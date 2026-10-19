@@ -1,7 +1,8 @@
 export type Level = "기초" | "중급" | "심화";
+export type LevelNum = 1 | 2 | 3;
 
 /** [한국어 이름, 영어 위키피디아 문서 이름, 난이도(1=기초 2=중급 3=심화), 한 줄 힌트] */
-export type RawTopic = [ko: string, en: string, level: 1 | 2 | 3, hint: string];
+export type RawTopic = [ko: string, en: string, level: LevelNum, hint: string];
 
 export interface CategoryDef {
   id: string;
@@ -27,6 +28,8 @@ export interface Topic {
   domain: string;
   category: string;
   categoryName: string;
+  /** 난이도 1~3 (Lv.1 기초 · Lv.2 중급 · Lv.3 심화) */
+  lv: LevelNum;
   level: Level;
   hint: string;
 }

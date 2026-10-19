@@ -75,15 +75,15 @@ const fromRow = (x: RecordRow): StudyRecord => ({
   studiedAt: x.studied_at, synced: true,
 });
 type ProfileRow = {
-  nickname: string; interests: string[]; study_minutes: number; explain_minutes: number;
+  nickname: string; interests: string[]; level: number; study_minutes: number; explain_minutes: number;
   reminder_enabled: boolean; reminder_time: string;
 };
 const prefsToProfile = (p: Prefs, id: string) => ({
-  id, nickname: p.nickname, interests: p.interests, study_minutes: p.studyMinutes, explain_minutes: p.explainMinutes,
+  id, nickname: p.nickname, interests: p.interests, level: p.level, study_minutes: p.studyMinutes, explain_minutes: p.explainMinutes,
   reminder_enabled: p.reminderEnabled, reminder_time: p.reminderTime, updated_at: new Date().toISOString(),
 });
 const profileToPrefs = (x: ProfileRow): Prefs => ({
-  nickname: x.nickname, interests: x.interests ?? [], studyMinutes: x.study_minutes, explainMinutes: x.explain_minutes,
+  nickname: x.nickname, interests: x.interests ?? [], level: ([0, 1, 2, 3].includes(x.level) ? x.level : 0) as Prefs["level"], studyMinutes: x.study_minutes, explainMinutes: x.explain_minutes,
   reminderEnabled: x.reminder_enabled, reminderTime: x.reminder_time,
 });
 

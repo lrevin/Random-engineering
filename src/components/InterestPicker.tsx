@@ -6,13 +6,17 @@ import { Chip, Row, T, tap } from "./ui";
 const countBy = (cat: string) => TOPICS.filter((t) => t.category === cat).length;
 
 /** 관심 분야 고르기 (회원가입·설정에서 함께 사용) */
-export function InterestPicker({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+export function InterestPicker({ value, onChange, domains }: {
+  value: string[]; onChange: (v: string[]) => void;
+  /** 주면 이 분야들만 보여 줌 (온보딩에서 고른 분야) */
+  domains?: string[];
+}) {
   const c = useColors();
   const toggle = (id: string) => onChange(value.includes(id) ? value.filter((x) => x !== id) : [...value, id]);
 
   return (
     <View style={{ gap: 18 }}>
-      {DOMAINS.map((d) => {
+      {DOMAINS.filter((d) => d.available && (!domains || domains.includes(d.id))).map((d) => {
         const ids = d.categories.map((x) => x.id);
         const all = ids.length > 0 && ids.every((id) => value.includes(id));
         return (

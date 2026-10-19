@@ -3,7 +3,7 @@ import { router } from "expo-router";
 import { useState, type ReactNode } from "react";
 import { Alert, Linking, Platform, Pressable, Switch, View } from "react-native";
 import { TimeStepper } from "@/components/TimeStepper";
-import { Btn, Card, Field, Row, Screen, T, tap } from "@/components/ui";
+import { Btn, Card, Field, Row, Screen, Segment, T, tap } from "@/components/ui";
 import { categoryById } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { notificationsSupported, requestNotificationPermission } from "@/lib/notify";
@@ -113,6 +113,17 @@ export default function Settings() {
 
       <Section title="공부">
         <Item label="관심 분야" sub={interestNames.length > 4 ? `${interestNames.slice(0, 4).join(", ")} 외 ${interestNames.length - 4}개` : interestNames.join(", ")} onPress={() => router.push("/interests")} />
+        <View style={{ paddingVertical: 13, gap: 10, borderBottomWidth: 1, borderBottomColor: c.line }}>
+          <View>
+            <T size={16}>기본 난이도</T>
+            <T size={13} color="muted">주제 뽑기 화면의 처음 필터</T>
+          </View>
+          <Segment<"0" | "1" | "2" | "3">
+            value={String(prefs.level) as "0" | "1" | "2" | "3"}
+            onChange={(v) => updatePrefs({ level: Number(v) as 0 | 1 | 2 | 3 })}
+            options={[{ value: "0", label: "골고루" }, { value: "1", label: "Lv.1 기초" }, { value: "2", label: "Lv.2 중급" }, { value: "3", label: "Lv.3 심화" }]}
+          />
+        </View>
         <Item label="공부 시간" sub="기본 15분" right={<Minutes value={prefs.studyMinutes} min={1} max={120} onChange={(v) => updatePrefs({ studyMinutes: v })} />} />
         <Item label="설명 시간" sub="기본 2분" right={<Minutes value={prefs.explainMinutes} min={1} max={30} onChange={(v) => updatePrefs({ explainMinutes: v })} />} last />
       </Section>

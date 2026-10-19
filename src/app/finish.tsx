@@ -2,7 +2,7 @@ import { Redirect, router } from "expo-router";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, View } from "react-native";
 import { Badge, Btn, Field, levelTone, Row, Screen, T, tap } from "@/components/ui";
-import { topicById } from "@/data";
+import { levelText, topicById } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { calcStreak } from "@/lib/stats";
 import { useColors } from "@/theme";
@@ -63,7 +63,7 @@ function FinishInner() {
         <View style={{ alignItems: "center", gap: 6, marginTop: 8 }}>
           <Row gap={6} style={{ justifyContent: "center" }}>
             <Badge label={topic.categoryName} />
-            <Badge label={topic.level} tone={levelTone(topic.level)} />
+            <Badge label={levelText(topic.lv)} tone={levelTone(topic.level)} />
           </Row>
           <T size={28} weight="bold" center>{topic.ko}</T>
         </View>
