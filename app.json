@@ -1,25 +1,56 @@
 {
   "expo": {
-    "name": "ppobgong",
+    "name": "뽑공",
     "slug": "ppobgong",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.ppobgong.app"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#1d2742",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.ppobgong.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-status-bar",
+      "expo-sqlite",
+      "expo-web-browser",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 160,
+          "backgroundColor": "#f4eee1",
+          "dark": {
+            "backgroundColor": "#14182a"
+          }
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#1d2742",
+          "defaultChannel": "default"
+        }
+      ]
+    ],
+    "scheme": "ppobgong",
+    "experiments": {
+      "typedRoutes": true
     }
   }
 }

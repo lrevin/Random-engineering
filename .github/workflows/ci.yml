@@ -1,0 +1,23 @@
+# 푸시·PR마다 타입 검사와 코드 검사를 자동으로 실행합니다.
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: 타입 검사
+        run: npx tsc --noEmit
+      - name: 코드 검사 (ESLint)
+        run: npx expo lint
