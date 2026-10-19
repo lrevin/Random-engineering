@@ -5,7 +5,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { KeyboardAvoidingView, Platform, Pressable, TextInput, useWindowDimensions, View } from "react-native";
 import { Ring } from "@/components/Ring";
 import { Badge, Btn, FONT, levelTone, Row, Screen, T } from "@/components/ui";
-import { studyLinks, topicById } from "@/data";
+import { studyLinks, levelText, topicById } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { confirmQuit } from "@/lib/confirm";
 import { useStageTimer } from "@/lib/useStageTimer";
@@ -78,7 +78,7 @@ function StudyInner() {
         <View style={{ alignItems: "center", gap: 6 }}>
           <Row gap={6} style={{ justifyContent: "center" }}>
             <Badge label={topic.categoryName} />
-            <Badge label={topic.level} tone={levelTone(topic.level)} />
+            <Badge label={levelText(topic.lv)} tone={levelTone(topic.level)} />
           </Row>
           <T size={28} weight="bold" center style={{ letterSpacing: -0.6, lineHeight: 36 }}>{topic.ko}</T>
           <T size={14} color="muted" center>{topic.en}</T>

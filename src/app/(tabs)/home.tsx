@@ -2,17 +2,23 @@ import { router } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Pressable, Switch, View } from "react-native";
 import { Badge, Btn, Card, levelTone, Row, Screen, Segment, T } from "@/components/ui";
-import { categoryById, TOPICS, type Level, type Topic } from "@/data";
+import { categoryById, levelText, TOPICS, type Topic } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { calcStreak, lastWeek } from "@/lib/stats";
 import { radius, useColors } from "@/theme";
 
-type LevelFilter = "전체" | Level;
+type LevelFilter = "0" | "1" | "2" | "3"; // 0 = 전체
 
 export default function Home() {
   const { prefs, records, active, setActive } = useApp();
   const c = useColors();
-  const [level, setLevel] = useState<LevelFilter>("전체");
+  const [level, setLevel] = useState<LevelFilter>(String(prefs.level) as LevelFilter);
+  // 설정에서 기본 난이도를 바꾸면 필터도 따라가게 함
+  const [prefLevel, setPrefLevel] = useState(prefs.level);
+  if (prefLevel !== prefs.level) {
+    setPrefLevel(prefs.level);
+    setLevel(String(prefs.level) as LevelFilter);
+  }
   const [includeDone, setIncludeDone] = useState(false);
   const [shown, setShown] = useState<Topic | null>(null);
   const [drawn, setDrawn] = useState<Topic | null>(null);
@@ -24,13 +30,22 @@ export default function Home() {
 
   const { streak, today } = calcStreak(records);
   const week = lastWeek(records);
-  const done = useMemo(() => new Set(records.map((r) => r.topicId)), [records]);
+  // 같은 개념이 여러 분야에 있을 수 있어서(예: 레이놀즈 수) 이름 기준으로도 공부 여부를 확인
+  const done = useMemo(() => new Set(records.flatMap((r) => [r.topicId, r.topicKo])), [records]);
 
-  const inScope = useMemo(
-    () => TOPICS.filter((t) => prefs.interests.includes(t.category) && (level === "전체" || t.level === level)),
-    [prefs.interests, level],
+  const inScope = useMemo(() => {
+    const seen = new Set<string>();
+    return TOPICS.filter((t) => {
+      if (!prefs.interests.includes(t.category) || (level !== "0" && t.lv !== Number(level))) return false;
+      if (seen.has(t.ko)) return false; // 여러 분야에 겹치는 개념은 한 번만
+      seen.add(t.ko);
+      return true;
+    });
+  }, [prefs.interests, level]);
+  const pool = useMemo(
+    () => (includeDone ? inScope : inScope.filter((t) => !done.has(t.id) && !done.has(t.ko))),
+    [inScope, includeDone, done],
   );
-  const pool = useMemo(() => (includeDone ? inScope : inScope.filter((t) => !done.has(t.id))), [inScope, includeDone, done]);
 
   const draw = () => {
     if (spinning) return;
@@ -65,7 +80,7 @@ export default function Home() {
   };
 
   const start = () => {
-    if (!drawn) return;
+    if (!drawn || active) return;
     setActive({
       topicId: drawn.id, stage: "study", memo: "",
       studyTotal: prefs.studyMinutes * 60, studyLeft: prefs.studyMinutes * 60, studyUsed: 0,
@@ -124,7 +139,7 @@ export default function Home() {
           <Segment<LevelFilter>
             value={level}
             onChange={setLevel}
-            options={[{ value: "전체", label: "전체" }, { value: "기초", label: "기초" }, { value: "중급", label: "중급" }, { value: "심화", label: "심화" }]}
+            options={[{ value: "0", label: "전체" }, { value: "1", label: "Lv.1" }, { value: "2", label: "Lv.2" }, { value: "3", label: "Lv.3" }]}
           />
           <Row gap={6}>
             <T size={14} color="ink2">공부한 주제도</T>
@@ -145,7 +160,7 @@ export default function Home() {
           <Animated.View style={{ alignItems: "center", gap: 8, transform: [{ scale: pop }] }}>
             <Row gap={6} style={{ justifyContent: "center" }}>
               <Badge label={`${categoryById(shown.category)?.emoji ?? ""} ${shown.categoryName}`} />
-              <Badge label={shown.level} tone={levelTone(shown.level)} />
+              <Badge label={levelText(shown.lv)} tone={levelTone(shown.level)} />
             </Row>
             <T size={34} weight="bold" center color={spinning ? "ink2" : "ink"} style={{ letterSpacing: -0.8, lineHeight: 44 }}>
               {shown.ko}
@@ -163,7 +178,7 @@ export default function Home() {
       </Card>
 
       <View style={{ gap: 10 }}>
-        {drawn && !spinning && <Btn title="이걸로 시작" variant="accent" size="lg" onPress={start} />}
+        {drawn && !spinning && !active && <Btn title="이걸로 시작" variant="accent" size="lg" onPress={start} />}
         <Btn
           title={spinning ? "뽑는 중…" : drawn ? "다시 뽑기" : "주제 뽑기 🎲"}
           variant={drawn ? "outline" : "primary"}

@@ -2,7 +2,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { Alert, Platform, View } from "react-native";
 import { Badge, Btn, Card, levelTone, Row, Screen, T } from "@/components/ui";
-import { studyLinks, topicById } from "@/data";
+import { levelText, studyLinks, topicById } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { fmtDate, fmtDuration } from "@/lib/stats";
 import { useColors } from "@/theme";
@@ -55,7 +55,7 @@ export default function RecordDetail() {
       <View style={{ gap: 6 }}>
         <Row gap={6}>
           <Badge label={topic?.categoryName ?? r.category} />
-          <Badge label={r.level} tone={levelTone(r.level)} />
+          <Badge label={levelText(r.level)} tone={levelTone(r.level)} />
         </Row>
         <T size={26} weight="bold">{r.topicKo}</T>
         <T size={14} color="muted">{fmtDate(r.studiedAt)} · 공부 {fmtDuration(r.studySec)} · 설명 {fmtDuration(r.explainSec)}</T>

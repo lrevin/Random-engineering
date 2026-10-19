@@ -19,6 +19,8 @@ export interface StudyRecord {
 export interface Prefs {
   nickname: string;
   interests: string[];
+  /** 주로 공부할 난이도: 0=골고루, 1=Lv.1 기초, 2=Lv.2 중급, 3=Lv.3 심화 */
+  level: 0 | 1 | 2 | 3;
   studyMinutes: number;
   explainMinutes: number;
   reminderEnabled: boolean;
@@ -29,6 +31,7 @@ export interface Prefs {
 export const DEFAULT_PREFS: Prefs = {
   nickname: "",
   interests: [],
+  level: 0,
   studyMinutes: 15,
   explainMinutes: 2,
   reminderEnabled: true,

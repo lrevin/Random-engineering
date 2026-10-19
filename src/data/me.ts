@@ -1,0 +1,88 @@
+// 기계공학 주제 데이터
+// 형식: [한국어 이름, 영어 위키피디아 문서 이름, 난이도(1=기초 2=중급 3=심화), 한 줄 힌트]
+
+import type { CategoryDef, RawTopic } from "./types";
+
+export const ME_CATEGORIES: CategoryDef[] = [
+  { id: "me-dynamics", name: "정역학·동역학", emoji: "🎯" },
+  { id: "me-solid", name: "재료역학", emoji: "📐" },
+  { id: "me-thermo", name: "열역학·열전달", emoji: "🔥" },
+  { id: "me-fluid", name: "유체역학", emoji: "🌊" },
+  { id: "me-design", name: "기계설계·기계요소", emoji: "⚙️" },
+  { id: "me-mfg", name: "생산·가공", emoji: "🏭" },
+];
+
+export const ME_RAW: Record<string, RawTopic[]> = {
+  "me-dynamics": [
+    ["뉴턴의 운동 법칙", "Newton's laws of motion", 1, "힘과 운동의 관계를 설명하는 세 가지 법칙"],
+    ["자유물체도", "Free body diagram", 1, "물체에 작용하는 힘을 그림으로 정리하는 방법"],
+    ["토크 (모멘트)", "Torque", 1, "물체를 회전시키려는 힘의 효과"],
+    ["마찰", "Friction", 1, "접촉면에서 운동을 방해하는 힘"],
+    ["충격량", "Impulse (physics)", 2, "짧은 시간 동안 작용한 힘과 운동량 변화"],
+    ["관성 모멘트", "Moment of inertia", 2, "회전 운동에서 질량에 해당하는 양"],
+    ["트러스", "Truss", 2, "삼각형 부재로 하중을 지지하는 구조물"],
+    ["단순 조화 운동", "Simple harmonic motion", 2, "스프링·진자처럼 반복되는 진동 운동"],
+    ["코리올리 힘", "Coriolis force", 3, "회전 좌표계에서 나타나는 겉보기 힘"],
+    ["라그랑주 역학", "Lagrangian mechanics", 3, "에너지로 운동방정식을 세우는 해석역학"],
+  ],
+  "me-solid": [
+    ["응력", "Stress (mechanics)", 1, "재료 내부에 작용하는 단위 면적당 힘"],
+    ["훅의 법칙", "Hooke's law", 1, "탄성 범위에서 힘과 변형의 비례 관계"],
+    ["응력-변형률 선도", "Stress–strain curve", 1, "재료의 기계적 성질을 한눈에 보여 주는 그래프"],
+    ["푸아송 비", "Poisson's ratio", 1, "늘어날 때 옆으로 줄어드는 정도를 나타내는 값"],
+    ["모어 원", "Mohr's circle", 2, "응력 변환을 원으로 그려 구하는 방법"],
+    ["오일러-베르누이 보 이론", "Euler–Bernoulli beam theory", 2, "보의 굽힘과 처짐을 계산하는 기본 이론"],
+    ["비틀림", "Torsion (mechanics)", 2, "축이 꼬일 때 생기는 응력과 변형"],
+    ["좌굴", "Buckling", 2, "가늘고 긴 기둥이 압축으로 갑자기 휘는 현상"],
+    ["피로 (재료)", "Fatigue (material)", 3, "반복 하중으로 재료가 파손되는 현상"],
+    ["파괴역학", "Fracture mechanics", 3, "균열이 있는 재료의 강도를 다루는 학문"],
+  ],
+  "me-thermo": [
+    ["열역학 제1법칙", "First law of thermodynamics", 1, "열과 일, 에너지 보존에 관한 법칙"],
+    ["열역학 제2법칙", "Second law of thermodynamics", 1, "자연 현상의 방향성에 관한 법칙"],
+    ["이상 기체 법칙", "Ideal gas law", 1, "기체의 압력·부피·온도 사이의 관계"],
+    ["카르노 사이클", "Carnot cycle", 1, "열기관이 낼 수 있는 이론적 최고 효율"],
+    ["엔트로피", "Entropy", 2, "무질서도와 비가역성을 나타내는 상태량"],
+    ["랭킨 사이클", "Rankine cycle", 2, "증기 발전소의 기본이 되는 열역학 사이클"],
+    ["열전도 (푸리에 법칙)", "Thermal conduction", 2, "물체 내부를 통해 열이 전달되는 방식"],
+    ["엑서지", "Exergy", 3, "에너지 중 실제로 쓸 수 있는 일의 양"],
+    ["누셀 수", "Nusselt number", 3, "대류 열전달의 세기를 나타내는 무차원수"],
+    ["대수 평균 온도차 (LMTD)", "Logarithmic mean temperature difference", 3, "열교환기 설계에 쓰는 온도차 개념"],
+  ],
+  "me-fluid": [
+    ["파스칼의 원리", "Pascal's law", 1, "밀폐된 유체에 가한 압력의 전달 방식"],
+    ["아르키메데스의 원리 (부력)", "Archimedes' principle", 1, "물에 잠긴 물체가 받는 힘"],
+    ["베르누이 방정식", "Bernoulli's principle", 1, "유체의 속도와 압력 사이의 관계"],
+    ["연속 방정식", "Continuity equation", 1, "흐름에서 질량이 보존된다는 식"],
+    ["레이놀즈 수", "Reynolds number", 2, "층류와 난류를 구분하는 무차원수"],
+    ["다르시-바이스바흐 방정식", "Darcy–Weisbach equation", 2, "관 속 흐름의 마찰 손실을 구하는 식"],
+    ["경계층", "Boundary layer", 2, "벽면 근처에서 속도가 크게 변하는 얇은 층"],
+    ["나비에-스토크스 방정식", "Navier–Stokes equations", 3, "점성 유체의 운동을 기술하는 방정식"],
+    ["버킹엄 π 정리", "Buckingham π theorem", 3, "차원 해석으로 무차원수를 찾는 방법"],
+    ["캐비테이션 (공동현상)", "Cavitation", 3, "액체 속 압력 저하로 기포가 생기는 현상"],
+  ],
+  "me-design": [
+    ["기어", "Gear", 1, "톱니로 회전과 동력을 전달하는 기계요소"],
+    ["나사", "Screw thread", 1, "체결과 운동 변환에 쓰이는 나선 구조"],
+    ["베어링", "Bearing (mechanical)", 1, "회전축을 지지하고 마찰을 줄이는 요소"],
+    ["안전율", "Factor of safety", 1, "설계에서 여유를 얼마나 둘지 정하는 값"],
+    ["끼워맞춤", "Engineering fit", 2, "구멍과 축의 치수 관계를 정하는 방식"],
+    ["벨트 전동", "Belt (mechanical)", 2, "벨트와 풀리로 동력을 전달하는 방법"],
+    ["키 (기계요소)", "Key (engineering)", 2, "축과 회전체를 고정해 토크를 전달하는 요소"],
+    ["클러치", "Clutch", 2, "동력을 연결하거나 끊는 장치"],
+    ["기하 공차 (GD&T)", "Geometric dimensioning and tolerancing", 3, "모양과 위치의 허용 오차를 표기하는 체계"],
+    ["인벌류트 치형", "Involute gear", 3, "대부분의 기어가 쓰는 치형 곡선"],
+  ],
+  "me-mfg": [
+    ["선반", "Lathe", 1, "공작물을 회전시켜 깎는 공작기계"],
+    ["밀링", "Milling (machining)", 1, "회전하는 공구로 평면·홈을 깎는 가공"],
+    ["주조", "Casting (metalworking)", 1, "녹인 금속을 틀에 부어 형상을 만드는 공정"],
+    ["용접", "Welding", 1, "재료를 녹이거나 압력을 가해 접합하는 방법"],
+    ["단조", "Forging", 2, "금속을 두드리거나 눌러 성형하는 공정"],
+    ["사출 성형", "Injection moulding", 2, "플라스틱 제품을 대량 생산하는 대표 공정"],
+    ["수치 제어 (CNC)", "Numerical control", 2, "컴퓨터 프로그램으로 공작기계를 움직이는 방식"],
+    ["열처리", "Heat treating", 2, "가열과 냉각으로 금속의 성질을 바꾸는 공정"],
+    ["방전 가공 (EDM)", "Electrical discharge machining", 3, "전기 불꽃으로 단단한 금속을 깎는 가공"],
+    ["분말 야금", "Powder metallurgy", 3, "금속 가루를 굳혀 부품을 만드는 공정"],
+  ],
+};

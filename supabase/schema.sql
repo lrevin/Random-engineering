@@ -7,6 +7,7 @@ create table if not exists public.profiles (
   id               uuid primary key references auth.users (id) on delete cascade,
   nickname         text not null check (char_length(nickname) between 1 and 20),
   interests        text[] not null default '{}',          -- 관심 분야(카테고리 id) 목록
+  level            smallint not null default 0 check (level between 0 and 3),  -- 0=골고루, 1~3=Lv.1~3
   study_minutes    int  not null default 15 check (study_minutes between 1 and 120),
   explain_minutes  int  not null default 2  check (explain_minutes between 1 and 30),
   reminder_enabled boolean not null default true,
@@ -14,6 +15,9 @@ create table if not exists public.profiles (
   created_at       timestamptz not null default now(),
   updated_at       timestamptz not null default now()
 );
+
+-- 이전 버전 스키마로 만든 표에 난이도 열 추가 (여러 번 실행해도 안전)
+alter table public.profiles add column if not exists level smallint not null default 0 check (level between 0 and 3);
 
 alter table public.profiles enable row level security;
 

@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { Pressable, useWindowDimensions, View } from "react-native";
 import { Ring } from "@/components/Ring";
 import { Badge, Btn, Card, levelTone, Row, Screen, T, tap } from "@/components/ui";
-import { topicById } from "@/data";
+import { levelText, topicById } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { confirmQuit } from "@/lib/confirm";
 import { useStageTimer } from "@/lib/useStageTimer";
@@ -55,7 +55,7 @@ function ExplainInner() {
       <View style={{ alignItems: "center", gap: 6 }}>
         <Row gap={6} style={{ justifyContent: "center" }}>
           <Badge label={topic.categoryName} />
-          <Badge label={topic.level} tone={levelTone(topic.level)} />
+          <Badge label={levelText(topic.lv)} tone={levelTone(topic.level)} />
         </Row>
         <T size={32} weight="bold" center style={{ letterSpacing: -0.7, lineHeight: 42 }}>{topic.ko}</T>
       </View>
