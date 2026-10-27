@@ -25,7 +25,9 @@ export default function WrongAnswers() {
   return (
     <Screen scroll>
       <View style={{ gap: 6 }}>
-        <Badge label={topic?.categoryName ?? r.category} />
+        <View style={{ alignSelf: "flex-start" }}>
+          <Badge label={topic?.categoryName ?? r.category} />
+        </View>
         <T size={24} weight="bold">오답 노트</T>
         <T size={15} color="muted">{r.topicKo} · {r.score}/{r.total} · 틀린 문제 {r.wrong.length}개</T>
       </View>

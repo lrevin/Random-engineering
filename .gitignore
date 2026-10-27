@@ -45,3 +45,6 @@ yarn-error.*
 .DS_Store
 .claude/
 __pycache__/
+
+# 계획서 변환 중 생긴 임시 파일
+docs/plan/plan_tmp*
