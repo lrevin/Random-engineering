@@ -6,7 +6,8 @@ import { Row, T, tap } from "./ui";
 
 const open = (url: string) => {
   tap();
-  WebBrowser.openBrowserAsync(url).catch(() => {});
+  // createTask: false → 안드로이드에서 브라우저를 닫으면 앱으로 바로 돌아오게 함
+  WebBrowser.openBrowserAsync(url, { createTask: false }).catch(() => {});
 };
 
 function LinkButton({ icon, title, sub, onPress, primary }: { icon: string; title: string; sub: string; onPress: () => void; primary?: boolean }) {
