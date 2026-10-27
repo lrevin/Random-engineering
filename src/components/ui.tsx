@@ -21,7 +21,7 @@ export const tap = () => {
 type TProps = TextProps & {
   size?: number;
   weight?: keyof typeof FONT;
-  color?: "ink" | "ink2" | "muted" | "accent" | "navyInk" | "accentInk" | "flame";
+  color?: "ink" | "ink2" | "muted" | "accent" | "navyInk" | "accentInk" | "flame" | "success";
   center?: boolean;
 };
 

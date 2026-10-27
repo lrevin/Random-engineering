@@ -1,0 +1,7688 @@
+{
+"ds-01": {
+"ko": "스택",
+"en": "Stack (abstract data type)",
+"lv": 1,
+"level": "기초",
+"hint": "함수 호출, 실행 취소 기능 등에 쓰이는 선형 자료 구조",
+"category": "자료구조",
+"domain": "컴퓨터공학"
+},
+"ds-02": {
+"ko": "큐",
+"en": "Queue (abstract data type)",
+"lv": 1,
+"level": "기초",
+"hint": "줄 서기처럼 순서대로 처리할 때 쓰는 선형 자료 구조",
+"category": "자료구조",
+"domain": "컴퓨터공학"
+},
+"ds-03": {
+"ko": "배열",
+"en": "Array (data structure)",
+"lv": 1,
+"level": "기초",
+"hint": "인덱스로 원소에 바로 접근하는 가장 기본적인 자료 구조",
+"category": "자료구조",
+"domain": "컴퓨터공학"
+},
+"ds-04": {
+"ko": "동적 배열",
+"en": "Dynamic array",
+"lv": 1,
+"level": "기초",
+"hint": "크기가 꽉 차면 스스로 늘어나는 배열 (ArrayList, vector 등)",
+"category": "자료구조",
+"domain": "컴퓨터공학"
+},
+"ds-05": {
+"ko": "연결 리스트",
+"en": "Linked list",
+"lv": 1,
+"level": "기초",
+"hint": "원소들이 메모리 곳곳에 흩어져 있어도 순서를 유지하는 방법",
+"category": "자료구조",
+"domain": "컴퓨터공학"
+},
+"ds-06": {
+"ko": "이중 연결 리스트",
+"en": "Doubly linked list",
+"lv": 1,
+"level": "기초",
+"hint": "앞뒤 양방향으로 이동할 수 있는 리스트 구조",
+"category": "자료구조",
+"domain": "컴퓨터공학"
+},
+"ds-07": {
+"ko": "덱",
+"en": "Double-ended queue",
+"lv": 1,
+"level": "기초",
+"hint": "양쪽 끝 모두에서 넣고 뺄 수 있는 자료 구조",
+"category": "자료구조",
+"domain": "컴퓨터공학"
+},
+"ds-08": {
+"ko": "원형 큐",
+"en": "Circular buffer",
+"lv": 2,
+"level": "중급",
+"hint": "고정된 크기의 배열로 큐를 효율적으로 만드는 방법",
+"category": "자료구조",
+"domain": "컴퓨터공학"
+},
+"ds-09": {
+"ko": "해시 테이블",
+"en": "Hash table",
+"lv": 2,
+"level": "중급",
+"hint": "키로 값을 아주 빠르게 찾는 자료 구조와 충돌 처리",
+"category": "자료구조",
+"domain": "컴퓨터공학"
+},
+"ds-10": {
+"ko": "이진 트리",
+"en": "Binary tree",
+"lv": 1,
+"level": "기초",
+"hint": "각 노드가 자식을 최대 둘까지 갖는 트리와 순회 방법",
+"category": "자료구조",
+"domain": "컴퓨터공학"
+},
+"ds-11": {
+"ko": "이진 탐색 트리",
+"en": "Binary search tree",
+"lv": 2,
+"level": "중급",
+"hint": "정렬된 순서를 트리 모양으로 유지해 빠르게 찾는 구조",
+"category": "자료구조",
+"domain": "컴퓨터공학"
+},
+"ds-12": {
+"ko": "AVL 트리",
+"en": "AVL tree",
+"lv": 3,
+"level": "심화",
+"hint": "한쪽으로 치우치지 않도록 회전으로 균형을 맞추는 트리",
+"category": "자료구조",
+"domain": "컴퓨터공학"
+},
+"ds-13": {
+"ko": "레드-블랙 트리",
+"en": "Red–black tree",
+"lv": 3,
+"level": "심화",
+"hint": "노드에 색을 붙여 균형을 유지하는 트리 (TreeMap 등에 사용)",
+"category": "자료구조",
+"domain": "컴퓨터공학"
+},
+"ds-14": {
+"ko": "B-트리",
+"en": "B-tree",
+"lv": 3,
+"level": "심화",
+"hint": "디스크 기반 데이터베이스 인덱스에 쓰이는 다진 균형 트리",
+"category": "자료구조",
+"domain": "컴퓨터공학"
+},
+"ds-15": {
+"ko": "B+ 트리",
+"en": "B+ tree",
+"lv": 3,
+"level": "심화",
+"hint": "리프 노드끼리 연결된 B-트리 변형과 범위 검색",
+"category": "자료구조",
+"domain": "컴퓨터공학"
+},
+"ds-16": {
+"ko": "힙",
+"en": "Heap (data structure)",
+"lv": 2,
+"level": "중급",
+"hint": "최댓값 또는 최솟값을 빠르게 꺼내는 완전 이진 트리",
+"category": "자료구조",
+"domain": "컴퓨터공학"
+},
+"ds-17": {
+"ko": "우선순위 큐",
+"en": "Priority queue",
+"lv": 2,
+"level": "중급",
+"hint": "들어온 순서가 아니라 중요도 순서로 꺼내는 큐",
+"category": "자료구조",
+"domain": "컴퓨터공학"
+},
+"ds-18": {
+"ko": "트라이",
+"en": "Trie",
+"lv": 2,
+"level": "중급",
+"hint": "자동 완성, 사전 검색에 쓰이는 문자열 트리",
+"category": "자료구조",
+"domain": "컴퓨터공학"
+},
+"ds-19": {
+"ko": "그래프",
+"en": "Graph (abstract data type)",
+"lv": 1,
+"level": "기초",
+"hint": "정점과 간선으로 관계를 표현하는 자료 구조",
+"category": "자료구조",
+"domain": "컴퓨터공학"
+},
+"ds-20": {
+"ko": "인접 행렬",
+"en": "Adjacency matrix",
+"lv": 1,
+"level": "기초",
+"hint": "그래프를 2차원 배열로 표현하는 방법과 장단점",
+"category": "자료구조",
+"domain": "컴퓨터공학"
+},
+"ds-21": {
+"ko": "인접 리스트",
+"en": "Adjacency list",
+"lv": 1,
+"level": "기초",
+"hint": "그래프를 정점별 이웃 목록으로 표현하는 방법과 장단점",
+"category": "자료구조",
+"domain": "컴퓨터공학"
+},
+"ds-22": {
+"ko": "서로소 집합 (유니온 파인드)",
+"en": "Disjoint-set data structure",
+"lv": 3,
+"level": "심화",
+"hint": "원소들이 같은 그룹인지 빠르게 판별하고 합치는 구조",
+"category": "자료구조",
+"domain": "컴퓨터공학"
+},
+"ds-23": {
+"ko": "세그먼트 트리",
+"en": "Segment tree",
+"lv": 3,
+"level": "심화",
+"hint": "구간 합·구간 최솟값 질의를 빠르게 처리하는 트리",
+"category": "자료구조",
+"domain": "컴퓨터공학"
+},
+"ds-24": {
+"ko": "펜윅 트리",
+"en": "Fenwick tree",
+"lv": 3,
+"level": "심화",
+"hint": "비트 연산을 이용해 누적 합을 빠르게 갱신·조회하는 구조",
+"category": "자료구조",
+"domain": "컴퓨터공학"
+},
+"ds-25": {
+"ko": "스킵 리스트",
+"en": "Skip list",
+"lv": 3,
+"level": "심화",
+"hint": "여러 층의 연결 리스트로 탐색 속도를 높이는 확률적 구조",
+"category": "자료구조",
+"domain": "컴퓨터공학"
+},
+"ds-26": {
+"ko": "블룸 필터",
+"en": "Bloom filter",
+"lv": 3,
+"level": "심화",
+"hint": "\"없다\"는 확실히, \"있다\"는 아마도로 답하는 확률적 자료 구조",
+"category": "자료구조",
+"domain": "컴퓨터공학"
+},
+"algo-01": {
+"ko": "빅오 표기법",
+"en": "Big O notation",
+"lv": 1,
+"level": "기초",
+"hint": "알고리즘이 입력 크기에 따라 얼마나 느려지는지 나타내는 방법",
+"category": "알고리즘",
+"domain": "컴퓨터공학"
+},
+"algo-02": {
+"ko": "시간 복잡도",
+"en": "Time complexity",
+"lv": 1,
+"level": "기초",
+"hint": "알고리즘의 실행 시간을 입력 크기의 함수로 분석하는 개념",
+"category": "알고리즘",
+"domain": "컴퓨터공학"
+},
+"algo-03": {
+"ko": "버블 정렬",
+"en": "Bubble sort",
+"lv": 1,
+"level": "기초",
+"hint": "이웃한 두 원소를 비교·교환하는 가장 단순한 정렬",
+"category": "알고리즘",
+"domain": "컴퓨터공학"
+},
+"algo-04": {
+"ko": "선택 정렬",
+"en": "Selection sort",
+"lv": 1,
+"level": "기초",
+"hint": "매번 남은 것 중 하나를 골라 자리를 확정하는 정렬",
+"category": "알고리즘",
+"domain": "컴퓨터공학"
+},
+"algo-05": {
+"ko": "삽입 정렬",
+"en": "Insertion sort",
+"lv": 1,
+"level": "기초",
+"hint": "카드를 손에 정리하듯 원소를 제자리에 끼워 넣는 정렬",
+"category": "알고리즘",
+"domain": "컴퓨터공학"
+},
+"algo-06": {
+"ko": "퀵 정렬",
+"en": "Quicksort",
+"lv": 2,
+"level": "중급",
+"hint": "피벗을 기준으로 나누어 정렬하는 대표적인 빠른 정렬",
+"category": "알고리즘",
+"domain": "컴퓨터공학"
+},
+"algo-07": {
+"ko": "병합 정렬",
+"en": "Merge sort",
+"lv": 2,
+"level": "중급",
+"hint": "반으로 나눈 뒤 정렬된 조각을 합치는 정렬",
+"category": "알고리즘",
+"domain": "컴퓨터공학"
+},
+"algo-08": {
+"ko": "힙 정렬",
+"en": "Heapsort",
+"lv": 2,
+"level": "중급",
+"hint": "힙 자료 구조를 이용한 정렬",
+"category": "알고리즘",
+"domain": "컴퓨터공학"
+},
+"algo-09": {
+"ko": "계수 정렬",
+"en": "Counting sort",
+"lv": 2,
+"level": "중급",
+"hint": "비교 없이 개수를 세서 정렬하는 방법",
+"category": "알고리즘",
+"domain": "컴퓨터공학"
+},
+"algo-10": {
+"ko": "기수 정렬",
+"en": "Radix sort",
+"lv": 2,
+"level": "중급",
+"hint": "자릿수별로 나누어 정렬하는 비교 없는 정렬",
+"category": "알고리즘",
+"domain": "컴퓨터공학"
+},
+"algo-11": {
+"ko": "이진 탐색",
+"en": "Binary search",
+"lv": 1,
+"level": "기초",
+"hint": "정렬된 배열에서 범위를 줄여 가며 찾는 방법",
+"category": "알고리즘",
+"domain": "컴퓨터공학"
+},
+"algo-12": {
+"ko": "너비 우선 탐색 (BFS)",
+"en": "Breadth-first search",
+"lv": 1,
+"level": "기초",
+"hint": "가까운 정점부터 차례로 방문하는 그래프 탐색",
+"category": "알고리즘",
+"domain": "컴퓨터공학"
+},
+"algo-13": {
+"ko": "깊이 우선 탐색 (DFS)",
+"en": "Depth-first search",
+"lv": 1,
+"level": "기초",
+"hint": "한 길을 끝까지 파고든 뒤 돌아오는 그래프 탐색",
+"category": "알고리즘",
+"domain": "컴퓨터공학"
+},
+"algo-14": {
+"ko": "다익스트라 알고리즘",
+"en": "Dijkstra's algorithm",
+"lv": 2,
+"level": "중급",
+"hint": "가중치 그래프에서 한 정점으로부터의 최단 경로 구하기",
+"category": "알고리즘",
+"domain": "컴퓨터공학"
+},
+"algo-15": {
+"ko": "벨만-포드 알고리즘",
+"en": "Bellman–Ford algorithm",
+"lv": 3,
+"level": "심화",
+"hint": "음수 가중치가 있어도 최단 경로를 구하는 방법",
+"category": "알고리즘",
+"domain": "컴퓨터공학"
+},
+"algo-16": {
+"ko": "플로이드-워셜 알고리즘",
+"en": "Floyd–Warshall algorithm",
+"lv": 3,
+"level": "심화",
+"hint": "모든 정점 쌍 사이의 최단 경로를 한 번에 구하는 방법",
+"category": "알고리즘",
+"domain": "컴퓨터공학"
+},
+"algo-17": {
+"ko": "크루스칼 알고리즘",
+"en": "Kruskal's algorithm",
+"lv": 2,
+"level": "중급",
+"hint": "간선을 기준으로 최소 신장 트리를 만드는 방법",
+"category": "알고리즘",
+"domain": "컴퓨터공학"
+},
+"algo-18": {
+"ko": "프림 알고리즘",
+"en": "Prim's algorithm",
+"lv": 2,
+"level": "중급",
+"hint": "정점을 기준으로 최소 신장 트리를 키워 나가는 방법",
+"category": "알고리즘",
+"domain": "컴퓨터공학"
+},
+"algo-19": {
+"ko": "위상 정렬",
+"en": "Topological sorting",
+"lv": 2,
+"level": "중급",
+"hint": "선후 관계가 있는 작업들의 순서를 정하는 방법",
+"category": "알고리즘",
+"domain": "컴퓨터공학"
+},
+"algo-20": {
+"ko": "동적 계획법",
+"en": "Dynamic programming",
+"lv": 2,
+"level": "중급",
+"hint": "작은 문제의 답을 저장해 큰 문제를 푸는 기법",
+"category": "알고리즘",
+"domain": "컴퓨터공학"
+},
+"algo-21": {
+"ko": "탐욕 알고리즘",
+"en": "Greedy algorithm",
+"lv": 2,
+"level": "중급",
+"hint": "매 순간 가장 좋아 보이는 선택을 하는 전략과 그 한계",
+"category": "알고리즘",
+"domain": "컴퓨터공학"
+},
+"algo-22": {
+"ko": "분할 정복",
+"en": "Divide-and-conquer algorithm",
+"lv": 2,
+"level": "중급",
+"hint": "문제를 쪼개서 풀고 다시 합치는 설계 기법",
+"category": "알고리즘",
+"domain": "컴퓨터공학"
+},
+"algo-23": {
+"ko": "백트래킹",
+"en": "Backtracking",
+"lv": 2,
+"level": "중급",
+"hint": "가능성이 없는 갈래는 되돌아가며 해를 찾는 탐색 기법",
+"category": "알고리즘",
+"domain": "컴퓨터공학"
+},
+"algo-24": {
+"ko": "재귀",
+"en": "Recursion (computer science)",
+"lv": 1,
+"level": "기초",
+"hint": "함수가 자기 자신을 호출하는 문제 해결 방식",
+"category": "알고리즘",
+"domain": "컴퓨터공학"
+},
+"algo-25": {
+"ko": "KMP 알고리즘",
+"en": "Knuth–Morris–Pratt algorithm",
+"lv": 3,
+"level": "심화",
+"hint": "문자열 안에서 패턴을 빠르게 찾는 방법",
+"category": "알고리즘",
+"domain": "컴퓨터공학"
+},
+"algo-26": {
+"ko": "A* 알고리즘",
+"en": "A* search algorithm",
+"lv": 3,
+"level": "심화",
+"hint": "휴리스틱을 이용해 길 찾기를 빠르게 하는 탐색",
+"category": "알고리즘",
+"domain": "컴퓨터공학"
+},
+"algo-27": {
+"ko": "배낭 문제",
+"en": "Knapsack problem",
+"lv": 2,
+"level": "중급",
+"hint": "무게 제한 안에서 가치를 최대로 담는 최적화 문제",
+"category": "알고리즘",
+"domain": "컴퓨터공학"
+},
+"algo-28": {
+"ko": "최장 공통 부분 수열 (LCS)",
+"en": "Longest common subsequence",
+"lv": 3,
+"level": "심화",
+"hint": "두 문자열이 공통으로 가진 가장 긴 순서열 찾기",
+"category": "알고리즘",
+"domain": "컴퓨터공학"
+},
+"os-01": {
+"ko": "프로세스",
+"en": "Process (computing)",
+"lv": 1,
+"level": "기초",
+"hint": "실행 중인 프로그램을 운영체제가 관리하는 단위",
+"category": "운영체제",
+"domain": "컴퓨터공학"
+},
+"os-02": {
+"ko": "스레드",
+"en": "Thread (computing)",
+"lv": 1,
+"level": "기초",
+"hint": "한 프로세스 안에서 실행 흐름을 여러 개로 나누는 단위",
+"category": "운영체제",
+"domain": "컴퓨터공학"
+},
+"os-03": {
+"ko": "프로세스 제어 블록 (PCB)",
+"en": "Process control block",
+"lv": 2,
+"level": "중급",
+"hint": "운영체제가 각 프로세스의 정보를 담아 두는 자료 구조",
+"category": "운영체제",
+"domain": "컴퓨터공학"
+},
+"os-04": {
+"ko": "문맥 교환",
+"en": "Context switch",
+"lv": 2,
+"level": "중급",
+"hint": "CPU가 실행 중인 작업을 바꿀 때 일어나는 일과 비용",
+"category": "운영체제",
+"domain": "컴퓨터공학"
+},
+"os-05": {
+"ko": "CPU 스케줄링",
+"en": "Scheduling (computing)",
+"lv": 2,
+"level": "중급",
+"hint": "여러 프로세스 중 누구에게 CPU를 줄지 정하는 방법들",
+"category": "운영체제",
+"domain": "컴퓨터공학"
+},
+"os-06": {
+"ko": "라운드 로빈 스케줄링",
+"en": "Round-robin scheduling",
+"lv": 1,
+"level": "기초",
+"hint": "정해진 시간만큼 돌아가며 CPU를 나눠 쓰는 방식",
+"category": "운영체제",
+"domain": "컴퓨터공학"
+},
+"os-07": {
+"ko": "교착 상태",
+"en": "Deadlock (computer science)",
+"lv": 2,
+"level": "중급",
+"hint": "서로가 가진 자원을 기다리며 아무도 진행 못 하는 상황",
+"category": "운영체제",
+"domain": "컴퓨터공학"
+},
+"os-08": {
+"ko": "은행원 알고리즘",
+"en": "Banker's algorithm",
+"lv": 3,
+"level": "심화",
+"hint": "교착 상태를 피하기 위해 자원 할당을 미리 검사하는 방법",
+"category": "운영체제",
+"domain": "컴퓨터공학"
+},
+"os-09": {
+"ko": "기아 상태",
+"en": "Starvation (computer science)",
+"lv": 2,
+"level": "중급",
+"hint": "어떤 프로세스가 끝없이 자원을 받지 못하는 문제와 해결책",
+"category": "운영체제",
+"domain": "컴퓨터공학"
+},
+"os-10": {
+"ko": "세마포어",
+"en": "Semaphore (programming)",
+"lv": 2,
+"level": "중급",
+"hint": "공유 자원에 접근하는 수를 정수로 제어하는 동기화 도구",
+"category": "운영체제",
+"domain": "컴퓨터공학"
+},
+"os-11": {
+"ko": "뮤텍스",
+"en": "Mutual exclusion",
+"lv": 2,
+"level": "중급",
+"hint": "한 번에 하나만 공유 자원에 들어가게 하는 잠금",
+"category": "운영체제",
+"domain": "컴퓨터공학"
+},
+"os-12": {
+"ko": "경쟁 상태",
+"en": "Race condition",
+"lv": 2,
+"level": "중급",
+"hint": "실행 순서에 따라 결과가 달라지는 동시성 버그",
+"category": "운영체제",
+"domain": "컴퓨터공학"
+},
+"os-13": {
+"ko": "임계 구역",
+"en": "Critical section",
+"lv": 2,
+"level": "중급",
+"hint": "동시에 실행되면 안 되는 코드 영역과 그 해결 조건",
+"category": "운영체제",
+"domain": "컴퓨터공학"
+},
+"os-14": {
+"ko": "식사하는 철학자 문제",
+"en": "Dining philosophers problem",
+"lv": 2,
+"level": "중급",
+"hint": "동기화와 교착 상태를 설명하는 고전 문제",
+"category": "운영체제",
+"domain": "컴퓨터공학"
+},
+"os-15": {
+"ko": "생산자-소비자 문제",
+"en": "Producer–consumer problem",
+"lv": 2,
+"level": "중급",
+"hint": "공유 버퍼를 두고 만드는 쪽과 쓰는 쪽을 동기화하는 문제",
+"category": "운영체제",
+"domain": "컴퓨터공학"
+},
+"os-16": {
+"ko": "프로세스 간 통신 (IPC)",
+"en": "Inter-process communication",
+"lv": 2,
+"level": "중급",
+"hint": "서로 다른 프로세스가 데이터를 주고받는 방법들",
+"category": "운영체제",
+"domain": "컴퓨터공학"
+},
+"os-17": {
+"ko": "가상 메모리",
+"en": "Virtual memory",
+"lv": 2,
+"level": "중급",
+"hint": "실제 메모리보다 큰 공간을 쓰는 것처럼 보이게 하는 기법",
+"category": "운영체제",
+"domain": "컴퓨터공학"
+},
+"os-18": {
+"ko": "페이징",
+"en": "Memory paging",
+"lv": 2,
+"level": "중급",
+"hint": "메모리를 고정 크기 조각으로 나누어 관리하는 방식",
+"category": "운영체제",
+"domain": "컴퓨터공학"
+},
+"os-19": {
+"ko": "세그먼테이션",
+"en": "Memory segmentation",
+"lv": 2,
+"level": "중급",
+"hint": "메모리를 논리적 단위의 가변 크기로 나누는 방식",
+"category": "운영체제",
+"domain": "컴퓨터공학"
+},
+"os-20": {
+"ko": "페이지 교체 알고리즘",
+"en": "Page replacement algorithm",
+"lv": 2,
+"level": "중급",
+"hint": "메모리가 꽉 찼을 때 어떤 페이지를 내보낼지 정하는 방법들",
+"category": "운영체제",
+"domain": "컴퓨터공학"
+},
+"os-21": {
+"ko": "스래싱",
+"en": "Thrashing (computer science)",
+"lv": 3,
+"level": "심화",
+"hint": "페이지 교체가 너무 잦아 성능이 급격히 떨어지는 현상",
+"category": "운영체제",
+"domain": "컴퓨터공학"
+},
+"os-22": {
+"ko": "TLB",
+"en": "Translation lookaside buffer",
+"lv": 3,
+"level": "심화",
+"hint": "주소 변환을 빠르게 하기 위한 특별한 캐시",
+"category": "운영체제",
+"domain": "컴퓨터공학"
+},
+"os-23": {
+"ko": "단편화",
+"en": "Fragmentation (computing)",
+"lv": 2,
+"level": "중급",
+"hint": "메모리에 빈 공간이 있어도 쓰지 못하는 문제 (내부·외부)",
+"category": "운영체제",
+"domain": "컴퓨터공학"
+},
+"os-24": {
+"ko": "인터럽트",
+"en": "Interrupt",
+"lv": 1,
+"level": "기초",
+"hint": "CPU에게 하던 일을 멈추고 급한 일을 처리하라고 알리는 신호",
+"category": "운영체제",
+"domain": "컴퓨터공학"
+},
+"os-25": {
+"ko": "시스템 콜",
+"en": "System call",
+"lv": 1,
+"level": "기초",
+"hint": "사용자 프로그램이 운영체제 기능을 요청하는 통로",
+"category": "운영체제",
+"domain": "컴퓨터공학"
+},
+"os-26": {
+"ko": "커널",
+"en": "Kernel (operating system)",
+"lv": 1,
+"level": "기초",
+"hint": "운영체제의 핵심 부분과 사용자 모드·커널 모드",
+"category": "운영체제",
+"domain": "컴퓨터공학"
+},
+"os-27": {
+"ko": "파일 시스템",
+"en": "File system",
+"lv": 1,
+"level": "기초",
+"hint": "저장 장치에 파일을 어떻게 저장하고 찾을지 정한 구조",
+"category": "운영체제",
+"domain": "컴퓨터공학"
+},
+"arch-01": {
+"ko": "2진수와 16진수",
+"en": "Hexadecimal",
+"lv": 1,
+"level": "기초",
+"hint": "컴퓨터가 수를 표현하는 진법과 서로 바꾸는 방법",
+"category": "컴퓨터구조",
+"domain": "컴퓨터공학"
+},
+"arch-02": {
+"ko": "2의 보수",
+"en": "Two's complement",
+"lv": 1,
+"level": "기초",
+"hint": "컴퓨터가 음수를 표현하는 대표적인 방법",
+"category": "컴퓨터구조",
+"domain": "컴퓨터공학"
+},
+"arch-03": {
+"ko": "부동소수점 (IEEE 754)",
+"en": "IEEE 754",
+"lv": 2,
+"level": "중급",
+"hint": "컴퓨터가 실수를 표현하는 표준과 오차의 원인",
+"category": "컴퓨터구조",
+"domain": "컴퓨터공학"
+},
+"arch-04": {
+"ko": "논리 게이트",
+"en": "Logic gate",
+"lv": 1,
+"level": "기초",
+"hint": "AND, OR, NOT 등 디지털 회로의 기본 부품",
+"category": "컴퓨터구조",
+"domain": "컴퓨터공학"
+},
+"arch-05": {
+"ko": "플립플롭",
+"en": "Flip-flop (electronics)",
+"lv": 2,
+"level": "중급",
+"hint": "1비트를 기억하는 순차 논리 회로",
+"category": "컴퓨터구조",
+"domain": "컴퓨터공학"
+},
+"arch-06": {
+"ko": "폰 노이만 구조",
+"en": "Von Neumann architecture",
+"lv": 1,
+"level": "기초",
+"hint": "프로그램과 데이터를 같은 메모리에 두는 컴퓨터 설계",
+"category": "컴퓨터구조",
+"domain": "컴퓨터공학"
+},
+"arch-07": {
+"ko": "하버드 구조",
+"en": "Harvard architecture",
+"lv": 2,
+"level": "중급",
+"hint": "명령어와 데이터 메모리를 분리한 컴퓨터 설계",
+"category": "컴퓨터구조",
+"domain": "컴퓨터공학"
+},
+"arch-08": {
+"ko": "레지스터",
+"en": "Processor register",
+"lv": 1,
+"level": "기초",
+"hint": "CPU 안에 있는 가장 빠른 저장 공간과 그 종류",
+"category": "컴퓨터구조",
+"domain": "컴퓨터공학"
+},
+"arch-09": {
+"ko": "ALU",
+"en": "Arithmetic logic unit",
+"lv": 1,
+"level": "기초",
+"hint": "CPU에서 계산을 담당하는 부분",
+"category": "컴퓨터구조",
+"domain": "컴퓨터공학"
+},
+"arch-10": {
+"ko": "명령어 사이클",
+"en": "Instruction cycle",
+"lv": 1,
+"level": "기초",
+"hint": "CPU가 명령어 하나를 처리하는 단계들",
+"category": "컴퓨터구조",
+"domain": "컴퓨터공학"
+},
+"arch-11": {
+"ko": "주소 지정 방식",
+"en": "Addressing mode",
+"lv": 2,
+"level": "중급",
+"hint": "명령어가 피연산자의 위치를 가리키는 여러 방법",
+"category": "컴퓨터구조",
+"domain": "컴퓨터공학"
+},
+"arch-12": {
+"ko": "RISC와 CISC",
+"en": "Reduced instruction set computer",
+"lv": 2,
+"level": "중급",
+"hint": "명령어 집합을 단순하게 할지 풍부하게 할지에 대한 설계 철학",
+"category": "컴퓨터구조",
+"domain": "컴퓨터공학"
+},
+"arch-13": {
+"ko": "메모리 계층 구조",
+"en": "Memory hierarchy",
+"lv": 1,
+"level": "기초",
+"hint": "속도·용량·가격에 따라 저장 장치를 층층이 배치하는 구조",
+"category": "컴퓨터구조",
+"domain": "컴퓨터공학"
+},
+"arch-14": {
+"ko": "캐시 메모리",
+"en": "CPU cache",
+"lv": 2,
+"level": "중급",
+"hint": "CPU와 메인 메모리 사이의 속도 차이를 줄이는 장치",
+"category": "컴퓨터구조",
+"domain": "컴퓨터공학"
+},
+"arch-15": {
+"ko": "참조 지역성",
+"en": "Locality of reference",
+"lv": 2,
+"level": "중급",
+"hint": "캐시가 효과적인 이유가 되는 프로그램의 접근 패턴",
+"category": "컴퓨터구조",
+"domain": "컴퓨터공학"
+},
+"arch-16": {
+"ko": "캐시 매핑 방식",
+"en": "Cache placement policies",
+"lv": 3,
+"level": "심화",
+"hint": "메모리 블록을 캐시 어디에 둘지 정하는 방법들",
+"category": "컴퓨터구조",
+"domain": "컴퓨터공학"
+},
+"arch-17": {
+"ko": "파이프라이닝",
+"en": "Instruction pipelining",
+"lv": 2,
+"level": "중급",
+"hint": "명령어 처리를 여러 단계로 겹쳐 실행하는 기법",
+"category": "컴퓨터구조",
+"domain": "컴퓨터공학"
+},
+"arch-18": {
+"ko": "파이프라인 해저드",
+"en": "Hazard (computer architecture)",
+"lv": 3,
+"level": "심화",
+"hint": "파이프라인이 제대로 흐르지 못하게 막는 원인들",
+"category": "컴퓨터구조",
+"domain": "컴퓨터공학"
+},
+"arch-19": {
+"ko": "분기 예측",
+"en": "Branch predictor",
+"lv": 3,
+"level": "심화",
+"hint": "조건문의 결과를 미리 추측해 성능을 높이는 기법",
+"category": "컴퓨터구조",
+"domain": "컴퓨터공학"
+},
+"arch-20": {
+"ko": "DMA",
+"en": "Direct memory access",
+"lv": 2,
+"level": "중급",
+"hint": "CPU를 거치지 않고 장치와 메모리가 데이터를 주고받는 방식",
+"category": "컴퓨터구조",
+"domain": "컴퓨터공학"
+},
+"arch-21": {
+"ko": "버스",
+"en": "Bus (computing)",
+"lv": 1,
+"level": "기초",
+"hint": "컴퓨터 부품들 사이에 데이터를 실어 나르는 통로",
+"category": "컴퓨터구조",
+"domain": "컴퓨터공학"
+},
+"arch-22": {
+"ko": "엔디언",
+"en": "Endianness",
+"lv": 2,
+"level": "중급",
+"hint": "여러 바이트로 된 값을 메모리에 저장하는 순서",
+"category": "컴퓨터구조",
+"domain": "컴퓨터공학"
+},
+"arch-23": {
+"ko": "멀티코어 프로세서",
+"en": "Multi-core processor",
+"lv": 1,
+"level": "기초",
+"hint": "하나의 칩에 여러 개의 처리 장치를 넣은 CPU",
+"category": "컴퓨터구조",
+"domain": "컴퓨터공학"
+},
+"arch-24": {
+"ko": "GPU",
+"en": "Graphics processing unit",
+"lv": 1,
+"level": "기초",
+"hint": "대량의 단순 계산을 병렬로 처리하는 프로세서",
+"category": "컴퓨터구조",
+"domain": "컴퓨터공학"
+},
+"arch-25": {
+"ko": "암달의 법칙",
+"en": "Amdahl's law",
+"lv": 3,
+"level": "심화",
+"hint": "병렬화로 얻을 수 있는 성능 향상의 한계",
+"category": "컴퓨터구조",
+"domain": "컴퓨터공학"
+},
+"arch-26": {
+"ko": "폴링과 인터럽트 방식 입출력",
+"en": "Polling (computer science)",
+"lv": 2,
+"level": "중급",
+"hint": "입출력 장치의 상태를 CPU가 확인하는 두 가지 방식",
+"category": "컴퓨터구조",
+"domain": "컴퓨터공학"
+},
+"net-01": {
+"ko": "OSI 7계층",
+"en": "OSI model",
+"lv": 1,
+"level": "기초",
+"hint": "네트워크 통신을 일곱 단계로 나눈 참조 모델",
+"category": "네트워크",
+"domain": "컴퓨터공학"
+},
+"net-02": {
+"ko": "TCP/IP 모델",
+"en": "Internet protocol suite",
+"lv": 1,
+"level": "기초",
+"hint": "실제 인터넷이 쓰는 계층 구조와 프로토콜 묶음",
+"category": "네트워크",
+"domain": "컴퓨터공학"
+},
+"net-03": {
+"ko": "TCP 3-way 핸드셰이크",
+"en": "Transmission Control Protocol",
+"lv": 2,
+"level": "중급",
+"hint": "TCP가 연결을 맺을 때 주고받는 세 번의 신호",
+"category": "네트워크",
+"domain": "컴퓨터공학"
+},
+"net-04": {
+"ko": "UDP",
+"en": "User Datagram Protocol",
+"lv": 1,
+"level": "기초",
+"hint": "연결 없이 빠르게 보내는 전송 계층 프로토콜과 쓰임새",
+"category": "네트워크",
+"domain": "컴퓨터공학"
+},
+"net-05": {
+"ko": "IP 주소",
+"en": "IP address",
+"lv": 1,
+"level": "기초",
+"hint": "인터넷에서 기기를 구분하는 주소 체계",
+"category": "네트워크",
+"domain": "컴퓨터공학"
+},
+"net-06": {
+"ko": "서브넷 마스크",
+"en": "Subnet",
+"lv": 2,
+"level": "중급",
+"hint": "하나의 네트워크를 더 작게 나누는 방법",
+"category": "네트워크",
+"domain": "컴퓨터공학"
+},
+"net-07": {
+"ko": "CIDR",
+"en": "Classless Inter-Domain Routing",
+"lv": 2,
+"level": "중급",
+"hint": "클래스 구분 없이 IP 주소를 유연하게 나누는 표기법",
+"category": "네트워크",
+"domain": "컴퓨터공학"
+},
+"net-08": {
+"ko": "IPv6",
+"en": "IPv6",
+"lv": 2,
+"level": "중급",
+"hint": "IPv4 주소 고갈을 해결하기 위한 새 인터넷 프로토콜",
+"category": "네트워크",
+"domain": "컴퓨터공학"
+},
+"net-09": {
+"ko": "DNS",
+"en": "Domain Name System",
+"lv": 1,
+"level": "기초",
+"hint": "사람이 읽는 주소를 IP 주소로 바꿔 주는 시스템",
+"category": "네트워크",
+"domain": "컴퓨터공학"
+},
+"net-10": {
+"ko": "DHCP",
+"en": "Dynamic Host Configuration Protocol",
+"lv": 1,
+"level": "기초",
+"hint": "기기에 IP 주소를 자동으로 나눠 주는 프로토콜",
+"category": "네트워크",
+"domain": "컴퓨터공학"
+},
+"net-11": {
+"ko": "ARP",
+"en": "Address Resolution Protocol",
+"lv": 2,
+"level": "중급",
+"hint": "IP 주소로 같은 네트워크 기기의 물리 주소를 알아내는 방법",
+"category": "네트워크",
+"domain": "컴퓨터공학"
+},
+"net-12": {
+"ko": "NAT",
+"en": "Network address translation",
+"lv": 2,
+"level": "중급",
+"hint": "여러 기기가 공인 IP 하나를 나눠 쓰게 하는 기술",
+"category": "네트워크",
+"domain": "컴퓨터공학"
+},
+"net-13": {
+"ko": "MAC 주소",
+"en": "MAC address",
+"lv": 1,
+"level": "기초",
+"hint": "네트워크 장치마다 붙은 물리적 주소",
+"category": "네트워크",
+"domain": "컴퓨터공학"
+},
+"net-14": {
+"ko": "이더넷",
+"en": "Ethernet",
+"lv": 1,
+"level": "기초",
+"hint": "유선 LAN에서 가장 널리 쓰이는 기술",
+"category": "네트워크",
+"domain": "컴퓨터공학"
+},
+"net-15": {
+"ko": "스위치",
+"en": "Network switch",
+"lv": 1,
+"level": "기초",
+"hint": "같은 네트워크 안에서 프레임을 목적지로 전달하는 장비",
+"category": "네트워크",
+"domain": "컴퓨터공학"
+},
+"net-16": {
+"ko": "라우터",
+"en": "Router (computing)",
+"lv": 1,
+"level": "기초",
+"hint": "서로 다른 네트워크 사이에서 패킷의 길을 정하는 장비",
+"category": "네트워크",
+"domain": "컴퓨터공학"
+},
+"net-17": {
+"ko": "VLAN",
+"en": "VLAN",
+"lv": 2,
+"level": "중급",
+"hint": "물리적으로 같은 스위치를 논리적으로 나누는 기술",
+"category": "네트워크",
+"domain": "컴퓨터공학"
+},
+"net-18": {
+"ko": "라우팅 프로토콜",
+"en": "Routing protocol",
+"lv": 2,
+"level": "중급",
+"hint": "라우터들이 경로 정보를 주고받는 규칙들",
+"category": "네트워크",
+"domain": "컴퓨터공학"
+},
+"net-19": {
+"ko": "OSPF",
+"en": "Open Shortest Path First",
+"lv": 3,
+"level": "심화",
+"hint": "링크 상태 정보를 이용하는 내부 라우팅 프로토콜",
+"category": "네트워크",
+"domain": "컴퓨터공학"
+},
+"net-20": {
+"ko": "BGP",
+"en": "Border Gateway Protocol",
+"lv": 3,
+"level": "심화",
+"hint": "인터넷의 큰 네트워크들 사이를 잇는 라우팅 프로토콜",
+"category": "네트워크",
+"domain": "컴퓨터공학"
+},
+"net-21": {
+"ko": "ICMP",
+"en": "Internet Control Message Protocol",
+"lv": 2,
+"level": "중급",
+"hint": "ping과 traceroute가 사용하는 오류·제어 메시지 프로토콜",
+"category": "네트워크",
+"domain": "컴퓨터공학"
+},
+"net-22": {
+"ko": "흐름 제어",
+"en": "Flow control (data)",
+"lv": 2,
+"level": "중급",
+"hint": "받는 쪽이 감당할 수 있는 속도로 보내도록 조절하는 방법",
+"category": "네트워크",
+"domain": "컴퓨터공학"
+},
+"net-23": {
+"ko": "혼잡 제어",
+"en": "TCP congestion control",
+"lv": 3,
+"level": "심화",
+"hint": "네트워크가 막히지 않도록 TCP가 보내는 양을 조절하는 방법",
+"category": "네트워크",
+"domain": "컴퓨터공학"
+},
+"net-24": {
+"ko": "슬라이딩 윈도우",
+"en": "Sliding window protocol",
+"lv": 2,
+"level": "중급",
+"hint": "여러 패킷을 확인 응답 없이 연속으로 보내는 방식",
+"category": "네트워크",
+"domain": "컴퓨터공학"
+},
+"net-25": {
+"ko": "CSMA/CD",
+"en": "Carrier-sense multiple access with collision detection",
+"lv": 2,
+"level": "중급",
+"hint": "유선 LAN에서 충돌을 감지하고 다시 보내는 방식",
+"category": "네트워크",
+"domain": "컴퓨터공학"
+},
+"net-26": {
+"ko": "포트 번호",
+"en": "Port (computer networking)",
+"lv": 1,
+"level": "기초",
+"hint": "한 컴퓨터 안에서 어떤 프로그램과 통신할지 구분하는 번호",
+"category": "네트워크",
+"domain": "컴퓨터공학"
+},
+"net-27": {
+"ko": "소켓",
+"en": "Network socket",
+"lv": 2,
+"level": "중급",
+"hint": "프로그램이 네트워크 통신을 하는 끝점과 그 API",
+"category": "네트워크",
+"domain": "컴퓨터공학"
+},
+"net-28": {
+"ko": "QUIC",
+"en": "QUIC",
+"lv": 3,
+"level": "심화",
+"hint": "UDP 위에서 동작하는 차세대 전송 프로토콜 (HTTP/3)",
+"category": "네트워크",
+"domain": "컴퓨터공학"
+},
+"db-01": {
+"ko": "관계형 데이터베이스",
+"en": "Relational database",
+"lv": 1,
+"level": "기초",
+"hint": "데이터를 표(릴레이션) 형태로 저장하고 관리하는 방식",
+"category": "데이터베이스",
+"domain": "컴퓨터공학"
+},
+"db-02": {
+"ko": "SQL",
+"en": "SQL",
+"lv": 1,
+"level": "기초",
+"hint": "관계형 데이터베이스를 다루는 표준 언어와 그 분류",
+"category": "데이터베이스",
+"domain": "컴퓨터공학"
+},
+"db-03": {
+"ko": "기본키",
+"en": "Primary key",
+"lv": 1,
+"level": "기초",
+"hint": "테이블의 각 행을 유일하게 구분하는 열",
+"category": "데이터베이스",
+"domain": "컴퓨터공학"
+},
+"db-04": {
+"ko": "후보키와 슈퍼키",
+"en": "Candidate key",
+"lv": 2,
+"level": "중급",
+"hint": "행을 구분할 수 있는 키들 사이의 관계",
+"category": "데이터베이스",
+"domain": "컴퓨터공학"
+},
+"db-05": {
+"ko": "외래키와 참조 무결성",
+"en": "Referential integrity",
+"lv": 2,
+"level": "중급",
+"hint": "다른 테이블을 가리키는 값이 항상 올바르도록 지키는 규칙",
+"category": "데이터베이스",
+"domain": "컴퓨터공학"
+},
+"db-06": {
+"ko": "ER 다이어그램",
+"en": "Entity–relationship model",
+"lv": 1,
+"level": "기초",
+"hint": "데이터베이스를 설계할 때 개체와 관계를 그림으로 나타내는 방법",
+"category": "데이터베이스",
+"domain": "컴퓨터공학"
+},
+"db-07": {
+"ko": "정규화",
+"en": "Database normalization",
+"lv": 2,
+"level": "중급",
+"hint": "중복과 이상 현상을 줄이기 위해 테이블을 나누는 과정",
+"category": "데이터베이스",
+"domain": "컴퓨터공학"
+},
+"db-08": {
+"ko": "함수 종속",
+"en": "Functional dependency",
+"lv": 2,
+"level": "중급",
+"hint": "한 속성의 값이 다른 속성의 값을 결정하는 관계",
+"category": "데이터베이스",
+"domain": "컴퓨터공학"
+},
+"db-09": {
+"ko": "제1·2·3 정규형",
+"en": "Third normal form",
+"lv": 2,
+"level": "중급",
+"hint": "정규화의 단계별 조건",
+"category": "데이터베이스",
+"domain": "컴퓨터공학"
+},
+"db-10": {
+"ko": "BCNF",
+"en": "Boyce–Codd normal form",
+"lv": 3,
+"level": "심화",
+"hint": "제3 정규형보다 엄격한 정규화 조건",
+"category": "데이터베이스",
+"domain": "컴퓨터공학"
+},
+"db-11": {
+"ko": "반정규화",
+"en": "Denormalization",
+"lv": 2,
+"level": "중급",
+"hint": "성능을 위해 일부러 중복을 허용하는 설계",
+"category": "데이터베이스",
+"domain": "컴퓨터공학"
+},
+"db-12": {
+"ko": "트랜잭션 ACID",
+"en": "ACID",
+"lv": 2,
+"level": "중급",
+"hint": "트랜잭션이 안전하게 처리되기 위해 지켜야 할 네 가지 성질",
+"category": "데이터베이스",
+"domain": "컴퓨터공학"
+},
+"db-13": {
+"ko": "트랜잭션 격리 수준",
+"en": "Isolation (database systems)",
+"lv": 3,
+"level": "심화",
+"hint": "동시에 실행되는 트랜잭션끼리 얼마나 서로를 볼 수 있는지 정한 단계",
+"category": "데이터베이스",
+"domain": "컴퓨터공학"
+},
+"db-14": {
+"ko": "동시성 제어",
+"en": "Concurrency control",
+"lv": 2,
+"level": "중급",
+"hint": "여러 사용자가 동시에 데이터를 바꿀 때 일관성을 지키는 방법",
+"category": "데이터베이스",
+"domain": "컴퓨터공학"
+},
+"db-15": {
+"ko": "2단계 잠금 (2PL)",
+"en": "Two-phase locking",
+"lv": 3,
+"level": "심화",
+"hint": "잠금을 얻는 단계와 푸는 단계를 나누는 동시성 제어 규약",
+"category": "데이터베이스",
+"domain": "컴퓨터공학"
+},
+"db-16": {
+"ko": "MVCC",
+"en": "Multiversion concurrency control",
+"lv": 3,
+"level": "심화",
+"hint": "데이터의 여러 버전을 두어 읽기와 쓰기가 서로 막지 않게 하는 방법",
+"category": "데이터베이스",
+"domain": "컴퓨터공학"
+},
+"db-17": {
+"ko": "로그 기반 회복",
+"en": "Write-ahead logging",
+"lv": 3,
+"level": "심화",
+"hint": "장애가 나도 데이터를 복구할 수 있게 로그를 먼저 쓰는 기법",
+"category": "데이터베이스",
+"domain": "컴퓨터공학"
+},
+"db-18": {
+"ko": "조인",
+"en": "Join (SQL)",
+"lv": 1,
+"level": "기초",
+"hint": "여러 테이블을 연결해서 조회하는 방법과 종류",
+"category": "데이터베이스",
+"domain": "컴퓨터공학"
+},
+"db-19": {
+"ko": "인덱스",
+"en": "Database index",
+"lv": 2,
+"level": "중급",
+"hint": "검색을 빠르게 하기 위한 보조 구조와 그 비용",
+"category": "데이터베이스",
+"domain": "컴퓨터공학"
+},
+"db-20": {
+"ko": "뷰",
+"en": "View (SQL)",
+"lv": 1,
+"level": "기초",
+"hint": "저장된 쿼리를 가상의 테이블처럼 쓰는 기능",
+"category": "데이터베이스",
+"domain": "컴퓨터공학"
+},
+"db-21": {
+"ko": "저장 프로시저",
+"en": "Stored procedure",
+"lv": 2,
+"level": "중급",
+"hint": "데이터베이스 안에 저장해 두고 호출하는 SQL 묶음",
+"category": "데이터베이스",
+"domain": "컴퓨터공학"
+},
+"db-22": {
+"ko": "트리거",
+"en": "Database trigger",
+"lv": 2,
+"level": "중급",
+"hint": "특정 데이터 변경이 일어나면 자동으로 실행되는 동작",
+"category": "데이터베이스",
+"domain": "컴퓨터공학"
+},
+"db-23": {
+"ko": "관계 대수",
+"en": "Relational algebra",
+"lv": 2,
+"level": "중급",
+"hint": "SQL의 이론적 바탕이 되는 연산 체계",
+"category": "데이터베이스",
+"domain": "컴퓨터공학"
+},
+"db-24": {
+"ko": "NoSQL",
+"en": "NoSQL",
+"lv": 1,
+"level": "기초",
+"hint": "표 형식이 아닌 방식으로 데이터를 저장하는 데이터베이스들",
+"category": "데이터베이스",
+"domain": "컴퓨터공학"
+},
+"db-25": {
+"ko": "CAP 정리",
+"en": "CAP theorem",
+"lv": 3,
+"level": "심화",
+"hint": "분산 시스템이 세 가지 성질을 동시에 모두 만족할 수 없다는 정리",
+"category": "데이터베이스",
+"domain": "컴퓨터공학"
+},
+"db-26": {
+"ko": "샤딩",
+"en": "Shard (database architecture)",
+"lv": 3,
+"level": "심화",
+"hint": "데이터를 여러 서버에 나누어 저장하는 수평 분할 기법",
+"category": "데이터베이스",
+"domain": "컴퓨터공학"
+},
+"db-27": {
+"ko": "복제 (레플리케이션)",
+"en": "Replication (computing)",
+"lv": 2,
+"level": "중급",
+"hint": "같은 데이터를 여러 서버에 복사해 두는 기법과 목적",
+"category": "데이터베이스",
+"domain": "컴퓨터공학"
+},
+"sec-01": {
+"ko": "정보보안 3요소 (CIA)",
+"en": "Information security",
+"lv": 1,
+"level": "기초",
+"hint": "보안이 지켜야 할 세 가지 기본 목표",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-02": {
+"ko": "SQL 인젝션",
+"en": "SQL injection",
+"lv": 1,
+"level": "기초",
+"hint": "입력값으로 데이터베이스 쿼리를 조작하는 공격과 방어",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-03": {
+"ko": "XSS",
+"en": "Cross-site scripting",
+"lv": 1,
+"level": "기초",
+"hint": "웹페이지에 악성 스크립트를 심어 다른 사용자에게 실행시키는 공격",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-04": {
+"ko": "CSRF",
+"en": "Cross-site request forgery",
+"lv": 2,
+"level": "중급",
+"hint": "로그인한 사용자가 모르게 요청을 보내게 만드는 공격",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-05": {
+"ko": "경로 조작 (디렉터리 트래버설)",
+"en": "Directory traversal attack",
+"lv": 2,
+"level": "중급",
+"hint": "파일 경로를 조작해 허용되지 않은 파일에 접근하는 공격",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-06": {
+"ko": "세션 하이재킹",
+"en": "Session hijacking",
+"lv": 2,
+"level": "중급",
+"hint": "다른 사람의 로그인 상태를 가로채는 공격",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-07": {
+"ko": "OWASP Top 10",
+"en": "OWASP",
+"lv": 1,
+"level": "기초",
+"hint": "가장 위험한 웹 애플리케이션 취약점 목록과 이를 발표하는 단체",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-08": {
+"ko": "대칭키 암호",
+"en": "Symmetric-key algorithm",
+"lv": 1,
+"level": "기초",
+"hint": "암호화와 복호화에 같은 키를 쓰는 방식과 키 배송 문제",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-09": {
+"ko": "공개키 암호",
+"en": "Public-key cryptography",
+"lv": 1,
+"level": "기초",
+"hint": "공개하는 키와 숨기는 키를 따로 쓰는 암호 방식",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-10": {
+"ko": "RSA",
+"en": "RSA cryptosystem",
+"lv": 2,
+"level": "중급",
+"hint": "큰 수를 다루는 수학적 난제에 기반한 대표적 공개키 암호",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-11": {
+"ko": "AES",
+"en": "Advanced Encryption Standard",
+"lv": 2,
+"level": "중급",
+"hint": "현재 가장 널리 쓰이는 대칭키 블록 암호 표준",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-12": {
+"ko": "DES와 3DES",
+"en": "Data Encryption Standard",
+"lv": 2,
+"level": "중급",
+"hint": "과거 표준 블록 암호와 그것이 대체된 이유",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-13": {
+"ko": "블록 암호 운용 모드",
+"en": "Block cipher mode of operation",
+"lv": 3,
+"level": "심화",
+"hint": "긴 데이터를 블록 암호로 암호화하는 여러 방법 (ECB, CBC 등)",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-14": {
+"ko": "디피-헬만 키 교환",
+"en": "Diffie–Hellman key exchange",
+"lv": 2,
+"level": "중급",
+"hint": "도청되는 통신로에서도 비밀 키를 함께 만들어 내는 방법",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-15": {
+"ko": "타원 곡선 암호",
+"en": "Elliptic-curve cryptography",
+"lv": 3,
+"level": "심화",
+"hint": "짧은 키로도 높은 안전성을 내는 공개키 암호",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-16": {
+"ko": "해시 함수",
+"en": "Cryptographic hash function",
+"lv": 1,
+"level": "기초",
+"hint": "임의 길이 데이터를 고정 길이 값으로 바꾸는 함수와 보안 요건",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-17": {
+"ko": "SHA-2",
+"en": "SHA-2",
+"lv": 2,
+"level": "중급",
+"hint": "현재 널리 쓰이는 해시 알고리즘 계열",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-18": {
+"ko": "메시지 인증 코드 (MAC)",
+"en": "Message authentication code",
+"lv": 2,
+"level": "중급",
+"hint": "메시지가 바뀌지 않았고 정당한 상대가 보냈음을 확인하는 값",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-19": {
+"ko": "HMAC",
+"en": "HMAC",
+"lv": 2,
+"level": "중급",
+"hint": "해시 함수와 비밀 키를 결합한 메시지 인증 방식",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-20": {
+"ko": "전자서명",
+"en": "Digital signature",
+"lv": 2,
+"level": "중급",
+"hint": "문서를 누가 작성했는지와 변조 여부를 증명하는 방법",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-21": {
+"ko": "공개키 기반 구조 (PKI)",
+"en": "Public key infrastructure",
+"lv": 2,
+"level": "중급",
+"hint": "공개키가 진짜 그 사람의 것인지 보증하는 체계",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-22": {
+"ko": "디지털 인증서 (X.509)",
+"en": "X.509",
+"lv": 2,
+"level": "중급",
+"hint": "공개키와 소유자 정보를 묶어 인증기관이 서명한 문서",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-23": {
+"ko": "TLS",
+"en": "Transport Layer Security",
+"lv": 2,
+"level": "중급",
+"hint": "HTTPS의 바탕이 되는 암호화 통신 프로토콜과 핸드셰이크",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-24": {
+"ko": "솔트와 패스워드 해싱",
+"en": "Salt (cryptography)",
+"lv": 2,
+"level": "중급",
+"hint": "비밀번호를 안전하게 저장하는 방법",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-25": {
+"ko": "레인보우 테이블",
+"en": "Rainbow table",
+"lv": 2,
+"level": "중급",
+"hint": "미리 계산한 값으로 비밀번호를 알아내는 공격",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-26": {
+"ko": "다중 인증 (MFA)",
+"en": "Multi-factor authentication",
+"lv": 1,
+"level": "기초",
+"hint": "두 가지 이상의 증거로 사용자를 확인하는 인증 방식",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-27": {
+"ko": "커버로스",
+"en": "Kerberos (protocol)",
+"lv": 3,
+"level": "심화",
+"hint": "티켓을 이용해 네트워크에서 사용자를 인증하는 프로토콜",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-28": {
+"ko": "OAuth",
+"en": "OAuth",
+"lv": 2,
+"level": "중급",
+"hint": "비밀번호를 넘기지 않고 다른 서비스에 권한을 위임하는 표준",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-29": {
+"ko": "접근 통제 (DAC·MAC·RBAC)",
+"en": "Access control",
+"lv": 2,
+"level": "중급",
+"hint": "누가 무엇에 접근할 수 있는지 정하는 여러 모델",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-30": {
+"ko": "벨-라파듈라 모델",
+"en": "Bell–LaPadula model",
+"lv": 3,
+"level": "심화",
+"hint": "기밀성을 지키기 위한 보안 모델의 읽기·쓰기 규칙",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-31": {
+"ko": "비바 모델",
+"en": "Biba Integrity Model",
+"lv": 3,
+"level": "심화",
+"hint": "무결성을 지키기 위한 보안 모델의 읽기·쓰기 규칙",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-32": {
+"ko": "버퍼 오버플로",
+"en": "Buffer overflow",
+"lv": 2,
+"level": "중급",
+"hint": "정해진 메모리 공간을 넘치게 써서 프로그램 흐름을 바꾸는 공격",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-33": {
+"ko": "포맷 스트링 공격",
+"en": "Uncontrolled format string",
+"lv": 3,
+"level": "심화",
+"hint": "printf 같은 함수의 서식 문자열을 악용하는 공격",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-34": {
+"ko": "ASLR",
+"en": "Address space layout randomization",
+"lv": 3,
+"level": "심화",
+"hint": "메모리 배치를 예측하기 어렵게 만드는 방어 기법",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-35": {
+"ko": "DEP (NX 비트)",
+"en": "Executable-space protection",
+"lv": 3,
+"level": "심화",
+"hint": "데이터 영역에서 코드가 실행되지 못하게 막는 보호 기법",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-36": {
+"ko": "스택 카나리",
+"en": "Stack buffer overflow",
+"lv": 3,
+"level": "심화",
+"hint": "스택 덮어쓰기를 감지하기 위해 끼워 넣는 값",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-37": {
+"ko": "ROP",
+"en": "Return-oriented programming",
+"lv": 3,
+"level": "심화",
+"hint": "이미 있는 코드 조각을 이어 붙여 원하는 동작을 만드는 공격",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-38": {
+"ko": "방화벽",
+"en": "Firewall (computing)",
+"lv": 1,
+"level": "기초",
+"hint": "정해진 규칙에 따라 네트워크 트래픽을 허용하거나 막는 장치",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-39": {
+"ko": "IDS와 IPS",
+"en": "Intrusion detection system",
+"lv": 2,
+"level": "중급",
+"hint": "침입을 탐지하는 시스템과 차단까지 하는 시스템의 차이",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-40": {
+"ko": "VPN",
+"en": "Virtual private network",
+"lv": 1,
+"level": "기초",
+"hint": "공용 네트워크 위에 안전한 사설 통신로를 만드는 기술",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-41": {
+"ko": "IPsec",
+"en": "IPsec",
+"lv": 3,
+"level": "심화",
+"hint": "IP 계층에서 패킷을 암호화·인증하는 프로토콜 모음",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-42": {
+"ko": "DoS와 DDoS",
+"en": "Denial-of-service attack",
+"lv": 1,
+"level": "기초",
+"hint": "서비스를 마비시키는 공격과 그 유형",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-43": {
+"ko": "SYN 플러딩",
+"en": "SYN flood",
+"lv": 2,
+"level": "중급",
+"hint": "TCP 연결 과정의 약점을 이용한 서비스 거부 공격",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-44": {
+"ko": "ARP 스푸핑",
+"en": "ARP spoofing",
+"lv": 2,
+"level": "중급",
+"hint": "주소 정보를 속여 같은 네트워크의 트래픽을 가로채는 공격",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-45": {
+"ko": "DNS 스푸핑",
+"en": "DNS spoofing",
+"lv": 2,
+"level": "중급",
+"hint": "도메인 이름 조회 결과를 속여 가짜 사이트로 보내는 공격",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-46": {
+"ko": "중간자 공격",
+"en": "Man-in-the-middle attack",
+"lv": 2,
+"level": "중급",
+"hint": "통신하는 두 사람 사이에 몰래 끼어드는 공격",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-47": {
+"ko": "포트 스캐닝",
+"en": "Port scanner",
+"lv": 2,
+"level": "중급",
+"hint": "공격 전에 열린 포트와 서비스를 알아내는 정찰 기법",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-48": {
+"ko": "피싱",
+"en": "Phishing",
+"lv": 1,
+"level": "기초",
+"hint": "믿을 만한 곳인 척 속여 정보를 빼내는 공격",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-49": {
+"ko": "사회공학",
+"en": "Social engineering (security)",
+"lv": 1,
+"level": "기초",
+"hint": "기술이 아닌 사람의 심리를 이용하는 공격",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-50": {
+"ko": "랜섬웨어",
+"en": "Ransomware",
+"lv": 1,
+"level": "기초",
+"hint": "파일을 인질로 잡고 돈을 요구하는 악성코드",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-51": {
+"ko": "트로이 목마",
+"en": "Trojan horse (computing)",
+"lv": 1,
+"level": "기초",
+"hint": "정상 프로그램인 척 숨어드는 악성코드",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-52": {
+"ko": "웜",
+"en": "Computer worm",
+"lv": 1,
+"level": "기초",
+"hint": "스스로 네트워크를 통해 퍼지는 악성코드와 바이러스와의 차이",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-53": {
+"ko": "루트킷",
+"en": "Rootkit",
+"lv": 2,
+"level": "중급",
+"hint": "시스템 깊숙이 숨어 자신의 존재를 감추는 악성코드",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-54": {
+"ko": "백도어",
+"en": "Backdoor (computing)",
+"lv": 1,
+"level": "기초",
+"hint": "정상 인증을 우회해 몰래 들어오는 통로",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-55": {
+"ko": "APT 공격",
+"en": "Advanced persistent threat",
+"lv": 2,
+"level": "중급",
+"hint": "특정 대상을 오랫동안 끈질기게 노리는 공격",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-56": {
+"ko": "제로데이 취약점",
+"en": "Zero-day vulnerability",
+"lv": 2,
+"level": "중급",
+"hint": "패치가 나오기 전에 악용되는 취약점",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-57": {
+"ko": "CVE와 CVSS",
+"en": "Common Vulnerabilities and Exposures",
+"lv": 1,
+"level": "기초",
+"hint": "알려진 취약점에 번호를 붙이고 위험도를 점수로 매기는 체계",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-58": {
+"ko": "침투 테스트",
+"en": "Penetration test",
+"lv": 2,
+"level": "중급",
+"hint": "공격자 입장에서 시스템을 점검하는 보안 평가",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-59": {
+"ko": "허니팟",
+"en": "Honeypot (computing)",
+"lv": 2,
+"level": "중급",
+"hint": "공격자를 유인해 관찰하기 위한 미끼 시스템",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-60": {
+"ko": "SIEM",
+"en": "Security information and event management",
+"lv": 2,
+"level": "중급",
+"hint": "여러 보안 장비의 로그를 모아 분석하는 시스템",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-61": {
+"ko": "디지털 포렌식",
+"en": "Digital forensics",
+"lv": 2,
+"level": "중급",
+"hint": "디지털 증거를 수집·분석하는 절차와 원칙",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-62": {
+"ko": "스테가노그래피",
+"en": "Steganography",
+"lv": 2,
+"level": "중급",
+"hint": "메시지를 다른 데이터 속에 숨기는 기법",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-63": {
+"ko": "제로 트러스트",
+"en": "Zero trust architecture",
+"lv": 2,
+"level": "중급",
+"hint": "\"절대 신뢰하지 말고 항상 검증하라\"는 보안 모델",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-64": {
+"ko": "위험 관리",
+"en": "IT risk management",
+"lv": 2,
+"level": "중급",
+"hint": "자산·위협·취약점을 분석하고 대응 방법을 정하는 과정",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-65": {
+"ko": "정보보호 관리체계 (ISO/IEC 27001)",
+"en": "ISO/IEC 27001",
+"lv": 2,
+"level": "중급",
+"hint": "정보보호 관리체계에 대한 국제 표준 (ISMS-P와 비교)",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"sec-66": {
+"ko": "개인정보 비식별화",
+"en": "De-identification",
+"lv": 2,
+"level": "중급",
+"hint": "개인을 알아볼 수 없게 데이터를 가공하는 기법",
+"category": "정보보안",
+"domain": "컴퓨터공학"
+},
+"pl-01": {
+"ko": "컴파일러와 인터프리터",
+"en": "Compiler",
+"lv": 1,
+"level": "기초",
+"hint": "소스 코드를 실행하는 두 가지 방식과 차이",
+"category": "프로그래밍 언어",
+"domain": "컴퓨터공학"
+},
+"pl-02": {
+"ko": "링커와 로더",
+"en": "Linker (computing)",
+"lv": 2,
+"level": "중급",
+"hint": "컴파일된 조각들을 묶어 실행 파일로 만들고 메모리에 올리는 과정",
+"category": "프로그래밍 언어",
+"domain": "컴퓨터공학"
+},
+"pl-03": {
+"ko": "정적 라이브러리와 공유 라이브러리",
+"en": "Library (computing)",
+"lv": 2,
+"level": "중급",
+"hint": "라이브러리를 실행 파일에 포함하는 방식과 실행 시 불러오는 방식",
+"category": "프로그래밍 언어",
+"domain": "컴퓨터공학"
+},
+"pl-04": {
+"ko": "바이트코드",
+"en": "Bytecode",
+"lv": 2,
+"level": "중급",
+"hint": "가상 머신이 실행하는 중간 형태의 코드",
+"category": "프로그래밍 언어",
+"domain": "컴퓨터공학"
+},
+"pl-05": {
+"ko": "JVM",
+"en": "Java virtual machine",
+"lv": 2,
+"level": "중급",
+"hint": "자바가 \"한 번 작성하면 어디서나 실행\"되는 이유",
+"category": "프로그래밍 언어",
+"domain": "컴퓨터공학"
+},
+"pl-06": {
+"ko": "JIT 컴파일",
+"en": "Just-in-time compilation",
+"lv": 3,
+"level": "심화",
+"hint": "실행 중에 자주 쓰이는 코드를 기계어로 바꾸는 기법",
+"category": "프로그래밍 언어",
+"domain": "컴퓨터공학"
+},
+"pl-07": {
+"ko": "어휘 분석",
+"en": "Lexical analysis",
+"lv": 3,
+"level": "심화",
+"hint": "컴파일러가 소스 코드를 토큰으로 쪼개는 단계",
+"category": "프로그래밍 언어",
+"domain": "컴퓨터공학"
+},
+"pl-08": {
+"ko": "구문 분석",
+"en": "Parsing",
+"lv": 3,
+"level": "심화",
+"hint": "토큰들이 문법에 맞는지 검사하고 구조를 만드는 단계",
+"category": "프로그래밍 언어",
+"domain": "컴퓨터공학"
+},
+"pl-09": {
+"ko": "추상 구문 트리 (AST)",
+"en": "Abstract syntax tree",
+"lv": 3,
+"level": "심화",
+"hint": "프로그램의 구조를 트리로 나타낸 것",
+"category": "프로그래밍 언어",
+"domain": "컴퓨터공학"
+},
+"pl-10": {
+"ko": "포인터",
+"en": "Pointer (computer programming)",
+"lv": 1,
+"level": "기초",
+"hint": "메모리 주소를 값으로 갖는 변수",
+"category": "프로그래밍 언어",
+"domain": "컴퓨터공학"
+},
+"pl-11": {
+"ko": "스택 영역과 힙 영역",
+"en": "Stack-based memory allocation",
+"lv": 2,
+"level": "중급",
+"hint": "프로그램 메모리에서 지역 변수와 동적 할당이 놓이는 곳",
+"category": "프로그래밍 언어",
+"domain": "컴퓨터공학"
+},
+"pl-12": {
+"ko": "가비지 컬렉션",
+"en": "Garbage collection (computer science)",
+"lv": 2,
+"level": "중급",
+"hint": "쓰지 않는 메모리를 자동으로 회수하는 방법",
+"category": "프로그래밍 언어",
+"domain": "컴퓨터공학"
+},
+"pl-13": {
+"ko": "메모리 누수",
+"en": "Memory leak",
+"lv": 1,
+"level": "기초",
+"hint": "다 쓴 메모리를 돌려주지 않아 생기는 문제",
+"category": "프로그래밍 언어",
+"domain": "컴퓨터공학"
+},
+"pl-14": {
+"ko": "객체 지향 프로그래밍",
+"en": "Object-oriented programming",
+"lv": 1,
+"level": "기초",
+"hint": "데이터와 동작을 객체로 묶어 프로그램을 짜는 방식",
+"category": "프로그래밍 언어",
+"domain": "컴퓨터공학"
+},
+"pl-15": {
+"ko": "캡슐화",
+"en": "Encapsulation (computer programming)",
+"lv": 1,
+"level": "기초",
+"hint": "객체 내부를 숨기고 정해진 방법으로만 접근하게 하는 원칙",
+"category": "프로그래밍 언어",
+"domain": "컴퓨터공학"
+},
+"pl-16": {
+"ko": "상속",
+"en": "Inheritance (object-oriented programming)",
+"lv": 1,
+"level": "기초",
+"hint": "기존 클래스의 특성을 물려받아 새 클래스를 만드는 것",
+"category": "프로그래밍 언어",
+"domain": "컴퓨터공학"
+},
+"pl-17": {
+"ko": "다형성",
+"en": "Polymorphism (computer science)",
+"lv": 2,
+"level": "중급",
+"hint": "같은 이름의 동작이 대상에 따라 다르게 수행되는 성질",
+"category": "프로그래밍 언어",
+"domain": "컴퓨터공학"
+},
+"pl-18": {
+"ko": "오버로딩과 오버라이딩",
+"en": "Method overriding",
+"lv": 2,
+"level": "중급",
+"hint": "이름이 같은 메서드를 다르게 정의하는 두 방식",
+"category": "프로그래밍 언어",
+"domain": "컴퓨터공학"
+},
+"pl-19": {
+"ko": "인터페이스와 추상 클래스",
+"en": "Interface (object-oriented programming)",
+"lv": 2,
+"level": "중급",
+"hint": "구현을 강제하는 두 가지 방법의 차이",
+"category": "프로그래밍 언어",
+"domain": "컴퓨터공학"
+},
+"pl-20": {
+"ko": "함수형 프로그래밍",
+"en": "Functional programming",
+"lv": 2,
+"level": "중급",
+"hint": "상태 변경을 피하고 함수 조합으로 프로그램을 짜는 방식",
+"category": "프로그래밍 언어",
+"domain": "컴퓨터공학"
+},
+"pl-21": {
+"ko": "고차 함수",
+"en": "Higher-order function",
+"lv": 2,
+"level": "중급",
+"hint": "함수를 인자로 받거나 함수를 돌려주는 함수",
+"category": "프로그래밍 언어",
+"domain": "컴퓨터공학"
+},
+"pl-22": {
+"ko": "클로저",
+"en": "Closure (computer programming)",
+"lv": 2,
+"level": "중급",
+"hint": "함수가 만들어질 때의 주변 변수를 기억하는 것",
+"category": "프로그래밍 언어",
+"domain": "컴퓨터공학"
+},
+"pl-23": {
+"ko": "타입 시스템 (정적·동적)",
+"en": "Type system",
+"lv": 2,
+"level": "중급",
+"hint": "변수 타입을 언제 검사하는지에 따른 언어 분류",
+"category": "프로그래밍 언어",
+"domain": "컴퓨터공학"
+},
+"pl-24": {
+"ko": "제네릭",
+"en": "Generic programming",
+"lv": 2,
+"level": "중급",
+"hint": "타입을 매개변수로 받아 재사용하는 프로그래밍",
+"category": "프로그래밍 언어",
+"domain": "컴퓨터공학"
+},
+"pl-25": {
+"ko": "값 전달과 참조 전달",
+"en": "Evaluation strategy",
+"lv": 2,
+"level": "중급",
+"hint": "함수에 인자를 넘길 때 무엇이 복사되는가",
+"category": "프로그래밍 언어",
+"domain": "컴퓨터공학"
+},
+"pl-26": {
+"ko": "예외 처리",
+"en": "Exception handling",
+"lv": 1,
+"level": "기초",
+"hint": "실행 중 오류를 잡아 처리하는 방법",
+"category": "프로그래밍 언어",
+"domain": "컴퓨터공학"
+},
+"pl-27": {
+"ko": "코루틴",
+"en": "Coroutine",
+"lv": 3,
+"level": "심화",
+"hint": "실행을 중간에 멈췄다가 이어서 할 수 있는 함수",
+"category": "프로그래밍 언어",
+"domain": "컴퓨터공학"
+},
+"pl-28": {
+"ko": "비동기 프로그래밍 (async/await)",
+"en": "Async/await",
+"lv": 2,
+"level": "중급",
+"hint": "기다리는 동안 다른 일을 하도록 코드를 짜는 방법",
+"category": "프로그래밍 언어",
+"domain": "컴퓨터공학"
+},
+"se-01": {
+"ko": "소프트웨어 개발 생명주기 (SDLC)",
+"en": "Systems development life cycle",
+"lv": 1,
+"level": "기초",
+"hint": "소프트웨어가 기획부터 폐기까지 거치는 단계",
+"category": "소프트웨어공학",
+"domain": "컴퓨터공학"
+},
+"se-02": {
+"ko": "폭포수 모델",
+"en": "Waterfall model",
+"lv": 1,
+"level": "기초",
+"hint": "단계를 순서대로 한 번씩 진행하는 전통적인 개발 모델",
+"category": "소프트웨어공학",
+"domain": "컴퓨터공학"
+},
+"se-03": {
+"ko": "나선형 모델",
+"en": "Spiral model",
+"lv": 2,
+"level": "중급",
+"hint": "위험 분석을 반복하며 점점 완성해 가는 개발 모델",
+"category": "소프트웨어공학",
+"domain": "컴퓨터공학"
+},
+"se-04": {
+"ko": "애자일",
+"en": "Agile software development",
+"lv": 1,
+"level": "기초",
+"hint": "변화에 빠르게 대응하는 반복적 개발 철학",
+"category": "소프트웨어공학",
+"domain": "컴퓨터공학"
+},
+"se-05": {
+"ko": "스크럼",
+"en": "Scrum (software development)",
+"lv": 1,
+"level": "기초",
+"hint": "짧은 주기로 일하는 대표적인 애자일 방법론",
+"category": "소프트웨어공학",
+"domain": "컴퓨터공학"
+},
+"se-06": {
+"ko": "요구사항 분석",
+"en": "Requirements analysis",
+"lv": 1,
+"level": "기초",
+"hint": "기능 요구사항과 비기능 요구사항을 정리하는 단계",
+"category": "소프트웨어공학",
+"domain": "컴퓨터공학"
+},
+"se-07": {
+"ko": "UML",
+"en": "Unified Modeling Language",
+"lv": 1,
+"level": "기초",
+"hint": "소프트웨어 설계를 그림으로 표현하는 표준 언어",
+"category": "소프트웨어공학",
+"domain": "컴퓨터공학"
+},
+"se-08": {
+"ko": "유스케이스 다이어그램",
+"en": "Use case diagram",
+"lv": 1,
+"level": "기초",
+"hint": "사용자와 시스템이 주고받는 기능을 나타내는 그림",
+"category": "소프트웨어공학",
+"domain": "컴퓨터공학"
+},
+"se-09": {
+"ko": "클래스 다이어그램",
+"en": "Class diagram",
+"lv": 1,
+"level": "기초",
+"hint": "클래스와 그 관계를 나타내는 그림",
+"category": "소프트웨어공학",
+"domain": "컴퓨터공학"
+},
+"se-10": {
+"ko": "시퀀스 다이어그램",
+"en": "Sequence diagram",
+"lv": 2,
+"level": "중급",
+"hint": "객체들이 주고받는 메시지를 시간 순서로 그린 그림",
+"category": "소프트웨어공학",
+"domain": "컴퓨터공학"
+},
+"se-11": {
+"ko": "디자인 패턴",
+"en": "Software design pattern",
+"lv": 2,
+"level": "중급",
+"hint": "자주 나오는 설계 문제에 대한 검증된 해결 방법 모음",
+"category": "소프트웨어공학",
+"domain": "컴퓨터공학"
+},
+"se-12": {
+"ko": "싱글턴 패턴",
+"en": "Singleton pattern",
+"lv": 2,
+"level": "중급",
+"hint": "인스턴스 개수를 제한하는 생성 패턴",
+"category": "소프트웨어공학",
+"domain": "컴퓨터공학"
+},
+"se-13": {
+"ko": "옵저버 패턴",
+"en": "Observer pattern",
+"lv": 2,
+"level": "중급",
+"hint": "상태 변화를 여러 객체에 자동으로 알리는 패턴",
+"category": "소프트웨어공학",
+"domain": "컴퓨터공학"
+},
+"se-14": {
+"ko": "팩토리 메서드 패턴",
+"en": "Factory method pattern",
+"lv": 2,
+"level": "중급",
+"hint": "객체 생성을 하위 클래스에 맡기는 패턴",
+"category": "소프트웨어공학",
+"domain": "컴퓨터공학"
+},
+"se-15": {
+"ko": "전략 패턴",
+"en": "Strategy pattern",
+"lv": 2,
+"level": "중급",
+"hint": "알고리즘을 바꿔 끼울 수 있게 하는 패턴",
+"category": "소프트웨어공학",
+"domain": "컴퓨터공학"
+},
+"se-16": {
+"ko": "MVC 패턴",
+"en": "Model–view–controller",
+"lv": 2,
+"level": "중급",
+"hint": "데이터, 화면, 제어를 나누는 구조",
+"category": "소프트웨어공학",
+"domain": "컴퓨터공학"
+},
+"se-17": {
+"ko": "SOLID 원칙",
+"en": "SOLID",
+"lv": 2,
+"level": "중급",
+"hint": "객체 지향 설계의 다섯 가지 원칙",
+"category": "소프트웨어공학",
+"domain": "컴퓨터공학"
+},
+"se-18": {
+"ko": "결합도와 응집도",
+"en": "Coupling (computer programming)",
+"lv": 2,
+"level": "중급",
+"hint": "좋은 모듈 설계를 판단하는 두 가지 기준",
+"category": "소프트웨어공학",
+"domain": "컴퓨터공학"
+},
+"se-19": {
+"ko": "단위 테스트",
+"en": "Unit testing",
+"lv": 1,
+"level": "기초",
+"hint": "가장 작은 단위의 코드를 따로 검사하는 테스트",
+"category": "소프트웨어공학",
+"domain": "컴퓨터공학"
+},
+"se-20": {
+"ko": "블랙박스 테스트",
+"en": "Black-box testing",
+"lv": 1,
+"level": "기초",
+"hint": "내부 구조를 보지 않고 입력과 출력만으로 하는 테스트",
+"category": "소프트웨어공학",
+"domain": "컴퓨터공학"
+},
+"se-21": {
+"ko": "화이트박스 테스트",
+"en": "White-box testing",
+"lv": 2,
+"level": "중급",
+"hint": "코드 내부 구조를 보고 경로를 검사하는 테스트",
+"category": "소프트웨어공학",
+"domain": "컴퓨터공학"
+},
+"se-22": {
+"ko": "테스트 주도 개발 (TDD)",
+"en": "Test-driven development",
+"lv": 2,
+"level": "중급",
+"hint": "코드보다 테스트를 먼저 작성하는 개발 방식",
+"category": "소프트웨어공학",
+"domain": "컴퓨터공학"
+},
+"se-23": {
+"ko": "리팩터링",
+"en": "Code refactoring",
+"lv": 2,
+"level": "중급",
+"hint": "동작은 그대로 두고 코드 구조를 개선하는 것",
+"category": "소프트웨어공학",
+"domain": "컴퓨터공학"
+},
+"se-24": {
+"ko": "버전 관리",
+"en": "Version control",
+"lv": 1,
+"level": "기초",
+"hint": "파일의 변경 이력을 기록하고 관리하는 방법",
+"category": "소프트웨어공학",
+"domain": "컴퓨터공학"
+},
+"se-25": {
+"ko": "Git",
+"en": "Git",
+"lv": 1,
+"level": "기초",
+"hint": "분산 버전 관리 시스템과 브랜치·커밋 개념",
+"category": "소프트웨어공학",
+"domain": "컴퓨터공학"
+},
+"se-26": {
+"ko": "CI/CD",
+"en": "CI/CD",
+"lv": 2,
+"level": "중급",
+"hint": "코드 통합과 배포를 자동화하는 방법",
+"category": "소프트웨어공학",
+"domain": "컴퓨터공학"
+},
+"se-27": {
+"ko": "DevOps",
+"en": "DevOps",
+"lv": 2,
+"level": "중급",
+"hint": "개발과 운영을 하나로 묶는 문화와 방법",
+"category": "소프트웨어공학",
+"domain": "컴퓨터공학"
+},
+"se-28": {
+"ko": "마이크로서비스",
+"en": "Microservices",
+"lv": 2,
+"level": "중급",
+"hint": "애플리케이션을 작은 독립 서비스들로 나누는 구조",
+"category": "소프트웨어공학",
+"domain": "컴퓨터공학"
+},
+"se-29": {
+"ko": "기술 부채",
+"en": "Technical debt",
+"lv": 2,
+"level": "중급",
+"hint": "당장의 편의를 위해 미뤄 둔 설계 문제가 쌓이는 것",
+"category": "소프트웨어공학",
+"domain": "컴퓨터공학"
+},
+"se-30": {
+"ko": "CMMI",
+"en": "Capability Maturity Model Integration",
+"lv": 3,
+"level": "심화",
+"hint": "조직의 개발 프로세스 성숙도를 평가하는 모델",
+"category": "소프트웨어공학",
+"domain": "컴퓨터공학"
+},
+"se-31": {
+"ko": "시큐어 코딩",
+"en": "Secure coding",
+"lv": 2,
+"level": "중급",
+"hint": "개발 단계에서 보안 취약점을 만들지 않도록 코딩하는 방법",
+"category": "소프트웨어공학",
+"domain": "컴퓨터공학"
+},
+"theory-01": {
+"ko": "명제 논리",
+"en": "Propositional calculus",
+"lv": 1,
+"level": "기초",
+"hint": "참과 거짓으로 판단할 수 있는 문장과 논리 연산",
+"category": "이산수학·이론",
+"domain": "컴퓨터공학"
+},
+"theory-02": {
+"ko": "불 대수",
+"en": "Boolean algebra",
+"lv": 1,
+"level": "기초",
+"hint": "0과 1로 하는 대수와 디지털 회로의 관계",
+"category": "이산수학·이론",
+"domain": "컴퓨터공학"
+},
+"theory-03": {
+"ko": "드 모르간의 법칙",
+"en": "De Morgan's laws",
+"lv": 1,
+"level": "기초",
+"hint": "논리식의 부정을 바꿔 쓰는 법칙",
+"category": "이산수학·이론",
+"domain": "컴퓨터공학"
+},
+"theory-04": {
+"ko": "카르노 맵",
+"en": "Karnaugh map",
+"lv": 2,
+"level": "중급",
+"hint": "논리식을 그림으로 간단히 만드는 방법",
+"category": "이산수학·이론",
+"domain": "컴퓨터공학"
+},
+"theory-05": {
+"ko": "집합",
+"en": "Set (mathematics)",
+"lv": 1,
+"level": "기초",
+"hint": "원소들의 모임과 그 연산",
+"category": "이산수학·이론",
+"domain": "컴퓨터공학"
+},
+"theory-06": {
+"ko": "동치 관계",
+"en": "Equivalence relation",
+"lv": 2,
+"level": "중급",
+"hint": "세 가지 성질을 모두 갖는 특별한 관계",
+"category": "이산수학·이론",
+"domain": "컴퓨터공학"
+},
+"theory-07": {
+"ko": "단사·전사·전단사 함수",
+"en": "Bijection, injection and surjection",
+"lv": 2,
+"level": "중급",
+"hint": "함수가 원소를 어떻게 대응시키는지에 따른 분류",
+"category": "이산수학·이론",
+"domain": "컴퓨터공학"
+},
+"theory-08": {
+"ko": "수학적 귀납법",
+"en": "Mathematical induction",
+"lv": 1,
+"level": "기초",
+"hint": "모든 자연수에 대해 성립함을 증명하는 방법",
+"category": "이산수학·이론",
+"domain": "컴퓨터공학"
+},
+"theory-09": {
+"ko": "비둘기집 원리",
+"en": "Pigeonhole principle",
+"lv": 1,
+"level": "기초",
+"hint": "단순하지만 강력한 존재 증명의 원리",
+"category": "이산수학·이론",
+"domain": "컴퓨터공학"
+},
+"theory-10": {
+"ko": "순열과 조합",
+"en": "Combination",
+"lv": 1,
+"level": "기초",
+"hint": "경우의 수를 세는 두 가지 기본 방법",
+"category": "이산수학·이론",
+"domain": "컴퓨터공학"
+},
+"theory-11": {
+"ko": "점화식",
+"en": "Recurrence relation",
+"lv": 2,
+"level": "중급",
+"hint": "앞의 항을 이용해 다음 항을 정의하는 식",
+"category": "이산수학·이론",
+"domain": "컴퓨터공학"
+},
+"theory-12": {
+"ko": "마스터 정리",
+"en": "Master theorem (analysis of algorithms)",
+"lv": 3,
+"level": "심화",
+"hint": "분할 정복 알고리즘의 시간 복잡도를 바로 구하는 공식",
+"category": "이산수학·이론",
+"domain": "컴퓨터공학"
+},
+"theory-13": {
+"ko": "그래프 이론",
+"en": "Graph theory",
+"lv": 1,
+"level": "기초",
+"hint": "점과 선으로 이루어진 구조를 다루는 수학",
+"category": "이산수학·이론",
+"domain": "컴퓨터공학"
+},
+"theory-14": {
+"ko": "오일러 경로",
+"en": "Eulerian path",
+"lv": 2,
+"level": "중급",
+"hint": "쾨니히스베르크 다리 문제에서 시작된 그래프 경로",
+"category": "이산수학·이론",
+"domain": "컴퓨터공학"
+},
+"theory-15": {
+"ko": "해밀턴 경로",
+"en": "Hamiltonian path",
+"lv": 2,
+"level": "중급",
+"hint": "모든 정점을 지나는 경로에 관한 문제",
+"category": "이산수학·이론",
+"domain": "컴퓨터공학"
+},
+"theory-16": {
+"ko": "모듈러 연산",
+"en": "Modular arithmetic",
+"lv": 2,
+"level": "중급",
+"hint": "나머지를 이용한 연산과 암호학에서의 쓰임",
+"category": "이산수학·이론",
+"domain": "컴퓨터공학"
+},
+"theory-17": {
+"ko": "유클리드 호제법",
+"en": "Euclidean algorithm",
+"lv": 1,
+"level": "기초",
+"hint": "두 수의 최대공약수를 빠르게 구하는 방법",
+"category": "이산수학·이론",
+"domain": "컴퓨터공학"
+},
+"theory-18": {
+"ko": "페르마의 소정리",
+"en": "Fermat's little theorem",
+"lv": 3,
+"level": "심화",
+"hint": "소수와 거듭제곱의 나머지에 관한 정리",
+"category": "이산수학·이론",
+"domain": "컴퓨터공학"
+},
+"theory-19": {
+"ko": "오일러 피 함수",
+"en": "Euler's totient function",
+"lv": 3,
+"level": "심화",
+"hint": "서로소인 수의 개수를 세는 함수 (RSA와 관련)",
+"category": "이산수학·이론",
+"domain": "컴퓨터공학"
+},
+"theory-20": {
+"ko": "중국인의 나머지 정리",
+"en": "Chinese remainder theorem",
+"lv": 3,
+"level": "심화",
+"hint": "여러 나머지 조건을 동시에 만족하는 수 찾기",
+"category": "이산수학·이론",
+"domain": "컴퓨터공학"
+},
+"theory-21": {
+"ko": "유한 오토마타",
+"en": "Finite-state machine",
+"lv": 2,
+"level": "중급",
+"hint": "유한한 상태와 전이로 입력을 처리하는 계산 모델",
+"category": "이산수학·이론",
+"domain": "컴퓨터공학"
+},
+"theory-22": {
+"ko": "정규 표현식",
+"en": "Regular expression",
+"lv": 2,
+"level": "중급",
+"hint": "문자열 패턴을 표현하는 형식 언어",
+"category": "이산수학·이론",
+"domain": "컴퓨터공학"
+},
+"theory-23": {
+"ko": "문맥 자유 문법",
+"en": "Context-free grammar",
+"lv": 3,
+"level": "심화",
+"hint": "프로그래밍 언어 문법을 정의하는 데 쓰이는 형식 문법",
+"category": "이산수학·이론",
+"domain": "컴퓨터공학"
+},
+"theory-24": {
+"ko": "촘스키 위계",
+"en": "Chomsky hierarchy",
+"lv": 3,
+"level": "심화",
+"hint": "형식 언어를 표현력에 따라 나눈 분류",
+"category": "이산수학·이론",
+"domain": "컴퓨터공학"
+},
+"theory-25": {
+"ko": "튜링 머신",
+"en": "Turing machine",
+"lv": 2,
+"level": "중급",
+"hint": "계산이란 무엇인지 정의하는 가상의 기계",
+"category": "이산수학·이론",
+"domain": "컴퓨터공학"
+},
+"theory-26": {
+"ko": "정지 문제",
+"en": "Halting problem",
+"lv": 3,
+"level": "심화",
+"hint": "컴퓨터로 풀 수 없는 문제가 존재한다는 증명",
+"category": "이산수학·이론",
+"domain": "컴퓨터공학"
+},
+"theory-27": {
+"ko": "P-NP 문제",
+"en": "P versus NP problem",
+"lv": 3,
+"level": "심화",
+"hint": "컴퓨터과학의 가장 유명한 미해결 문제",
+"category": "이산수학·이론",
+"domain": "컴퓨터공학"
+},
+"theory-28": {
+"ko": "NP-완전",
+"en": "NP-completeness",
+"lv": 3,
+"level": "심화",
+"hint": "풀기 어렵다고 여겨지는 문제들의 대표 집합과 환원",
+"category": "이산수학·이론",
+"domain": "컴퓨터공학"
+},
+"theory-29": {
+"ko": "람다 대수",
+"en": "Lambda calculus",
+"lv": 3,
+"level": "심화",
+"hint": "함수만으로 계산을 표현하는 형식 체계",
+"category": "이산수학·이론",
+"domain": "컴퓨터공학"
+},
+"web-01": {
+"ko": "HTTP",
+"en": "HTTP",
+"lv": 1,
+"level": "기초",
+"hint": "웹에서 요청과 응답을 주고받는 프로토콜과 메서드",
+"category": "웹",
+"domain": "컴퓨터공학"
+},
+"web-02": {
+"ko": "HTTPS",
+"en": "HTTPS",
+"lv": 1,
+"level": "기초",
+"hint": "HTTP를 안전하게 만드는 방법",
+"category": "웹",
+"domain": "컴퓨터공학"
+},
+"web-03": {
+"ko": "HTTP 상태 코드",
+"en": "List of HTTP status codes",
+"lv": 1,
+"level": "기초",
+"hint": "200, 404, 500 같은 응답 번호의 의미와 분류",
+"category": "웹",
+"domain": "컴퓨터공학"
+},
+"web-04": {
+"ko": "HTTP/2",
+"en": "HTTP/2",
+"lv": 3,
+"level": "심화",
+"hint": "HTTP/1.1의 성능 문제를 개선한 새 버전",
+"category": "웹",
+"domain": "컴퓨터공학"
+},
+"web-05": {
+"ko": "URL",
+"en": "URL",
+"lv": 1,
+"level": "기초",
+"hint": "웹 자원의 위치를 나타내는 주소의 구성 요소",
+"category": "웹",
+"domain": "컴퓨터공학"
+},
+"web-06": {
+"ko": "쿠키",
+"en": "HTTP cookie",
+"lv": 1,
+"level": "기초",
+"hint": "웹사이트가 브라우저에 저장하는 작은 데이터와 보안 속성",
+"category": "웹",
+"domain": "컴퓨터공학"
+},
+"web-07": {
+"ko": "세션",
+"en": "Session (computer science)",
+"lv": 1,
+"level": "기초",
+"hint": "상태가 없는 HTTP에서 로그인 상태를 유지하는 방법",
+"category": "웹",
+"domain": "컴퓨터공학"
+},
+"web-08": {
+"ko": "JWT",
+"en": "JSON Web Token",
+"lv": 2,
+"level": "중급",
+"hint": "서명된 토큰으로 사용자를 인증하는 방식",
+"category": "웹",
+"domain": "컴퓨터공학"
+},
+"web-09": {
+"ko": "REST API",
+"en": "REST",
+"lv": 2,
+"level": "중급",
+"hint": "자원과 행위를 HTTP로 표현하는 API 설계 방식",
+"category": "웹",
+"domain": "컴퓨터공학"
+},
+"web-10": {
+"ko": "GraphQL",
+"en": "GraphQL",
+"lv": 3,
+"level": "심화",
+"hint": "클라이언트가 필요한 데이터 모양을 직접 정하는 API 질의 언어",
+"category": "웹",
+"domain": "컴퓨터공학"
+},
+"web-11": {
+"ko": "JSON",
+"en": "JSON",
+"lv": 1,
+"level": "기초",
+"hint": "웹에서 데이터를 주고받을 때 가장 많이 쓰는 형식",
+"category": "웹",
+"domain": "컴퓨터공학"
+},
+"web-12": {
+"ko": "HTML5",
+"en": "HTML5",
+"lv": 1,
+"level": "기초",
+"hint": "웹 페이지의 구조를 만드는 언어의 최신 표준",
+"category": "웹",
+"domain": "컴퓨터공학"
+},
+"web-13": {
+"ko": "CSS 박스 모델",
+"en": "CSS box model",
+"lv": 1,
+"level": "기초",
+"hint": "웹 요소의 크기와 여백이 계산되는 방식",
+"category": "웹",
+"domain": "컴퓨터공학"
+},
+"web-14": {
+"ko": "DOM",
+"en": "Document Object Model",
+"lv": 1,
+"level": "기초",
+"hint": "자바스크립트가 웹 페이지를 다룰 수 있게 하는 구조",
+"category": "웹",
+"domain": "컴퓨터공학"
+},
+"web-15": {
+"ko": "브라우저 렌더링 과정",
+"en": "Browser engine",
+"lv": 2,
+"level": "중급",
+"hint": "HTML이 화면에 그려지기까지 브라우저가 하는 일",
+"category": "웹",
+"domain": "컴퓨터공학"
+},
+"web-16": {
+"ko": "AJAX",
+"en": "Ajax (programming)",
+"lv": 1,
+"level": "기초",
+"hint": "페이지를 새로 고치지 않고 서버와 데이터를 주고받는 방법",
+"category": "웹",
+"domain": "컴퓨터공학"
+},
+"web-17": {
+"ko": "웹소켓",
+"en": "WebSocket",
+"lv": 2,
+"level": "중급",
+"hint": "서버와 브라우저가 실시간으로 양방향 통신하는 방법",
+"category": "웹",
+"domain": "컴퓨터공학"
+},
+"web-18": {
+"ko": "SPA",
+"en": "Single-page application",
+"lv": 2,
+"level": "중급",
+"hint": "페이지 이동 없이 한 페이지에서 화면을 바꾸는 웹 앱",
+"category": "웹",
+"domain": "컴퓨터공학"
+},
+"web-19": {
+"ko": "서버 사이드 렌더링",
+"en": "Server-side scripting",
+"lv": 2,
+"level": "중급",
+"hint": "화면을 서버에서 완성해 보내는 방식과 장단점",
+"category": "웹",
+"domain": "컴퓨터공학"
+},
+"web-20": {
+"ko": "동일 출처 정책",
+"en": "Same-origin policy",
+"lv": 2,
+"level": "중급",
+"hint": "브라우저가 다른 출처의 자원 접근을 제한하는 보안 규칙",
+"category": "웹",
+"domain": "컴퓨터공학"
+},
+"web-21": {
+"ko": "CORS",
+"en": "Cross-origin resource sharing",
+"lv": 2,
+"level": "중급",
+"hint": "다른 출처의 요청을 안전하게 허용하는 방법",
+"category": "웹",
+"domain": "컴퓨터공학"
+},
+"web-22": {
+"ko": "콘텐츠 보안 정책 (CSP)",
+"en": "Content Security Policy",
+"lv": 3,
+"level": "심화",
+"hint": "어떤 스크립트를 실행할 수 있는지 브라우저에 알려 주는 보안 장치",
+"category": "웹",
+"domain": "컴퓨터공학"
+},
+"web-23": {
+"ko": "웹 서버와 WAS",
+"en": "Web server",
+"lv": 1,
+"level": "기초",
+"hint": "정적 파일을 주는 서버와 동적 처리를 하는 서버의 차이",
+"category": "웹",
+"domain": "컴퓨터공학"
+},
+"web-24": {
+"ko": "리버스 프록시",
+"en": "Reverse proxy",
+"lv": 2,
+"level": "중급",
+"hint": "서버 앞에서 요청을 대신 받아 전달하는 서버",
+"category": "웹",
+"domain": "컴퓨터공학"
+},
+"web-25": {
+"ko": "로드 밸런싱",
+"en": "Load balancing (computing)",
+"lv": 2,
+"level": "중급",
+"hint": "요청을 여러 서버에 나누어 보내는 기술",
+"category": "웹",
+"domain": "컴퓨터공학"
+},
+"web-26": {
+"ko": "CDN",
+"en": "Content delivery network",
+"lv": 2,
+"level": "중급",
+"hint": "사용자 가까운 곳에서 콘텐츠를 전달하는 네트워크",
+"category": "웹",
+"domain": "컴퓨터공학"
+},
+"web-27": {
+"ko": "웹 캐시",
+"en": "Web cache",
+"lv": 2,
+"level": "중급",
+"hint": "같은 자원을 다시 받지 않도록 저장해 두는 방법과 캐시 헤더",
+"category": "웹",
+"domain": "컴퓨터공학"
+},
+"web-28": {
+"ko": "웹 접근성",
+"en": "Web accessibility",
+"lv": 1,
+"level": "기초",
+"hint": "누구나 웹을 이용할 수 있도록 만드는 원칙",
+"category": "웹",
+"domain": "컴퓨터공학"
+},
+"web-29": {
+"ko": "웹 방화벽 (WAF)",
+"en": "Web application firewall",
+"lv": 2,
+"level": "중급",
+"hint": "웹 공격을 막기 위해 HTTP 트래픽을 검사하는 장치",
+"category": "웹",
+"domain": "컴퓨터공학"
+},
+"ai-01": {
+"ko": "머신러닝",
+"en": "Machine learning",
+"lv": 1,
+"level": "기초",
+"hint": "데이터로부터 규칙을 스스로 학습하는 방법",
+"category": "AI·데이터",
+"domain": "컴퓨터공학"
+},
+"ai-02": {
+"ko": "지도 학습",
+"en": "Supervised learning",
+"lv": 1,
+"level": "기초",
+"hint": "정답이 있는 데이터로 학습하는 방식",
+"category": "AI·데이터",
+"domain": "컴퓨터공학"
+},
+"ai-03": {
+"ko": "비지도 학습",
+"en": "Unsupervised learning",
+"lv": 1,
+"level": "기초",
+"hint": "정답 없이 데이터의 구조를 찾는 학습 방식",
+"category": "AI·데이터",
+"domain": "컴퓨터공학"
+},
+"ai-04": {
+"ko": "강화 학습",
+"en": "Reinforcement learning",
+"lv": 2,
+"level": "중급",
+"hint": "보상을 받으며 시행착오로 배우는 학습 방식",
+"category": "AI·데이터",
+"domain": "컴퓨터공학"
+},
+"ai-05": {
+"ko": "선형 회귀",
+"en": "Linear regression",
+"lv": 1,
+"level": "기초",
+"hint": "데이터에 가장 잘 맞는 직선을 찾는 방법",
+"category": "AI·데이터",
+"domain": "컴퓨터공학"
+},
+"ai-06": {
+"ko": "로지스틱 회귀",
+"en": "Logistic regression",
+"lv": 2,
+"level": "중급",
+"hint": "이름은 회귀지만 분류에 쓰이는 모델",
+"category": "AI·데이터",
+"domain": "컴퓨터공학"
+},
+"ai-07": {
+"ko": "결정 트리",
+"en": "Decision tree learning",
+"lv": 1,
+"level": "기초",
+"hint": "질문을 이어 가며 분류하는 나무 모양의 모델",
+"category": "AI·데이터",
+"domain": "컴퓨터공학"
+},
+"ai-08": {
+"ko": "랜덤 포레스트",
+"en": "Random forest",
+"lv": 2,
+"level": "중급",
+"hint": "여러 결정 트리를 모아 예측하는 앙상블 기법",
+"category": "AI·데이터",
+"domain": "컴퓨터공학"
+},
+"ai-09": {
+"ko": "서포트 벡터 머신",
+"en": "Support vector machine",
+"lv": 3,
+"level": "심화",
+"hint": "두 그룹 사이의 경계를 가장 넓게 긋는 분류 모델",
+"category": "AI·데이터",
+"domain": "컴퓨터공학"
+},
+"ai-10": {
+"ko": "k-최근접 이웃",
+"en": "K-nearest neighbors algorithm",
+"lv": 1,
+"level": "기초",
+"hint": "가까운 이웃들을 보고 분류하는 방법",
+"category": "AI·데이터",
+"domain": "컴퓨터공학"
+},
+"ai-11": {
+"ko": "k-평균 군집화",
+"en": "K-means clustering",
+"lv": 2,
+"level": "중급",
+"hint": "데이터를 k개의 무리로 나누는 군집화 방법",
+"category": "AI·데이터",
+"domain": "컴퓨터공학"
+},
+"ai-12": {
+"ko": "주성분 분석 (PCA)",
+"en": "Principal component analysis",
+"lv": 3,
+"level": "심화",
+"hint": "데이터의 차원을 줄이면서 정보를 최대한 유지하는 방법",
+"category": "AI·데이터",
+"domain": "컴퓨터공학"
+},
+"ai-13": {
+"ko": "인공 신경망",
+"en": "Neural network (machine learning)",
+"lv": 1,
+"level": "기초",
+"hint": "뇌의 뉴런을 흉내 낸 계산 모델",
+"category": "AI·데이터",
+"domain": "컴퓨터공학"
+},
+"ai-14": {
+"ko": "퍼셉트론",
+"en": "Perceptron",
+"lv": 1,
+"level": "기초",
+"hint": "가장 단순한 형태의 인공 신경망과 그 한계",
+"category": "AI·데이터",
+"domain": "컴퓨터공학"
+},
+"ai-15": {
+"ko": "활성화 함수",
+"en": "Activation function",
+"lv": 2,
+"level": "중급",
+"hint": "신경망에 비선형성을 넣는 함수들",
+"category": "AI·데이터",
+"domain": "컴퓨터공학"
+},
+"ai-16": {
+"ko": "경사 하강법",
+"en": "Gradient descent",
+"lv": 2,
+"level": "중급",
+"hint": "손실을 줄이는 방향으로 조금씩 움직이며 최적값을 찾는 방법",
+"category": "AI·데이터",
+"domain": "컴퓨터공학"
+},
+"ai-17": {
+"ko": "역전파",
+"en": "Backpropagation",
+"lv": 3,
+"level": "심화",
+"hint": "신경망의 가중치를 효율적으로 학습시키는 알고리즘",
+"category": "AI·데이터",
+"domain": "컴퓨터공학"
+},
+"ai-18": {
+"ko": "과적합",
+"en": "Overfitting",
+"lv": 1,
+"level": "기초",
+"hint": "학습 데이터에만 너무 잘 맞아 새 데이터에 약해지는 문제",
+"category": "AI·데이터",
+"domain": "컴퓨터공학"
+},
+"ai-19": {
+"ko": "교차 검증",
+"en": "Cross-validation (statistics)",
+"lv": 2,
+"level": "중급",
+"hint": "모델 성능을 공정하게 평가하기 위해 데이터를 나누어 쓰는 방법",
+"category": "AI·데이터",
+"domain": "컴퓨터공학"
+},
+"ai-20": {
+"ko": "혼동 행렬",
+"en": "Confusion matrix",
+"lv": 1,
+"level": "기초",
+"hint": "분류 모델의 맞고 틀린 결과를 표로 정리한 것",
+"category": "AI·데이터",
+"domain": "컴퓨터공학"
+},
+"ai-21": {
+"ko": "정밀도와 재현율",
+"en": "Precision and recall",
+"lv": 2,
+"level": "중급",
+"hint": "분류 성능을 보는 두 지표와 그 조화 평균",
+"category": "AI·데이터",
+"domain": "컴퓨터공학"
+},
+"ai-22": {
+"ko": "합성곱 신경망 (CNN)",
+"en": "Convolutional neural network",
+"lv": 3,
+"level": "심화",
+"hint": "이미지 인식에 강한 신경망 구조",
+"category": "AI·데이터",
+"domain": "컴퓨터공학"
+},
+"ai-23": {
+"ko": "순환 신경망 (RNN)",
+"en": "Recurrent neural network",
+"lv": 3,
+"level": "심화",
+"hint": "순서가 있는 데이터를 다루는 신경망 구조",
+"category": "AI·데이터",
+"domain": "컴퓨터공학"
+},
+"ai-24": {
+"ko": "트랜스포머",
+"en": "Transformer (deep learning architecture)",
+"lv": 3,
+"level": "심화",
+"hint": "현대 언어 모델의 기반이 되는 신경망 구조",
+"category": "AI·데이터",
+"domain": "컴퓨터공학"
+},
+"ai-25": {
+"ko": "베이즈 정리",
+"en": "Bayes' theorem",
+"lv": 2,
+"level": "중급",
+"hint": "새 증거가 주어졌을 때 확률을 갱신하는 공식",
+"category": "AI·데이터",
+"domain": "컴퓨터공학"
+},
+"ai-26": {
+"ko": "특성 스케일링",
+"en": "Feature scaling",
+"lv": 2,
+"level": "중급",
+"hint": "값의 범위를 맞춰 학습이 잘 되게 하는 전처리",
+"category": "AI·데이터",
+"domain": "컴퓨터공학"
+},
+"ai-27": {
+"ko": "빅데이터",
+"en": "Big data",
+"lv": 1,
+"level": "기초",
+"hint": "기존 방식으로 다루기 어려운 대량의 데이터와 그 특징",
+"category": "AI·데이터",
+"domain": "컴퓨터공학"
+},
+"ai-28": {
+"ko": "데이터 마이닝",
+"en": "Data mining",
+"lv": 1,
+"level": "기초",
+"hint": "대량의 데이터에서 유용한 패턴을 찾아내는 과정",
+"category": "AI·데이터",
+"domain": "컴퓨터공학"
+},
+"ai-29": {
+"ko": "적대적 머신러닝",
+"en": "Adversarial machine learning",
+"lv": 3,
+"level": "심화",
+"hint": "AI 모델을 속이거나 공격하는 기법과 방어",
+"category": "AI·데이터",
+"domain": "컴퓨터공학"
+},
+"ee-circuit-01": {
+"ko": "옴의 법칙",
+"en": "Ohm's law",
+"lv": 1,
+"level": "기초",
+"hint": "전압·전류·저항 사이의 기본 관계",
+"category": "회로이론",
+"domain": "전기·전자공학"
+},
+"ee-circuit-02": {
+"ko": "키르히호프의 법칙",
+"en": "Kirchhoff's circuit laws",
+"lv": 1,
+"level": "기초",
+"hint": "회로의 마디와 폐회로에서 성립하는 두 법칙",
+"category": "회로이론",
+"domain": "전기·전자공학"
+},
+"ee-circuit-03": {
+"ko": "임피던스",
+"en": "Electrical impedance",
+"lv": 1,
+"level": "기초",
+"hint": "교류 회로에서 저항 개념을 확장한 양",
+"category": "회로이론",
+"domain": "전기·전자공학"
+},
+"ee-circuit-04": {
+"ko": "중첩의 원리",
+"en": "Superposition principle",
+"lv": 1,
+"level": "기초",
+"hint": "여러 전원이 있는 선형 회로를 나눠 푸는 방법",
+"category": "회로이론",
+"domain": "전기·전자공학"
+},
+"ee-circuit-05": {
+"ko": "테브난의 정리",
+"en": "Thévenin's theorem",
+"lv": 2,
+"level": "중급",
+"hint": "복잡한 회로를 단순한 등가 회로로 바꾸는 정리",
+"category": "회로이론",
+"domain": "전기·전자공학"
+},
+"ee-circuit-06": {
+"ko": "노턴의 정리",
+"en": "Norton's theorem",
+"lv": 2,
+"level": "중급",
+"hint": "전류원을 이용한 등가 회로 변환 정리",
+"category": "회로이론",
+"domain": "전기·전자공학"
+},
+"ee-circuit-07": {
+"ko": "페이저",
+"en": "Phasor",
+"lv": 2,
+"level": "중급",
+"hint": "사인파 교류를 복소수로 다루는 표현법",
+"category": "회로이론",
+"domain": "전기·전자공학"
+},
+"ee-circuit-08": {
+"ko": "RLC 회로",
+"en": "RLC circuit",
+"lv": 2,
+"level": "중급",
+"hint": "저항·인덕터·커패시터가 함께 있는 회로의 응답",
+"category": "회로이론",
+"domain": "전기·전자공학"
+},
+"ee-circuit-09": {
+"ko": "2포트 회로망",
+"en": "Two-port network",
+"lv": 3,
+"level": "심화",
+"hint": "입력·출력 단자 쌍으로 회로를 모델링하는 방법",
+"category": "회로이론",
+"domain": "전기·전자공학"
+},
+"ee-circuit-10": {
+"ko": "텔레겐의 정리",
+"en": "Tellegen's theorem",
+"lv": 3,
+"level": "심화",
+"hint": "회로망 전체의 전력 보존에 관한 일반 정리",
+"category": "회로이론",
+"domain": "전기·전자공학"
+},
+"ee-electronics-01": {
+"ko": "다이오드",
+"en": "Diode",
+"lv": 1,
+"level": "기초",
+"hint": "전류를 한쪽 방향으로만 흐르게 하는 소자",
+"category": "전자회로",
+"domain": "전기·전자공학"
+},
+"ee-electronics-02": {
+"ko": "제너 다이오드",
+"en": "Zener diode",
+"lv": 1,
+"level": "기초",
+"hint": "역방향 항복을 이용해 전압을 일정하게 유지하는 소자",
+"category": "전자회로",
+"domain": "전기·전자공학"
+},
+"ee-electronics-03": {
+"ko": "정류기",
+"en": "Rectifier",
+"lv": 1,
+"level": "기초",
+"hint": "교류를 직류로 바꾸는 회로",
+"category": "전자회로",
+"domain": "전기·전자공학"
+},
+"ee-electronics-04": {
+"ko": "연산 증폭기 (Op-Amp)",
+"en": "Operational amplifier",
+"lv": 1,
+"level": "기초",
+"hint": "아날로그 회로의 만능 부품이 되는 증폭기",
+"category": "전자회로",
+"domain": "전기·전자공학"
+},
+"ee-electronics-05": {
+"ko": "공통 이미터 증폭기",
+"en": "Common emitter",
+"lv": 2,
+"level": "중급",
+"hint": "BJT를 이용한 가장 대표적인 증폭 회로 구성",
+"category": "전자회로",
+"domain": "전기·전자공학"
+},
+"ee-electronics-06": {
+"ko": "차동 증폭기",
+"en": "Differential amplifier",
+"lv": 2,
+"level": "중급",
+"hint": "두 입력의 차이만 증폭하는 회로",
+"category": "전자회로",
+"domain": "전기·전자공학"
+},
+"ee-electronics-07": {
+"ko": "부귀환 증폭기",
+"en": "Negative feedback amplifier",
+"lv": 2,
+"level": "중급",
+"hint": "출력 일부를 되돌려 특성을 안정시키는 증폭기",
+"category": "전자회로",
+"domain": "전기·전자공학"
+},
+"ee-electronics-08": {
+"ko": "발진기",
+"en": "Electronic oscillator",
+"lv": 2,
+"level": "중급",
+"hint": "입력 없이 스스로 주기 신호를 만드는 회로",
+"category": "전자회로",
+"domain": "전기·전자공학"
+},
+"ee-electronics-09": {
+"ko": "전류 거울",
+"en": "Current mirror",
+"lv": 3,
+"level": "심화",
+"hint": "집적회로에서 일정한 전류를 복제하는 회로",
+"category": "전자회로",
+"domain": "전기·전자공학"
+},
+"ee-electronics-10": {
+"ko": "위상 고정 루프 (PLL)",
+"en": "Phase-locked loop",
+"lv": 3,
+"level": "심화",
+"hint": "기준 신호에 주파수와 위상을 맞추는 회로",
+"category": "전자회로",
+"domain": "전기·전자공학"
+},
+"ee-semi-01": {
+"ko": "반도체",
+"en": "Semiconductor",
+"lv": 1,
+"level": "기초",
+"hint": "도체와 부도체 사이의 전기적 성질을 가진 물질",
+"category": "반도체·소자",
+"domain": "전기·전자공학"
+},
+"ee-semi-02": {
+"ko": "도핑",
+"en": "Doping (semiconductor)",
+"lv": 1,
+"level": "기초",
+"hint": "불순물을 넣어 반도체의 성질을 바꾸는 공정",
+"category": "반도체·소자",
+"domain": "전기·전자공학"
+},
+"ee-semi-03": {
+"ko": "PN 접합",
+"en": "P–n junction",
+"lv": 1,
+"level": "기초",
+"hint": "다이오드와 트랜지스터의 기본이 되는 구조",
+"category": "반도체·소자",
+"domain": "전기·전자공학"
+},
+"ee-semi-04": {
+"ko": "밴드갭 (에너지 띠틈)",
+"en": "Band gap",
+"lv": 1,
+"level": "기초",
+"hint": "전자가 존재할 수 없는 에너지 구간",
+"category": "반도체·소자",
+"domain": "전기·전자공학"
+},
+"ee-semi-05": {
+"ko": "바이폴라 접합 트랜지스터 (BJT)",
+"en": "Bipolar junction transistor",
+"lv": 2,
+"level": "중급",
+"hint": "전자와 정공이 모두 참여하는 전류 제어 소자",
+"category": "반도체·소자",
+"domain": "전기·전자공학"
+},
+"ee-semi-06": {
+"ko": "MOSFET",
+"en": "MOSFET",
+"lv": 2,
+"level": "중급",
+"hint": "현대 디지털 칩을 이루는 전압 제어 트랜지스터",
+"category": "반도체·소자",
+"domain": "전기·전자공학"
+},
+"ee-semi-07": {
+"ko": "CMOS",
+"en": "CMOS",
+"lv": 2,
+"level": "중급",
+"hint": "두 종류의 트랜지스터를 짝지어 전력을 줄이는 기술",
+"category": "반도체·소자",
+"domain": "전기·전자공학"
+},
+"ee-semi-08": {
+"ko": "홀 효과",
+"en": "Hall effect",
+"lv": 2,
+"level": "중급",
+"hint": "자기장 속 도체에 생기는 가로 방향 전압",
+"category": "반도체·소자",
+"domain": "전기·전자공학"
+},
+"ee-semi-09": {
+"ko": "페르미 준위",
+"en": "Fermi level",
+"lv": 3,
+"level": "심화",
+"hint": "고체 속 전자의 에너지 분포를 대표하는 기준",
+"category": "반도체·소자",
+"domain": "전기·전자공학"
+},
+"ee-semi-10": {
+"ko": "포토리소그래피",
+"en": "Photolithography",
+"lv": 3,
+"level": "심화",
+"hint": "빛으로 웨이퍼 위에 회로 패턴을 새기는 공정",
+"category": "반도체·소자",
+"domain": "전기·전자공학"
+},
+"ee-signal-01": {
+"ko": "푸리에 급수",
+"en": "Fourier series",
+"lv": 1,
+"level": "기초",
+"hint": "주기 신호를 사인·코사인의 합으로 나타내는 방법",
+"category": "신호·시스템",
+"domain": "전기·전자공학"
+},
+"ee-signal-02": {
+"ko": "합성곱 (컨벌루션)",
+"en": "Convolution",
+"lv": 1,
+"level": "기초",
+"hint": "시스템의 출력을 입력과 응답으로 계산하는 연산",
+"category": "신호·시스템",
+"domain": "전기·전자공학"
+},
+"ee-signal-03": {
+"ko": "선형 시불변 시스템 (LTI)",
+"en": "Linear time-invariant system",
+"lv": 1,
+"level": "기초",
+"hint": "신호·시스템 해석의 출발점이 되는 시스템",
+"category": "신호·시스템",
+"domain": "전기·전자공학"
+},
+"ee-signal-04": {
+"ko": "임펄스 응답",
+"en": "Impulse response",
+"lv": 1,
+"level": "기초",
+"hint": "아주 짧은 입력에 대한 시스템의 반응",
+"category": "신호·시스템",
+"domain": "전기·전자공학"
+},
+"ee-signal-05": {
+"ko": "푸리에 변환",
+"en": "Fourier transform",
+"lv": 2,
+"level": "중급",
+"hint": "신호를 시간 영역에서 주파수 영역으로 옮기는 변환",
+"category": "신호·시스템",
+"domain": "전기·전자공학"
+},
+"ee-signal-06": {
+"ko": "라플라스 변환",
+"en": "Laplace transform",
+"lv": 2,
+"level": "중급",
+"hint": "미분방정식을 대수식으로 바꿔 푸는 변환",
+"category": "신호·시스템",
+"domain": "전기·전자공학"
+},
+"ee-signal-07": {
+"ko": "나이퀴스트-섀넌 표본화 정리",
+"en": "Nyquist–Shannon sampling theorem",
+"lv": 2,
+"level": "중급",
+"hint": "아날로그 신호를 디지털로 바꿀 때의 조건",
+"category": "신호·시스템",
+"domain": "전기·전자공학"
+},
+"ee-signal-08": {
+"ko": "Z 변환",
+"en": "Z-transform",
+"lv": 2,
+"level": "중급",
+"hint": "이산 시간 신호를 다루는 변환",
+"category": "신호·시스템",
+"domain": "전기·전자공학"
+},
+"ee-signal-09": {
+"ko": "고속 푸리에 변환 (FFT)",
+"en": "Fast Fourier transform",
+"lv": 3,
+"level": "심화",
+"hint": "주파수 분석을 빠르게 계산하는 알고리즘",
+"category": "신호·시스템",
+"domain": "전기·전자공학"
+},
+"ee-signal-10": {
+"ko": "유한 임펄스 응답 필터 (FIR)",
+"en": "Finite impulse response",
+"lv": 3,
+"level": "심화",
+"hint": "디지털 필터의 한 종류와 그 특징",
+"category": "신호·시스템",
+"domain": "전기·전자공학"
+},
+"ee-comm-01": {
+"ko": "진폭 변조 (AM)",
+"en": "Amplitude modulation",
+"lv": 1,
+"level": "기초",
+"hint": "반송파의 세기를 바꿔 정보를 싣는 방식",
+"category": "통신공학",
+"domain": "전기·전자공학"
+},
+"ee-comm-02": {
+"ko": "주파수 변조 (FM)",
+"en": "Frequency modulation",
+"lv": 1,
+"level": "기초",
+"hint": "반송파의 주파수를 바꿔 정보를 싣는 방식",
+"category": "통신공학",
+"domain": "전기·전자공학"
+},
+"ee-comm-03": {
+"ko": "신호 대 잡음비 (SNR)",
+"en": "Signal-to-noise ratio",
+"lv": 1,
+"level": "기초",
+"hint": "통신 품질을 나타내는 대표적인 지표",
+"category": "통신공학",
+"domain": "전기·전자공학"
+},
+"ee-comm-04": {
+"ko": "펄스 부호 변조 (PCM)",
+"en": "Pulse-code modulation",
+"lv": 1,
+"level": "기초",
+"hint": "아날로그 음성을 디지털 부호로 바꾸는 방식",
+"category": "통신공학",
+"domain": "전기·전자공학"
+},
+"ee-comm-05": {
+"ko": "섀넌-하틀리 정리",
+"en": "Shannon–Hartley theorem",
+"lv": 2,
+"level": "중급",
+"hint": "채널의 최대 전송 용량에 관한 정리",
+"category": "통신공학",
+"domain": "전기·전자공학"
+},
+"ee-comm-06": {
+"ko": "직교 진폭 변조 (QAM)",
+"en": "Quadrature amplitude modulation",
+"lv": 2,
+"level": "중급",
+"hint": "진폭과 위상을 함께 이용하는 디지털 변조",
+"category": "통신공학",
+"domain": "전기·전자공학"
+},
+"ee-comm-07": {
+"ko": "위상 편이 변조 (PSK)",
+"en": "Phase-shift keying",
+"lv": 2,
+"level": "중급",
+"hint": "반송파의 위상으로 비트를 표현하는 변조",
+"category": "통신공학",
+"domain": "전기·전자공학"
+},
+"ee-comm-08": {
+"ko": "직교 주파수 분할 다중화 (OFDM)",
+"en": "Orthogonal frequency-division multiplexing",
+"lv": 3,
+"level": "심화",
+"hint": "와이파이·LTE의 핵심이 되는 다중 반송파 방식",
+"category": "통신공학",
+"domain": "전기·전자공학"
+},
+"ee-comm-09": {
+"ko": "다중 입출력 (MIMO)",
+"en": "MIMO",
+"lv": 3,
+"level": "심화",
+"hint": "여러 안테나로 전송 용량을 늘리는 기술",
+"category": "통신공학",
+"domain": "전기·전자공학"
+},
+"ee-comm-10": {
+"ko": "부호 분할 다중 접속 (CDMA)",
+"en": "Code-division multiple access",
+"lv": 3,
+"level": "심화",
+"hint": "여러 사용자가 같은 주파수를 나눠 쓰는 방법",
+"category": "통신공학",
+"domain": "전기·전자공학"
+},
+"ee-power-01": {
+"ko": "변압기",
+"en": "Transformer",
+"lv": 1,
+"level": "기초",
+"hint": "교류 전압을 높이거나 낮추는 전기기기",
+"category": "전력·전기기기",
+"domain": "전기·전자공학"
+},
+"ee-power-02": {
+"ko": "3상 교류",
+"en": "Three-phase electric power",
+"lv": 1,
+"level": "기초",
+"hint": "발전·송전에서 표준으로 쓰는 교류 방식",
+"category": "전력·전기기기",
+"domain": "전기·전자공학"
+},
+"ee-power-03": {
+"ko": "역률",
+"en": "Power factor",
+"lv": 1,
+"level": "기초",
+"hint": "공급한 전력 중 실제로 일하는 비율",
+"category": "전력·전기기기",
+"domain": "전기·전자공학"
+},
+"ee-power-04": {
+"ko": "직류 전동기",
+"en": "DC motor",
+"lv": 1,
+"level": "기초",
+"hint": "직류 전원으로 회전력을 얻는 전동기",
+"category": "전력·전기기기",
+"domain": "전기·전자공학"
+},
+"ee-power-05": {
+"ko": "유도 전동기",
+"en": "Induction motor",
+"lv": 2,
+"level": "중급",
+"hint": "산업 현장에서 가장 많이 쓰이는 교류 전동기",
+"category": "전력·전기기기",
+"domain": "전기·전자공학"
+},
+"ee-power-06": {
+"ko": "동기 전동기",
+"en": "Synchronous motor",
+"lv": 2,
+"level": "중급",
+"hint": "전원 주파수와 같은 속도로 도는 전동기",
+"category": "전력·전기기기",
+"domain": "전기·전자공학"
+},
+"ee-power-07": {
+"ko": "송전",
+"en": "Electric power transmission",
+"lv": 2,
+"level": "중급",
+"hint": "발전소의 전력을 먼 곳까지 보내는 방법",
+"category": "전력·전기기기",
+"domain": "전기·전자공학"
+},
+"ee-power-08": {
+"ko": "인버터",
+"en": "Power inverter",
+"lv": 2,
+"level": "중급",
+"hint": "직류를 교류로 바꾸는 전력변환 장치",
+"category": "전력·전기기기",
+"domain": "전기·전자공학"
+},
+"ee-power-09": {
+"ko": "전력 조류 계산",
+"en": "Power-flow study",
+"lv": 3,
+"level": "심화",
+"hint": "전력 계통의 전압과 전력 흐름을 구하는 해석",
+"category": "전력·전기기기",
+"domain": "전기·전자공학"
+},
+"ee-power-10": {
+"ko": "대칭 좌표법",
+"en": "Symmetrical components",
+"lv": 3,
+"level": "심화",
+"hint": "불평형 3상 고장을 해석하는 기법",
+"category": "전력·전기기기",
+"domain": "전기·전자공학"
+},
+"ee-control-01": {
+"ko": "전달 함수",
+"en": "Transfer function",
+"lv": 1,
+"level": "기초",
+"hint": "시스템의 입출력 관계를 나타내는 함수",
+"category": "제어공학",
+"domain": "전기·전자공학"
+},
+"ee-control-02": {
+"ko": "PID 제어기",
+"en": "Proportional–integral–derivative controller",
+"lv": 1,
+"level": "기초",
+"hint": "산업 현장에서 가장 널리 쓰이는 피드백 제어기",
+"category": "제어공학",
+"domain": "전기·전자공학"
+},
+"ee-control-03": {
+"ko": "계단 응답",
+"en": "Step response",
+"lv": 1,
+"level": "기초",
+"hint": "입력이 갑자기 바뀔 때 시스템의 반응",
+"category": "제어공학",
+"domain": "전기·전자공학"
+},
+"ee-control-04": {
+"ko": "오버슈트",
+"en": "Overshoot (signal)",
+"lv": 1,
+"level": "기초",
+"hint": "응답이 목표값을 넘어서는 현상",
+"category": "제어공학",
+"domain": "전기·전자공학"
+},
+"ee-control-05": {
+"ko": "보드 선도",
+"en": "Bode plot",
+"lv": 2,
+"level": "중급",
+"hint": "주파수 응답을 그래프로 나타내는 방법",
+"category": "제어공학",
+"domain": "전기·전자공학"
+},
+"ee-control-06": {
+"ko": "근궤적법",
+"en": "Root locus analysis",
+"lv": 2,
+"level": "중급",
+"hint": "이득 변화에 따른 극점의 이동을 그리는 기법",
+"category": "제어공학",
+"domain": "전기·전자공학"
+},
+"ee-control-07": {
+"ko": "라우스-후르비츠 안정도 판별법",
+"en": "Routh–Hurwitz stability criterion",
+"lv": 2,
+"level": "중급",
+"hint": "특성방정식만으로 안정성을 따지는 방법",
+"category": "제어공학",
+"domain": "전기·전자공학"
+},
+"ee-control-08": {
+"ko": "나이퀴스트 안정도 판별법",
+"en": "Nyquist stability criterion",
+"lv": 3,
+"level": "심화",
+"hint": "주파수 응답으로 폐루프 안정성을 판단하는 방법",
+"category": "제어공학",
+"domain": "전기·전자공학"
+},
+"ee-control-09": {
+"ko": "상태 공간 표현",
+"en": "State-space representation",
+"lv": 3,
+"level": "심화",
+"hint": "현대 제어에서 시스템을 행렬로 표현하는 방식",
+"category": "제어공학",
+"domain": "전기·전자공학"
+},
+"ee-control-10": {
+"ko": "칼만 필터",
+"en": "Kalman filter",
+"lv": 3,
+"level": "심화",
+"hint": "잡음 섞인 측정값으로 상태를 추정하는 기법",
+"category": "제어공학",
+"domain": "전기·전자공학"
+},
+"me-dynamics-01": {
+"ko": "뉴턴의 운동 법칙",
+"en": "Newton's laws of motion",
+"lv": 1,
+"level": "기초",
+"hint": "힘과 운동의 관계를 설명하는 세 가지 법칙",
+"category": "정역학·동역학",
+"domain": "기계공학"
+},
+"me-dynamics-02": {
+"ko": "자유물체도",
+"en": "Free body diagram",
+"lv": 1,
+"level": "기초",
+"hint": "물체에 작용하는 힘을 그림으로 정리하는 방법",
+"category": "정역학·동역학",
+"domain": "기계공학"
+},
+"me-dynamics-03": {
+"ko": "토크 (모멘트)",
+"en": "Torque",
+"lv": 1,
+"level": "기초",
+"hint": "물체를 회전시키려는 힘의 효과",
+"category": "정역학·동역학",
+"domain": "기계공학"
+},
+"me-dynamics-04": {
+"ko": "마찰",
+"en": "Friction",
+"lv": 1,
+"level": "기초",
+"hint": "접촉면에서 운동을 방해하는 힘",
+"category": "정역학·동역학",
+"domain": "기계공학"
+},
+"me-dynamics-05": {
+"ko": "충격량",
+"en": "Impulse (physics)",
+"lv": 2,
+"level": "중급",
+"hint": "짧은 시간 동안 작용한 힘과 운동량 변화",
+"category": "정역학·동역학",
+"domain": "기계공학"
+},
+"me-dynamics-06": {
+"ko": "관성 모멘트",
+"en": "Moment of inertia",
+"lv": 2,
+"level": "중급",
+"hint": "회전 운동에서 질량에 해당하는 양",
+"category": "정역학·동역학",
+"domain": "기계공학"
+},
+"me-dynamics-07": {
+"ko": "트러스",
+"en": "Truss",
+"lv": 2,
+"level": "중급",
+"hint": "삼각형 부재로 하중을 지지하는 구조물",
+"category": "정역학·동역학",
+"domain": "기계공학"
+},
+"me-dynamics-08": {
+"ko": "단순 조화 운동",
+"en": "Simple harmonic motion",
+"lv": 2,
+"level": "중급",
+"hint": "스프링·진자처럼 반복되는 진동 운동",
+"category": "정역학·동역학",
+"domain": "기계공학"
+},
+"me-dynamics-09": {
+"ko": "코리올리 힘",
+"en": "Coriolis force",
+"lv": 3,
+"level": "심화",
+"hint": "회전 좌표계에서 나타나는 겉보기 힘",
+"category": "정역학·동역학",
+"domain": "기계공학"
+},
+"me-dynamics-10": {
+"ko": "라그랑주 역학",
+"en": "Lagrangian mechanics",
+"lv": 3,
+"level": "심화",
+"hint": "에너지로 운동방정식을 세우는 해석역학",
+"category": "정역학·동역학",
+"domain": "기계공학"
+},
+"me-solid-01": {
+"ko": "응력",
+"en": "Stress (mechanics)",
+"lv": 1,
+"level": "기초",
+"hint": "재료 내부에 작용하는 단위 면적당 힘",
+"category": "재료역학",
+"domain": "기계공학"
+},
+"me-solid-02": {
+"ko": "훅의 법칙",
+"en": "Hooke's law",
+"lv": 1,
+"level": "기초",
+"hint": "탄성 범위에서 힘과 변형의 비례 관계",
+"category": "재료역학",
+"domain": "기계공학"
+},
+"me-solid-03": {
+"ko": "응력-변형률 선도",
+"en": "Stress–strain curve",
+"lv": 1,
+"level": "기초",
+"hint": "재료의 기계적 성질을 한눈에 보여 주는 그래프",
+"category": "재료역학",
+"domain": "기계공학"
+},
+"me-solid-04": {
+"ko": "푸아송 비",
+"en": "Poisson's ratio",
+"lv": 1,
+"level": "기초",
+"hint": "늘어날 때 옆으로 줄어드는 정도를 나타내는 값",
+"category": "재료역학",
+"domain": "기계공학"
+},
+"me-solid-05": {
+"ko": "모어 원",
+"en": "Mohr's circle",
+"lv": 2,
+"level": "중급",
+"hint": "응력 변환을 원으로 그려 구하는 방법",
+"category": "재료역학",
+"domain": "기계공학"
+},
+"me-solid-06": {
+"ko": "오일러-베르누이 보 이론",
+"en": "Euler–Bernoulli beam theory",
+"lv": 2,
+"level": "중급",
+"hint": "보의 굽힘과 처짐을 계산하는 기본 이론",
+"category": "재료역학",
+"domain": "기계공학"
+},
+"me-solid-07": {
+"ko": "비틀림",
+"en": "Torsion (mechanics)",
+"lv": 2,
+"level": "중급",
+"hint": "축이 꼬일 때 생기는 응력과 변형",
+"category": "재료역학",
+"domain": "기계공학"
+},
+"me-solid-08": {
+"ko": "좌굴",
+"en": "Buckling",
+"lv": 2,
+"level": "중급",
+"hint": "가늘고 긴 기둥이 압축으로 갑자기 휘는 현상",
+"category": "재료역학",
+"domain": "기계공학"
+},
+"me-solid-09": {
+"ko": "피로 (재료)",
+"en": "Fatigue (material)",
+"lv": 3,
+"level": "심화",
+"hint": "반복 하중으로 재료가 파손되는 현상",
+"category": "재료역학",
+"domain": "기계공학"
+},
+"me-solid-10": {
+"ko": "파괴역학",
+"en": "Fracture mechanics",
+"lv": 3,
+"level": "심화",
+"hint": "균열이 있는 재료의 강도를 다루는 학문",
+"category": "재료역학",
+"domain": "기계공학"
+},
+"me-thermo-01": {
+"ko": "열역학 제1법칙",
+"en": "First law of thermodynamics",
+"lv": 1,
+"level": "기초",
+"hint": "열과 일, 에너지 보존에 관한 법칙",
+"category": "열역학·열전달",
+"domain": "기계공학"
+},
+"me-thermo-02": {
+"ko": "열역학 제2법칙",
+"en": "Second law of thermodynamics",
+"lv": 1,
+"level": "기초",
+"hint": "자연 현상의 방향성에 관한 법칙",
+"category": "열역학·열전달",
+"domain": "기계공학"
+},
+"me-thermo-03": {
+"ko": "이상 기체 법칙",
+"en": "Ideal gas law",
+"lv": 1,
+"level": "기초",
+"hint": "기체의 압력·부피·온도 사이의 관계",
+"category": "열역학·열전달",
+"domain": "기계공학"
+},
+"me-thermo-04": {
+"ko": "카르노 사이클",
+"en": "Carnot cycle",
+"lv": 1,
+"level": "기초",
+"hint": "열기관이 낼 수 있는 이론적 최고 효율",
+"category": "열역학·열전달",
+"domain": "기계공학"
+},
+"me-thermo-05": {
+"ko": "엔트로피",
+"en": "Entropy",
+"lv": 2,
+"level": "중급",
+"hint": "무질서도와 비가역성을 나타내는 상태량",
+"category": "열역학·열전달",
+"domain": "기계공학"
+},
+"me-thermo-06": {
+"ko": "랭킨 사이클",
+"en": "Rankine cycle",
+"lv": 2,
+"level": "중급",
+"hint": "증기 발전소의 기본이 되는 열역학 사이클",
+"category": "열역학·열전달",
+"domain": "기계공학"
+},
+"me-thermo-07": {
+"ko": "열전도 (푸리에 법칙)",
+"en": "Thermal conduction",
+"lv": 2,
+"level": "중급",
+"hint": "물체 내부를 통해 열이 전달되는 방식",
+"category": "열역학·열전달",
+"domain": "기계공학"
+},
+"me-thermo-08": {
+"ko": "엑서지",
+"en": "Exergy",
+"lv": 3,
+"level": "심화",
+"hint": "에너지 중 실제로 쓸 수 있는 일의 양",
+"category": "열역학·열전달",
+"domain": "기계공학"
+},
+"me-thermo-09": {
+"ko": "누셀 수",
+"en": "Nusselt number",
+"lv": 3,
+"level": "심화",
+"hint": "대류 열전달의 세기를 나타내는 무차원수",
+"category": "열역학·열전달",
+"domain": "기계공학"
+},
+"me-thermo-10": {
+"ko": "대수 평균 온도차 (LMTD)",
+"en": "Logarithmic mean temperature difference",
+"lv": 3,
+"level": "심화",
+"hint": "열교환기 설계에 쓰는 온도차 개념",
+"category": "열역학·열전달",
+"domain": "기계공학"
+},
+"me-fluid-01": {
+"ko": "파스칼의 원리",
+"en": "Pascal's law",
+"lv": 1,
+"level": "기초",
+"hint": "밀폐된 유체에 가한 압력의 전달 방식",
+"category": "유체역학",
+"domain": "기계공학"
+},
+"me-fluid-02": {
+"ko": "아르키메데스의 원리 (부력)",
+"en": "Archimedes' principle",
+"lv": 1,
+"level": "기초",
+"hint": "물에 잠긴 물체가 받는 힘",
+"category": "유체역학",
+"domain": "기계공학"
+},
+"me-fluid-03": {
+"ko": "베르누이 방정식",
+"en": "Bernoulli's principle",
+"lv": 1,
+"level": "기초",
+"hint": "유체의 속도와 압력 사이의 관계",
+"category": "유체역학",
+"domain": "기계공학"
+},
+"me-fluid-04": {
+"ko": "연속 방정식",
+"en": "Continuity equation",
+"lv": 1,
+"level": "기초",
+"hint": "흐름에서 질량이 보존된다는 식",
+"category": "유체역학",
+"domain": "기계공학"
+},
+"me-fluid-05": {
+"ko": "레이놀즈 수",
+"en": "Reynolds number",
+"lv": 2,
+"level": "중급",
+"hint": "층류와 난류를 구분하는 무차원수",
+"category": "유체역학",
+"domain": "기계공학"
+},
+"me-fluid-06": {
+"ko": "다르시-바이스바흐 방정식",
+"en": "Darcy–Weisbach equation",
+"lv": 2,
+"level": "중급",
+"hint": "관 속 흐름의 마찰 손실을 구하는 식",
+"category": "유체역학",
+"domain": "기계공학"
+},
+"me-fluid-07": {
+"ko": "경계층",
+"en": "Boundary layer",
+"lv": 2,
+"level": "중급",
+"hint": "벽면 근처에서 속도가 크게 변하는 얇은 층",
+"category": "유체역학",
+"domain": "기계공학"
+},
+"me-fluid-08": {
+"ko": "나비에-스토크스 방정식",
+"en": "Navier–Stokes equations",
+"lv": 3,
+"level": "심화",
+"hint": "점성 유체의 운동을 기술하는 방정식",
+"category": "유체역학",
+"domain": "기계공학"
+},
+"me-fluid-09": {
+"ko": "버킹엄 π 정리",
+"en": "Buckingham π theorem",
+"lv": 3,
+"level": "심화",
+"hint": "차원 해석으로 무차원수를 찾는 방법",
+"category": "유체역학",
+"domain": "기계공학"
+},
+"me-fluid-10": {
+"ko": "캐비테이션 (공동현상)",
+"en": "Cavitation",
+"lv": 3,
+"level": "심화",
+"hint": "액체 속 압력 저하로 기포가 생기는 현상",
+"category": "유체역학",
+"domain": "기계공학"
+},
+"me-design-01": {
+"ko": "기어",
+"en": "Gear",
+"lv": 1,
+"level": "기초",
+"hint": "톱니로 회전과 동력을 전달하는 기계요소",
+"category": "기계설계·기계요소",
+"domain": "기계공학"
+},
+"me-design-02": {
+"ko": "나사",
+"en": "Screw thread",
+"lv": 1,
+"level": "기초",
+"hint": "체결과 운동 변환에 쓰이는 나선 구조",
+"category": "기계설계·기계요소",
+"domain": "기계공학"
+},
+"me-design-03": {
+"ko": "베어링",
+"en": "Bearing (mechanical)",
+"lv": 1,
+"level": "기초",
+"hint": "회전축을 지지하고 마찰을 줄이는 요소",
+"category": "기계설계·기계요소",
+"domain": "기계공학"
+},
+"me-design-04": {
+"ko": "안전율",
+"en": "Factor of safety",
+"lv": 1,
+"level": "기초",
+"hint": "설계에서 여유를 얼마나 둘지 정하는 값",
+"category": "기계설계·기계요소",
+"domain": "기계공학"
+},
+"me-design-05": {
+"ko": "끼워맞춤",
+"en": "Engineering fit",
+"lv": 2,
+"level": "중급",
+"hint": "구멍과 축의 치수 관계를 정하는 방식",
+"category": "기계설계·기계요소",
+"domain": "기계공학"
+},
+"me-design-06": {
+"ko": "벨트 전동",
+"en": "Belt (mechanical)",
+"lv": 2,
+"level": "중급",
+"hint": "벨트와 풀리로 동력을 전달하는 방법",
+"category": "기계설계·기계요소",
+"domain": "기계공학"
+},
+"me-design-07": {
+"ko": "키 (기계요소)",
+"en": "Key (engineering)",
+"lv": 2,
+"level": "중급",
+"hint": "축과 회전체를 고정해 토크를 전달하는 요소",
+"category": "기계설계·기계요소",
+"domain": "기계공학"
+},
+"me-design-08": {
+"ko": "클러치",
+"en": "Clutch",
+"lv": 2,
+"level": "중급",
+"hint": "동력을 연결하거나 끊는 장치",
+"category": "기계설계·기계요소",
+"domain": "기계공학"
+},
+"me-design-09": {
+"ko": "기하 공차 (GD&T)",
+"en": "Geometric dimensioning and tolerancing",
+"lv": 3,
+"level": "심화",
+"hint": "모양과 위치의 허용 오차를 표기하는 체계",
+"category": "기계설계·기계요소",
+"domain": "기계공학"
+},
+"me-design-10": {
+"ko": "인벌류트 치형",
+"en": "Involute gear",
+"lv": 3,
+"level": "심화",
+"hint": "대부분의 기어가 쓰는 치형 곡선",
+"category": "기계설계·기계요소",
+"domain": "기계공학"
+},
+"me-mfg-01": {
+"ko": "선반",
+"en": "Lathe",
+"lv": 1,
+"level": "기초",
+"hint": "공작물을 회전시켜 깎는 공작기계",
+"category": "생산·가공",
+"domain": "기계공학"
+},
+"me-mfg-02": {
+"ko": "밀링",
+"en": "Milling (machining)",
+"lv": 1,
+"level": "기초",
+"hint": "회전하는 공구로 평면·홈을 깎는 가공",
+"category": "생산·가공",
+"domain": "기계공학"
+},
+"me-mfg-03": {
+"ko": "주조",
+"en": "Casting (metalworking)",
+"lv": 1,
+"level": "기초",
+"hint": "녹인 금속을 틀에 부어 형상을 만드는 공정",
+"category": "생산·가공",
+"domain": "기계공학"
+},
+"me-mfg-04": {
+"ko": "용접",
+"en": "Welding",
+"lv": 1,
+"level": "기초",
+"hint": "재료를 녹이거나 압력을 가해 접합하는 방법",
+"category": "생산·가공",
+"domain": "기계공학"
+},
+"me-mfg-05": {
+"ko": "단조",
+"en": "Forging",
+"lv": 2,
+"level": "중급",
+"hint": "금속을 두드리거나 눌러 성형하는 공정",
+"category": "생산·가공",
+"domain": "기계공학"
+},
+"me-mfg-06": {
+"ko": "사출 성형",
+"en": "Injection moulding",
+"lv": 2,
+"level": "중급",
+"hint": "플라스틱 제품을 대량 생산하는 대표 공정",
+"category": "생산·가공",
+"domain": "기계공학"
+},
+"me-mfg-07": {
+"ko": "수치 제어 (CNC)",
+"en": "Numerical control",
+"lv": 2,
+"level": "중급",
+"hint": "컴퓨터 프로그램으로 공작기계를 움직이는 방식",
+"category": "생산·가공",
+"domain": "기계공학"
+},
+"me-mfg-08": {
+"ko": "열처리",
+"en": "Heat treating",
+"lv": 2,
+"level": "중급",
+"hint": "가열과 냉각으로 금속의 성질을 바꾸는 공정",
+"category": "생산·가공",
+"domain": "기계공학"
+},
+"me-mfg-09": {
+"ko": "방전 가공 (EDM)",
+"en": "Electrical discharge machining",
+"lv": 3,
+"level": "심화",
+"hint": "전기 불꽃으로 단단한 금속을 깎는 가공",
+"category": "생산·가공",
+"domain": "기계공학"
+},
+"me-mfg-10": {
+"ko": "분말 야금",
+"en": "Powder metallurgy",
+"lv": 3,
+"level": "심화",
+"hint": "금속 가루를 굳혀 부품을 만드는 공정",
+"category": "생산·가공",
+"domain": "기계공학"
+},
+"che-thermo-01": {
+"ko": "이상기체 상태방정식",
+"en": "Ideal gas law",
+"lv": 1,
+"level": "기초",
+"hint": "기체의 압력·부피·온도 사이의 관계",
+"category": "화공열역학",
+"domain": "화학공학"
+},
+"che-thermo-02": {
+"ko": "열역학 제1법칙",
+"en": "First law of thermodynamics",
+"lv": 1,
+"level": "기초",
+"hint": "에너지는 형태만 바뀔 뿐 보존된다",
+"category": "화공열역학",
+"domain": "화학공학"
+},
+"che-thermo-03": {
+"ko": "엔트로피",
+"en": "Entropy",
+"lv": 1,
+"level": "기초",
+"hint": "무질서도와 자발적 과정의 방향",
+"category": "화공열역학",
+"domain": "화학공학"
+},
+"che-thermo-04": {
+"ko": "라울의 법칙",
+"en": "Raoult's law",
+"lv": 1,
+"level": "기초",
+"hint": "이상용액에서 성분의 증기압 계산",
+"category": "화공열역학",
+"domain": "화학공학"
+},
+"che-thermo-05": {
+"ko": "깁스 자유 에너지",
+"en": "Gibbs free energy",
+"lv": 2,
+"level": "중급",
+"hint": "등온·등압에서 반응의 자발성 판단 기준",
+"category": "화공열역학",
+"domain": "화학공학"
+},
+"che-thermo-06": {
+"ko": "반데르발스 상태방정식",
+"en": "Van der Waals equation",
+"lv": 2,
+"level": "중급",
+"hint": "분자 크기와 인력을 보정한 실제기체 식",
+"category": "화공열역학",
+"domain": "화학공학"
+},
+"che-thermo-07": {
+"ko": "랭킨 사이클",
+"en": "Rankine cycle",
+"lv": 2,
+"level": "중급",
+"hint": "증기를 이용한 발전소의 열기관 사이클",
+"category": "화공열역학",
+"domain": "화학공학"
+},
+"che-thermo-08": {
+"ko": "퓨개시티",
+"en": "Fugacity",
+"lv": 3,
+"level": "심화",
+"hint": "실제기체의 압력을 대신하는 유효 압력",
+"category": "화공열역학",
+"domain": "화학공학"
+},
+"che-thermo-09": {
+"ko": "활동도 계수",
+"en": "Activity coefficient",
+"lv": 3,
+"level": "심화",
+"hint": "비이상용액이 이상에서 벗어난 정도",
+"category": "화공열역학",
+"domain": "화학공학"
+},
+"che-thermo-10": {
+"ko": "줄-톰슨 효과",
+"en": "Joule–Thomson effect",
+"lv": 3,
+"level": "심화",
+"hint": "기체가 교축 팽창할 때의 온도 변화",
+"category": "화공열역학",
+"domain": "화학공학"
+},
+"che-reaction-01": {
+"ko": "반응속도식",
+"en": "Rate equation",
+"lv": 1,
+"level": "기초",
+"hint": "농도와 반응속도를 잇는 식과 반응차수",
+"category": "반응공학",
+"domain": "화학공학"
+},
+"che-reaction-02": {
+"ko": "아레니우스 식",
+"en": "Arrhenius equation",
+"lv": 1,
+"level": "기초",
+"hint": "온도와 활성화에너지가 속도상수에 주는 영향",
+"category": "반응공학",
+"domain": "화학공학"
+},
+"che-reaction-03": {
+"ko": "회분식 반응기",
+"en": "Batch reactor",
+"lv": 1,
+"level": "기초",
+"hint": "원료를 한 번에 넣고 반응시키는 반응기",
+"category": "반응공학",
+"domain": "화학공학"
+},
+"che-reaction-04": {
+"ko": "연속교반탱크반응기 (CSTR)",
+"en": "Continuous stirred-tank reactor",
+"lv": 1,
+"level": "기초",
+"hint": "완전 혼합 상태로 연속 운전하는 반응기",
+"category": "반응공학",
+"domain": "화학공학"
+},
+"che-reaction-05": {
+"ko": "플러그 흐름 반응기 (PFR)",
+"en": "Plug flow reactor model",
+"lv": 2,
+"level": "중급",
+"hint": "관 속을 축방향 혼합 없이 흐르는 반응기",
+"category": "반응공학",
+"domain": "화학공학"
+},
+"che-reaction-06": {
+"ko": "촉매",
+"en": "Catalysis",
+"lv": 2,
+"level": "중급",
+"hint": "소모되지 않고 반응 경로를 바꾸는 물질",
+"category": "반응공학",
+"domain": "화학공학"
+},
+"che-reaction-07": {
+"ko": "랭뮤어 흡착 등온식",
+"en": "Langmuir adsorption model",
+"lv": 2,
+"level": "중급",
+"hint": "단분자층 흡착과 표면 덮임률",
+"category": "반응공학",
+"domain": "화학공학"
+},
+"che-reaction-08": {
+"ko": "체류시간 분포 (RTD)",
+"en": "Residence time distribution",
+"lv": 3,
+"level": "심화",
+"hint": "반응기 속 유체 입자가 머무는 시간의 분포",
+"category": "반응공학",
+"domain": "화학공학"
+},
+"che-reaction-09": {
+"ko": "티엘레 계수",
+"en": "Thiele modulus",
+"lv": 3,
+"level": "심화",
+"hint": "촉매 기공 내 확산과 반응속도의 비교",
+"category": "반응공학",
+"domain": "화학공학"
+},
+"che-reaction-10": {
+"ko": "미카엘리스-멘텐 속도론",
+"en": "Michaelis–Menten kinetics",
+"lv": 3,
+"level": "심화",
+"hint": "효소 반응의 기질 농도와 속도 관계",
+"category": "반응공학",
+"domain": "화학공학"
+},
+"che-transport-01": {
+"ko": "점성",
+"en": "Viscosity",
+"lv": 1,
+"level": "기초",
+"hint": "유체가 흐름에 저항하는 성질",
+"category": "이동현상",
+"domain": "화학공학"
+},
+"che-transport-02": {
+"ko": "레이놀즈 수",
+"en": "Reynolds number",
+"lv": 1,
+"level": "기초",
+"hint": "층류와 난류를 가르는 무차원수",
+"category": "이동현상",
+"domain": "화학공학"
+},
+"che-transport-03": {
+"ko": "열전도 (푸리에 법칙)",
+"en": "Thermal conduction",
+"lv": 1,
+"level": "기초",
+"hint": "온도 기울기에 따른 고체 내 열 이동",
+"category": "이동현상",
+"domain": "화학공학"
+},
+"che-transport-04": {
+"ko": "픽의 확산 법칙",
+"en": "Fick's laws of diffusion",
+"lv": 1,
+"level": "기초",
+"hint": "농도 기울기에 따른 물질 이동",
+"category": "이동현상",
+"domain": "화학공학"
+},
+"che-transport-05": {
+"ko": "경계층",
+"en": "Boundary layer",
+"lv": 2,
+"level": "중급",
+"hint": "벽면 근처 속도가 급변하는 얇은 영역",
+"category": "이동현상",
+"domain": "화학공학"
+},
+"che-transport-06": {
+"ko": "대류 열전달 계수",
+"en": "Heat transfer coefficient",
+"lv": 2,
+"level": "중급",
+"hint": "유체와 표면 사이 열 이동의 세기",
+"category": "이동현상",
+"domain": "화학공학"
+},
+"che-transport-07": {
+"ko": "누셀트 수",
+"en": "Nusselt number",
+"lv": 2,
+"level": "중급",
+"hint": "대류와 전도 열전달의 비",
+"category": "이동현상",
+"domain": "화학공학"
+},
+"che-transport-08": {
+"ko": "슈테판-볼츠만 법칙",
+"en": "Stefan–Boltzmann law",
+"lv": 2,
+"level": "중급",
+"hint": "흑체가 내는 복사 에너지와 온도",
+"category": "이동현상",
+"domain": "화학공학"
+},
+"che-transport-09": {
+"ko": "나비에-스토크스 방정식",
+"en": "Navier–Stokes equations",
+"lv": 3,
+"level": "심화",
+"hint": "점성 유체의 운동량 보존 방정식",
+"category": "이동현상",
+"domain": "화학공학"
+},
+"che-transport-10": {
+"ko": "칠턴-콜번 유사성",
+"en": "Chilton and Colburn J-factor analogy",
+"lv": 3,
+"level": "심화",
+"hint": "운동량·열·물질 전달 사이의 상사성",
+"category": "이동현상",
+"domain": "화학공학"
+},
+"che-unit-01": {
+"ko": "증류",
+"en": "Distillation",
+"lv": 1,
+"level": "기초",
+"hint": "끓는점 차이를 이용한 액체 혼합물 분리",
+"category": "단위조작·분리공정",
+"domain": "화학공학"
+},
+"che-unit-02": {
+"ko": "기체 흡수",
+"en": "Absorption (chemistry)",
+"lv": 1,
+"level": "기초",
+"hint": "기체 성분을 액체 용매에 녹여 분리",
+"category": "단위조작·분리공정",
+"domain": "화학공학"
+},
+"che-unit-03": {
+"ko": "액액추출",
+"en": "Liquid–liquid extraction",
+"lv": 1,
+"level": "기초",
+"hint": "섞이지 않는 두 액체 간 용해도 차 이용",
+"category": "단위조작·분리공정",
+"domain": "화학공학"
+},
+"che-unit-04": {
+"ko": "열교환기",
+"en": "Heat exchanger",
+"lv": 1,
+"level": "기초",
+"hint": "두 유체 사이에 열을 주고받는 장치",
+"category": "단위조작·분리공정",
+"domain": "화학공학"
+},
+"che-unit-05": {
+"ko": "상대휘발도",
+"en": "Relative volatility",
+"lv": 2,
+"level": "중급",
+"hint": "두 성분의 증류 분리 용이성 척도",
+"category": "단위조작·분리공정",
+"domain": "화학공학"
+},
+"che-unit-06": {
+"ko": "이론단",
+"en": "Theoretical plate",
+"lv": 2,
+"level": "중급",
+"hint": "기액 평형에 도달하는 가상의 단",
+"category": "단위조작·분리공정",
+"domain": "화학공학"
+},
+"che-unit-07": {
+"ko": "대수평균온도차 (LMTD)",
+"en": "Logarithmic mean temperature difference",
+"lv": 2,
+"level": "중급",
+"hint": "열교환기 설계에 쓰는 평균 온도차",
+"category": "단위조작·분리공정",
+"domain": "화학공학"
+},
+"che-unit-08": {
+"ko": "역삼투",
+"en": "Reverse osmosis",
+"lv": 2,
+"level": "중급",
+"hint": "압력을 가해 막으로 용매를 걸러내는 공정",
+"category": "단위조작·분리공정",
+"domain": "화학공학"
+},
+"che-unit-09": {
+"ko": "맥케이브-틸레 법",
+"en": "McCabe–Thiele method",
+"lv": 3,
+"level": "심화",
+"hint": "작도로 증류탑 단수를 구하는 방법",
+"category": "단위조작·분리공정",
+"domain": "화학공학"
+},
+"che-unit-10": {
+"ko": "펜스케 식",
+"en": "Fenske equation",
+"lv": 3,
+"level": "심화",
+"hint": "전환류에서의 최소 이론단수 계산",
+"category": "단위조작·분리공정",
+"domain": "화학공학"
+},
+"che-process-01": {
+"ko": "물질수지",
+"en": "Mass balance",
+"lv": 1,
+"level": "기초",
+"hint": "들어온 양 = 나간 양 + 축적 + 소모",
+"category": "공정설계·제어",
+"domain": "화학공학"
+},
+"che-process-02": {
+"ko": "공정흐름도 (PFD)",
+"en": "Process flow diagram",
+"lv": 1,
+"level": "기초",
+"hint": "주요 설비와 흐름을 그린 공정 도면",
+"category": "공정설계·제어",
+"domain": "화학공학"
+},
+"che-process-03": {
+"ko": "라플라스 변환",
+"en": "Laplace transform",
+"lv": 1,
+"level": "기초",
+"hint": "미분방정식을 대수식으로 바꾸는 도구",
+"category": "공정설계·제어",
+"domain": "화학공학"
+},
+"che-process-04": {
+"ko": "시간상수",
+"en": "Time constant",
+"lv": 1,
+"level": "기초",
+"hint": "1차 시스템 응답이 얼마나 빠른가",
+"category": "공정설계·제어",
+"domain": "화학공학"
+},
+"che-process-05": {
+"ko": "PID 제어기",
+"en": "Proportional–integral–derivative controller",
+"lv": 2,
+"level": "중급",
+"hint": "비례·적분·미분 동작을 결합한 제어기",
+"category": "공정설계·제어",
+"domain": "화학공학"
+},
+"che-process-06": {
+"ko": "전달함수",
+"en": "Transfer function",
+"lv": 2,
+"level": "중급",
+"hint": "입력과 출력의 관계를 s영역에서 표현",
+"category": "공정설계·제어",
+"domain": "화학공학"
+},
+"che-process-07": {
+"ko": "위험과 운전분석 (HAZOP)",
+"en": "Hazard and operability study",
+"lv": 2,
+"level": "중급",
+"hint": "가이드워드로 공정 위험을 찾는 기법",
+"category": "공정설계·제어",
+"domain": "화학공학"
+},
+"che-process-08": {
+"ko": "보드 선도",
+"en": "Bode plot",
+"lv": 3,
+"level": "심화",
+"hint": "주파수에 따른 이득과 위상 그래프",
+"category": "공정설계·제어",
+"domain": "화학공학"
+},
+"che-process-09": {
+"ko": "지글러-니콜스 튜닝",
+"en": "Ziegler–Nichols method",
+"lv": 3,
+"level": "심화",
+"hint": "제어기 파라미터를 경험적으로 정하는 법",
+"category": "공정설계·제어",
+"domain": "화학공학"
+},
+"che-process-10": {
+"ko": "핀치 분석",
+"en": "Pinch analysis",
+"lv": 3,
+"level": "심화",
+"hint": "열 회수를 최대화하는 열교환망 설계",
+"category": "공정설계·제어",
+"domain": "화학공학"
+},
+"cv-struct-01": {
+"ko": "응력",
+"en": "Stress (mechanics)",
+"lv": 1,
+"level": "기초",
+"hint": "단위 면적당 작용하는 내력",
+"category": "구조역학",
+"domain": "토목공학"
+},
+"cv-struct-02": {
+"ko": "훅의 법칙",
+"en": "Hooke's law",
+"lv": 1,
+"level": "기초",
+"hint": "탄성 범위에서 하중과 변형의 비례",
+"category": "구조역학",
+"domain": "토목공학"
+},
+"cv-struct-03": {
+"ko": "휨모멘트",
+"en": "Bending moment",
+"lv": 1,
+"level": "기초",
+"hint": "보를 구부리려는 내부 모멘트",
+"category": "구조역학",
+"domain": "토목공학"
+},
+"cv-struct-04": {
+"ko": "전단력",
+"en": "Shear force",
+"lv": 1,
+"level": "기초",
+"hint": "단면을 미끄러지게 하려는 내력",
+"category": "구조역학",
+"domain": "토목공학"
+},
+"cv-struct-05": {
+"ko": "단면2차모멘트",
+"en": "Second moment of area",
+"lv": 2,
+"level": "중급",
+"hint": "단면 형상이 휨에 저항하는 정도",
+"category": "구조역학",
+"domain": "토목공학"
+},
+"cv-struct-06": {
+"ko": "좌굴",
+"en": "Buckling",
+"lv": 2,
+"level": "중급",
+"hint": "압축 부재가 옆으로 휘며 무너지는 현상",
+"category": "구조역학",
+"domain": "토목공학"
+},
+"cv-struct-07": {
+"ko": "모어 원",
+"en": "Mohr's circle",
+"lv": 2,
+"level": "중급",
+"hint": "회전한 면의 응력을 원으로 구하는 법",
+"category": "구조역학",
+"domain": "토목공학"
+},
+"cv-struct-08": {
+"ko": "부정정 구조물",
+"en": "Statically indeterminate",
+"lv": 3,
+"level": "심화",
+"hint": "평형방정식만으로 풀 수 없는 구조",
+"category": "구조역학",
+"domain": "토목공학"
+},
+"cv-struct-09": {
+"ko": "모멘트 분배법",
+"en": "Moment distribution method",
+"lv": 3,
+"level": "심화",
+"hint": "반복 계산으로 연속보를 해석하는 방법",
+"category": "구조역학",
+"domain": "토목공학"
+},
+"cv-struct-10": {
+"ko": "가상일의 원리",
+"en": "Virtual work",
+"lv": 3,
+"level": "심화",
+"hint": "가상 변위로 처짐과 반력을 구하는 원리",
+"category": "구조역학",
+"domain": "토목공학"
+},
+"cv-geo-01": {
+"ko": "간극비",
+"en": "Void ratio",
+"lv": 1,
+"level": "기초",
+"hint": "흙 속 빈 공간과 흙 입자 부피의 비",
+"category": "토질·지반공학",
+"domain": "토목공학"
+},
+"cv-geo-02": {
+"ko": "애터버그 한계",
+"en": "Atterberg limits",
+"lv": 1,
+"level": "기초",
+"hint": "함수비에 따른 세립토의 상태 변화",
+"category": "토질·지반공학",
+"domain": "토목공학"
+},
+"cv-geo-03": {
+"ko": "다르시 법칙",
+"en": "Darcy's law",
+"lv": 1,
+"level": "기초",
+"hint": "흙 속을 흐르는 물의 유량과 동수경사",
+"category": "토질·지반공학",
+"domain": "토목공학"
+},
+"cv-geo-04": {
+"ko": "표준관입시험 (SPT)",
+"en": "Standard penetration test",
+"lv": 1,
+"level": "기초",
+"hint": "타격 횟수 N값으로 지반 강도 추정",
+"category": "토질·지반공학",
+"domain": "토목공학"
+},
+"cv-geo-05": {
+"ko": "유효응력",
+"en": "Effective stress",
+"lv": 2,
+"level": "중급",
+"hint": "흙 입자 골격이 실제로 받는 응력",
+"category": "토질·지반공학",
+"domain": "토목공학"
+},
+"cv-geo-06": {
+"ko": "압밀",
+"en": "Consolidation (soil)",
+"lv": 2,
+"level": "중급",
+"hint": "간극수가 빠지며 점토가 서서히 침하",
+"category": "토질·지반공학",
+"domain": "토목공학"
+},
+"cv-geo-07": {
+"ko": "모어-쿨롱 파괴 기준",
+"en": "Mohr–Coulomb theory",
+"lv": 2,
+"level": "중급",
+"hint": "점착력과 내부마찰각으로 본 전단강도",
+"category": "토질·지반공학",
+"domain": "토목공학"
+},
+"cv-geo-08": {
+"ko": "액상화",
+"en": "Soil liquefaction",
+"lv": 3,
+"level": "심화",
+"hint": "지진 시 포화 모래가 액체처럼 변함",
+"category": "토질·지반공학",
+"domain": "토목공학"
+},
+"cv-geo-09": {
+"ko": "토압",
+"en": "Lateral earth pressure",
+"lv": 3,
+"level": "심화",
+"hint": "옹벽에 작용하는 흙의 수평 압력",
+"category": "토질·지반공학",
+"domain": "토목공학"
+},
+"cv-geo-10": {
+"ko": "사면안정 해석",
+"en": "Slope stability analysis",
+"lv": 3,
+"level": "심화",
+"hint": "비탈면이 무너지지 않을지 판단하는 법",
+"category": "토질·지반공학",
+"domain": "토목공학"
+},
+"cv-hydro-01": {
+"ko": "베르누이 방정식",
+"en": "Bernoulli's principle",
+"lv": 1,
+"level": "기초",
+"hint": "흐름에서 압력·속도·위치 에너지 보존",
+"category": "수리·수문학",
+"domain": "토목공학"
+},
+"cv-hydro-02": {
+"ko": "연속 방정식",
+"en": "Continuity equation",
+"lv": 1,
+"level": "기초",
+"hint": "단면이 바뀌어도 유량은 일정",
+"category": "수리·수문학",
+"domain": "토목공학"
+},
+"cv-hydro-03": {
+"ko": "정수역학",
+"en": "Hydrostatics",
+"lv": 1,
+"level": "기초",
+"hint": "정지한 유체 속 깊이에 따른 압력",
+"category": "수리·수문학",
+"domain": "토목공학"
+},
+"cv-hydro-04": {
+"ko": "아르키메데스의 원리",
+"en": "Archimedes' principle",
+"lv": 1,
+"level": "기초",
+"hint": "잠긴 물체가 받는 부력의 크기",
+"category": "수리·수문학",
+"domain": "토목공학"
+},
+"cv-hydro-05": {
+"ko": "다르시-바이스바흐 식",
+"en": "Darcy–Weisbach equation",
+"lv": 2,
+"level": "중급",
+"hint": "관로 마찰에 의한 손실수두 계산",
+"category": "수리·수문학",
+"domain": "토목공학"
+},
+"cv-hydro-06": {
+"ko": "매닝 공식",
+"en": "Manning formula",
+"lv": 2,
+"level": "중급",
+"hint": "조도계수로 개수로 유속을 구하는 식",
+"category": "수리·수문학",
+"domain": "토목공학"
+},
+"cv-hydro-07": {
+"ko": "프루드 수",
+"en": "Froude number",
+"lv": 2,
+"level": "중급",
+"hint": "상류와 사류를 구분하는 무차원수",
+"category": "수리·수문학",
+"domain": "토목공학"
+},
+"cv-hydro-08": {
+"ko": "도수",
+"en": "Hydraulic jump",
+"lv": 2,
+"level": "중급",
+"hint": "사류가 상류로 급변하며 수면이 뛰는 현상",
+"category": "수리·수문학",
+"domain": "토목공학"
+},
+"cv-hydro-09": {
+"ko": "단위유량도",
+"en": "Unit hydrograph",
+"lv": 3,
+"level": "심화",
+"hint": "단위 유효우량에 대한 유역의 유출 응답",
+"category": "수리·수문학",
+"domain": "토목공학"
+},
+"cv-hydro-10": {
+"ko": "SCS 유출곡선지수 (CN)",
+"en": "Runoff curve number",
+"lv": 3,
+"level": "심화",
+"hint": "토지 이용으로 직접유출량을 추정하는 법",
+"category": "수리·수문학",
+"domain": "토목공학"
+},
+"cv-transport-01": {
+"ko": "수준측량",
+"en": "Levelling",
+"lv": 1,
+"level": "기초",
+"hint": "두 지점 사이 높이 차를 재는 측량",
+"category": "교통·측량",
+"domain": "토목공학"
+},
+"cv-transport-02": {
+"ko": "삼각측량",
+"en": "Triangulation (surveying)",
+"lv": 1,
+"level": "기초",
+"hint": "삼각형 망으로 위치를 정하는 측량",
+"category": "교통·측량",
+"domain": "토목공학"
+},
+"cv-transport-03": {
+"ko": "위성측위시스템 (GNSS)",
+"en": "Satellite navigation",
+"lv": 1,
+"level": "기초",
+"hint": "위성 신호로 지상 위치를 결정",
+"category": "교통·측량",
+"domain": "토목공학"
+},
+"cv-transport-04": {
+"ko": "지리정보시스템 (GIS)",
+"en": "Geographic information system",
+"lv": 1,
+"level": "기초",
+"hint": "공간 데이터를 저장·분석하는 시스템",
+"category": "교통·측량",
+"domain": "토목공학"
+},
+"cv-transport-05": {
+"ko": "트래버스 측량",
+"en": "Traverse (surveying)",
+"lv": 2,
+"level": "중급",
+"hint": "측선의 길이와 각을 이어가는 측량",
+"category": "교통·측량",
+"domain": "토목공학"
+},
+"cv-transport-06": {
+"ko": "교통류 기본도",
+"en": "Fundamental diagram of traffic flow",
+"lv": 2,
+"level": "중급",
+"hint": "교통량·속도·밀도 사이의 관계",
+"category": "교통·측량",
+"domain": "토목공학"
+},
+"cv-transport-07": {
+"ko": "서비스 수준 (LOS)",
+"en": "Level of service (transportation)",
+"lv": 2,
+"level": "중급",
+"hint": "도로 운영 상태를 등급으로 평가",
+"category": "교통·측량",
+"domain": "토목공학"
+},
+"cv-transport-08": {
+"ko": "편경사",
+"en": "Cant (road and rail)",
+"lv": 2,
+"level": "중급",
+"hint": "곡선부에서 바깥쪽을 높이는 이유",
+"category": "교통·측량",
+"domain": "토목공학"
+},
+"cv-transport-09": {
+"ko": "완화곡선 (클로소이드)",
+"en": "Euler spiral",
+"lv": 3,
+"level": "심화",
+"hint": "직선과 원곡선을 부드럽게 잇는 곡선",
+"category": "교통·측량",
+"domain": "토목공학"
+},
+"cv-transport-10": {
+"ko": "교통수요 예측 (4단계 모형)",
+"en": "Transportation forecasting",
+"lv": 3,
+"level": "심화",
+"hint": "통행 발생·분포·수단·배정의 단계",
+"category": "교통·측량",
+"domain": "토목공학"
+},
+"cv-concrete-01": {
+"ko": "물-시멘트비",
+"en": "Water–cement ratio",
+"lv": 1,
+"level": "기초",
+"hint": "배합수 양이 강도와 내구성에 주는 영향",
+"category": "콘크리트·건설재료",
+"domain": "토목공학"
+},
+"cv-concrete-02": {
+"ko": "포틀랜드 시멘트",
+"en": "Portland cement",
+"lv": 1,
+"level": "기초",
+"hint": "가장 널리 쓰이는 시멘트와 그 원료",
+"category": "콘크리트·건설재료",
+"domain": "토목공학"
+},
+"cv-concrete-03": {
+"ko": "골재",
+"en": "Construction aggregate",
+"lv": 1,
+"level": "기초",
+"hint": "콘크리트 부피 대부분을 차지하는 재료",
+"category": "콘크리트·건설재료",
+"domain": "토목공학"
+},
+"cv-concrete-04": {
+"ko": "슬럼프 시험",
+"en": "Concrete slump test",
+"lv": 1,
+"level": "기초",
+"hint": "굳지 않은 콘크리트의 반죽질기 측정",
+"category": "콘크리트·건설재료",
+"domain": "토목공학"
+},
+"cv-concrete-05": {
+"ko": "철근콘크리트",
+"en": "Reinforced concrete",
+"lv": 2,
+"level": "중급",
+"hint": "인장은 철근, 압축은 콘크리트가 분담",
+"category": "콘크리트·건설재료",
+"domain": "토목공학"
+},
+"cv-concrete-06": {
+"ko": "프리스트레스트 콘크리트 (PSC)",
+"en": "Prestressed concrete",
+"lv": 2,
+"level": "중급",
+"hint": "미리 압축력을 넣어 인장을 상쇄",
+"category": "콘크리트·건설재료",
+"domain": "토목공학"
+},
+"cv-concrete-07": {
+"ko": "크리프",
+"en": "Creep (deformation)",
+"lv": 2,
+"level": "중급",
+"hint": "일정 하중 아래 시간에 따라 늘어나는 변형",
+"category": "콘크리트·건설재료",
+"domain": "토목공학"
+},
+"cv-concrete-08": {
+"ko": "포졸란",
+"en": "Pozzolan",
+"lv": 2,
+"level": "중급",
+"hint": "플라이애시 같은 혼화재의 작용 원리",
+"category": "콘크리트·건설재료",
+"domain": "토목공학"
+},
+"cv-concrete-09": {
+"ko": "알칼리-골재 반응",
+"en": "Alkali–silica reaction",
+"lv": 3,
+"level": "심화",
+"hint": "골재와 시멘트 알칼리의 팽창 반응",
+"category": "콘크리트·건설재료",
+"domain": "토목공학"
+},
+"cv-concrete-10": {
+"ko": "한계상태설계법",
+"en": "Limit state design",
+"lv": 3,
+"level": "심화",
+"hint": "강도와 사용성 한계로 안전을 검토",
+"category": "콘크리트·건설재료",
+"domain": "토목공학"
+},
+"ar-struct-01": {
+"ko": "철근콘크리트",
+"en": "Reinforced concrete",
+"lv": 1,
+"level": "기초",
+"hint": "콘크리트와 철근이 힘을 나눠 받는 원리",
+"category": "건축구조",
+"domain": "건축공학"
+},
+"ar-struct-02": {
+"ko": "철골 구조",
+"en": "Steel frame",
+"lv": 1,
+"level": "기초",
+"hint": "강재 기둥과 보로 뼈대를 짜는 구조",
+"category": "건축구조",
+"domain": "건축공학"
+},
+"ar-struct-03": {
+"ko": "트러스",
+"en": "Truss",
+"lv": 1,
+"level": "기초",
+"hint": "삼각형 부재 조합으로 하중을 전달하는 구조",
+"category": "건축구조",
+"domain": "건축공학"
+},
+"ar-struct-04": {
+"ko": "캔틸레버",
+"en": "Cantilever",
+"lv": 1,
+"level": "기초",
+"hint": "한쪽 끝만 고정된 채 내민 보",
+"category": "건축구조",
+"domain": "건축공학"
+},
+"ar-struct-05": {
+"ko": "라멘 구조",
+"en": "Moment-resisting frame",
+"lv": 2,
+"level": "중급",
+"hint": "기둥과 보를 강하게 접합한 골조 형식",
+"category": "건축구조",
+"domain": "건축공학"
+},
+"ar-struct-06": {
+"ko": "프리스트레스트 콘크리트",
+"en": "Prestressed concrete",
+"lv": 2,
+"level": "중급",
+"hint": "미리 압축력을 넣어 균열을 줄이는 방법",
+"category": "건축구조",
+"domain": "건축공학"
+},
+"ar-struct-07": {
+"ko": "좌굴",
+"en": "Buckling",
+"lv": 2,
+"level": "중급",
+"hint": "가늘고 긴 부재가 압축에 갑자기 휘는 현상",
+"category": "건축구조",
+"domain": "건축공학"
+},
+"ar-struct-08": {
+"ko": "면진 구조",
+"en": "Base isolation",
+"lv": 3,
+"level": "심화",
+"hint": "건물과 지반 사이에서 지진 진동을 끊는 기술",
+"category": "건축구조",
+"domain": "건축공학"
+},
+"ar-struct-09": {
+"ko": "한계상태설계법",
+"en": "Limit state design",
+"lv": 3,
+"level": "심화",
+"hint": "구조물이 기능을 잃는 경계 상태로 설계하는 법",
+"category": "건축구조",
+"domain": "건축공학"
+},
+"ar-struct-10": {
+"ko": "쉘 구조",
+"en": "Thin-shell structure",
+"lv": 3,
+"level": "심화",
+"hint": "얇은 곡면으로 큰 공간을 덮는 구조",
+"category": "건축구조",
+"domain": "건축공학"
+},
+"ar-env-01": {
+"ko": "열관류율",
+"en": "Thermal transmittance",
+"lv": 1,
+"level": "기초",
+"hint": "벽체를 통해 열이 얼마나 빠져나가는가",
+"category": "건축환경·설비",
+"domain": "건축공학"
+},
+"ar-env-02": {
+"ko": "노점 온도",
+"en": "Dew point",
+"lv": 1,
+"level": "기초",
+"hint": "공기 속 수증기가 물방울로 맺히는 온도",
+"category": "건축환경·설비",
+"domain": "건축공학"
+},
+"ar-env-03": {
+"ko": "자연환기",
+"en": "Natural ventilation",
+"lv": 1,
+"level": "기초",
+"hint": "기계 없이 바람과 온도차로 공기 바꾸기",
+"category": "건축환경·설비",
+"domain": "건축공학"
+},
+"ar-env-04": {
+"ko": "공기조화 설비 (HVAC)",
+"en": "Heating, ventilation, and air conditioning",
+"lv": 1,
+"level": "기초",
+"hint": "냉난방·환기를 함께 다루는 건물 설비",
+"category": "건축환경·설비",
+"domain": "건축공학"
+},
+"ar-env-05": {
+"ko": "열교",
+"en": "Thermal bridge",
+"lv": 2,
+"level": "중급",
+"hint": "단열이 끊긴 부분으로 열이 새는 현상",
+"category": "건축환경·설비",
+"domain": "건축공학"
+},
+"ar-env-06": {
+"ko": "주광률",
+"en": "Daylight factor",
+"lv": 2,
+"level": "중급",
+"hint": "실내로 들어오는 자연광의 비율 지표",
+"category": "건축환경·설비",
+"domain": "건축공학"
+},
+"ar-env-07": {
+"ko": "잔향시간",
+"en": "Reverberation",
+"lv": 2,
+"level": "중급",
+"hint": "소리가 멈춘 뒤 실내에 남는 울림",
+"category": "건축환경·설비",
+"domain": "건축공학"
+},
+"ar-env-08": {
+"ko": "습공기선도",
+"en": "Psychrometrics",
+"lv": 3,
+"level": "심화",
+"hint": "공기의 온도·습도 상태를 읽는 도표",
+"category": "건축환경·설비",
+"domain": "건축공학"
+},
+"ar-env-09": {
+"ko": "전열교환기",
+"en": "Energy recovery ventilation",
+"lv": 3,
+"level": "심화",
+"hint": "환기하면서 버려지는 열을 되찾는 장치",
+"category": "건축환경·설비",
+"domain": "건축공학"
+},
+"ar-env-10": {
+"ko": "패시브 하우스",
+"en": "Passive house",
+"lv": 3,
+"level": "심화",
+"hint": "냉난방 에너지를 극도로 줄인 건축 기준",
+"category": "건축환경·설비",
+"domain": "건축공학"
+},
+"ar-const-01": {
+"ko": "거푸집",
+"en": "Formwork",
+"lv": 1,
+"level": "기초",
+"hint": "굳기 전 콘크리트의 모양을 잡는 틀",
+"category": "건축시공·관리",
+"domain": "건축공학"
+},
+"ar-const-02": {
+"ko": "레디믹스트 콘크리트 (레미콘)",
+"en": "Ready-mix concrete",
+"lv": 1,
+"level": "기초",
+"hint": "공장에서 배합해 현장으로 운반하는 콘크리트",
+"category": "건축시공·관리",
+"domain": "건축공학"
+},
+"ar-const-03": {
+"ko": "슬럼프 시험",
+"en": "Concrete slump test",
+"lv": 1,
+"level": "기초",
+"hint": "굳지 않은 콘크리트의 묽기를 재는 시험",
+"category": "건축시공·관리",
+"domain": "건축공학"
+},
+"ar-const-04": {
+"ko": "물-시멘트비",
+"en": "Water–cement ratio",
+"lv": 1,
+"level": "기초",
+"hint": "콘크리트 강도를 좌우하는 배합 비율",
+"category": "건축시공·관리",
+"domain": "건축공학"
+},
+"ar-const-05": {
+"ko": "주공정법 (CPM)",
+"en": "Critical path method",
+"lv": 2,
+"level": "중급",
+"hint": "공사 기간을 결정하는 작업 경로 찾기",
+"category": "건축시공·관리",
+"domain": "건축공학"
+},
+"ar-const-06": {
+"ko": "가치공학 (VE)",
+"en": "Value engineering",
+"lv": 2,
+"level": "중급",
+"hint": "기능은 유지하며 비용을 낮추는 기법",
+"category": "건축시공·관리",
+"domain": "건축공학"
+},
+"ar-const-07": {
+"ko": "건설정보모델링 (BIM)",
+"en": "Building information modeling",
+"lv": 2,
+"level": "중급",
+"hint": "건물 정보를 3차원 모델로 통합 관리",
+"category": "건축시공·관리",
+"domain": "건축공학"
+},
+"ar-const-08": {
+"ko": "설계·시공 일괄 발주 (턴키)",
+"en": "Design–build",
+"lv": 3,
+"level": "심화",
+"hint": "설계와 시공을 한 업체에 맡기는 방식",
+"category": "건축시공·관리",
+"domain": "건축공학"
+},
+"ar-const-09": {
+"ko": "알칼리 골재 반응",
+"en": "Alkali–silica reaction",
+"lv": 3,
+"level": "심화",
+"hint": "골재와 시멘트 성분이 반응해 생기는 균열",
+"category": "건축시공·관리",
+"domain": "건축공학"
+},
+"ar-const-10": {
+"ko": "건설사업관리 (CM)",
+"en": "Construction management",
+"lv": 3,
+"level": "심화",
+"hint": "발주자를 대신해 사업 전반을 관리하는 제도",
+"category": "건축시공·관리",
+"domain": "건축공학"
+},
+"ar-plan-01": {
+"ko": "용적률",
+"en": "Floor area ratio",
+"lv": 1,
+"level": "기초",
+"hint": "대지 면적 대비 건물 연면적의 비율",
+"category": "건축계획",
+"domain": "건축공학"
+},
+"ar-plan-02": {
+"ko": "유니버설 디자인",
+"en": "Universal design",
+"lv": 1,
+"level": "기초",
+"hint": "누구나 차별 없이 쓸 수 있는 설계 원칙",
+"category": "건축계획",
+"domain": "건축공학"
+},
+"ar-plan-03": {
+"ko": "녹색건축",
+"en": "Green building",
+"lv": 1,
+"level": "기초",
+"hint": "환경 부담을 줄이는 건축의 개념",
+"category": "건축계획",
+"domain": "건축공학"
+},
+"ar-plan-04": {
+"ko": "오픈 플랜",
+"en": "Open plan",
+"lv": 1,
+"level": "기초",
+"hint": "칸막이를 줄여 공간을 트는 평면 구성",
+"category": "건축계획",
+"domain": "건축공학"
+},
+"ar-plan-05": {
+"ko": "범죄예방 환경설계 (CPTED)",
+"en": "Crime prevention through environmental design",
+"lv": 2,
+"level": "중급",
+"hint": "공간 설계로 범죄 기회를 줄이는 기법",
+"category": "건축계획",
+"domain": "건축공학"
+},
+"ar-plan-06": {
+"ko": "LEED 인증",
+"en": "Leadership in Energy and Environmental Design",
+"lv": 2,
+"level": "중급",
+"hint": "미국의 대표적인 친환경 건축 인증",
+"category": "건축계획",
+"domain": "건축공학"
+},
+"ar-plan-07": {
+"ko": "모듈러 건축",
+"en": "Modular building",
+"lv": 2,
+"level": "중급",
+"hint": "공장에서 만든 유닛을 현장에서 조립",
+"category": "건축계획",
+"domain": "건축공학"
+},
+"ar-plan-08": {
+"ko": "근대건축 5원칙",
+"en": "Five Points of Architecture",
+"lv": 3,
+"level": "심화",
+"hint": "르 코르뷔지에가 제시한 새 건축의 요소",
+"category": "건축계획",
+"domain": "건축공학"
+},
+"ar-plan-09": {
+"ko": "모뒬로르",
+"en": "Modulor",
+"lv": 3,
+"level": "심화",
+"hint": "인체 치수와 황금비를 결합한 척도 체계",
+"category": "건축계획",
+"domain": "건축공학"
+},
+"ar-plan-10": {
+"ko": "제로에너지 건축",
+"en": "Zero-energy building",
+"lv": 3,
+"level": "심화",
+"hint": "쓰는 에너지만큼 스스로 생산하는 건물",
+"category": "건축계획",
+"domain": "건축공학"
+},
+"mt-crystal-01": {
+"ko": "결정 구조",
+"en": "Crystal structure",
+"lv": 1,
+"level": "기초",
+"hint": "원자가 규칙적으로 배열되는 방식",
+"category": "결정구조·결함",
+"domain": "신소재공학"
+},
+"mt-crystal-02": {
+"ko": "입방정계 (BCC·FCC)",
+"en": "Cubic crystal system",
+"lv": 1,
+"level": "기초",
+"hint": "정육면체 단위격자의 원자 배치 종류",
+"category": "결정구조·결함",
+"domain": "신소재공학"
+},
+"mt-crystal-03": {
+"ko": "밀러 지수",
+"en": "Miller index",
+"lv": 1,
+"level": "기초",
+"hint": "결정 속 면과 방향을 숫자로 표기하는 법",
+"category": "결정구조·결함",
+"domain": "신소재공학"
+},
+"mt-crystal-04": {
+"ko": "배위수",
+"en": "Coordination number",
+"lv": 1,
+"level": "기초",
+"hint": "한 원자를 둘러싼 최근접 원자의 수",
+"category": "결정구조·결함",
+"domain": "신소재공학"
+},
+"mt-crystal-05": {
+"ko": "전위",
+"en": "Dislocation",
+"lv": 2,
+"level": "중급",
+"hint": "소성 변형을 일으키는 선 모양 결함",
+"category": "결정구조·결함",
+"domain": "신소재공학"
+},
+"mt-crystal-06": {
+"ko": "공공",
+"en": "Vacancy defect",
+"lv": 2,
+"level": "중급",
+"hint": "원자가 있어야 할 자리가 빈 점결함",
+"category": "결정구조·결함",
+"domain": "신소재공학"
+},
+"mt-crystal-07": {
+"ko": "결정립계",
+"en": "Grain boundary",
+"lv": 2,
+"level": "중급",
+"hint": "방향이 다른 결정들이 만나는 경계",
+"category": "결정구조·결함",
+"domain": "신소재공학"
+},
+"mt-crystal-08": {
+"ko": "버거스 벡터",
+"en": "Burgers vector",
+"lv": 3,
+"level": "심화",
+"hint": "전위가 만드는 격자 뒤틀림의 크기와 방향",
+"category": "결정구조·결함",
+"domain": "신소재공학"
+},
+"mt-crystal-09": {
+"ko": "적층 결함",
+"en": "Stacking fault",
+"lv": 3,
+"level": "심화",
+"hint": "원자면 쌓임 순서가 어긋난 면결함",
+"category": "결정구조·결함",
+"domain": "신소재공학"
+},
+"mt-crystal-10": {
+"ko": "쌍정",
+"en": "Crystal twinning",
+"lv": 3,
+"level": "심화",
+"hint": "경계를 사이에 두고 거울상인 결정",
+"category": "결정구조·결함",
+"domain": "신소재공학"
+},
+"mt-phase-01": {
+"ko": "상태도",
+"en": "Phase diagram",
+"lv": 1,
+"level": "기초",
+"hint": "온도·조성에 따른 안정한 상을 보여주는 그림",
+"category": "상태도·상변태",
+"domain": "신소재공학"
+},
+"mt-phase-02": {
+"ko": "공정 반응",
+"en": "Eutectic system",
+"lv": 1,
+"level": "기초",
+"hint": "액체가 두 고상으로 동시에 굳는 반응",
+"category": "상태도·상변태",
+"domain": "신소재공학"
+},
+"mt-phase-03": {
+"ko": "지렛대 법칙",
+"en": "Lever rule",
+"lv": 1,
+"level": "기초",
+"hint": "두 상이 공존할 때 각 상의 양 구하기",
+"category": "상태도·상변태",
+"domain": "신소재공학"
+},
+"mt-phase-04": {
+"ko": "펄라이트",
+"en": "Pearlite",
+"lv": 1,
+"level": "기초",
+"hint": "페라이트와 시멘타이트가 층을 이룬 조직",
+"category": "상태도·상변태",
+"domain": "신소재공학"
+},
+"mt-phase-05": {
+"ko": "깁스 상률",
+"en": "Phase rule",
+"lv": 2,
+"level": "중급",
+"hint": "평형에서 바꿀 수 있는 변수의 개수",
+"category": "상태도·상변태",
+"domain": "신소재공학"
+},
+"mt-phase-06": {
+"ko": "마르텐사이트",
+"en": "Martensite",
+"lv": 2,
+"level": "중급",
+"hint": "강을 급랭하면 생기는 단단한 조직",
+"category": "상태도·상변태",
+"domain": "신소재공학"
+},
+"mt-phase-07": {
+"ko": "픽의 확산 법칙",
+"en": "Fick's laws of diffusion",
+"lv": 2,
+"level": "중급",
+"hint": "농도 차이에 따른 원자 이동을 기술",
+"category": "상태도·상변태",
+"domain": "신소재공학"
+},
+"mt-phase-08": {
+"ko": "핵생성",
+"en": "Nucleation",
+"lv": 3,
+"level": "심화",
+"hint": "새로운 상이 처음 생겨나는 과정",
+"category": "상태도·상변태",
+"domain": "신소재공학"
+},
+"mt-phase-09": {
+"ko": "스피노달 분해",
+"en": "Spinodal decomposition",
+"lv": 3,
+"level": "심화",
+"hint": "핵생성 없이 조성이 저절로 분리되는 현상",
+"category": "상태도·상변태",
+"domain": "신소재공학"
+},
+"mt-phase-10": {
+"ko": "항온 변태 곡선 (TTT)",
+"en": "Isothermal transformation diagram",
+"lv": 3,
+"level": "심화",
+"hint": "온도·시간에 따른 변태 진행을 나타낸 도표",
+"category": "상태도·상변태",
+"domain": "신소재공학"
+},
+"mt-mech-01": {
+"ko": "응력-변형률 곡선",
+"en": "Stress–strain curve",
+"lv": 1,
+"level": "기초",
+"hint": "인장할 때 힘과 늘어남의 관계 그래프",
+"category": "기계적 성질",
+"domain": "신소재공학"
+},
+"mt-mech-02": {
+"ko": "영률 (탄성 계수)",
+"en": "Young's modulus",
+"lv": 1,
+"level": "기초",
+"hint": "재료가 얼마나 뻣뻣한지 나타내는 값",
+"category": "기계적 성질",
+"domain": "신소재공학"
+},
+"mt-mech-03": {
+"ko": "항복 강도",
+"en": "Yield (engineering)",
+"lv": 1,
+"level": "기초",
+"hint": "영구 변형이 시작되는 지점의 응력",
+"category": "기계적 성질",
+"domain": "신소재공학"
+},
+"mt-mech-04": {
+"ko": "경도",
+"en": "Hardness",
+"lv": 1,
+"level": "기초",
+"hint": "표면이 눌림이나 긁힘에 버티는 정도",
+"category": "기계적 성질",
+"domain": "신소재공학"
+},
+"mt-mech-05": {
+"ko": "크리프",
+"en": "Creep (deformation)",
+"lv": 2,
+"level": "중급",
+"hint": "일정한 하중에서 시간이 지나며 늘어나는 변형",
+"category": "기계적 성질",
+"domain": "신소재공학"
+},
+"mt-mech-06": {
+"ko": "피로",
+"en": "Fatigue (material)",
+"lv": 2,
+"level": "중급",
+"hint": "반복 하중으로 강도 이하에서 파손되는 현상",
+"category": "기계적 성질",
+"domain": "신소재공학"
+},
+"mt-mech-07": {
+"ko": "가공 경화",
+"en": "Work hardening",
+"lv": 2,
+"level": "중급",
+"hint": "변형할수록 재료가 더 단단해지는 현상",
+"category": "기계적 성질",
+"domain": "신소재공학"
+},
+"mt-mech-08": {
+"ko": "파괴 인성",
+"en": "Fracture toughness",
+"lv": 3,
+"level": "심화",
+"hint": "균열이 있을 때 파괴에 저항하는 능력",
+"category": "기계적 성질",
+"domain": "신소재공학"
+},
+"mt-mech-09": {
+"ko": "홀-페치 관계 (결정립 미세화 강화)",
+"en": "Grain boundary strengthening",
+"lv": 3,
+"level": "심화",
+"hint": "결정립 크기와 강도 사이의 관계",
+"category": "기계적 성질",
+"domain": "신소재공학"
+},
+"mt-mech-10": {
+"ko": "석출 경화",
+"en": "Precipitation hardening",
+"lv": 3,
+"level": "심화",
+"hint": "미세 입자를 석출시켜 강도를 높이는 법",
+"category": "기계적 성질",
+"domain": "신소재공학"
+},
+"mt-types-01": {
+"ko": "탄소강",
+"en": "Carbon steel",
+"lv": 1,
+"level": "기초",
+"hint": "탄소 함량으로 성질이 달라지는 기본 강",
+"category": "금속·세라믹·고분자",
+"domain": "신소재공학"
+},
+"mt-types-02": {
+"ko": "스테인리스강",
+"en": "Stainless steel",
+"lv": 1,
+"level": "기초",
+"hint": "크롬을 넣어 녹이 잘 슬지 않는 강",
+"category": "금속·세라믹·고분자",
+"domain": "신소재공학"
+},
+"mt-types-03": {
+"ko": "알루미늄 합금",
+"en": "Aluminium alloy",
+"lv": 1,
+"level": "기초",
+"hint": "가볍고 강도를 높인 비철 합금",
+"category": "금속·세라믹·고분자",
+"domain": "신소재공학"
+},
+"mt-types-04": {
+"ko": "열가소성 수지",
+"en": "Thermoplastic",
+"lv": 1,
+"level": "기초",
+"hint": "가열하면 다시 녹일 수 있는 고분자",
+"category": "금속·세라믹·고분자",
+"domain": "신소재공학"
+},
+"mt-types-05": {
+"ko": "열경화성 수지",
+"en": "Thermosetting polymer",
+"lv": 2,
+"level": "중급",
+"hint": "한 번 굳으면 다시 녹지 않는 고분자",
+"category": "금속·세라믹·고분자",
+"domain": "신소재공학"
+},
+"mt-types-06": {
+"ko": "유리 전이",
+"en": "Glass transition",
+"lv": 2,
+"level": "중급",
+"hint": "비정질 고분자가 단단함과 고무 상태를 오가는 현상",
+"category": "금속·세라믹·고분자",
+"domain": "신소재공학"
+},
+"mt-types-07": {
+"ko": "소결",
+"en": "Sintering",
+"lv": 2,
+"level": "중급",
+"hint": "분말을 녹는점 아래에서 굳혀 만드는 공정",
+"category": "금속·세라믹·고분자",
+"domain": "신소재공학"
+},
+"mt-types-08": {
+"ko": "형상 기억 합금",
+"en": "Shape-memory alloy",
+"lv": 3,
+"level": "심화",
+"hint": "변형돼도 가열하면 원래 모양으로 돌아가는 금속",
+"category": "금속·세라믹·고분자",
+"domain": "신소재공학"
+},
+"mt-types-09": {
+"ko": "초합금",
+"en": "Superalloy",
+"lv": 3,
+"level": "심화",
+"hint": "고온에서도 강도를 유지하는 내열 합금",
+"category": "금속·세라믹·고분자",
+"domain": "신소재공학"
+},
+"mt-types-10": {
+"ko": "고엔트로피 합금",
+"en": "High-entropy alloy",
+"lv": 3,
+"level": "심화",
+"hint": "여러 원소를 비슷한 비율로 섞은 합금",
+"category": "금속·세라믹·고분자",
+"domain": "신소재공학"
+},
+"mt-analysis-01": {
+"ko": "브래그 법칙",
+"en": "Bragg's law",
+"lv": 1,
+"level": "기초",
+"hint": "X선이 결정면에서 보강 간섭하는 조건",
+"category": "재료분석",
+"domain": "신소재공학"
+},
+"mt-analysis-02": {
+"ko": "주사전자현미경 (SEM)",
+"en": "Scanning electron microscope",
+"lv": 1,
+"level": "기초",
+"hint": "전자빔을 훑어 표면 형상을 보는 장비",
+"category": "재료분석",
+"domain": "신소재공학"
+},
+"mt-analysis-03": {
+"ko": "금속 조직학",
+"en": "Metallography",
+"lv": 1,
+"level": "기초",
+"hint": "연마·부식 후 금속 조직을 관찰하는 기술",
+"category": "재료분석",
+"domain": "신소재공학"
+},
+"mt-analysis-04": {
+"ko": "비파괴 검사",
+"en": "Nondestructive testing",
+"lv": 1,
+"level": "기초",
+"hint": "부품을 망가뜨리지 않고 결함 찾기",
+"category": "재료분석",
+"domain": "신소재공학"
+},
+"mt-analysis-05": {
+"ko": "투과전자현미경 (TEM)",
+"en": "Transmission electron microscopy",
+"lv": 2,
+"level": "중급",
+"hint": "얇은 시편을 통과한 전자로 내부를 보는 법",
+"category": "재료분석",
+"domain": "신소재공학"
+},
+"mt-analysis-06": {
+"ko": "에너지 분산형 X선 분광법 (EDS)",
+"en": "Energy-dispersive X-ray spectroscopy",
+"lv": 2,
+"level": "중급",
+"hint": "특성 X선으로 원소 성분을 알아내는 분석",
+"category": "재료분석",
+"domain": "신소재공학"
+},
+"mt-analysis-07": {
+"ko": "시차 주사 열량 측정 (DSC)",
+"en": "Differential scanning calorimetry",
+"lv": 2,
+"level": "중급",
+"hint": "가열 중 열 흐름으로 상변화를 측정",
+"category": "재료분석",
+"domain": "신소재공학"
+},
+"mt-analysis-08": {
+"ko": "원자간력 현미경 (AFM)",
+"en": "Atomic force microscopy",
+"lv": 3,
+"level": "심화",
+"hint": "탐침과 표면의 힘으로 나노 형상 측정",
+"category": "재료분석",
+"domain": "신소재공학"
+},
+"mt-analysis-09": {
+"ko": "X선 광전자 분광법 (XPS)",
+"en": "X-ray photoelectron spectroscopy",
+"lv": 3,
+"level": "심화",
+"hint": "튀어나온 전자로 표면 화학 상태 분석",
+"category": "재료분석",
+"domain": "신소재공학"
+},
+"mt-analysis-10": {
+"ko": "라만 분광법",
+"en": "Raman spectroscopy",
+"lv": 3,
+"level": "심화",
+"hint": "빛의 비탄성 산란으로 분자 진동을 분석",
+"category": "재료분석",
+"domain": "신소재공학"
+},
+"ie-or-01": {
+"ko": "선형계획법",
+"en": "Linear programming",
+"lv": 1,
+"level": "기초",
+"hint": "제약 조건 아래에서 목표를 최적화하는 수학 모델",
+"category": "경영과학·최적화",
+"domain": "산업공학"
+},
+"ie-or-02": {
+"ko": "대기행렬 이론",
+"en": "Queueing theory",
+"lv": 1,
+"level": "기초",
+"hint": "줄 서서 기다리는 현상을 수학적으로 분석",
+"category": "경영과학·최적화",
+"domain": "산업공학"
+},
+"ie-or-03": {
+"ko": "게임 이론",
+"en": "Game theory",
+"lv": 1,
+"level": "기초",
+"hint": "서로의 선택이 결과에 영향을 주는 의사결정 분석",
+"category": "경영과학·최적화",
+"domain": "산업공학"
+},
+"ie-or-04": {
+"ko": "몬테카를로 시뮬레이션",
+"en": "Monte Carlo method",
+"lv": 1,
+"level": "기초",
+"hint": "난수를 반복 사용해 결과를 추정하는 기법",
+"category": "경영과학·최적화",
+"domain": "산업공학"
+},
+"ie-or-05": {
+"ko": "심플렉스법",
+"en": "Simplex algorithm",
+"lv": 2,
+"level": "중급",
+"hint": "꼭짓점을 따라 이동하며 최적해를 찾는 풀이법",
+"category": "경영과학·최적화",
+"domain": "산업공학"
+},
+"ie-or-06": {
+"ko": "정수계획법",
+"en": "Integer programming",
+"lv": 2,
+"level": "중급",
+"hint": "변수가 정수여야 하는 최적화 문제",
+"category": "경영과학·최적화",
+"domain": "산업공학"
+},
+"ie-or-07": {
+"ko": "마르코프 연쇄",
+"en": "Markov chain",
+"lv": 2,
+"level": "중급",
+"hint": "현재 상태만으로 다음 상태가 정해지는 확률 과정",
+"category": "경영과학·최적화",
+"domain": "산업공학"
+},
+"ie-or-08": {
+"ko": "쌍대 문제 (선형계획)",
+"en": "Dual linear program",
+"lv": 3,
+"level": "심화",
+"hint": "하나의 최적화 문제를 뒤집어 본 짝 문제",
+"category": "경영과학·최적화",
+"domain": "산업공학"
+},
+"ie-or-09": {
+"ko": "외판원 문제 (TSP)",
+"en": "Travelling salesman problem",
+"lv": 3,
+"level": "심화",
+"hint": "모든 도시를 한 번씩 도는 최단 경로 찾기",
+"category": "경영과학·최적화",
+"domain": "산업공학"
+},
+"ie-or-10": {
+"ko": "최대 유량 문제",
+"en": "Maximum flow problem",
+"lv": 3,
+"level": "심화",
+"hint": "네트워크에서 보낼 수 있는 흐름의 최댓값",
+"category": "경영과학·최적화",
+"domain": "산업공학"
+},
+"ie-quality-01": {
+"ko": "관리도",
+"en": "Control chart",
+"lv": 1,
+"level": "기초",
+"hint": "공정이 안정 상태인지 시간에 따라 감시하는 도표",
+"category": "품질·통계",
+"domain": "산업공학"
+},
+"ie-quality-02": {
+"ko": "6시그마",
+"en": "Six Sigma",
+"lv": 1,
+"level": "기초",
+"hint": "결함을 극도로 줄이려는 품질 경영 방법론",
+"category": "품질·통계",
+"domain": "산업공학"
+},
+"ie-quality-03": {
+"ko": "QC 7가지 도구",
+"en": "Seven basic tools of quality",
+"lv": 1,
+"level": "기초",
+"hint": "현장 품질 문제 해결에 쓰는 기본 도구 모음",
+"category": "품질·통계",
+"domain": "산업공학"
+},
+"ie-quality-04": {
+"ko": "가설검정",
+"en": "Statistical hypothesis testing",
+"lv": 1,
+"level": "기초",
+"hint": "표본으로 주장의 참·거짓을 판단하는 절차",
+"category": "품질·통계",
+"domain": "산업공학"
+},
+"ie-quality-05": {
+"ko": "공정능력지수 (Cp, Cpk)",
+"en": "Process capability index",
+"lv": 2,
+"level": "중급",
+"hint": "공정이 규격을 얼마나 잘 만족하는지 수치화",
+"category": "품질·통계",
+"domain": "산업공학"
+},
+"ie-quality-06": {
+"ko": "실험계획법 (DOE)",
+"en": "Design of experiments",
+"lv": 2,
+"level": "중급",
+"hint": "요인의 영향을 효율적으로 알아내는 실험 설계",
+"category": "품질·통계",
+"domain": "산업공학"
+},
+"ie-quality-07": {
+"ko": "분산분석 (ANOVA)",
+"en": "Analysis of variance",
+"lv": 2,
+"level": "중급",
+"hint": "여러 집단 평균의 차이를 검정하는 방법",
+"category": "품질·통계",
+"domain": "산업공학"
+},
+"ie-quality-08": {
+"ko": "샘플링 검사",
+"en": "Acceptance sampling",
+"lv": 2,
+"level": "중급",
+"hint": "일부만 검사해 로트의 합격 여부를 결정",
+"category": "품질·통계",
+"domain": "산업공학"
+},
+"ie-quality-09": {
+"ko": "다구치 방법",
+"en": "Taguchi methods",
+"lv": 3,
+"level": "심화",
+"hint": "잡음에 강한 제품을 설계하는 품질공학 기법",
+"category": "품질·통계",
+"domain": "산업공학"
+},
+"ie-quality-10": {
+"ko": "고장모드 영향분석 (FMEA)",
+"en": "Failure mode and effects analysis",
+"lv": 3,
+"level": "심화",
+"hint": "고장 형태와 그 영향을 미리 평가하는 기법",
+"category": "품질·통계",
+"domain": "산업공학"
+},
+"ie-prod-01": {
+"ko": "적시생산 (JIT)",
+"en": "Just-in-time manufacturing",
+"lv": 1,
+"level": "기초",
+"hint": "필요한 것을 필요한 때 필요한 만큼 생산",
+"category": "생산·물류관리",
+"domain": "산업공학"
+},
+"ie-prod-02": {
+"ko": "린 생산",
+"en": "Lean manufacturing",
+"lv": 1,
+"level": "기초",
+"hint": "낭비를 없애 가치 흐름을 개선하는 생산 방식",
+"category": "생산·물류관리",
+"domain": "산업공학"
+},
+"ie-prod-03": {
+"ko": "경제적 주문량 (EOQ)",
+"en": "Economic order quantity",
+"lv": 1,
+"level": "기초",
+"hint": "재고 비용을 최소화하는 한 번의 주문 크기",
+"category": "생산·물류관리",
+"domain": "산업공학"
+},
+"ie-prod-04": {
+"ko": "공급망 관리 (SCM)",
+"en": "Supply chain management",
+"lv": 1,
+"level": "기초",
+"hint": "원자재부터 고객까지 흐름 전체를 관리",
+"category": "생산·물류관리",
+"domain": "산업공학"
+},
+"ie-prod-05": {
+"ko": "자재소요계획 (MRP)",
+"en": "Material requirements planning",
+"lv": 2,
+"level": "중급",
+"hint": "생산 일정에 맞춰 부품 수요를 계산",
+"category": "생산·물류관리",
+"domain": "산업공학"
+},
+"ie-prod-06": {
+"ko": "채찍 효과",
+"en": "Bullwhip effect",
+"lv": 2,
+"level": "중급",
+"hint": "공급망 상류로 갈수록 수요 변동이 커지는 현상",
+"category": "생산·물류관리",
+"domain": "산업공학"
+},
+"ie-prod-07": {
+"ko": "주경로법 (CPM)",
+"en": "Critical path method",
+"lv": 2,
+"level": "중급",
+"hint": "프로젝트 전체 기간을 결정하는 작업 경로 분석",
+"category": "생산·물류관리",
+"domain": "산업공학"
+},
+"ie-prod-08": {
+"ko": "존슨 규칙",
+"en": "Johnson's rule",
+"lv": 3,
+"level": "심화",
+"hint": "두 기계 작업 순서를 정해 총 완료시간 최소화",
+"category": "생산·물류관리",
+"domain": "산업공학"
+},
+"ie-prod-09": {
+"ko": "제약 이론 (TOC)",
+"en": "Theory of constraints",
+"lv": 3,
+"level": "심화",
+"hint": "시스템 성과를 막는 병목에 집중하는 관리 철학",
+"category": "생산·물류관리",
+"domain": "산업공학"
+},
+"ie-prod-10": {
+"ko": "지수평활법",
+"en": "Exponential smoothing",
+"lv": 3,
+"level": "심화",
+"hint": "최근 자료에 더 큰 가중치를 두는 수요 예측법",
+"category": "생산·물류관리",
+"domain": "산업공학"
+},
+"ie-human-01": {
+"ko": "인간공학",
+"en": "Human factors and ergonomics",
+"lv": 1,
+"level": "기초",
+"hint": "사람에게 맞게 기계와 환경을 설계하는 학문",
+"category": "인간공학·안전",
+"domain": "산업공학"
+},
+"ie-human-02": {
+"ko": "하인리히 법칙",
+"en": "Accident triangle",
+"lv": 1,
+"level": "기초",
+"hint": "큰 사고 뒤에 숨은 작은 사고와 징후의 비율",
+"category": "인간공학·안전",
+"domain": "산업공학"
+},
+"ie-human-03": {
+"ko": "동작·시간 연구",
+"en": "Time and motion study",
+"lv": 1,
+"level": "기초",
+"hint": "작업 동작과 시간을 분석해 표준을 정함",
+"category": "인간공학·안전",
+"domain": "산업공학"
+},
+"ie-human-04": {
+"ko": "근골격계 질환",
+"en": "Musculoskeletal disorder",
+"lv": 1,
+"level": "기초",
+"hint": "반복 작업과 나쁜 자세로 생기는 직업병",
+"category": "인간공학·안전",
+"domain": "산업공학"
+},
+"ie-human-05": {
+"ko": "피츠의 법칙",
+"en": "Fitts's law",
+"lv": 2,
+"level": "중급",
+"hint": "목표물까지 움직이는 시간을 예측하는 모델",
+"category": "인간공학·안전",
+"domain": "산업공학"
+},
+"ie-human-06": {
+"ko": "힉의 법칙",
+"en": "Hick's law",
+"lv": 2,
+"level": "중급",
+"hint": "선택지 수와 반응 시간의 관계",
+"category": "인간공학·안전",
+"domain": "산업공학"
+},
+"ie-human-07": {
+"ko": "스위스 치즈 모델",
+"en": "Swiss cheese model",
+"lv": 2,
+"level": "중급",
+"hint": "여러 방어층의 구멍이 겹칠 때 사고가 난다",
+"category": "인간공학·안전",
+"domain": "산업공학"
+},
+"ie-human-08": {
+"ko": "결함수 분석 (FTA)",
+"en": "Fault tree analysis",
+"lv": 3,
+"level": "심화",
+"hint": "정상 사상에서 원인을 논리 게이트로 거슬러 분석",
+"category": "인간공학·안전",
+"domain": "산업공학"
+},
+"ie-human-09": {
+"ko": "위험과 운전성 분석 (HAZOP)",
+"en": "Hazard and operability study",
+"lv": 3,
+"level": "심화",
+"hint": "가이드워드로 공정 이탈을 체계적으로 검토",
+"category": "인간공학·안전",
+"domain": "산업공학"
+},
+"ie-human-10": {
+"ko": "신호검출이론",
+"en": "Detection theory",
+"lv": 3,
+"level": "심화",
+"hint": "잡음 속 신호를 판별하는 민감도와 반응 기준",
+"category": "인간공학·안전",
+"domain": "산업공학"
+},
+"en-water-01": {
+"ko": "생물화학적 산소요구량 (BOD)",
+"en": "Biochemical oxygen demand",
+"lv": 1,
+"level": "기초",
+"hint": "미생물이 유기물을 분해할 때 쓰는 산소량",
+"category": "수질·수처리",
+"domain": "환경·에너지공학"
+},
+"en-water-02": {
+"ko": "화학적 산소요구량 (COD)",
+"en": "Chemical oxygen demand",
+"lv": 1,
+"level": "기초",
+"hint": "산화제로 유기물을 분해할 때 드는 산소량",
+"category": "수질·수처리",
+"domain": "환경·에너지공학"
+},
+"en-water-03": {
+"ko": "부영양화",
+"en": "Eutrophication",
+"lv": 1,
+"level": "기초",
+"hint": "영양염류가 넘쳐 조류가 급증하는 현상",
+"category": "수질·수처리",
+"domain": "환경·에너지공학"
+},
+"en-water-04": {
+"ko": "응집·플록 형성",
+"en": "Flocculation",
+"lv": 1,
+"level": "기초",
+"hint": "작은 입자를 뭉쳐 가라앉히는 정수 공정",
+"category": "수질·수처리",
+"domain": "환경·에너지공학"
+},
+"en-water-05": {
+"ko": "활성슬러지법",
+"en": "Activated sludge",
+"lv": 2,
+"level": "중급",
+"hint": "미생물 덩어리로 하수를 정화하는 대표 공법",
+"category": "수질·수처리",
+"domain": "환경·에너지공학"
+},
+"en-water-06": {
+"ko": "역삼투",
+"en": "Reverse osmosis",
+"lv": 2,
+"level": "중급",
+"hint": "압력을 가해 막으로 물만 통과시키는 기술",
+"category": "수질·수처리",
+"domain": "환경·에너지공학"
+},
+"en-water-07": {
+"ko": "질산화",
+"en": "Nitrification",
+"lv": 2,
+"level": "중급",
+"hint": "암모니아가 단계적으로 산화되는 생물 반응",
+"category": "수질·수처리",
+"domain": "환경·에너지공학"
+},
+"en-water-08": {
+"ko": "염소 소독",
+"en": "Water chlorination",
+"lv": 2,
+"level": "중급",
+"hint": "염소로 병원균을 제거하는 정수 공정",
+"category": "수질·수처리",
+"domain": "환경·에너지공학"
+},
+"en-water-09": {
+"ko": "막분리 생물반응기 (MBR)",
+"en": "Membrane bioreactor",
+"lv": 3,
+"level": "심화",
+"hint": "생물 처리와 분리막을 결합한 수처리",
+"category": "수질·수처리",
+"domain": "환경·에너지공학"
+},
+"en-water-10": {
+"ko": "생물학적 인 제거",
+"en": "Enhanced biological phosphorus removal",
+"lv": 3,
+"level": "심화",
+"hint": "혐기·호기 조건을 번갈아 인을 제거",
+"category": "수질·수처리",
+"domain": "환경·에너지공학"
+},
+"en-air-01": {
+"ko": "온실효과",
+"en": "Greenhouse effect",
+"lv": 1,
+"level": "기초",
+"hint": "대기가 지표의 열을 붙잡아 두는 현상",
+"category": "대기오염·기후",
+"domain": "환경·에너지공학"
+},
+"en-air-02": {
+"ko": "미세먼지 (PM2.5)",
+"en": "Particulates",
+"lv": 1,
+"level": "기초",
+"hint": "공기 중에 떠다니는 아주 작은 입자",
+"category": "대기오염·기후",
+"domain": "환경·에너지공학"
+},
+"en-air-03": {
+"ko": "오존층 파괴",
+"en": "Ozone depletion",
+"lv": 1,
+"level": "기초",
+"hint": "성층권 오존이 줄어드는 현상과 원인 물질",
+"category": "대기오염·기후",
+"domain": "환경·에너지공학"
+},
+"en-air-04": {
+"ko": "기온역전",
+"en": "Inversion (meteorology)",
+"lv": 1,
+"level": "기초",
+"hint": "높이 올라갈수록 기온이 오르는 대기 상태",
+"category": "대기오염·기후",
+"domain": "환경·에너지공학"
+},
+"en-air-05": {
+"ko": "전기집진기",
+"en": "Electrostatic precipitator",
+"lv": 2,
+"level": "중급",
+"hint": "전기력으로 배기가스 속 먼지를 포집",
+"category": "대기오염·기후",
+"domain": "환경·에너지공학"
+},
+"en-air-06": {
+"ko": "선택적 촉매 환원 (SCR)",
+"en": "Selective catalytic reduction",
+"lv": 2,
+"level": "중급",
+"hint": "촉매와 환원제로 질소산화물을 제거",
+"category": "대기오염·기후",
+"domain": "환경·에너지공학"
+},
+"en-air-07": {
+"ko": "배연탈황",
+"en": "Flue-gas desulfurization",
+"lv": 2,
+"level": "중급",
+"hint": "배기가스에서 황산화물을 제거하는 공정",
+"category": "대기오염·기후",
+"domain": "환경·에너지공학"
+},
+"en-air-08": {
+"ko": "대기확산 모델",
+"en": "Atmospheric dispersion modeling",
+"lv": 3,
+"level": "심화",
+"hint": "오염물질이 퍼지는 농도를 수식으로 예측",
+"category": "대기오염·기후",
+"domain": "환경·에너지공학"
+},
+"en-air-09": {
+"ko": "탄소 포집 및 저장 (CCS)",
+"en": "Carbon capture and storage",
+"lv": 3,
+"level": "심화",
+"hint": "이산화탄소를 모아 땅속에 가두는 기술",
+"category": "대기오염·기후",
+"domain": "환경·에너지공학"
+},
+"en-air-10": {
+"ko": "지구온난화지수 (GWP)",
+"en": "Global warming potential",
+"lv": 3,
+"level": "심화",
+"hint": "온실가스의 상대적 온난화 효과 지표",
+"category": "대기오염·기후",
+"domain": "환경·에너지공학"
+},
+"en-waste-01": {
+"ko": "위생 매립",
+"en": "Landfill",
+"lv": 1,
+"level": "기초",
+"hint": "폐기물을 땅에 묻어 처분하는 방법",
+"category": "폐기물·토양",
+"domain": "환경·에너지공학"
+},
+"en-waste-02": {
+"ko": "소각",
+"en": "Incineration",
+"lv": 1,
+"level": "기초",
+"hint": "폐기물을 태워 부피를 줄이는 처리",
+"category": "폐기물·토양",
+"domain": "환경·에너지공학"
+},
+"en-waste-03": {
+"ko": "퇴비화",
+"en": "Compost",
+"lv": 1,
+"level": "기초",
+"hint": "유기성 폐기물을 미생물로 분해해 비료화",
+"category": "폐기물·토양",
+"domain": "환경·에너지공학"
+},
+"en-waste-04": {
+"ko": "순환경제",
+"en": "Circular economy",
+"lv": 1,
+"level": "기초",
+"hint": "자원을 버리지 않고 계속 순환시키는 경제 모델",
+"category": "폐기물·토양",
+"domain": "환경·에너지공학"
+},
+"en-waste-05": {
+"ko": "침출수",
+"en": "Leachate",
+"lv": 2,
+"level": "중급",
+"hint": "매립지에서 빗물이 오염물을 녹여 흘러나온 물",
+"category": "폐기물·토양",
+"domain": "환경·에너지공학"
+},
+"en-waste-06": {
+"ko": "혐기성 소화",
+"en": "Anaerobic digestion",
+"lv": 2,
+"level": "중급",
+"hint": "산소 없이 유기물을 분해해 메탄을 얻는 공정",
+"category": "폐기물·토양",
+"domain": "환경·에너지공학"
+},
+"en-waste-07": {
+"ko": "생물학적 정화 (바이오레메디에이션)",
+"en": "Bioremediation",
+"lv": 2,
+"level": "중급",
+"hint": "미생물로 오염된 토양·지하수를 정화",
+"category": "폐기물·토양",
+"domain": "환경·에너지공학"
+},
+"en-waste-08": {
+"ko": "토양 증기 추출 (SVE)",
+"en": "Soil vapor extraction",
+"lv": 2,
+"level": "중급",
+"hint": "토양 속 휘발성 오염물을 진공으로 뽑아냄",
+"category": "폐기물·토양",
+"domain": "환경·에너지공학"
+},
+"en-waste-09": {
+"ko": "다이옥신",
+"en": "Polychlorinated dibenzodioxins",
+"lv": 3,
+"level": "심화",
+"hint": "소각 과정에서 생길 수 있는 맹독성 물질",
+"category": "폐기물·토양",
+"domain": "환경·에너지공학"
+},
+"en-waste-10": {
+"ko": "열분해",
+"en": "Pyrolysis",
+"lv": 3,
+"level": "심화",
+"hint": "산소 없이 가열해 물질을 분해하는 공정",
+"category": "폐기물·토양",
+"domain": "환경·에너지공학"
+},
+"en-energy-01": {
+"ko": "태양광 발전",
+"en": "Photovoltaics",
+"lv": 1,
+"level": "기초",
+"hint": "빛을 직접 전기로 바꾸는 발전 방식",
+"category": "신재생에너지",
+"domain": "환경·에너지공학"
+},
+"en-energy-02": {
+"ko": "풍력 발전",
+"en": "Wind power",
+"lv": 1,
+"level": "기초",
+"hint": "바람의 운동에너지로 전기를 만드는 방식",
+"category": "신재생에너지",
+"domain": "환경·에너지공학"
+},
+"en-energy-03": {
+"ko": "연료전지",
+"en": "Fuel cell",
+"lv": 1,
+"level": "기초",
+"hint": "수소와 산소의 화학반응으로 전기를 생산",
+"category": "신재생에너지",
+"domain": "환경·에너지공학"
+},
+"en-energy-04": {
+"ko": "지열 에너지",
+"en": "Geothermal energy",
+"lv": 1,
+"level": "기초",
+"hint": "땅속 열을 난방·발전에 이용",
+"category": "신재생에너지",
+"domain": "환경·에너지공학"
+},
+"en-energy-05": {
+"ko": "p-n 접합",
+"en": "P–n junction",
+"lv": 2,
+"level": "중급",
+"hint": "태양전지와 다이오드의 핵심이 되는 반도체 구조",
+"category": "신재생에너지",
+"domain": "환경·에너지공학"
+},
+"en-energy-06": {
+"ko": "최대전력점 추적 (MPPT)",
+"en": "Maximum power point tracking",
+"lv": 2,
+"level": "중급",
+"hint": "발전 출력이 가장 큰 지점을 계속 찾는 제어",
+"category": "신재생에너지",
+"domain": "환경·에너지공학"
+},
+"en-energy-07": {
+"ko": "베츠의 법칙",
+"en": "Betz's law",
+"lv": 2,
+"level": "중급",
+"hint": "풍차가 바람에서 뽑을 수 있는 에너지의 한계",
+"category": "신재생에너지",
+"domain": "환경·에너지공학"
+},
+"en-energy-08": {
+"ko": "에너지 저장 장치 (ESS)",
+"en": "Grid energy storage",
+"lv": 2,
+"level": "중급",
+"hint": "남는 전력을 저장했다 필요할 때 공급",
+"category": "신재생에너지",
+"domain": "환경·에너지공학"
+},
+"en-energy-09": {
+"ko": "수전해",
+"en": "Electrolysis of water",
+"lv": 3,
+"level": "심화",
+"hint": "전기로 물을 분해해 수소를 얻는 방법",
+"category": "신재생에너지",
+"domain": "환경·에너지공학"
+},
+"en-energy-10": {
+"ko": "균등화 발전원가 (LCOE)",
+"en": "Levelized cost of electricity",
+"lv": 3,
+"level": "심화",
+"hint": "발전원별 전기 생산 단가를 비교하는 지표",
+"category": "신재생에너지",
+"domain": "환경·에너지공학"
+},
+"ae-aero-01": {
+"ko": "양력",
+"en": "Lift (force)",
+"lv": 1,
+"level": "기초",
+"hint": "비행기가 하늘에 뜰 수 있게 하는 힘",
+"category": "공기역학",
+"domain": "항공우주공학"
+},
+"ae-aero-02": {
+"ko": "항력",
+"en": "Drag (physics)",
+"lv": 1,
+"level": "기초",
+"hint": "물체의 운동을 방해하는 유체의 저항력",
+"category": "공기역학",
+"domain": "항공우주공학"
+},
+"ae-aero-03": {
+"ko": "베르누이 정리",
+"en": "Bernoulli's principle",
+"lv": 1,
+"level": "기초",
+"hint": "유체의 속도와 압력 사이의 관계",
+"category": "공기역학",
+"domain": "항공우주공학"
+},
+"ae-aero-04": {
+"ko": "받음각",
+"en": "Angle of attack",
+"lv": 1,
+"level": "기초",
+"hint": "날개와 흐름 방향이 이루는 각도",
+"category": "공기역학",
+"domain": "항공우주공학"
+},
+"ae-aero-05": {
+"ko": "마하 수",
+"en": "Mach number",
+"lv": 2,
+"level": "중급",
+"hint": "비행 속도를 소리의 속도와 비교한 값",
+"category": "공기역학",
+"domain": "항공우주공학"
+},
+"ae-aero-06": {
+"ko": "레이놀즈 수",
+"en": "Reynolds number",
+"lv": 2,
+"level": "중급",
+"hint": "관성력과 점성력의 비로 흐름을 구분",
+"category": "공기역학",
+"domain": "항공우주공학"
+},
+"ae-aero-07": {
+"ko": "경계층",
+"en": "Boundary layer",
+"lv": 2,
+"level": "중급",
+"hint": "물체 표면 근처 점성이 지배하는 얇은 층",
+"category": "공기역학",
+"domain": "항공우주공학"
+},
+"ae-aero-08": {
+"ko": "충격파",
+"en": "Shock wave",
+"lv": 2,
+"level": "중급",
+"hint": "초음속 흐름에서 생기는 급격한 압력 변화",
+"category": "공기역학",
+"domain": "항공우주공학"
+},
+"ae-aero-09": {
+"ko": "쿠타-주코프스키 정리",
+"en": "Kutta–Joukowski theorem",
+"lv": 3,
+"level": "심화",
+"hint": "순환과 양력을 연결하는 이론",
+"category": "공기역학",
+"domain": "항공우주공학"
+},
+"ae-aero-10": {
+"ko": "유도항력",
+"en": "Lift-induced drag",
+"lv": 3,
+"level": "심화",
+"hint": "양력을 만드는 대가로 생기는 저항",
+"category": "공기역학",
+"domain": "항공우주공학"
+},
+"ae-prop-01": {
+"ko": "추력",
+"en": "Thrust",
+"lv": 1,
+"level": "기초",
+"hint": "항공기를 앞으로 밀어내는 반작용 힘",
+"category": "추진기관",
+"domain": "항공우주공학"
+},
+"ae-prop-02": {
+"ko": "터보제트 엔진",
+"en": "Turbojet",
+"lv": 1,
+"level": "기초",
+"hint": "흡입·압축·연소·배기로 추력을 얻는 엔진",
+"category": "추진기관",
+"domain": "항공우주공학"
+},
+"ae-prop-03": {
+"ko": "터보팬 엔진",
+"en": "Turbofan",
+"lv": 1,
+"level": "기초",
+"hint": "여객기에 주로 쓰이는 바이패스 엔진",
+"category": "추진기관",
+"domain": "항공우주공학"
+},
+"ae-prop-04": {
+"ko": "로켓 엔진",
+"en": "Rocket engine",
+"lv": 1,
+"level": "기초",
+"hint": "산화제를 싣고 다니는 반작용 엔진",
+"category": "추진기관",
+"domain": "항공우주공학"
+},
+"ae-prop-05": {
+"ko": "브레이턴 사이클",
+"en": "Brayton cycle",
+"lv": 2,
+"level": "중급",
+"hint": "가스터빈의 이상적인 열역학 사이클",
+"category": "추진기관",
+"domain": "항공우주공학"
+},
+"ae-prop-06": {
+"ko": "비추력",
+"en": "Specific impulse",
+"lv": 2,
+"level": "중급",
+"hint": "추진제의 효율을 나타내는 지표",
+"category": "추진기관",
+"domain": "항공우주공학"
+},
+"ae-prop-07": {
+"ko": "치올코프스키 로켓 방정식",
+"en": "Tsiolkovsky rocket equation",
+"lv": 2,
+"level": "중급",
+"hint": "로켓의 속도 변화와 질량비의 관계",
+"category": "추진기관",
+"domain": "항공우주공학"
+},
+"ae-prop-08": {
+"ko": "드 라발 노즐",
+"en": "De Laval nozzle",
+"lv": 2,
+"level": "중급",
+"hint": "배기가스를 초음속으로 가속하는 노즐",
+"category": "추진기관",
+"domain": "항공우주공학"
+},
+"ae-prop-09": {
+"ko": "스크램제트",
+"en": "Scramjet",
+"lv": 3,
+"level": "심화",
+"hint": "초음속 연소를 이용하는 공기흡입 엔진",
+"category": "추진기관",
+"domain": "항공우주공학"
+},
+"ae-prop-10": {
+"ko": "에어로스파이크 엔진",
+"en": "Aerospike engine",
+"lv": 3,
+"level": "심화",
+"hint": "고도에 따라 팽창이 보정되는 노즐 엔진",
+"category": "추진기관",
+"domain": "항공우주공학"
+},
+"ae-flight-01": {
+"ko": "에일러론 (도움날개)",
+"en": "Aileron",
+"lv": 1,
+"level": "기초",
+"hint": "항공기의 좌우 기울기를 조종하는 면",
+"category": "비행역학·항공기 구조",
+"domain": "항공우주공학"
+},
+"ae-flight-02": {
+"ko": "승강타",
+"en": "Elevator (aeronautics)",
+"lv": 1,
+"level": "기초",
+"hint": "기수를 올리거나 내리는 조종면",
+"category": "비행역학·항공기 구조",
+"domain": "항공우주공학"
+},
+"ae-flight-03": {
+"ko": "방향타",
+"en": "Rudder",
+"lv": 1,
+"level": "기초",
+"hint": "기수의 좌우 방향을 바꾸는 조종면",
+"category": "비행역학·항공기 구조",
+"domain": "항공우주공학"
+},
+"ae-flight-04": {
+"ko": "항공기 기준축 (롤·피치·요)",
+"en": "Aircraft principal axes",
+"lv": 1,
+"level": "기초",
+"hint": "항공기 회전을 설명하는 세 개의 축",
+"category": "비행역학·항공기 구조",
+"domain": "항공우주공학"
+},
+"ae-flight-05": {
+"ko": "실속",
+"en": "Stall (fluid dynamics)",
+"lv": 2,
+"level": "중급",
+"hint": "받음각이 너무 커져 양력을 잃는 현상",
+"category": "비행역학·항공기 구조",
+"domain": "항공우주공학"
+},
+"ae-flight-06": {
+"ko": "세로 정적 안정성",
+"en": "Longitudinal static stability",
+"lv": 2,
+"level": "중급",
+"hint": "피치 방향 교란 후 되돌아오려는 성질",
+"category": "비행역학·항공기 구조",
+"domain": "항공우주공학"
+},
+"ae-flight-07": {
+"ko": "모노코크 구조",
+"en": "Monocoque",
+"lv": 2,
+"level": "중급",
+"hint": "외피가 하중을 함께 지지하는 동체 구조",
+"category": "비행역학·항공기 구조",
+"domain": "항공우주공학"
+},
+"ae-flight-08": {
+"ko": "하중 배수",
+"en": "Load factor (aeronautics)",
+"lv": 2,
+"level": "중급",
+"hint": "선회·기동 시 기체가 받는 하중의 배율",
+"category": "비행역학·항공기 구조",
+"domain": "항공우주공학"
+},
+"ae-flight-09": {
+"ko": "더치 롤",
+"en": "Dutch roll",
+"lv": 3,
+"level": "심화",
+"hint": "요와 롤이 결합된 진동 운동",
+"category": "비행역학·항공기 구조",
+"domain": "항공우주공학"
+},
+"ae-flight-10": {
+"ko": "공탄성",
+"en": "Aeroelasticity",
+"lv": 3,
+"level": "심화",
+"hint": "공기력과 구조 변형이 상호작용하는 현상",
+"category": "비행역학·항공기 구조",
+"domain": "항공우주공학"
+},
+"ae-space-01": {
+"ko": "케플러 법칙",
+"en": "Kepler's laws of planetary motion",
+"lv": 1,
+"level": "기초",
+"hint": "행성 궤도의 모양과 주기에 관한 법칙",
+"category": "우주·궤도역학",
+"domain": "항공우주공학"
+},
+"ae-space-02": {
+"ko": "탈출 속도",
+"en": "Escape velocity",
+"lv": 1,
+"level": "기초",
+"hint": "천체의 중력을 벗어나기 위한 최소 속도",
+"category": "우주·궤도역학",
+"domain": "항공우주공학"
+},
+"ae-space-03": {
+"ko": "정지 궤도",
+"en": "Geostationary orbit",
+"lv": 1,
+"level": "기초",
+"hint": "지상에서 보면 멈춰 있는 위성의 궤도",
+"category": "우주·궤도역학",
+"domain": "항공우주공학"
+},
+"ae-space-04": {
+"ko": "대기권 재진입",
+"en": "Atmospheric entry",
+"lv": 1,
+"level": "기초",
+"hint": "우주선이 대기로 돌아올 때의 가열 문제",
+"category": "우주·궤도역학",
+"domain": "항공우주공학"
+},
+"ae-space-05": {
+"ko": "궤도 요소",
+"en": "Orbital elements",
+"lv": 2,
+"level": "중급",
+"hint": "궤도를 정의하는 여섯 개의 매개변수",
+"category": "우주·궤도역학",
+"domain": "항공우주공학"
+},
+"ae-space-06": {
+"ko": "호만 전이 궤도",
+"en": "Hohmann transfer orbit",
+"lv": 2,
+"level": "중급",
+"hint": "두 원궤도 사이를 옮겨 가는 효율적 경로",
+"category": "우주·궤도역학",
+"domain": "항공우주공학"
+},
+"ae-space-07": {
+"ko": "라그랑주 점",
+"en": "Lagrange point",
+"lv": 2,
+"level": "중급",
+"hint": "두 천체의 중력이 균형을 이루는 위치",
+"category": "우주·궤도역학",
+"domain": "항공우주공학"
+},
+"ae-space-08": {
+"ko": "중력 도움 (스윙바이)",
+"en": "Gravity assist",
+"lv": 2,
+"level": "중급",
+"hint": "행성 중력을 이용해 속도를 얻는 기법",
+"category": "우주·궤도역학",
+"domain": "항공우주공학"
+},
+"ae-space-09": {
+"ko": "램버트 문제",
+"en": "Lambert's problem",
+"lv": 3,
+"level": "심화",
+"hint": "두 위치와 비행시간으로 궤도를 구하는 문제",
+"category": "우주·궤도역학",
+"domain": "항공우주공학"
+},
+"ae-space-10": {
+"ko": "반작용 휠",
+"en": "Reaction wheel",
+"lv": 3,
+"level": "심화",
+"hint": "회전 관성으로 위성 자세를 제어하는 장치",
+"category": "우주·궤도역학",
+"domain": "항공우주공학"
+},
+"bm-biotech-01": {
+"ko": "세포",
+"en": "Cell (biology)",
+"lv": 1,
+"level": "기초",
+"hint": "모든 생명체를 이루는 기본 단위",
+"category": "생명공학 기초",
+"domain": "바이오·의공학"
+},
+"bm-biotech-02": {
+"ko": "DNA 복제",
+"en": "DNA replication",
+"lv": 1,
+"level": "기초",
+"hint": "세포 분열 전 유전 정보를 복사하는 과정",
+"category": "생명공학 기초",
+"domain": "바이오·의공학"
+},
+"bm-biotech-03": {
+"ko": "센트럴 도그마",
+"en": "Central dogma of molecular biology",
+"lv": 1,
+"level": "기초",
+"hint": "유전 정보가 흐르는 방향에 관한 원리",
+"category": "생명공학 기초",
+"domain": "바이오·의공학"
+},
+"bm-biotech-04": {
+"ko": "효소",
+"en": "Enzyme",
+"lv": 1,
+"level": "기초",
+"hint": "생체 내 화학 반응을 빠르게 하는 단백질",
+"category": "생명공학 기초",
+"domain": "바이오·의공학"
+},
+"bm-biotech-05": {
+"ko": "미카엘리스-멘텐 반응속도론",
+"en": "Michaelis–Menten kinetics",
+"lv": 2,
+"level": "중급",
+"hint": "기질 농도와 효소 반응 속도의 관계",
+"category": "생명공학 기초",
+"domain": "바이오·의공학"
+},
+"bm-biotech-06": {
+"ko": "단백질 구조",
+"en": "Protein structure",
+"lv": 2,
+"level": "중급",
+"hint": "1차부터 4차까지 단백질이 접히는 방식",
+"category": "생명공학 기초",
+"domain": "바이오·의공학"
+},
+"bm-biotech-07": {
+"ko": "세포 호흡",
+"en": "Cellular respiration",
+"lv": 2,
+"level": "중급",
+"hint": "영양분에서 ATP를 만들어 내는 과정",
+"category": "생명공학 기초",
+"domain": "바이오·의공학"
+},
+"bm-biotech-08": {
+"ko": "막 수송",
+"en": "Membrane transport",
+"lv": 2,
+"level": "중급",
+"hint": "물질이 세포막을 드나드는 방법",
+"category": "생명공학 기초",
+"domain": "바이오·의공학"
+},
+"bm-biotech-09": {
+"ko": "세포 신호 전달",
+"en": "Cell signaling",
+"lv": 3,
+"level": "심화",
+"hint": "세포가 외부 신호를 받아 반응하는 경로",
+"category": "생명공학 기초",
+"domain": "바이오·의공학"
+},
+"bm-biotech-10": {
+"ko": "세포자멸사 (아포토시스)",
+"en": "Apoptosis",
+"lv": 3,
+"level": "심화",
+"hint": "세포가 스스로 질서 있게 죽는 과정",
+"category": "생명공학 기초",
+"domain": "바이오·의공학"
+},
+"bm-genetic-01": {
+"ko": "중합효소 연쇄 반응 (PCR)",
+"en": "Polymerase chain reaction",
+"lv": 1,
+"level": "기초",
+"hint": "특정 DNA 조각을 대량으로 증폭하는 기술",
+"category": "유전공학·분자생물",
+"domain": "바이오·의공학"
+},
+"bm-genetic-02": {
+"ko": "제한 효소",
+"en": "Restriction enzyme",
+"lv": 1,
+"level": "기초",
+"hint": "특정 염기서열에서 DNA를 자르는 효소",
+"category": "유전공학·분자생물",
+"domain": "바이오·의공학"
+},
+"bm-genetic-03": {
+"ko": "플라스미드",
+"en": "Plasmid",
+"lv": 1,
+"level": "기초",
+"hint": "세균 속 작은 고리 모양의 DNA",
+"category": "유전공학·분자생물",
+"domain": "바이오·의공학"
+},
+"bm-genetic-04": {
+"ko": "겔 전기영동",
+"en": "Gel electrophoresis",
+"lv": 1,
+"level": "기초",
+"hint": "DNA·단백질을 크기별로 분리하는 방법",
+"category": "유전공학·분자생물",
+"domain": "바이오·의공학"
+},
+"bm-genetic-05": {
+"ko": "분자 클로닝",
+"en": "Molecular cloning",
+"lv": 2,
+"level": "중급",
+"hint": "원하는 유전자를 벡터에 넣어 복제하는 과정",
+"category": "유전공학·분자생물",
+"domain": "바이오·의공학"
+},
+"bm-genetic-06": {
+"ko": "DNA 염기서열 분석",
+"en": "DNA sequencing",
+"lv": 2,
+"level": "중급",
+"hint": "DNA의 염기 순서를 읽어 내는 기술",
+"category": "유전공학·분자생물",
+"domain": "바이오·의공학"
+},
+"bm-genetic-07": {
+"ko": "CRISPR 유전자 편집",
+"en": "CRISPR gene editing",
+"lv": 2,
+"level": "중급",
+"hint": "가이드 RNA로 원하는 위치를 자르는 기술",
+"category": "유전공학·분자생물",
+"domain": "바이오·의공학"
+},
+"bm-genetic-08": {
+"ko": "웨스턴 블롯",
+"en": "Western blot",
+"lv": 2,
+"level": "중급",
+"hint": "특정 단백질을 항체로 검출하는 방법",
+"category": "유전공학·분자생물",
+"domain": "바이오·의공학"
+},
+"bm-genetic-09": {
+"ko": "RNA 간섭 (RNAi)",
+"en": "RNA interference",
+"lv": 3,
+"level": "심화",
+"hint": "작은 RNA로 유전자 발현을 억제하는 현상",
+"category": "유전공학·분자생물",
+"domain": "바이오·의공학"
+},
+"bm-genetic-10": {
+"ko": "실시간 PCR (qPCR)",
+"en": "Real-time polymerase chain reaction",
+"lv": 3,
+"level": "심화",
+"hint": "증폭 과정을 형광으로 정량하는 기술",
+"category": "유전공학·분자생물",
+"domain": "바이오·의공학"
+},
+"bm-biomed-01": {
+"ko": "심전도 (ECG)",
+"en": "Electrocardiography",
+"lv": 1,
+"level": "기초",
+"hint": "심장의 전기 활동을 기록하는 검사",
+"category": "의공학·의료기기",
+"domain": "바이오·의공학"
+},
+"bm-biomed-02": {
+"ko": "컴퓨터 단층촬영 (CT)",
+"en": "CT scan",
+"lv": 1,
+"level": "기초",
+"hint": "X선으로 몸의 단면 영상을 얻는 장비",
+"category": "의공학·의료기기",
+"domain": "바이오·의공학"
+},
+"bm-biomed-03": {
+"ko": "초음파 영상",
+"en": "Medical ultrasound",
+"lv": 1,
+"level": "기초",
+"hint": "음파의 반사로 몸속을 보는 영상 기법",
+"category": "의공학·의료기기",
+"domain": "바이오·의공학"
+},
+"bm-biomed-04": {
+"ko": "인공심박동기",
+"en": "Artificial cardiac pacemaker",
+"lv": 1,
+"level": "기초",
+"hint": "심장 박동을 전기 자극으로 조절하는 기기",
+"category": "의공학·의료기기",
+"domain": "바이오·의공학"
+},
+"bm-biomed-05": {
+"ko": "자기공명영상 (MRI)",
+"en": "Magnetic resonance imaging",
+"lv": 2,
+"level": "중급",
+"hint": "강한 자기장과 전파로 만드는 영상",
+"category": "의공학·의료기기",
+"domain": "바이오·의공학"
+},
+"bm-biomed-06": {
+"ko": "생체적합성",
+"en": "Biocompatibility",
+"lv": 2,
+"level": "중급",
+"hint": "재료가 몸 안에서 해를 주지 않는 성질",
+"category": "의공학·의료기기",
+"domain": "바이오·의공학"
+},
+"bm-biomed-07": {
+"ko": "뇌파 (EEG)",
+"en": "Electroencephalography",
+"lv": 2,
+"level": "중급",
+"hint": "두피에서 뇌의 전기 활동을 측정하는 검사",
+"category": "의공학·의료기기",
+"domain": "바이오·의공학"
+},
+"bm-biomed-08": {
+"ko": "제세동",
+"en": "Defibrillation",
+"lv": 2,
+"level": "중급",
+"hint": "전기 충격으로 심장 리듬을 되돌리는 처치",
+"category": "의공학·의료기기",
+"domain": "바이오·의공학"
+},
+"bm-biomed-09": {
+"ko": "양전자 방출 단층촬영 (PET)",
+"en": "Positron emission tomography",
+"lv": 3,
+"level": "심화",
+"hint": "방사성 추적자로 대사 활동을 보는 영상",
+"category": "의공학·의료기기",
+"domain": "바이오·의공학"
+},
+"bm-biomed-10": {
+"ko": "조직공학",
+"en": "Tissue engineering",
+"lv": 3,
+"level": "심화",
+"hint": "세포와 지지체로 조직을 재생하는 분야",
+"category": "의공학·의료기기",
+"domain": "바이오·의공학"
+},
+"bm-process-01": {
+"ko": "발효",
+"en": "Fermentation",
+"lv": 1,
+"level": "기초",
+"hint": "미생물이 유기물을 분해해 산물을 만드는 과정",
+"category": "생물공정",
+"domain": "바이오·의공학"
+},
+"bm-process-02": {
+"ko": "생물반응기",
+"en": "Bioreactor",
+"lv": 1,
+"level": "기초",
+"hint": "세포·미생물을 키우는 제어된 용기",
+"category": "생물공정",
+"domain": "바이오·의공학"
+},
+"bm-process-03": {
+"ko": "멸균",
+"en": "Sterilization (microbiology)",
+"lv": 1,
+"level": "기초",
+"hint": "모든 미생물을 제거하는 공정",
+"category": "생물공정",
+"domain": "바이오·의공학"
+},
+"bm-process-04": {
+"ko": "미생물 생장 곡선",
+"en": "Bacterial growth",
+"lv": 1,
+"level": "기초",
+"hint": "유도기·대수기·정지기·사멸기의 변화",
+"category": "생물공정",
+"domain": "바이오·의공학"
+},
+"bm-process-05": {
+"ko": "모노드 식",
+"en": "Monod equation",
+"lv": 2,
+"level": "중급",
+"hint": "기질 농도와 미생물 비성장속도의 관계",
+"category": "생물공정",
+"domain": "바이오·의공학"
+},
+"bm-process-06": {
+"ko": "유가식 배양",
+"en": "Fed-batch culture",
+"lv": 2,
+"level": "중급",
+"hint": "배양 중 기질을 조금씩 공급하는 방식",
+"category": "생물공정",
+"domain": "바이오·의공학"
+},
+"bm-process-07": {
+"ko": "크로마토그래피",
+"en": "Chromatography",
+"lv": 2,
+"level": "중급",
+"hint": "이동상과 고정상으로 물질을 분리하는 방법",
+"category": "생물공정",
+"domain": "바이오·의공학"
+},
+"bm-process-08": {
+"ko": "단백질 정제",
+"en": "Protein purification",
+"lv": 2,
+"level": "중급",
+"hint": "혼합물에서 목표 단백질만 분리하는 과정",
+"category": "생물공정",
+"domain": "바이오·의공학"
+},
+"bm-process-09": {
+"ko": "케모스탯 (연속 배양)",
+"en": "Chemostat",
+"lv": 3,
+"level": "심화",
+"hint": "유입과 유출을 같게 유지하는 배양 장치",
+"category": "생물공정",
+"domain": "바이오·의공학"
+},
+"bm-process-10": {
+"ko": "다운스트림 공정",
+"en": "Downstream processing",
+"lv": 3,
+"level": "심화",
+"hint": "배양 후 산물을 회수·정제하는 단계",
+"category": "생물공정",
+"domain": "바이오·의공학"
+}
+}
