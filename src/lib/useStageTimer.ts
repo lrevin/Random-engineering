@@ -6,18 +6,17 @@ import { cancelTimerEnd, requestNotificationPermission, scheduleTimerEnd } from 
 import { useCountdown } from "./useCountdown";
 
 const MESSAGES = {
-  study: { title: "⏰ 공부 시간 끝!", body: "이제 메모를 덮고 2분 동안 설명해 보세요." },
-  explain: { title: "🗣 설명 시간 끝!", body: "오늘 설명은 몇 점이었나요? 기록을 남겨 주세요." },
+  study: { title: "⏰ 공부 시간 끝!", body: "이제 퀴즈 10문제로 얼마나 알게 됐는지 확인해 보세요." },
 };
 
 /**
- * 공부/설명 단계 타이머.
+ * 공부 단계 타이머.
  * 진행 상태를 저장해 두어서 앱을 껐다 켜도 이어지고, 끝나는 시각에 알림이 울립니다.
  */
-export function useStageTimer(stage: "study" | "explain", onEnd: () => void) {
+export function useStageTimer(stage: "study", onEnd: () => void) {
   const { active, setActive } = useApp();
-  const totalKey = stage === "study" ? "studyTotal" : "explainTotal";
-  const leftKey = stage === "study" ? "studyLeft" : "explainLeft";
+  const totalKey = "studyTotal";
+  const leftKey = "studyLeft";
 
   const total = active?.[totalKey] ?? 0;
   // 화면에 들어온 순간의 상태 (한 번만 계산)

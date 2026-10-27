@@ -7,6 +7,8 @@ import { EE_CATEGORIES, EE_RAW } from "./ee";
 import { ENV_CATEGORIES, ENV_RAW } from "./env";
 import { IE_CATEGORIES, IE_RAW } from "./ie";
 import { IT_CATEGORIES, IT_RAW } from "./it";
+import { KO_WIKI } from "./kowiki";
+import { OFFICIAL_DOCS } from "./links";
 import { MAT_CATEGORIES, MAT_RAW } from "./mat";
 import { ME_CATEGORIES, ME_RAW } from "./me";
 import type { CategoryDef, Domain, Level, LevelNum, RawTopic, Topic } from "./types";
@@ -71,11 +73,26 @@ export const topicCount = (pred: (t: Topic) => boolean) => TOPICS.filter(pred).l
 /** 위키 검색어: 괄호 안 설명은 빼고 검색 */
 export const searchTerm = (ko: string) => ko.replace(/\s*\(.*?\)\s*/g, " ").trim();
 
-export const studyLinks = (t: Topic) => {
-  const q = encodeURIComponent(searchTerm(t.ko));
-  return [
-    { label: "한국어 위키백과", url: `https://ko.wikipedia.org/w/index.php?search=${q}` },
-    { label: "영어 위키피디아", url: `https://en.wikipedia.org/w/index.php?search=${encodeURIComponent(t.en)}` },
-    { label: "나무위키", url: `https://namu.wiki/Search?q=${q}` },
-  ];
+const wikiUrl = (lang: "ko" | "en", title: string) =>
+  `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, "_"))}`;
+
+export interface TopicLinks {
+  /** 한국어 위키백과 문서 (언어 간 링크로 확인된 실제 문서). 없으면 undefined */
+  koWiki?: { title: string; url: string };
+  /** 영어 위키피디아 문서 */
+  enWiki: { title: string; url: string };
+  /** 공식 문서 (표준·공식 사이트). 없으면 undefined */
+  official?: { label: string; url: string };
+  /** 나무위키 검색 */
+  namu: string;
+}
+
+export const topicLinks = (t: Topic): TopicLinks => {
+  const ko = KO_WIKI[t.en];
+  return {
+    koWiki: ko ? { title: ko, url: wikiUrl("ko", ko) } : undefined,
+    enWiki: { title: t.en, url: wikiUrl("en", t.en) },
+    official: OFFICIAL_DOCS[t.en],
+    namu: `https://namu.wiki/Search?q=${encodeURIComponent(searchTerm(t.ko))}`,
+  };
 };

@@ -5,7 +5,7 @@ import { createContext, useCallback, useContext, useEffect, useLayoutEffect, use
 import { AppState as RNAppState } from "react-native";
 import { cancelAllNotifications, rescheduleReminders } from "./notify";
 import { supabase } from "./supabase";
-import { DEFAULT_PREFS, type ActiveSession, type Prefs, type StudyRecord } from "./types";
+import { DEFAULT_PREFS, type ActiveSession, type Prefs, type StudyRecord, type WrongAnswer } from "./types";
 
 /** none: 아직 시작 전(첫 화면) · guest: 로그인 없이 둘러보기 · user: 회원 */
 export type Mode = "none" | "guest" | "user";
@@ -62,29 +62,45 @@ const writeJSON = (key: string, v: unknown) => AsyncStorage.setItem(key, JSON.st
 // ───────── 서버 행 ↔ 앱 객체 변환 ─────────
 type RecordRow = {
   id: string; topic_id: string; topic_ko: string; domain: string; category: string; level: string;
-  memo: string; rating: number; good: string; stuck: string; study_sec: number; explain_sec: number; studied_at: string;
+  memo: string; score: number; quiz_total: number; rp: number; wrong: WrongAnswer[] | null;
+  study_sec: number; quiz_source: string; studied_at: string;
 };
 const toRow = (r: StudyRecord, userId: string) => ({
   id: r.id, user_id: userId, topic_id: r.topicId, topic_ko: r.topicKo, domain: r.domain, category: r.category, level: r.level,
-  memo: r.memo.slice(0, 5000), rating: r.rating, good: r.good.slice(0, 300), stuck: r.stuck.slice(0, 300),
-  study_sec: r.studySec, explain_sec: r.explainSec, studied_at: r.studiedAt,
+  memo: r.memo.slice(0, 5000), score: r.score, quiz_total: r.total, rp: r.rp, wrong: r.wrong.slice(0, 10),
+  study_sec: r.studySec, quiz_source: r.quizSource, studied_at: r.studiedAt,
 });
 const fromRow = (x: RecordRow): StudyRecord => ({
   id: x.id, topicId: x.topic_id, topicKo: x.topic_ko, domain: x.domain, category: x.category, level: x.level,
-  memo: x.memo, rating: x.rating, good: x.good, stuck: x.stuck, studySec: x.study_sec, explainSec: x.explain_sec,
-  studiedAt: x.studied_at, synced: true,
+  memo: x.memo, score: x.score, total: x.quiz_total, rp: x.rp, wrong: x.wrong ?? [], studySec: x.study_sec,
+  quizSource: x.quiz_source === "offline" ? "offline" : "ai", studiedAt: x.studied_at, synced: true,
 });
+
+/** 이전 버전(별점 방식) 기록을 새 형식으로 바꿉니다. */
+const normalizeRecord = (r: Partial<StudyRecord> & { rating?: number }): StudyRecord => ({
+  id: r.id ?? "", topicId: r.topicId ?? "", topicKo: r.topicKo ?? "", domain: r.domain ?? "it",
+  category: r.category ?? "", level: r.level ?? "", memo: r.memo ?? "",
+  score: typeof r.score === "number" ? r.score : Math.round((r.rating ?? 0) * 2),
+  total: typeof r.total === "number" ? r.total : 10,
+  rp: typeof r.rp === "number" ? r.rp : 0,
+  wrong: Array.isArray(r.wrong) ? r.wrong : [],
+  studySec: r.studySec ?? 0,
+  quizSource: r.quizSource === "offline" ? "offline" : "ai",
+  studiedAt: r.studiedAt ?? new Date(0).toISOString(),
+  synced: !!r.synced,
+});
+
 type ProfileRow = {
-  nickname: string; interests: string[]; level: number; study_minutes: number; explain_minutes: number;
+  nickname: string; interests: string[]; level: number; study_minutes: number;
   reminder_enabled: boolean; reminder_time: string;
 };
 const prefsToProfile = (p: Prefs, id: string) => ({
-  id, nickname: p.nickname, interests: p.interests, level: p.level, study_minutes: p.studyMinutes, explain_minutes: p.explainMinutes,
+  id, nickname: p.nickname, interests: p.interests, level: p.level, study_minutes: p.studyMinutes,
   reminder_enabled: p.reminderEnabled, reminder_time: p.reminderTime, updated_at: new Date().toISOString(),
 });
 const profileToPrefs = (x: ProfileRow): Prefs => ({
-  nickname: x.nickname, interests: x.interests ?? [], level: ([0, 1, 2, 3].includes(x.level) ? x.level : 0) as Prefs["level"], studyMinutes: x.study_minutes, explainMinutes: x.explain_minutes,
-  reminderEnabled: x.reminder_enabled, reminderTime: x.reminder_time,
+  nickname: x.nickname, interests: x.interests ?? [], level: ([0, 1, 2, 3].includes(x.level) ? x.level : 0) as Prefs["level"],
+  studyMinutes: x.study_minutes, reminderEnabled: x.reminder_enabled, reminderTime: x.reminder_time,
 });
 
 const sortRecords = (rs: StudyRecord[]) => [...rs].sort((a, b) => a.studiedAt.localeCompare(b.studiedAt));
@@ -181,13 +197,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let alive = true;
     (async () => {
-      const [m, p, ob, rs, ac] = await Promise.all([
+      const [m, p, ob, rawRecords, rawActive] = await Promise.all([
         readJSON<Mode>(K.mode, "none"),
         readJSON<Prefs>(K.prefs, DEFAULT_PREFS),
         readJSON<boolean>(K.onboarded, false),
-        readJSON<StudyRecord[]>(K.records, []),
+        readJSON<Partial<StudyRecord>[]>(K.records, []),
         readJSON<ActiveSession | null>(K.active, null),
       ]);
+      const rs = Array.isArray(rawRecords) ? rawRecords.map(normalizeRecord) : [];
+      // 이전 버전(설명 단계)에서 진행 중이던 주제는 이어갈 수 없으므로 비움
+      const ac = rawActive && ["study", "quiz", "result"].includes(rawActive.stage) ? rawActive : null;
       if (!alive) return;
       setPrefs({ ...DEFAULT_PREFS, ...p });
       prefsRef.current = { ...DEFAULT_PREFS, ...p };

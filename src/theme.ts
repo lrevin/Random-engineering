@@ -16,6 +16,8 @@ const light = {
   accentSoft: "#f5e1da",
   chip: "#efe7d6",
   flame: "#e0742c",
+  success: "#2f7d4f",
+  successSoft: "#dff0e4",
 };
 
 const dark: typeof light = {
@@ -33,6 +35,8 @@ const dark: typeof light = {
   accentSoft: "#3b2228",
   chip: "#232842",
   flame: "#f08a45",
+  success: "#5cc98a",
+  successSoft: "#1d3a2b",
 };
 
 export type Colors = typeof light;

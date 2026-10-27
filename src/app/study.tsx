@@ -1,13 +1,14 @@
 import { useKeepScreenOn } from "@/lib/useKeepScreenOn";
 import { Redirect, router } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, TextInput, useWindowDimensions, View } from "react-native";
 import { Ring } from "@/components/Ring";
+import { TopicLinks } from "@/components/TopicLinks";
 import { Badge, Btn, FONT, levelTone, Row, Screen, T } from "@/components/ui";
-import { studyLinks, levelText, topicById } from "@/data";
+import { levelText, topicById } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { confirmQuit } from "@/lib/confirm";
+import { prefetchQuiz } from "@/lib/quiz";
 import { useStageTimer } from "@/lib/useStageTimer";
 import { radius, useColors } from "@/theme";
 
@@ -31,19 +32,20 @@ function StudyInner() {
   const [saved, setSaved] = useState(true);
   const memoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const goExplain = useCallback(() => {
-    setActive((a) => (a ? { ...a, stage: "explain", endAt: null } : a));
-    router.replace("/explain");
+  const goQuiz = useCallback(() => {
+    setActive((a) => (a ? { ...a, stage: "quiz", endAt: null } : a));
+    router.replace("/quiz");
   }, [setActive]);
 
   const timer = useStageTimer("study", useCallback(() => {
     setActive((a) => (a ? { ...a, memo: memoRef.current, studyLeft: 0, studyUsed: a.studyTotal } : a));
-    goExplain();
-  }, [goExplain, setActive]));
+    goQuiz();
+  }, [goQuiz, setActive]));
 
-  // 처음 들어오면 바로 시작
+  // 처음 들어오면 바로 시작하고, 퀴즈를 미리 받아 둠
   useEffect(() => {
     if (timer.fresh) timer.start();
+    if (topic) prefetchQuiz(topic);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -62,7 +64,7 @@ function StudyInner() {
   const skip = () => {
     const { left, used } = timer.stop();
     setActive((a) => (a ? { ...a, memo, studyLeft: left, studyUsed: used } : a));
-    goExplain();
+    goQuiz();
   };
 
   if (!topic) return null;
@@ -88,15 +90,11 @@ function StudyInner() {
           <Ring size={ringSize} left={timer.left} total={timer.total} running={timer.running} />
           <Row style={{ justifyContent: "center" }}>
             <Btn title={timer.running ? "일시정지" : "재개"} variant="primary" onPress={timer.toggle} />
-            <Btn title="건너뛰기 → 설명" onPress={skip} />
+            <Btn title="공부 끝 → 퀴즈" onPress={skip} />
           </Row>
         </View>
 
-        <Row style={{ justifyContent: "center" }}>
-          {studyLinks(topic).map((l) => (
-            <Btn key={l.label} title={`${l.label} ↗`} size="sm" onPress={() => WebBrowser.openBrowserAsync(l.url).catch(() => {})} />
-          ))}
-        </Row>
+        <TopicLinks topic={topic} />
 
         <View style={{ gap: 6 }}>
           <Row style={{ justifyContent: "space-between" }}>
@@ -109,7 +107,7 @@ function StudyInner() {
             multiline
             textAlignVertical="top"
             maxLength={5000}
-            placeholder="정의, 동작 원리, 예시를 짧게 적어 두세요. 설명 단계에서는 이 메모가 가려져요."
+            placeholder="정의, 동작 원리, 예시를 짧게 적어 두세요. 퀴즈를 푸는 동안에는 메모를 볼 수 없어요."
             placeholderTextColor={c.muted}
             style={{ minHeight: 150, borderWidth: 1, borderColor: c.line2, borderRadius: radius.md, backgroundColor: c.paper, padding: 12, fontSize: 16, lineHeight: 24, color: c.ink, fontFamily: FONT.regular }}
           />

@@ -1,9 +1,12 @@
 import { router } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Pressable, Switch, View } from "react-native";
+import { TierBadge, UserRankBar } from "@/components/Rank";
+import { TopicLinks } from "@/components/TopicLinks";
 import { Badge, Btn, Card, levelTone, Row, Screen, Segment, T } from "@/components/ui";
 import { categoryById, levelText, TOPICS, type Topic } from "@/data";
 import { useApp } from "@/lib/app-state";
+import { maxRpFor, topicMastery, totalRp } from "@/lib/rank";
 import { calcStreak, lastWeek } from "@/lib/stats";
 import { radius, useColors } from "@/theme";
 
@@ -84,8 +87,7 @@ export default function Home() {
     setActive({
       topicId: drawn.id, stage: "study", memo: "",
       studyTotal: prefs.studyMinutes * 60, studyLeft: prefs.studyMinutes * 60, studyUsed: 0,
-      explainTotal: prefs.explainMinutes * 60, explainLeft: prefs.explainMinutes * 60, explainUsed: 0,
-      rating: 0, good: "", stuck: "", startedAt: new Date().toISOString(), endAt: null,
+      quizOnly: false, quiz: null, result: null, startedAt: new Date().toISOString(), endAt: null,
     });
     router.push("/study");
   };
@@ -109,6 +111,10 @@ export default function Home() {
           <T size={11} color="muted">연속 일수</T>
         </View>
       </Row>
+
+      <Card style={{ paddingVertical: 12 }}>
+        <UserRankBar rp={totalRp(records)} compact />
+      </Card>
 
       <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
         {week.map((d, i) => (
@@ -169,6 +175,10 @@ export default function Home() {
               <>
                 <T size={14} color="muted" center>{shown.en}</T>
                 <T size={16} color="ink2" center style={{ marginTop: 4 }}>{shown.hint}</T>
+                <Row gap={8} style={{ justifyContent: "center", marginTop: 4 }}>
+                  <TierBadge index={topicMastery(shown.id, records).index} size="sm" />
+                  <T size={12} color="muted">퀴즈 최대 +{maxRpFor(shown)} RP</T>
+                </Row>
               </>
             )}
           </Animated.View>
@@ -177,8 +187,10 @@ export default function Home() {
         )}
       </Card>
 
+      {drawn && !spinning && <TopicLinks topic={drawn} />}
+
       <View style={{ gap: 10 }}>
-        {drawn && !spinning && !active && <Btn title="이걸로 시작" variant="accent" size="lg" onPress={start} />}
+        {drawn && !spinning && !active && <Btn title={`이걸로 시작 (${prefs.studyMinutes}분 공부 → 퀴즈 10문제)`} variant="accent" size="lg" onPress={start} />}
         <Btn
           title={spinning ? "뽑는 중…" : drawn ? "다시 뽑기" : "주제 뽑기 🎲"}
           variant={drawn ? "outline" : "primary"}

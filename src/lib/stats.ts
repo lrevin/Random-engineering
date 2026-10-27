@@ -45,7 +45,9 @@ export function lastWeek(records: StudyRecord[], now = new Date()) {
   });
 }
 
-export function averageRating(records: StudyRecord[]) {
-  if (!records.length) return 0;
-  return records.reduce((a, r) => a + r.rating, 0) / records.length;
+/** 평균 퀴즈 점수 (10점 만점 기준) */
+export function averageScore(records: StudyRecord[]) {
+  const rs = records.filter((r) => r.total > 0);
+  if (!rs.length) return 0;
+  return rs.reduce((a, r) => a + (r.score / r.total) * 10, 0) / rs.length;
 }

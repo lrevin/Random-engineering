@@ -44,8 +44,8 @@ function RootNav() {
         <Stack.Protected guard={inApp}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="study" options={flow} />
-          <Stack.Screen name="explain" options={flow} />
-          <Stack.Screen name="finish" options={flow} />
+          <Stack.Screen name="quiz" options={flow} />
+          <Stack.Screen name="result" options={flow} />
           <Stack.Screen name="record/[id]" options={{ presentation: "modal" }} />
           <Stack.Screen name="interests" options={{ presentation: "modal" }} />
         </Stack.Protected>
