@@ -1,4 +1,4 @@
-"""앱의 주제 데이터(src/data/*.ts)를 서버 함수용 JSON으로 내보냅니다.
+"""앱의 주제 데이터(app/src/data/*.ts)를 서버 함수용 JSON으로 내보냅니다.
 퀴즈 생성 함수는 이 목록에 있는 주제만 받아서, 임의의 요청으로 AI 비용이 나가는 것을 막습니다.
 사용법: python scripts/export_topics.py   (주제를 추가·수정한 뒤 다시 실행하고 함수를 재배포하세요)
 """
@@ -7,8 +7,8 @@ import os
 import re
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA = os.path.join(ROOT, "src", "data")
-OUT = os.path.join(ROOT, "supabase", "functions", "generate-quiz", "topics.json")
+DATA = os.path.join(ROOT, "app", "src", "data")
+OUT = os.path.join(ROOT, "api", "supabase", "functions", "generate-quiz", "topics.json")
 LEVEL = {1: "기초", 2: "중급", 3: "심화"}
 
 index_src = open(os.path.join(DATA, "index.ts"), encoding="utf8").read()

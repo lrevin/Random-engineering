@@ -1,4 +1,4 @@
-"""영어 위키피디아 문서 제목 → 한국어 위키백과 문서 제목(언어 간 링크)을 받아 src/data/kowiki.ts 로 저장합니다.
+"""영어 위키피디아 문서 제목 → 한국어 위키백과 문서 제목(언어 간 링크)을 받아 app/src/data/kowiki.ts 로 저장합니다.
 사용법: python scripts/fetch_kowiki.py
 """
 import glob
@@ -11,7 +11,7 @@ import urllib.parse
 import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA = os.path.join(ROOT, "src", "data")
+DATA = os.path.join(ROOT, "app", "src", "data")
 UA = "PpobgongCapstone/1.0 (student project; contact via GitHub)"
 SKIP = ("index.ts", "types.ts", "kowiki.ts", "links.ts")
 ROW = re.compile(r'\[\s*"((?:[^"\\]|\\.)+)",\s*"((?:[^"\\]|\\.)+)",\s*[123],')

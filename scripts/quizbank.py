@@ -1,12 +1,12 @@
-"""앱에 내장하는 퀴즈 문제 은행(src/data/quizbank/) 관리 도구.
+"""앱에 내장하는 퀴즈 문제 은행(app/src/data/quizbank/) 관리 도구.
 
 사용법:
   python scripts/quizbank.py plan      # 아직 문제가 없는 주제를 20개씩 묶은 작업 목록 출력 (JSON)
   python scripts/quizbank.py check     # 모든 문제 파일 검사 (형식·개수·중복)
-  python scripts/quizbank.py index     # src/data/quizbank/index.ts 다시 만들기
+  python scripts/quizbank.py index     # app/src/data/quizbank/index.ts 다시 만들기
   python scripts/quizbank.py status    # 진행 현황
 
-문제 파일 형식 (src/data/quizbank/<이름>.json):
+문제 파일 형식 (app/src/data/quizbank/<이름>.json):
   { "<주제 id>": [ {"type":"mc","q":"...","choices":["a","b","c","d"],"answer":0,"explain":"..."},
                    {"type":"ox","q":"...","answer":true,"explain":"..."}, ... ] }
 """
@@ -16,8 +16,8 @@ import os
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-BANK = os.path.join(ROOT, "src", "data", "quizbank")
-TOPICS = os.path.join(ROOT, "supabase", "functions", "generate-quiz", "topics.json")
+BANK = os.path.join(ROOT, "app", "src", "data", "quizbank")
+TOPICS = os.path.join(ROOT, "api", "supabase", "functions", "generate-quiz", "topics.json")
 CHUNK = 20
 MIN_TOTAL, MIN_MC, MIN_OX = 12, 8, 3
 
@@ -128,7 +128,7 @@ def plan():
             group.append(todo[i])
             i += 1
         n = len(glob.glob(os.path.join(BANK, f"{cat}-*.json"))) + sum(1 for c in chunks if c["category"] == cat) + 1
-        chunks.append({"category": cat, "file": f"src/data/quizbank/{cat}-{n}.json",
+        chunks.append({"category": cat, "file": f"app/src/data/quizbank/{cat}-{n}.json",
                        "topics": [{"id": t, **topics[t]} for t in group]})
     return chunks
 

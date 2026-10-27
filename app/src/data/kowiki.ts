@@ -1,4 +1,4 @@
-// 자동 생성 파일: python scripts/fetch_kowiki.py
+// 자동 생성 파일: (저장소 루트에서) python scripts/fetch_kowiki.py
 // 영어 위키피디아 문서 제목 → 한국어 위키백과 문서 제목 (위키백과 언어 간 링크 기준)
 // 한국어 문서가 없는 주제는 목록에 없습니다.
 
