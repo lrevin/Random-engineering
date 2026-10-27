@@ -6,8 +6,9 @@
 // 주제 목록(topics.json)에 있는 주제만 받으므로 AI 비용은 최대 "주제 수 × 1회"입니다.
 //
 // 배포:
-//   supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
-//   supabase functions deploy generate-quiz --no-verify-jwt
+//   cd api && npx supabase secrets set ANTHROPIC_API_KEY=<Claude API 키>
+//   cd api && npx supabase functions deploy generate-quiz --no-verify-jwt
+// 규칙: api/API_RULES.md
 // (둘러보기 사용자도 퀴즈를 받을 수 있도록 JWT 검사를 끕니다. 대신 위의 주제 목록 + 캐시로 남용을 막습니다.)
 
 import Anthropic from "npm:@anthropic-ai/sdk";

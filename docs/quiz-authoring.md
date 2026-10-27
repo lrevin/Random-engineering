@@ -1,6 +1,6 @@
 # 퀴즈 문제 작성 기준
 
-앱에 내장하는 문제 은행(`src/data/quizbank/*.json`)을 만들 때 지키는 기준입니다.
+앱에 내장하는 문제 은행(`app/src/data/quizbank/*.json`)을 만들 때 지키는 기준입니다.
 사람이 쓰든 AI가 초안을 쓰든 같은 기준으로 작성하고, 출시 전에는 해당 분야를 아는 팀원이 검토합니다.
 
 ## 분량
@@ -37,7 +37,7 @@
   ]
 }
 ```
-- 키는 주제 id (`supabase/functions/generate-quiz/topics.json`에 있는 id)
+- 키는 주제 id (`api/supabase/functions/generate-quiz/topics.json`에 있는 id)
 - `mc`: `choices` 4개, `answer`는 정답 보기 번호(0부터)
 - `ox`: `answer`는 `true`(O) / `false`(X), `choices` 없음
 - UTF-8, 올바른 JSON (마지막 쉼표 금지)
@@ -45,6 +45,6 @@
 ## 검사
 ```bash
 python scripts/quizbank.py check   # 형식·개수·중복 검사
-python scripts/quizbank.py index   # src/data/quizbank/index.ts 갱신
+python scripts/quizbank.py index   # app/src/data/quizbank/index.ts 갱신
 python scripts/quizbank.py status  # 진행 현황
 ```

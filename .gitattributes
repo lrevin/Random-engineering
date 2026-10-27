@@ -1,0 +1,7 @@
+# 줄바꿈: 저장소에는 LF로 저장 (윈도우에서 작업해도 맥·리눅스·CI와 같게)
+* text=auto eol=lf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+*.png binary
+*.jpg binary
+*.ttf binary

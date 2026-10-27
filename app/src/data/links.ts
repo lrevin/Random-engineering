@@ -1,6 +1,6 @@
 // 공식 문서가 있는 주제 (영어 위키피디아 문서 제목 기준)
 // 표준 문서(RFC·NIST·W3C·WHATWG·ISO·IEEE)와 공식 사이트만 넣습니다.
-// 주소는 scripts/check_links.py 로 접속 여부를 확인합니다.
+// 주소는 저장소 루트의 scripts/check_links.py 로 접속 여부를 확인합니다.
 
 export const OFFICIAL_DOCS: Record<string, { label: string; url: string }> = {
   "Transmission Control Protocol": { label: "RFC 9293 (TCP 표준)", url: "https://www.rfc-editor.org/rfc/rfc9293" },
