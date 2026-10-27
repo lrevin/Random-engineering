@@ -1,4 +1,6 @@
-# Random Engineering — 뽑공 (PPOBGONG)
+<p align="center"><img src="docs/images/logo-white.png" alt="뽑공 로고" width="440"></p>
+
+# Random Engineering — 뽑공 (뽑는 공학 공부)
 
 > 랜덤 공학 주제 하나, **15분 공부하고 퀴즈 10문제**
 
@@ -10,7 +12,7 @@
 | [`app/`](app) | 모바일 앱 — React Native 0.86 · Expo SDK 57 · TypeScript (iOS·안드로이드 공용) |
 | [`api/`](api) | 백엔드 — Supabase (PostgreSQL · Auth · RLS) + AI 퀴즈 서버 함수 (Deno · Claude API) |
 | [`api/API_RULES.md`](api/API_RULES.md) | **API 규칙** — 엔드포인트 목록, 이름·인증·오류 형식, DB 변경 방법 |
-| [`docs/`](docs) | 퀴즈 작성 기준, 퀴즈 검토 메모 |
+| [`docs/`](docs) | 졸업작품 계획서(`docs/plan`), 로고·그림(`docs/images`), 퀴즈 작성 기준·검토 메모 |
 | [`scripts/`](scripts) | 주제·퀴즈 데이터 생성·검사 도구 (Python) |
 
 ## 팀
@@ -95,6 +97,8 @@ npx expo start --android  # 안드로이드 에뮬레이터
 | `python scripts/export_topics.py` | 서버 함수용 주제 목록 만들기 (주제를 바꾼 뒤) |
 | `python scripts/fetch_kowiki.py` | 주제별 한국어 위키백과 문서 제목 받기 |
 | `python scripts/check_links.py` | 공식 문서 주소가 열리는지 확인 |
+| `python scripts/make_logo.py` | 로고·앱 아이콘 다시 만들기 |
+| `python scripts/make_figures.py` | 계획서용 그림(구성도·DB 구조도·일정표) 다시 만들기 |
 
 ## 저장소에 없는 파일 (각자 준비)
 보안 때문에 올리지 않는다. 팀장에게 따로 받는다.
