@@ -44,7 +44,7 @@ create table if not exists public.study_records (
   rp           int not null default 0 check (rp between 0 and 1000),  -- 이번에 얻은 랭크 포인트
   wrong        jsonb not null default '[]'::jsonb,         -- 틀린 문제 [{q, answer, explain}]
   study_sec    int not null default 0 check (study_sec >= 0),
-  quiz_source  text not null default 'ai' check (quiz_source in ('ai', 'offline')),
+  quiz_source  text not null default 'ai' check (quiz_source in ('bank', 'ai', 'offline')),
   studied_at   timestamptz not null default now(),
   created_at   timestamptz not null default now(),
   check (score <= quiz_total)

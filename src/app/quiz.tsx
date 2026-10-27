@@ -90,7 +90,7 @@ function QuizInner() {
     setActive((x) => x ? {
       ...x, stage: "result", quiz: { ...quiz, answers },
       result: {
-        score, total, rp: rp.total, parts: rp.parts, streak,
+        recordId: rec.id, score, total, rp: rp.total, parts: rp.parts, streak,
         userTierBefore: userRank(rpBefore).index, userTierAfter: userRank(rpBefore + rp.total).index,
         topicTierBefore: topicBefore.index, topicTierAfter: topicAfter.index,
       },

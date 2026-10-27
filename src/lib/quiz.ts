@@ -1,15 +1,18 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { TOPICS, type Topic } from "@/data";
+import { QUIZ_BANK } from "@/data/quizbank";
 import { supabase } from "./supabase";
 
 export type QuizQuestion =
   | { type: "mc"; q: string; choices: string[]; answer: number; explain: string }
   | { type: "ox"; q: string; answer: boolean; explain: string };
 
+export type QuizSource = "bank" | "ai" | "offline";
+
 export interface QuizSet {
   topicId: string;
-  /** ai: 서버에서 AI가 만든 문제 · offline: 서버 연결이 없을 때 앱 데이터로 만든 연습 문제 */
-  source: "ai" | "offline";
+  /** bank: 앱에 내장된 문제 은행 · ai: 서버에서 AI가 만든 문제 · offline: 앱 데이터로 만든 연습 문제 */
+  source: QuizSource;
   questions: QuizQuestion[];
 }
 
@@ -130,9 +133,13 @@ const cacheKey = (id: string) => `pg.quiz.${id}`;
 
 /**
  * 퀴즈 문제 은행을 가져옵니다.
- * 1) 이 휴대폰에 저장된 문제 → 2) 서버(AI가 만든 문제를 모든 사용자가 공유) → 3) 오프라인 연습 문제
+ * 1) 앱에 내장된 문제 은행 → 2) 이 휴대폰에 저장된 AI 문제 → 3) 서버(AI가 만든 문제를 모든 사용자가 공유)
+ * → 4) 오프라인 연습 문제
  */
 export async function loadQuiz(topic: Topic): Promise<QuizSet> {
+  const bank = validQuestions(QUIZ_BANK[topic.id]);
+  if (bank.length >= QUIZ_LENGTH) return { topicId: topic.id, source: "bank", questions: bank };
+
   try {
     const cached = await AsyncStorage.getItem(cacheKey(topic.id));
     if (cached) {

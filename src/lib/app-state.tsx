@@ -73,7 +73,7 @@ const toRow = (r: StudyRecord, userId: string) => ({
 const fromRow = (x: RecordRow): StudyRecord => ({
   id: x.id, topicId: x.topic_id, topicKo: x.topic_ko, domain: x.domain, category: x.category, level: x.level,
   memo: x.memo, score: x.score, total: x.quiz_total, rp: x.rp, wrong: x.wrong ?? [], studySec: x.study_sec,
-  quizSource: x.quiz_source === "offline" ? "offline" : "ai", studiedAt: x.studied_at, synced: true,
+  quizSource: (["bank", "ai", "offline"].includes(x.quiz_source) ? x.quiz_source : "ai") as StudyRecord["quizSource"], studiedAt: x.studied_at, synced: true,
 });
 
 /** 이전 버전(별점 방식) 기록을 새 형식으로 바꿉니다. */
@@ -85,7 +85,7 @@ const normalizeRecord = (r: Partial<StudyRecord> & { rating?: number }): StudyRe
   rp: typeof r.rp === "number" ? r.rp : 0,
   wrong: Array.isArray(r.wrong) ? r.wrong : [],
   studySec: r.studySec ?? 0,
-  quizSource: r.quizSource === "offline" ? "offline" : "ai",
+  quizSource: r.quizSource === "offline" || r.quizSource === "bank" ? r.quizSource : "ai",
   studiedAt: r.studiedAt ?? new Date(0).toISOString(),
   synced: !!r.synced,
 });

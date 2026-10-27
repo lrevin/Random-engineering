@@ -33,7 +33,6 @@ function ResultInner({ snapshot }: { snapshot: NonNullable<ReturnType<typeof use
   const mastery = topicMastery(snapshot.topicId, records);
   const rankUp = r.userTierAfter > r.userTierBefore;
   const topicUp = r.topicTierAfter > r.topicTierBefore;
-  const quiz = snapshot.quiz;
   const pct = r.total ? r.score / r.total : 0;
 
   const done = (to: "/home" | "/history") => {
@@ -80,10 +79,11 @@ function ResultInner({ snapshot }: { snapshot: NonNullable<ReturnType<typeof use
       </Card>
 
       <Card style={{ gap: 8 }}>
-        <Row style={{ justifyContent: "space-between" }}>
-          <T size={16} weight="bold">이 주제 숙련도</T>
+        <Row gap={8}>
+          <T size={16} weight="bold">[{topic?.categoryName ?? "주제"}]</T>
           <TierBadge index={r.topicTierAfter} />
         </Row>
+        <T size={13} color="ink2">{topic?.ko ?? snapshot.topicId}</T>
         {topicUp && r.topicTierBefore >= 0 && (
           <T size={14} color="success" weight="semibold">{TIERS[r.topicTierBefore].name} → {TIERS[r.topicTierAfter].name} 승급!</T>
         )}
@@ -94,21 +94,16 @@ function ResultInner({ snapshot }: { snapshot: NonNullable<ReturnType<typeof use
         </T>
       </Card>
 
-      {quiz && r.score < r.total && (
-        <Card style={{ gap: 12 }}>
-          <T size={16} weight="bold">틀린 문제</T>
-          {quiz.questions.map((q, i) => {
-            const a = quiz.answers[i];
-            if (a === q.answer) return null;
-            return (
-              <View key={i} style={{ gap: 3 }}>
-                <T size={14} weight="semibold">{q.q}</T>
-                <T size={13} color="success">정답: {q.type === "mc" ? q.choices[q.answer] : q.answer ? "O" : "X"}</T>
-                <T size={13} color="muted">{q.explain}</T>
-              </View>
-            );
-          })}
-        </Card>
+      {r.score < r.total && (
+        <Btn
+          title={`오답 문제 보러 가기 (${r.total - r.score}개)`}
+          variant="accent"
+          onPress={() => {
+            // 이전 버전에서 저장된 결과에는 기록 id가 없으므로 그 주제의 최근 기록을 사용
+            const id = r.recordId ?? [...records].reverse().find((x) => x.topicId === snapshot.topicId)?.id;
+            if (id) router.push(`/wrong/${id}`);
+          }}
+        />
       )}
 
       <View style={{ gap: 8 }}>

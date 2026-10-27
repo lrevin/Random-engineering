@@ -84,16 +84,7 @@ export default function RecordDetail() {
       </Card>
 
       {r.wrong.length > 0 && (
-        <Card style={{ gap: 12 }}>
-          <T size={15} weight="bold">틀린 문제 {r.wrong.length}개</T>
-          {r.wrong.map((w, i) => (
-            <View key={i} style={{ gap: 3 }}>
-              <T size={14} weight="semibold">{w.q}</T>
-              <T size={13} color="success">정답: {w.answer}</T>
-              <T size={13} color="muted">{w.explain}</T>
-            </View>
-          ))}
-        </Card>
+        <Btn title={`오답 문제 보러 가기 (${r.wrong.length}개)`} onPress={() => router.push(`/wrong/${r.id}`)} />
       )}
 
       {topic && (

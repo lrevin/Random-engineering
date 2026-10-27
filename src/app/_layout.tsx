@@ -47,6 +47,7 @@ function RootNav() {
           <Stack.Screen name="quiz" options={flow} />
           <Stack.Screen name="result" options={flow} />
           <Stack.Screen name="record/[id]" options={{ presentation: "modal" }} />
+          <Stack.Screen name="wrong/[id]" options={{ presentation: "modal" }} />
           <Stack.Screen name="interests" options={{ presentation: "modal" }} />
         </Stack.Protected>
         <Stack.Protected guard={mode !== "user"}>

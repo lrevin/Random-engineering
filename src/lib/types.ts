@@ -1,4 +1,4 @@
-import type { QuizQuestion } from "./quiz";
+import type { QuizQuestion, QuizSource } from "./quiz";
 import type { RpPart } from "./rank";
 
 /** 틀린 문제 (기록 화면에서 다시 보기용) */
@@ -25,8 +25,8 @@ export interface StudyRecord {
   wrong: WrongAnswer[];
   /** 공부 시간(초). 퀴즈만 다시 푼 경우 0 */
   studySec: number;
-  /** ai: AI가 만든 퀴즈 · offline: 오프라인 연습 퀴즈 */
-  quizSource: "ai" | "offline";
+  /** bank: 내장 문제 은행 · ai: AI가 만든 퀴즈 · offline: 오프라인 연습 퀴즈 */
+  quizSource: QuizSource;
   studiedAt: string;
   /** 서버에 올라갔는지 (게스트 기록이나 오프라인 저장분은 false) */
   synced: boolean;
@@ -56,13 +56,15 @@ export const DEFAULT_PREFS: Prefs = {
 export type Stage = "study" | "quiz" | "result";
 
 export interface QuizProgress {
-  source: "ai" | "offline";
+  source: QuizSource;
   questions: QuizQuestion[];
   /** 고른 답 (4지선다는 보기 번호, OX는 true/false). 아직 안 푼 문제는 배열에 없음 */
   answers: (number | boolean)[];
 }
 
 export interface QuizResult {
+  /** 저장된 기록 id (오답 보기 화면에서 사용) */
+  recordId: string;
   score: number;
   total: number;
   rp: number;
