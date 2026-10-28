@@ -8,11 +8,14 @@ import b_sec_1 from "./sec-1.json";
 import b_sec_3 from "./sec-3.json";
 import b_sec_4 from "./sec-4.json";
 
-export const QUIZ_BANK: Record<string, QuizQuestion[]> = Object.assign(
-  {},
-  b_ds_1 as Record<string, QuizQuestion[]>,
-  b_ds_2 as Record<string, QuizQuestion[]>,
-  b_sec_1 as Record<string, QuizQuestion[]>,
-  b_sec_3 as Record<string, QuizQuestion[]>,
-  b_sec_4 as Record<string, QuizQuestion[]>,
-);
+const FILES = [
+  b_ds_1,
+  b_ds_2,
+  b_sec_1,
+  b_sec_3,
+  b_sec_4,
+] as Record<string, QuizQuestion[]>[];
+
+// 한 주제의 문제가 여러 파일에 나뉘어 있으면 합칩니다
+export const QUIZ_BANK: Record<string, QuizQuestion[]> = {};
+for (const f of FILES) for (const [id, qs] of Object.entries(f)) (QUIZ_BANK[id] ??= []).push(...qs);
