@@ -106,7 +106,7 @@ export default function Home() {
     ? "관심 분야를 먼저 골라 주세요."
     : !pool.length
       ? includeMastered ? "조건에 맞는 주제가 없어요." : "이 조건의 주제를 모두 마스터했어요! 🎉\n'마스터한 주제 포함'을 눌러 보세요."
-      : "레버를 당기거나 아래 버튼을 눌러\n오늘의 주제를 뽑아 보세요";
+      : "레버를 당기거나 버튼을 눌러\n오늘의 주제를 뽑아 보세요";
 
   return (
     <Screen edges={["top"]} scroll>
