@@ -1,15 +1,16 @@
 # API 규칙
 
-뽑공의 서버는 **Supabase** 하나로 이루어져 있습니다. 따로 만든 API 서버(Spring 등)는 없고, 다음 네 가지를 API로 씁니다.
+뽑공의 서버는 **Supabase**와, 계속 켜 두는 **퀴즈 AI 서버**([`quiz-server/`](quiz-server))로 이루어져 있습니다. 다음 다섯 가지를 API로 씁니다.
 
 | 종류 | 무엇 | 어디에 정의 |
 |---|---|---|
 | 인증 | Supabase Auth (이메일 가입·로그인, 나중에 카카오·Apple) | Supabase 대시보드 설정 |
 | 데이터 | 표(table)를 REST로 읽고 쓰기 (PostgREST) | [`supabase/schema.sql`](supabase/schema.sql) |
 | 함수(RPC) | DB 안의 함수 호출 | [`supabase/schema.sql`](supabase/schema.sql) |
-| 서버 함수 | Edge Function (Deno) — AI 퀴즈 생성처럼 비밀 키가 필요한 일 | [`supabase/functions/`](supabase/functions) |
+| 서버 함수 | Edge Function (Deno) — AI 퀴즈 생성처럼 비밀 키가 필요한 일 (퀴즈 AI 서버가 없을 때의 예비 경로) | [`supabase/functions/`](supabase/functions) |
+| 퀴즈 AI 서버 | Node 서버 — 개인 PC 등에서 계속 켜 두고 퀴즈를 만들어 쌓아 두는 출제 AI | [`quiz-server/`](quiz-server) |
 
-앱은 `@supabase/supabase-js`로만 호출합니다. 호출 코드는 [`app/src/lib/app-state.tsx`](../app/src/lib/app-state.tsx)(인증·기록·프로필)와 [`app/src/lib/quiz.ts`](../app/src/lib/quiz.ts)(퀴즈)에 모여 있고, **화면 파일에서 직접 Supabase를 부르지 않습니다.**
+앱은 Supabase는 `@supabase/supabase-js`로, 퀴즈 AI 서버는 `fetch`로 호출합니다. 호출 코드는 [`app/src/lib/app-state.tsx`](../app/src/lib/app-state.tsx)(인증·기록·프로필)와 [`app/src/lib/quiz.ts`](../app/src/lib/quiz.ts)(퀴즈)에 모여 있고, **화면 파일에서 직접 Supabase를 부르지 않습니다.**
 
 ---
 
@@ -76,12 +77,21 @@
 
 ## 4. 서버 함수 (Edge Functions)
 
+### 퀴즈 한 번의 구성
+한 번 푸는 퀴즈는 **7문제 = AI가 새로 만든 4문제 + 우리가 미리 만든 문제 3개**입니다 ([`app/src/lib/quiz.ts`](../app/src/lib/quiz.ts) `buildQuiz`).
+AI 문제는 ① 퀴즈 AI 서버 → ② `generate-quiz` 함수 → ③ 휴대폰에 저장해 둔 AI 문제 순서로 받고, 모자라면 미리 만든 문제 → 오프라인 연습 문제로 채웁니다.
+
+**비슷한 문제 막기**: AI에게 새 문제를 시킬 때 그 주제의 문제 은행 + 이미 만든 AI 문제를 먼저 보여 주고 겹치지 않는 새 유형으로 내게 합니다(출제 지침 [`quiz-server/gem.md`](quiz-server/gem.md)). 그래도 비슷한 문제는 글자 2개 묶음 유사도 0.5 이상이면 버립니다 — 퀴즈 AI 서버, 서버 함수, 앱 세 곳에서 같은 방법으로 검사합니다.
+
+### 퀴즈 AI 서버 `POST /quiz`
+[`quiz-server/README.md`](quiz-server/README.md) 참고. 요청·응답 형식은 아래 `generate-quiz`와 같습니다. 앱은 `EXPO_PUBLIC_QUIZ_SERVER_URL`이 있을 때만 부릅니다.
+
 ### `POST /functions/v1/generate-quiz`
-주제 하나의 AI 퀴즈 문제(15개)를 돌려줍니다.
+주제 하나의 AI 퀴즈 문제를 `count`개(기본 4) 돌려줍니다.
 
 요청
 ```json
-{ "topicId": "sec-01" }
+{ "topicId": "sec-01", "count": 4, "avoid": ["앱이 이미 고른 문제 문장", "…"] }
 ```
 응답 `200`
 ```json
@@ -89,8 +99,7 @@
   "questions": [
     { "type": "mc", "q": "…", "choices": ["…", "…", "…", "…"], "answer": 2, "explain": "…" },
     { "type": "ox", "q": "…", "answer": false, "explain": "…" }
-  ],
-  "cached": true
+  ]
 }
 ```
 | 상태 | 언제 | 응답 |
@@ -98,10 +107,11 @@
 | 400 | `topicId`가 없거나 주제 목록에 없음, JSON이 아님 | `{ "error": "unknown topic" }` |
 | 405 | POST가 아님 | `{ "error": "method not allowed" }` |
 | 429 | AI 사용량 제한 | `{ "error": "rate limited" }` |
-| 502 | AI 오류, 쓸 수 있는 문제가 10개 미만 | `{ "error": "…" }` |
+| 502 | AI 오류이고 줄 수 있는 문제도 없음 | `{ "error": "…" }` |
 
 - **주제 목록([`topics.json`](supabase/functions/generate-quiz/topics.json))에 있는 주제만** 받습니다. 임의의 글을 보내 AI 비용을 쓰게 할 수 없도록 하기 위해서입니다. 주제를 바꾸면 `python scripts/export_topics.py` 후 다시 배포합니다 (CI가 어긋나면 실패시킴).
-- 먼저 `quizzes` 표를 보고, 있으면 AI를 부르지 않고 돌려줍니다. 그래서 AI 호출은 **주제 수만큼만** 일어납니다.
+- `quizzes` 표에 쌓인 그 주제의 AI 문제 중 문제 은행([`bank.json`](supabase/functions/generate-quiz/bank.json))·`avoid`와 비슷하지 않은 것을 골라 줍니다. 모자랄 때만 6문제를 새로 만들어 쌓고, 주제마다 최대 40문제까지만 만들어서 **AI 비용에 상한**이 있습니다.
+- 출제 지침은 [`gem.json`](supabase/functions/generate-quiz/gem.json) (= `quiz-server/gem.md`를 `export_topics.py`가 복사한 것)입니다.
 - 둘러보기 사용자도 쓸 수 있게 `--no-verify-jwt`로 배포합니다. 대신 위의 주제 목록 제한과 캐시로 남용을 막습니다.
 - 앱은 응답을 그대로 믿지 않고 `validQuestions()`로 한 번 더 검사합니다. 실패하면 오프라인 연습 문제로 넘어갑니다.
 
@@ -118,7 +128,7 @@
 - 결과는 **구조화 출력(JSON 스키마)**으로 받고, 받은 뒤에도 형식을 다시 검사합니다.
 - 안전 거절에 대비해 `fallbacks: "default"`(베타 헤더 `server-side-fallback-2026-07-01`)를 켜 둡니다.
 - `stop_reason`이 `refusal` 또는 `max_tokens`이면 저장하지 않고 502로 돌려줍니다.
-- 프롬프트(출제 기준)는 [`docs/quiz-authoring.md`](../docs/quiz-authoring.md)와 같은 기준을 따릅니다.
+- 프롬프트(출제 기준)는 [`quiz-server/gem.md`](quiz-server/gem.md) 하나로 관리하고, [`docs/quiz-authoring.md`](../docs/quiz-authoring.md)와 같은 기준을 따릅니다.
 
 ---
 
@@ -148,7 +158,10 @@
 # AI 퀴즈 (주제 id는 topics.json 참고)
 curl -X POST "https://<프로젝트 ID>.supabase.co/functions/v1/generate-quiz" \
   -H "apikey: <Publishable key>" -H "Content-Type: application/json" \
-  -d '{"topicId":"sec-01"}'
+  -d '{"topicId":"sec-01","count":4}'
+
+# 퀴즈 AI 서버 (켜 둔 PC 주소)
+curl -X POST "http://<PC IP>:8787/quiz" -H "Content-Type: application/json" -d '{"topicId":"ma-linalg-07","count":4}'
 
 # 내 프로필 (로그인해서 받은 access token 필요)
 curl "https://<프로젝트 ID>.supabase.co/rest/v1/profiles?select=*" \

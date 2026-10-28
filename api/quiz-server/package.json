@@ -1,0 +1,18 @@
+{
+  "name": "ppobgong-quiz-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "뽑공 퀴즈 AI 서버: 계속 켜 두고 주제별 퀴즈를 만들어 주는 출제 AI",
+  "type": "module",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.mjs",
+    "test": "node test.mjs"
+  },
+  "engines": {
+    "node": ">=22.9"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.3.0"
+  }
+}

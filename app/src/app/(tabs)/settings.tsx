@@ -124,7 +124,7 @@ export default function Settings() {
             options={[{ value: "0", label: "골고루" }, { value: "1", label: "Lv.1 기초" }, { value: "2", label: "Lv.2 중급" }, { value: "3", label: "Lv.3 심화" }]}
           />
         </View>
-        <Item label="공부 시간" sub="기본 15분 · 끝나면 퀴즈 10문제" right={<Minutes value={prefs.studyMinutes} min={1} max={120} onChange={(v) => updatePrefs({ studyMinutes: v })} />} last />
+        <Item label="공부 시간" sub="기본 15분 · 끝나면 퀴즈 7문제" right={<Minutes value={prefs.studyMinutes} min={1} max={120} onChange={(v) => updatePrefs({ studyMinutes: v })} />} last />
       </Section>
 
       <Section title="매일 알림">

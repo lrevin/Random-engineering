@@ -7,7 +7,7 @@ import { Badge, Btn, levelTone, Row, T, tap } from "@/components/ui";
 import { levelText, topicById } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { confirmQuit } from "@/lib/confirm";
-import { loadQuiz, pickQuestions, type QuizQuestion } from "@/lib/quiz";
+import { loadQuiz, type QuizQuestion } from "@/lib/quiz";
 import { calcRp, topicMastery, totalRp, userRank } from "@/lib/rank";
 import { calcStreak } from "@/lib/stats";
 import type { WrongAnswer } from "@/lib/types";
@@ -38,7 +38,7 @@ function QuizInner() {
     loadQuiz(topic)
       .then((set) => {
         if (!alive) return;
-        setActive((x) => (x ? { ...x, quiz: { source: set.source, questions: pickQuestions(set.questions), answers: [] } } : x));
+        setActive((x) => (x ? { ...x, quiz: { source: set.source, questions: set.questions, answers: [] } } : x));
       })
       .catch(() => alive && setFailed(true));
     return () => { alive = false; };
@@ -103,7 +103,6 @@ function QuizInner() {
     q={q}
     index={idx}
     count={quiz.questions.length}
-    offline={quiz.source === "offline"}
     topicName={topic.ko}
     badges={<Row gap={6}><Badge label={topic.categoryName} /><Badge label={levelText(topic.lv)} tone={levelTone(topic.level)} /></Row>}
     saving={saving}
@@ -116,8 +115,8 @@ function QuizInner() {
   />;
 }
 
-function QuestionView({ q, index, count, offline, topicName, badges, saving, onQuit, onNext }: {
-  q: QuizQuestion; index: number; count: number; offline: boolean; topicName: string;
+function QuestionView({ q, index, count, topicName, badges, saving, onQuit, onNext }: {
+  q: QuizQuestion; index: number; count: number; topicName: string;
   badges: ReactNode; saving: boolean;
   onQuit: () => void; onNext: (answer: number | boolean) => void;
 }) {
@@ -157,8 +156,11 @@ function QuestionView({ q, index, count, offline, topicName, badges, saving, onQ
       <ScrollView contentContainerStyle={{ padding: 20, gap: 16, maxWidth: 640, width: "100%", alignSelf: "center" }}>
         <View style={{ gap: 6 }}>
           {badges}
-          <T size={13} color="muted">{topicName} · {q.type === "mc" ? "4지선다" : "O / X"}</T>
-          {offline && <T size={12} color="accent">오프라인 연습 문제예요 (서버 연결 시 AI 문제로 바뀌어요)</T>}
+          <T size={13} color="muted">
+            {topicName} · {q.type === "mc" ? "4지선다" : "O / X"}
+            {q.src === "ai" ? " · 🤖 AI 출제" : q.src === "bank" ? " · 📚 기본 문제" : ""}
+          </T>
+          {q.src === "offline" && <T size={12} color="accent">연습 문제예요 (퀴즈 AI에 연결되면 새 문제로 바뀌어요)</T>}
         </View>
         <T size={21} weight="bold" style={{ lineHeight: 31 }}>{q.q}</T>
 

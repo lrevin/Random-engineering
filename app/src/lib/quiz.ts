@@ -3,21 +3,31 @@ import { TOPICS, type Topic } from "@/data";
 import { QUIZ_BANK } from "@/data/quizbank";
 import { supabase } from "./supabase";
 
-export type QuizQuestion =
-  | { type: "mc"; q: string; choices: string[]; answer: number; explain: string }
-  | { type: "ox"; q: string; answer: boolean; explain: string };
+/** 문제마다 어디서 왔는지: bank = 우리가 미리 만든 문제 · ai = 퀴즈 AI가 새로 만든 문제 · offline = 앱 데이터로 만든 연습 문제 */
+export type QuestionSource = "bank" | "ai" | "offline";
 
-export type QuizSource = "bank" | "ai" | "offline";
+export type QuizQuestion =
+  | { type: "mc"; q: string; choices: string[]; answer: number; explain: string; src?: QuestionSource }
+  | { type: "ox"; q: string; answer: boolean; explain: string; src?: QuestionSource };
+
+export type QuizSource = QuestionSource;
 
 export interface QuizSet {
   topicId: string;
-  /** bank: 앱에 내장된 문제 은행 · ai: 서버에서 AI가 만든 문제 · offline: 앱 데이터로 만든 연습 문제 */
+  /** 대표 출처: AI 문제가 하나라도 있으면 ai, 없으면 bank, 둘 다 없으면 offline */
   source: QuizSource;
+  /** 이번에 풀 문제 (이미 섞여 있음) */
   questions: QuizQuestion[];
 }
 
-export const QUIZ_LENGTH = 10;
-const MC_COUNT = 7;
+/** 한 번에 푸는 문제 수: AI가 새로 만든 4문제 + 미리 만든 문제 3개 */
+export const QUIZ_LENGTH = 7;
+export const AI_COUNT = 4;
+
+/** 퀴즈 AI 서버 (api/quiz-server). 개인 PC 등에서 계속 켜 두는 출제 AI. 없으면 Supabase 함수 → 오프라인 문제 */
+const QUIZ_SERVER_URL = (process.env.EXPO_PUBLIC_QUIZ_SERVER_URL ?? "").replace(/\/+$/, "");
+const QUIZ_SERVER_TOKEN = process.env.EXPO_PUBLIC_QUIZ_SERVER_TOKEN ?? "";
+const AI_TIMEOUT_MS = 25000;
 
 // ───────── 검증 ─────────
 function isQuestion(x: unknown): x is QuizQuestion {
@@ -33,6 +43,32 @@ function isQuestion(x: unknown): x is QuizQuestion {
   return false;
 }
 export const validQuestions = (xs: unknown): QuizQuestion[] => (Array.isArray(xs) ? xs.filter(isQuestion) : []);
+
+// ───────── 비슷한 문제 거르기 ─────────
+const normalize = (s: string) => s.toLowerCase().replace(/[^0-9a-z가-힣]/g, "");
+const bigrams = (s: string) => {
+  const n = normalize(s);
+  const out = new Set<string>();
+  for (let i = 0; i < n.length - 1; i++) out.add(n.slice(i, i + 2));
+  return out;
+};
+/** 두 문장이 얼마나 비슷한지 (글자 2개씩 묶음의 자카드 유사도, 0~1) */
+export function similarity(a: string, b: string) {
+  const A = bigrams(a), B = bigrams(b);
+  if (!A.size || !B.size) return normalize(a) === normalize(b) ? 1 : 0;
+  let inter = 0;
+  for (const x of A) if (B.has(x)) inter++;
+  return inter / (A.size + B.size - inter);
+}
+export const SIMILAR = 0.5;
+const tooSimilar = (q: QuizQuestion, others: QuizQuestion[]) => others.some((o) => similarity(q.q, o.q) >= SIMILAR);
+
+/** 서로 비슷하지 않은 문제만 남김 (이미 고른 문제와도 비교) */
+function distinct(qs: QuizQuestion[], against: QuizQuestion[] = []) {
+  const kept: QuizQuestion[] = [];
+  for (const q of qs) if (!tooSimilar(q, [...against, ...kept])) kept.push(q);
+  return kept;
+}
 
 // ───────── 섞기 ─────────
 function shuffle<T>(xs: T[]): T[] {
@@ -50,16 +86,15 @@ function shuffleChoices(q: QuizQuestion): QuizQuestion {
   return { ...q, choices: order.map((i) => q.choices[i]), answer: order.indexOf(q.answer) };
 }
 
-/** 문제 은행에서 이번에 풀 10문제를 고름: 4지선다 7 + OX 3 (부족하면 남는 유형으로 채움) */
-export function pickQuestions(pool: QuizQuestion[], n = QUIZ_LENGTH): QuizQuestion[] {
+/** n문제 고르기: 4지선다 위주로, OX는 약 30% (부족하면 남는 유형으로 채움) */
+export function pickQuestions(pool: QuizQuestion[], n: number): QuizQuestion[] {
   const mc = shuffle(pool.filter((q) => q.type === "mc"));
   const ox = shuffle(pool.filter((q) => q.type === "ox"));
-  const wantMc = Math.min(mc.length, Math.max(MC_COUNT, n - ox.length));
-  const chosen = [...mc.slice(0, wantMc), ...ox.slice(0, n - wantMc)];
-  return shuffle(chosen).slice(0, n).map(shuffleChoices);
+  const wantMc = Math.min(mc.length, Math.max(Math.round(n * 0.7), n - ox.length));
+  return [...mc.slice(0, wantMc), ...ox.slice(0, n - wantMc)];
 }
 
-// ───────── 오프라인 연습 문제 (서버가 없을 때) ─────────
+// ───────── 오프라인 연습 문제 (AI도 문제 은행도 없을 때) ─────────
 const josa = (word: string, withBatchim: string, without: string) => {
   const last = word.replace(/\s*\(.*?\)\s*$/, "").trim().slice(-1);
   const code = last.charCodeAt(0) - 0xac00;
@@ -67,7 +102,7 @@ const josa = (word: string, withBatchim: string, without: string) => {
   return code % 28 ? withBatchim : without;
 };
 
-export function offlineQuiz(topic: Topic): QuizSet {
+export function offlineQuestions(topic: Topic): QuizQuestion[] {
   const same = shuffle(TOPICS.filter((t) => t.category === topic.category && t.id !== topic.id && t.ko !== topic.ko));
   const others = shuffle(TOPICS.filter((t) => t.domain === topic.domain && t.category !== topic.category));
   const pick3 = (exclude: Topic) => shuffle([...same, ...others].filter((t) => t.id !== exclude.id && t.ko !== exclude.ko)).slice(0, 3);
@@ -125,46 +160,113 @@ export function offlineQuiz(topic: Topic): QuizSet {
       explain: `이 설명은 ${decoy.ko}에 대한 것이에요. ${topic.ko}${josa(topic.ko, "은", "는")} “${topic.hint}”.`,
     });
   }
-  return { topicId: topic.id, source: "offline", questions: validQuestions(qs) };
+  return validQuestions(qs).map((q) => ({ ...q, src: "offline" as const }));
 }
 
-// ───────── 불러오기 ─────────
-const cacheKey = (id: string) => `pg.quiz.${id}`;
+/** 예전 이름 (오프라인 문제만으로 된 세트) */
+export const offlineQuiz = (topic: Topic): QuizSet => ({
+  topicId: topic.id, source: "offline", questions: pickQuestions(offlineQuestions(topic), QUIZ_LENGTH).map(shuffleChoices),
+});
+
+// ───────── 퀴즈 AI 호출 ─────────
+const aiCacheKey = (id: string) => `pg.quiz.ai.${id}`;
+
+async function postJson(url: string, body: unknown): Promise<unknown> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), AI_TIMEOUT_MS);
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...(QUIZ_SERVER_TOKEN ? { "x-quiz-token": QUIZ_SERVER_TOKEN } : {}) },
+      body: JSON.stringify(body),
+      signal: ctrl.signal,
+    });
+    if (!res.ok) throw new Error(`quiz server ${res.status}`);
+    return await res.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 /**
- * 퀴즈 문제 은행을 가져옵니다.
- * 1) 앱에 내장된 문제 은행 → 2) 이 휴대폰에 저장된 AI 문제 → 3) 서버(AI가 만든 문제를 모든 사용자가 공유)
- * → 4) 오프라인 연습 문제
+ * 퀴즈 AI에게 새 문제를 받아 옴. 미리 만든 문제(avoid)를 함께 보내서 비슷하지 않은 새 유형으로 만들게 함.
+ * 1) 퀴즈 AI 서버 → 2) Supabase 함수 → 실패하면 빈 배열
  */
-export async function loadQuiz(topic: Topic): Promise<QuizSet> {
-  const bank = validQuestions(QUIZ_BANK[topic.id]);
-  if (bank.length >= QUIZ_LENGTH) return { topicId: topic.id, source: "bank", questions: bank };
-
-  try {
-    const cached = await AsyncStorage.getItem(cacheKey(topic.id));
-    if (cached) {
-      const qs = validQuestions(JSON.parse(cached));
-      if (qs.length >= QUIZ_LENGTH) return { topicId: topic.id, source: "ai", questions: qs };
+async function fetchAiQuestions(topic: Topic, avoid: QuizQuestion[]): Promise<QuizQuestion[]> {
+  const body = { topicId: topic.id, count: AI_COUNT, avoid: avoid.map((q) => q.q).slice(0, 40) };
+  if (QUIZ_SERVER_URL) {
+    try {
+      const data = await postJson(`${QUIZ_SERVER_URL}/quiz`, body);
+      const qs = validQuestions((data as { questions?: unknown } | null)?.questions);
+      if (qs.length) return qs;
+    } catch {
+      // 서버가 꺼져 있으면 다음 방법으로
     }
-  } catch {
-    // 저장된 문제가 깨졌으면 무시
   }
   if (supabase) {
     try {
-      const { data, error } = await supabase.functions.invoke("generate-quiz", { body: { topicId: topic.id } });
+      const { data, error } = await supabase.functions.invoke("generate-quiz", { body });
       const qs = validQuestions((data as { questions?: unknown } | null)?.questions);
-      if (!error && qs.length >= QUIZ_LENGTH) {
-        AsyncStorage.setItem(cacheKey(topic.id), JSON.stringify(qs)).catch(() => {});
-        return { topicId: topic.id, source: "ai", questions: qs };
-      }
+      if (!error && qs.length) return qs;
     } catch {
-      // 네트워크 오류 → 오프라인 문제로
+      // 네트워크 오류
     }
   }
-  return offlineQuiz(topic);
+  return [];
 }
 
-/** 공부를 시작할 때 미리 받아 두기 (15분 뒤 바로 퀴즈를 시작할 수 있게) */
+async function readAiCache(topicId: string): Promise<QuizQuestion[]> {
+  try {
+    const raw = await AsyncStorage.getItem(aiCacheKey(topicId));
+    return raw ? validQuestions(JSON.parse(raw)) : [];
+  } catch {
+    return [];
+  }
+}
+/** 받은 AI 문제는 이 휴대폰에도 모아 둠 (오프라인일 때 다시 씀, 최대 30개) */
+async function saveAiCache(topicId: string, qs: QuizQuestion[]) {
+  const prev = await readAiCache(topicId);
+  const merged = distinct([...qs, ...prev]).slice(0, 30);
+  AsyncStorage.setItem(aiCacheKey(topicId), JSON.stringify(merged)).catch(() => {});
+}
+
+// ───────── 한 번 풀 퀴즈 만들기 ─────────
+async function buildQuiz(topic: Topic): Promise<QuizSet> {
+  const bank = distinct(validQuestions(QUIZ_BANK[topic.id]).map((q) => ({ ...q, src: "bank" as const })));
+
+  // AI 문제: 미리 만든 문제와 비슷하면 버림
+  let ai: QuizQuestion[] = distinct(await fetchAiQuestions(topic, bank), bank).map((q) => ({ ...q, src: "ai" as const }));
+  if (ai.length) saveAiCache(topic.id, ai).catch(() => {});
+  else ai = distinct(shuffle(await readAiCache(topic.id)), bank).map((q) => ({ ...q, src: "ai" as const }));
+  ai = pickQuestions(ai, AI_COUNT);
+
+  // 나머지는 미리 만든 문제로 채우고, 그래도 모자라면 오프라인 연습 문제로
+  const picked = [...ai, ...pickQuestions(distinct(bank, ai), QUIZ_LENGTH - ai.length)];
+  if (picked.length < QUIZ_LENGTH) {
+    picked.push(...pickQuestions(distinct(offlineQuestions(topic), picked), QUIZ_LENGTH - picked.length));
+  }
+  const source: QuizSource = picked.some((q) => q.src === "ai") ? "ai" : picked.some((q) => q.src === "bank") ? "bank" : "offline";
+  return { topicId: topic.id, source, questions: shuffle(picked).slice(0, QUIZ_LENGTH).map(shuffleChoices) };
+}
+
+// 공부를 시작할 때 미리 만들어 둔 퀴즈 (퀴즈 화면에 들어가면 한 번 꺼내 씀)
+const prepared = new Map<string, { at: number; p: Promise<QuizSet> }>();
+const PREPARED_TTL = 3 * 60 * 60 * 1000;
+
+/**
+ * 이번에 풀 퀴즈를 가져옵니다. 공부 시작 때 미리 만든 게 있으면 그것을, 없으면 새로 만듭니다.
+ * (퀴즈 다시 풀기는 매번 새 문제 조합)
+ */
+export function loadQuiz(topic: Topic): Promise<QuizSet> {
+  const ready = prepared.get(topic.id);
+  prepared.delete(topic.id);
+  if (ready && Date.now() - ready.at < PREPARED_TTL) return ready.p.catch(() => buildQuiz(topic));
+  return buildQuiz(topic);
+}
+
+/** 공부를 시작할 때 미리 만들어 두기 (공부가 끝나면 바로 퀴즈를 시작할 수 있게) */
 export const prefetchQuiz = (topic: Topic) => {
-  loadQuiz(topic).catch(() => {});
+  const p = buildQuiz(topic);
+  p.catch(() => {});
+  prepared.set(topic.id, { at: Date.now(), p });
 };
