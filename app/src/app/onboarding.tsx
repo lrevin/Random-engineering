@@ -3,15 +3,18 @@ import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 import { DomainPicker } from "@/components/DomainPicker";
 import { InterestPicker } from "@/components/InterestPicker";
 import { LevelPicker } from "@/components/LevelPicker";
+import { RelatedPicker } from "@/components/RelatedPicker";
 import { TimeStepper } from "@/components/TimeStepper";
 import { Btn, Field, Row, Screen, T } from "@/components/ui";
-import { categoryById, domainById } from "@/data";
+import { categoryById, domainById, relatedFor } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { requestNotificationPermission } from "@/lib/notify";
 import type { Prefs } from "@/lib/types";
 import { useColors } from "@/theme";
 
-const STEPS = ["닉네임", "분야", "세부 분야", "난이도", "알림"];
+const STEPS = ["닉네임", "분야", "세부 분야", "연관 분야", "난이도", "알림"];
+const LAST = STEPS.length - 1;
+const domainOf = (category: string) => categoryById(category)?.domain;
 
 export default function Onboarding() {
   const { prefs, updatePrefs, mode } = useApp();
@@ -22,6 +25,9 @@ export default function Onboarding() {
     ...new Set(prefs.interests.map((id) => categoryById(id)?.domain).filter((d): d is string => !!d)),
   ]);
   const [interests, setInterests] = useState<string[]>(prefs.interests);
+  // 연관 분야: 고른 분야의 바탕이 되는 다른 분야의 세부 분야 (예: 컴퓨터공학 → 선형대수·확률·회로이론)
+  const relatedItems = relatedFor(domains, domainOf);
+  const [related, setRelated] = useState<string[]>([]);
   const [level, setLevel] = useState<Prefs["level"]>(prefs.level);
   const [time, setTime] = useState(prefs.reminderTime);
   const [busy, setBusy] = useState(false);
@@ -43,9 +49,17 @@ export default function Onboarding() {
         .flatMap((d) => domainById(d)?.categories.map((x) => x.id) ?? []);
       setInterests([...kept, ...added]);
     }
-    if (step === 2 && interests.length === 0) return setErr("세부 분야를 하나 이상 골라 주세요.");
+    if (step === 2) {
+      if (interests.length === 0) return setErr("세부 분야를 하나 이상 골라 주세요.");
+      // 처음에는 추천 연관 분야를 모두 켜 둠
+      const items = relatedFor(domains, domainOf).map((x) => x.category);
+      setRelated(items);
+      if (!items.length) return setStep(4); // 추천할 연관 분야가 없으면 건너뜀
+    }
     setStep(step + 1);
   };
+
+  const allInterests = [...new Set([...interests, ...related.filter((id) => relatedItems.some((x) => x.category === id))])];
 
   const finish = async (withReminder: boolean) => {
     setBusy(true);
@@ -53,7 +67,7 @@ export default function Onboarding() {
     try {
       const granted = withReminder ? await requestNotificationPermission() : false;
       await updatePrefs(
-        { nickname: nickname.trim(), interests, level, reminderTime: time, reminderEnabled: withReminder && granted },
+        { nickname: nickname.trim(), interests: allInterests, level, reminderTime: time, reminderEnabled: withReminder && granted },
         { finishOnboarding: true },
       );
     } catch {
@@ -63,7 +77,8 @@ export default function Onboarding() {
   };
 
   const nextLabel =
-    step === 1 ? `다음 (${domains.length}개 분야)` : step === 2 ? `다음 (${interests.length}개 선택)` : "다음";
+    step === 1 ? `다음 (${domains.length}개 분야)` : step === 2 ? `다음 (${interests.length}개 선택)`
+      : step === 3 ? `다음 (연관 ${related.length}개 추가)` : "다음";
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
@@ -106,13 +121,22 @@ export default function Onboarding() {
           {step === 3 && (
             <>
               <View style={{ gap: 4 }}>
-                <T size={26} weight="bold">어느 난이도부터 시작할까요?</T>
-                <T color="ink2">주제마다 Lv.1~3 난이도가 있어요. 공부 화면에서 언제든 바꿀 수 있어요.</T>
+                <T size={26} weight="bold">함께 보면 좋은 연관 분야예요</T>
+                <T color="ink2">고른 분야의 바탕이 되는 이론이에요. 같이 공부하면 이해가 훨씬 쉬워요. 필요 없는 것은 눌러 끄세요.</T>
               </View>
-              <LevelPicker value={level} onChange={setLevel} interests={interests} />
+              <RelatedPicker items={relatedItems} value={related} onChange={setRelated} />
             </>
           )}
           {step === 4 && (
+            <>
+              <View style={{ gap: 4 }}>
+                <T size={26} weight="bold">어느 난이도부터 시작할까요?</T>
+                <T color="ink2">주제마다 Lv.1~3 난이도가 있어요. 공부 화면에서 언제든 바꿀 수 있어요.</T>
+              </View>
+              <LevelPicker value={level} onChange={setLevel} interests={allInterests} />
+            </>
+          )}
+          {step === LAST && (
             <>
               <View style={{ gap: 4 }}>
                 <T size={26} weight="bold">매일 언제 알려 드릴까요? 🔔</T>
@@ -124,9 +148,9 @@ export default function Onboarding() {
         </ScrollView>
 
         {err ? <T color="accent">{err}</T> : null}
-        {step < 4 ? (
+        {step < LAST ? (
           <Row style={{ flexWrap: "nowrap" }}>
-            {step > 0 && <Btn title="이전" onPress={() => { setErr(""); setStep(step - 1); }} style={{ flex: 1 }} size="lg" />}
+            {step > 0 && <Btn title="이전" onPress={() => { setErr(""); setStep(step === 4 && !relatedItems.length ? 2 : step - 1); }} style={{ flex: 1 }} size="lg" />}
             <Btn title={nextLabel} variant="primary" size="lg" onPress={next} style={{ flex: 2 }} />
           </Row>
         ) : (

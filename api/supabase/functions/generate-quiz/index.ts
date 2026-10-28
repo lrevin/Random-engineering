@@ -1,18 +1,21 @@
 // 퀴즈 생성 서버 함수 (Supabase Edge Function, Deno)
+// 퀴즈 AI 서버(api/quiz-server)를 켜 두지 않았을 때 앱이 쓰는 예비 출제 경로입니다. 규칙은 서버와 같습니다.
 //
-// 앱이 { topicId } 를 보내면:
-//   1) 이미 만든 문제가 DB(quizzes)에 있으면 그대로 돌려줌 → AI 호출 없음
-//   2) 없으면 Claude로 15문제를 만들어 검증·저장하고 돌려줌
-// 주제 목록(topics.json)에 있는 주제만 받으므로 AI 비용은 최대 "주제 수 × 1회"입니다.
+// 앱이 { topicId, count?, avoid? } 를 보내면:
+//   1) DB(quizzes)에 쌓인 그 주제의 AI 문제 중, 우리 문제 은행(bank.json)·avoid와 비슷하지 않은 것을 count개 골라 줌
+//   2) 모자라면 문제 은행 + 이미 쌓인 문제를 AI에게 먼저 보여 주고, 겹치지 않는 새 유형으로 6문제를 더 만들어 쌓음
+// 주제 목록(topics.json)에 있는 주제만 받고, 주제마다 최대 MAX_POOL 문제까지만 만들어서 AI 비용에 상한이 있습니다.
 //
+// topics.json · bank.json · gem.json 은 python scripts/export_topics.py 로 만듭니다 (gem.json = api/quiz-server/gem.md).
 // 배포:
 //   cd api && npx supabase secrets set ANTHROPIC_API_KEY=<Claude API 키>
 //   cd api && npx supabase functions deploy generate-quiz --no-verify-jwt
 // 규칙: api/API_RULES.md
-// (둘러보기 사용자도 퀴즈를 받을 수 있도록 JWT 검사를 끕니다. 대신 위의 주제 목록 + 캐시로 남용을 막습니다.)
 
 import Anthropic from "npm:@anthropic-ai/sdk";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import bankJson from "./bank.json" with { type: "json" };
+import gem from "./gem.json" with { type: "json" };
 import topics from "./topics.json" with { type: "json" };
 
 type TopicInfo = { ko: string; en: string; lv: number; level: string; hint: string; category: string; domain: string };
@@ -22,6 +25,9 @@ type Question =
 
 const MODEL = "claude-opus-5-5";
 const TOPICS = topics as Record<string, TopicInfo>;
+const BANK = bankJson as Record<string, string[]>;
+const BATCH = 6;
+const MAX_POOL = 40;
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -30,24 +36,6 @@ const CORS = {
 };
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...CORS, "Content-Type": "application/json" } });
-
-const SYSTEM = `당신은 한국 대학교 공과대학 전공 과목과 국가기술자격(기사) 시험 문제를 출제하는 출제위원입니다.
-학생이 방금 15분 동안 위키백과로 한 가지 개념을 공부했습니다. 그 개념을 제대로 이해했는지 확인하는 퀴즈를 만듭니다.
-
-규칙:
-- 모든 문제는 주어진 개념 하나에 대한 것이어야 합니다. 정의, 동작 원리·작동 방식, 특징·장단점, 비교(비슷한 개념과의 차이), 적용 예시, 간단한 계산이나 판단을 고르게 섞습니다.
-- 교과서·위키백과 수준에서 널리 인정되는 사실만 씁니다. 출처마다 다를 수 있는 수치, 연도, 인명 암기 문제는 피합니다.
-- 정답이 하나로 분명해야 합니다. "모두 맞다/모두 틀리다", "위 보기 중 없음" 같은 보기는 쓰지 않습니다.
-- 4지선다 오답 보기는 그럴듯하지만 분명히 틀린 내용으로 만들고, 정답 위치를 고르게 섞습니다.
-- OX 문제는 맞는 진술과 틀린 진술을 섞습니다.
-- 난이도는 주어진 Lv에 맞춥니다 (Lv.1 기초: 정의·핵심 특징 / Lv.2 중급: 원리·비교·적용 / Lv.3 심화: 응용·분석·계산).
-- 문제와 해설은 자연스러운 한국어로 씁니다. 전공 용어는 한국어로 쓰고 필요하면 괄호에 영어를 덧붙입니다.
-- explain에는 왜 그것이 정답인지 1~2문장으로 씁니다.
-
-형식:
-- 정확히 15문제: 4지선다(type "mc") 11개, OX(type "ox") 4개.
-- mc: choices에 보기 4개, answer_index에 정답 번호(0~3), answer_bool은 false.
-- ox: choices는 빈 배열, answer_bool에 정답(true=O, false=X), answer_index는 0.`;
 
 const SCHEMA = {
   type: "object",
@@ -94,22 +82,49 @@ function toQuestions(raw: RawQuestion[]): Question[] {
   return out;
 }
 
-async function generate(topic: TopicInfo): Promise<Question[]> {
+// ───────── 비슷한 문제 거르기 (앱·퀴즈 AI 서버와 같은 방법) ─────────
+const normalize = (s: string) => s.toLowerCase().replace(/[^0-9a-z가-힣]/g, "");
+function similarity(a: string, b: string) {
+  const grams = (s: string) => {
+    const n = normalize(s);
+    const out = new Set<string>();
+    for (let i = 0; i < n.length - 1; i++) out.add(n.slice(i, i + 2));
+    return out;
+  };
+  const A = grams(a), B = grams(b);
+  if (!A.size || !B.size) return normalize(a) === normalize(b) ? 1 : 0;
+  let inter = 0;
+  for (const x of A) if (B.has(x)) inter++;
+  return inter / (A.size + B.size - inter);
+}
+function distinct(qs: Question[], against: string[]) {
+  const kept: Question[] = [];
+  for (const q of qs) {
+    if (![...against, ...kept.map((k) => k.q)].some((o) => similarity(q.q, o) >= 0.5)) kept.push(q);
+  }
+  return kept;
+}
+
+async function generate(topic: TopicInfo, existing: string[], count: number): Promise<Question[]> {
   const client = new Anthropic(); // ANTHROPIC_API_KEY 환경 변수 사용
+  const list = existing.length ? existing.map((q, i) => `${i + 1}. ${q}`).join("\n") : "(아직 없음)";
   const prompt = `개념: ${topic.ko} (영어: ${topic.en})
 분야: ${topic.domain} > ${topic.category}
 난이도: Lv.${topic.lv} ${topic.level}
 참고 힌트: ${topic.hint}
 
-이 개념에 대한 퀴즈 15문제를 만들어 주세요.`;
+이미 있는 문제 (이것과 비슷한 문제는 만들지 마세요):
+${list}
+
+위 문제들과 겹치지 않는 새로운 유형의 퀴즈 ${count}문제를 만들어 주세요.`;
 
   const res = await client.beta.messages.create({
     model: MODEL,
-    max_tokens: 16000,
+    max_tokens: 12000,
     betas: ["server-side-fallback-2026-07-01"],
     fallbacks: "default",
     output_config: { effort: "medium", format: { type: "json_schema", schema: SCHEMA } },
-    system: SYSTEM,
+    system: (gem as { system: string }).system,
     messages: [{ role: "user", content: prompt }],
   } as never);
 
@@ -118,39 +133,56 @@ async function generate(topic: TopicInfo): Promise<Question[]> {
   if (msg.stop_reason === "max_tokens") throw new Error("truncated");
   const text = msg.content.filter((b) => b.type === "text").map((b) => b.text ?? "").join("");
   const parsed = JSON.parse(text) as { questions: RawQuestion[] };
-  return toQuestions(parsed.questions);
+  return distinct(toQuestions(parsed.questions), existing);
+}
+
+function sample<T>(xs: T[], n: number) {
+  const a = [...xs];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a.slice(0, n);
 }
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ error: "method not allowed" }, 405);
 
-  let topicId = "";
+  let body: { topicId?: unknown; count?: unknown; avoid?: unknown } = {};
   try {
-    topicId = String((await req.json())?.topicId ?? "");
+    body = await req.json();
   } catch {
     return json({ error: "bad request" }, 400);
   }
+  const topicId = String(body?.topicId ?? "");
   const topic = TOPICS[topicId];
   if (!topic) return json({ error: "unknown topic" }, 400);
+  const count = Math.min(7, Math.max(1, Number(body?.count) || 4));
+  const avoid = (Array.isArray(body?.avoid) ? body.avoid : []).slice(0, 40).map((s) => String(s).slice(0, 400));
 
   const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
     auth: { persistSession: false },
   });
 
-  // 1) 캐시
-  const { data: cached } = await db.from("quizzes").select("questions").eq("topic_id", topicId).maybeSingle();
-  if (cached?.questions) return json({ questions: cached.questions, cached: true });
+  const { data: row } = await db.from("quizzes").select("questions").eq("topic_id", topicId).maybeSingle();
+  let pool = (row?.questions as Question[] | undefined) ?? [];
+  const against = [...(BANK[topicId] ?? []), ...avoid];
+  let usable = distinct(pool, against);
 
-  // 2) 생성
-  try {
-    const questions = await generate(topic);
-    if (questions.length < 10) return json({ error: "not enough valid questions" }, 502);
-    await db.from("quizzes").upsert({ topic_id: topicId, questions, model: MODEL }, { onConflict: "topic_id", ignoreDuplicates: true });
-    return json({ questions, cached: false });
-  } catch (e) {
-    if (e instanceof Anthropic.RateLimitError) return json({ error: "rate limited" }, 429);
-    if (e instanceof Anthropic.APIError) return json({ error: `ai error ${e.status}` }, 502);
-    return json({ error: "generation failed" }, 502);
+  if (usable.length < count && pool.length < MAX_POOL) {
+    try {
+      const made = await generate(topic, [...(BANK[topicId] ?? []), ...pool.map((q) => q.q), ...avoid], BATCH);
+      pool = [...pool, ...made];
+      await db.from("quizzes").upsert({ topic_id: topicId, questions: pool, model: MODEL }, { onConflict: "topic_id" });
+      usable = distinct(pool, against);
+    } catch (e) {
+      if (!usable.length) {
+        if (e instanceof Anthropic.RateLimitError) return json({ error: "rate limited" }, 429);
+        if (e instanceof Anthropic.APIError) return json({ error: `ai error ${e.status}` }, 502);
+        return json({ error: "generation failed" }, 502);
+      }
+    }
   }
+  return json({ questions: sample(usable, count) });
 });

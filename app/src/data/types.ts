@@ -17,6 +17,8 @@ export interface Domain {
   description: string;
   /** false면 "준비 중"으로 표시 (아직 주제 데이터가 없음) */
   available: boolean;
+  /** eng: 공학 · sci: 과학 */
+  group: "eng" | "sci";
   categories: CategoryDef[];
 }
 

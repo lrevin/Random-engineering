@@ -13,7 +13,7 @@ import { radius, raised, shadow, useColors } from "@/theme";
 
 type Filter = "all" | "review";
 
-/** 다시 볼 주제 기준: 10문제 중 6개 이하 */
+/** 다시 볼 주제 기준: 정답률 60% 이하 */
 const needsReview = (r: StudyRecord) => r.total > 0 && r.score / r.total <= 0.6;
 
 function Score({ r }: { r: StudyRecord }) {

@@ -6,7 +6,7 @@ import { cancelTimerEnd, requestNotificationPermission, scheduleTimerEnd } from 
 import { useCountdown } from "./useCountdown";
 
 const MESSAGES = {
-  study: { title: "⏰ 공부 시간 끝!", body: "이제 퀴즈 10문제로 얼마나 알게 됐는지 확인해 보세요." },
+  study: { title: "⏰ 공부 시간 끝!", body: "이제 퀴즈 7문제로 얼마나 알게 됐는지 확인해 보세요." },
 };
 
 /**

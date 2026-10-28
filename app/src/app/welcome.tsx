@@ -8,7 +8,7 @@ import { useColors } from "@/theme";
 const STEPS = [
   { n: "1", title: "뽑기", body: "관심 분야에서 랜덤 주제 하나" },
   { n: "2", title: "15분 공부", body: "AI 없이 위키·백과사전으로" },
-  { n: "3", title: "퀴즈 10문제", body: "맞힐수록 RP를 얻고 랭크가 올라가요" },
+  { n: "3", title: "퀴즈 7문제", body: "AI가 새로 낸 문제 + 기본 문제, 맞힐수록 랭크 UP" },
 ];
 
 export default function Welcome() {

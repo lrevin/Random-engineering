@@ -7684,5 +7684,1805 @@
 "hint": "배양 후 산물을 회수·정제하는 단계",
 "category": "생물공정",
 "domain": "바이오·의공학"
+},
+"ma-linalg-01": {
+"ko": "행렬",
+"en": "Matrix (mathematics)",
+"lv": 1,
+"level": "기초",
+"hint": "수나 식을 직사각형 모양으로 배열한 것",
+"category": "선형대수",
+"domain": "수학"
+},
+"ma-linalg-02": {
+"ko": "벡터 공간",
+"en": "Vector space",
+"lv": 1,
+"level": "기초",
+"hint": "덧셈과 스칼라 곱이 정의된 벡터들의 집합",
+"category": "선형대수",
+"domain": "수학"
+},
+"ma-linalg-03": {
+"ko": "행렬식",
+"en": "Determinant",
+"lv": 1,
+"level": "기초",
+"hint": "정사각행렬이 역행렬을 가지는지 알려 주는 값",
+"category": "선형대수",
+"domain": "수학"
+},
+"ma-linalg-04": {
+"ko": "역행렬",
+"en": "Invertible matrix",
+"lv": 1,
+"level": "기초",
+"hint": "곱하면 단위행렬이 되는 짝 행렬",
+"category": "선형대수",
+"domain": "수학"
+},
+"ma-linalg-05": {
+"ko": "가우스 소거법",
+"en": "Gaussian elimination",
+"lv": 2,
+"level": "중급",
+"hint": "행 연산으로 연립일차방정식을 푸는 방법",
+"category": "선형대수",
+"domain": "수학"
+},
+"ma-linalg-06": {
+"ko": "선형 변환",
+"en": "Linear map",
+"lv": 2,
+"level": "중급",
+"hint": "덧셈과 스칼라 곱을 보존하는 함수",
+"category": "선형대수",
+"domain": "수학"
+},
+"ma-linalg-07": {
+"ko": "고윳값과 고유벡터",
+"en": "Eigenvalues and eigenvectors",
+"lv": 2,
+"level": "중급",
+"hint": "변환해도 방향이 그대로인 벡터와 그 배율",
+"category": "선형대수",
+"domain": "수학"
+},
+"ma-linalg-08": {
+"ko": "내적",
+"en": "Dot product",
+"lv": 2,
+"level": "중급",
+"hint": "두 벡터의 크기와 사잇각으로 정해지는 스칼라",
+"category": "선형대수",
+"domain": "수학"
+},
+"ma-linalg-09": {
+"ko": "특잇값 분해",
+"en": "Singular value decomposition",
+"lv": 3,
+"level": "심화",
+"hint": "어떤 행렬이든 회전·늘림·회전으로 나누는 분해",
+"category": "선형대수",
+"domain": "수학"
+},
+"ma-linalg-10": {
+"ko": "그람-슈미트 과정",
+"en": "Gram–Schmidt process",
+"lv": 3,
+"level": "심화",
+"hint": "벡터들을 서로 수직인 기저로 바꾸는 방법",
+"category": "선형대수",
+"domain": "수학"
+},
+"ma-calc-01": {
+"ko": "극한",
+"en": "Limit (mathematics)",
+"lv": 1,
+"level": "기초",
+"hint": "값이 어떤 수에 한없이 가까워지는 성질",
+"category": "미적분·해석",
+"domain": "수학"
+},
+"ma-calc-02": {
+"ko": "도함수",
+"en": "Derivative",
+"lv": 1,
+"level": "기초",
+"hint": "한 점에서 함수가 변하는 순간 변화율",
+"category": "미적분·해석",
+"domain": "수학"
+},
+"ma-calc-03": {
+"ko": "적분",
+"en": "Integral",
+"lv": 1,
+"level": "기초",
+"hint": "곡선 아래 넓이나 누적량을 구하는 계산",
+"category": "미적분·해석",
+"domain": "수학"
+},
+"ma-calc-04": {
+"ko": "미적분학의 기본 정리",
+"en": "Fundamental theorem of calculus",
+"lv": 1,
+"level": "기초",
+"hint": "미분과 적분이 서로 역연산이라는 정리",
+"category": "미적분·해석",
+"domain": "수학"
+},
+"ma-calc-05": {
+"ko": "연쇄 법칙",
+"en": "Chain rule",
+"lv": 2,
+"level": "중급",
+"hint": "합성함수를 미분하는 규칙",
+"category": "미적분·해석",
+"domain": "수학"
+},
+"ma-calc-06": {
+"ko": "테일러 급수",
+"en": "Taylor series",
+"lv": 2,
+"level": "중급",
+"hint": "함수를 한 점에서의 도함수로 이루어진 다항식 합으로 나타냄",
+"category": "미적분·해석",
+"domain": "수학"
+},
+"ma-calc-07": {
+"ko": "편미분",
+"en": "Partial derivative",
+"lv": 2,
+"level": "중급",
+"hint": "다변수 함수에서 한 변수만 바꾸며 미분",
+"category": "미적분·해석",
+"domain": "수학"
+},
+"ma-calc-08": {
+"ko": "중적분",
+"en": "Multiple integral",
+"lv": 2,
+"level": "중급",
+"hint": "여러 변수에 대해 넓이·부피를 적분",
+"category": "미적분·해석",
+"domain": "수학"
+},
+"ma-calc-09": {
+"ko": "그레이디언트",
+"en": "Gradient",
+"lv": 3,
+"level": "심화",
+"hint": "가장 빠르게 증가하는 방향을 가리키는 벡터",
+"category": "미적분·해석",
+"domain": "수학"
+},
+"ma-calc-10": {
+"ko": "발산 정리",
+"en": "Divergence theorem",
+"lv": 3,
+"level": "심화",
+"hint": "닫힌 곡면을 지나는 흐름과 내부 발산의 관계",
+"category": "미적분·해석",
+"domain": "수학"
+},
+"ma-prob-01": {
+"ko": "확률",
+"en": "Probability",
+"lv": 1,
+"level": "기초",
+"hint": "어떤 사건이 일어날 가능성을 0~1로 나타낸 값",
+"category": "확률·통계",
+"domain": "수학"
+},
+"ma-prob-02": {
+"ko": "조건부 확률",
+"en": "Conditional probability",
+"lv": 1,
+"level": "기초",
+"hint": "어떤 사건이 일어났다는 조건에서의 확률",
+"category": "확률·통계",
+"domain": "수학"
+},
+"ma-prob-03": {
+"ko": "기댓값",
+"en": "Expected value",
+"lv": 1,
+"level": "기초",
+"hint": "확률로 가중한 평균값",
+"category": "확률·통계",
+"domain": "수학"
+},
+"ma-prob-04": {
+"ko": "분산",
+"en": "Variance",
+"lv": 1,
+"level": "기초",
+"hint": "값이 평균에서 얼마나 퍼져 있는지 나타내는 척도",
+"category": "확률·통계",
+"domain": "수학"
+},
+"ma-prob-05": {
+"ko": "베이즈 정리",
+"en": "Bayes' theorem",
+"lv": 2,
+"level": "중급",
+"hint": "새로운 증거로 확률을 갱신하는 공식",
+"category": "확률·통계",
+"domain": "수학"
+},
+"ma-prob-06": {
+"ko": "정규 분포",
+"en": "Normal distribution",
+"lv": 2,
+"level": "중급",
+"hint": "평균을 중심으로 좌우 대칭인 종 모양 분포",
+"category": "확률·통계",
+"domain": "수학"
+},
+"ma-prob-07": {
+"ko": "이항 분포",
+"en": "Binomial distribution",
+"lv": 2,
+"level": "중급",
+"hint": "성공·실패 시행을 n번 했을 때 성공 횟수의 분포",
+"category": "확률·통계",
+"domain": "수학"
+},
+"ma-prob-08": {
+"ko": "중심 극한 정리",
+"en": "Central limit theorem",
+"lv": 2,
+"level": "중급",
+"hint": "표본 평균의 분포가 정규 분포에 가까워지는 정리",
+"category": "확률·통계",
+"domain": "수학"
+},
+"ma-prob-09": {
+"ko": "가설 검정",
+"en": "Statistical hypothesis test",
+"lv": 3,
+"level": "심화",
+"hint": "데이터로 가설을 받아들일지 판단하는 절차",
+"category": "확률·통계",
+"domain": "수학"
+},
+"ma-prob-10": {
+"ko": "최대 가능도 방법",
+"en": "Maximum likelihood estimation",
+"lv": 3,
+"level": "심화",
+"hint": "관측 데이터가 나올 확률을 최대로 하는 모수 추정",
+"category": "확률·통계",
+"domain": "수학"
+},
+"ma-eng-01": {
+"ko": "상미분 방정식",
+"en": "Ordinary differential equation",
+"lv": 1,
+"level": "기초",
+"hint": "한 변수의 함수와 그 도함수 사이의 방정식",
+"category": "공업수학",
+"domain": "수학"
+},
+"ma-eng-02": {
+"ko": "복소수",
+"en": "Complex number",
+"lv": 1,
+"level": "기초",
+"hint": "실수부와 허수부로 이루어진 수",
+"category": "공업수학",
+"domain": "수학"
+},
+"ma-eng-03": {
+"ko": "오일러 공식",
+"en": "Euler's formula",
+"lv": 1,
+"level": "기초",
+"hint": "지수 함수와 삼각 함수를 잇는 공식",
+"category": "공업수학",
+"domain": "수학"
+},
+"ma-eng-04": {
+"ko": "선형 미분 방정식",
+"en": "Linear differential equation",
+"lv": 2,
+"level": "중급",
+"hint": "미지 함수와 도함수가 일차로만 나오는 미분 방정식",
+"category": "공업수학",
+"domain": "수학"
+},
+"ma-eng-05": {
+"ko": "라플라스 변환",
+"en": "Laplace transform",
+"lv": 2,
+"level": "중급",
+"hint": "미분 방정식을 대수 방정식으로 바꾸는 적분 변환",
+"category": "공업수학",
+"domain": "수학"
+},
+"ma-eng-06": {
+"ko": "푸리에 급수",
+"en": "Fourier series",
+"lv": 2,
+"level": "중급",
+"hint": "주기 함수를 사인·코사인의 합으로 나타냄",
+"category": "공업수학",
+"domain": "수학"
+},
+"ma-eng-07": {
+"ko": "푸리에 변환",
+"en": "Fourier transform",
+"lv": 2,
+"level": "중급",
+"hint": "신호를 주파수 성분으로 분해하는 변환",
+"category": "공업수학",
+"domain": "수학"
+},
+"ma-eng-08": {
+"ko": "편미분 방정식",
+"en": "Partial differential equation",
+"lv": 3,
+"level": "심화",
+"hint": "여러 변수의 편도함수가 들어간 방정식",
+"category": "공업수학",
+"domain": "수학"
+},
+"ma-eng-09": {
+"ko": "뉴턴 방법",
+"en": "Newton's method",
+"lv": 3,
+"level": "심화",
+"hint": "접선을 이용해 방정식의 근을 반복 근사",
+"category": "공업수학",
+"domain": "수학"
+},
+"ma-eng-10": {
+"ko": "수치 적분",
+"en": "Numerical integration",
+"lv": 3,
+"level": "심화",
+"hint": "사다리꼴·심프슨 공식 등으로 적분값을 근사",
+"category": "공업수학",
+"domain": "수학"
+},
+"ph-mech-01": {
+"ko": "뉴턴 운동 법칙",
+"en": "Newton's laws of motion",
+"lv": 1,
+"level": "기초",
+"hint": "관성·가속도·작용 반작용의 세 법칙",
+"category": "일반역학",
+"domain": "물리학"
+},
+"ph-mech-02": {
+"ko": "운동량",
+"en": "Momentum",
+"lv": 1,
+"level": "기초",
+"hint": "질량과 속도의 곱으로 나타내는 운동의 양",
+"category": "일반역학",
+"domain": "물리학"
+},
+"ph-mech-03": {
+"ko": "일 (물리학)",
+"en": "Work (physics)",
+"lv": 1,
+"level": "기초",
+"hint": "힘이 물체를 움직이며 전달한 에너지",
+"category": "일반역학",
+"domain": "물리학"
+},
+"ph-mech-04": {
+"ko": "에너지 보존 법칙",
+"en": "Conservation of energy",
+"lv": 1,
+"level": "기초",
+"hint": "닫힌 계의 전체 에너지는 변하지 않는다는 법칙",
+"category": "일반역학",
+"domain": "물리학"
+},
+"ph-mech-05": {
+"ko": "원운동",
+"en": "Circular motion",
+"lv": 2,
+"level": "중급",
+"hint": "구심력을 받아 원 궤도를 도는 운동",
+"category": "일반역학",
+"domain": "물리학"
+},
+"ph-mech-06": {
+"ko": "단조화 운동",
+"en": "Simple harmonic motion",
+"lv": 2,
+"level": "중급",
+"hint": "복원력이 변위에 비례하는 진동",
+"category": "일반역학",
+"domain": "물리학"
+},
+"ph-mech-07": {
+"ko": "각운동량",
+"en": "Angular momentum",
+"lv": 2,
+"level": "중급",
+"hint": "회전하는 물체의 운동량",
+"category": "일반역학",
+"domain": "물리학"
+},
+"ph-mech-08": {
+"ko": "토크",
+"en": "Torque",
+"lv": 2,
+"level": "중급",
+"hint": "물체를 회전시키는 힘의 효과",
+"category": "일반역학",
+"domain": "물리학"
+},
+"ph-mech-09": {
+"ko": "관성 모멘트",
+"en": "Moment of inertia",
+"lv": 3,
+"level": "심화",
+"hint": "회전 운동에서 질량 역할을 하는 양",
+"category": "일반역학",
+"domain": "물리학"
+},
+"ph-mech-10": {
+"ko": "라그랑주 역학",
+"en": "Lagrangian mechanics",
+"lv": 3,
+"level": "심화",
+"hint": "에너지로 운동 방정식을 세우는 해석역학",
+"category": "일반역학",
+"domain": "물리학"
+},
+"ph-em-01": {
+"ko": "쿨롱 법칙",
+"en": "Coulomb's law",
+"lv": 1,
+"level": "기초",
+"hint": "두 전하 사이의 힘은 거리의 제곱에 반비례",
+"category": "전자기학",
+"domain": "물리학"
+},
+"ph-em-02": {
+"ko": "전기장",
+"en": "Electric field",
+"lv": 1,
+"level": "기초",
+"hint": "전하가 주변 공간에 만드는 힘의 장",
+"category": "전자기학",
+"domain": "물리학"
+},
+"ph-em-03": {
+"ko": "자기장",
+"en": "Magnetic field",
+"lv": 1,
+"level": "기초",
+"hint": "움직이는 전하나 자석이 만드는 장",
+"category": "전자기학",
+"domain": "물리학"
+},
+"ph-em-04": {
+"ko": "전위",
+"en": "Electric potential",
+"lv": 1,
+"level": "기초",
+"hint": "단위 전하가 가지는 전기적 위치 에너지",
+"category": "전자기학",
+"domain": "물리학"
+},
+"ph-em-05": {
+"ko": "가우스 법칙",
+"en": "Gauss's law",
+"lv": 2,
+"level": "중급",
+"hint": "닫힌 곡면을 지나는 전기 선속과 내부 전하의 관계",
+"category": "전자기학",
+"domain": "물리학"
+},
+"ph-em-06": {
+"ko": "로런츠 힘",
+"en": "Lorentz force",
+"lv": 2,
+"level": "중급",
+"hint": "전기장과 자기장 속 전하가 받는 힘",
+"category": "전자기학",
+"domain": "물리학"
+},
+"ph-em-07": {
+"ko": "패러데이 전자기 유도 법칙",
+"en": "Faraday's law of induction",
+"lv": 2,
+"level": "중급",
+"hint": "자기 선속이 변하면 기전력이 생긴다는 법칙",
+"category": "전자기학",
+"domain": "물리학"
+},
+"ph-em-08": {
+"ko": "앙페르 회로 법칙",
+"en": "Ampère's circuital law",
+"lv": 2,
+"level": "중급",
+"hint": "전류와 그 주위 자기장의 관계",
+"category": "전자기학",
+"domain": "물리학"
+},
+"ph-em-09": {
+"ko": "맥스웰 방정식",
+"en": "Maxwell's equations",
+"lv": 3,
+"level": "심화",
+"hint": "전기와 자기를 하나로 묶은 네 방정식",
+"category": "전자기학",
+"domain": "물리학"
+},
+"ph-em-10": {
+"ko": "전자기파",
+"en": "Electromagnetic radiation",
+"lv": 3,
+"level": "심화",
+"hint": "전기장과 자기장이 서로를 만들며 퍼지는 파동",
+"category": "전자기학",
+"domain": "물리학"
+},
+"ph-thermo-01": {
+"ko": "온도",
+"en": "Temperature",
+"lv": 1,
+"level": "기초",
+"hint": "물체의 뜨겁고 차가운 정도를 나타내는 양",
+"category": "열·통계물리",
+"domain": "물리학"
+},
+"ph-thermo-02": {
+"ko": "열역학 제1법칙",
+"en": "First law of thermodynamics",
+"lv": 1,
+"level": "기초",
+"hint": "내부 에너지 변화 = 받은 열 − 한 일",
+"category": "열·통계물리",
+"domain": "물리학"
+},
+"ph-thermo-03": {
+"ko": "이상 기체 법칙",
+"en": "Ideal gas law",
+"lv": 1,
+"level": "기초",
+"hint": "압력·부피·온도·몰수 사이의 관계 PV=nRT",
+"category": "열·통계물리",
+"domain": "물리학"
+},
+"ph-thermo-04": {
+"ko": "비열",
+"en": "Specific heat capacity",
+"lv": 1,
+"level": "기초",
+"hint": "단위 질량의 온도를 1도 올리는 데 드는 열",
+"category": "열·통계물리",
+"domain": "물리학"
+},
+"ph-thermo-05": {
+"ko": "엔트로피",
+"en": "Entropy",
+"lv": 2,
+"level": "중급",
+"hint": "계의 무질서도, 열역학 제2법칙의 핵심 양",
+"category": "열·통계물리",
+"domain": "물리학"
+},
+"ph-thermo-06": {
+"ko": "열역학 제2법칙",
+"en": "Second law of thermodynamics",
+"lv": 2,
+"level": "중급",
+"hint": "고립계의 엔트로피는 줄어들지 않는다",
+"category": "열·통계물리",
+"domain": "물리학"
+},
+"ph-thermo-07": {
+"ko": "카르노 기관",
+"en": "Carnot heat engine",
+"lv": 2,
+"level": "중급",
+"hint": "가장 효율이 높은 이상적인 열기관",
+"category": "열·통계물리",
+"domain": "물리학"
+},
+"ph-thermo-08": {
+"ko": "기체 분자 운동론",
+"en": "Kinetic theory of gases",
+"lv": 2,
+"level": "중급",
+"hint": "기체의 성질을 분자 운동으로 설명",
+"category": "열·통계물리",
+"domain": "물리학"
+},
+"ph-thermo-09": {
+"ko": "볼츠만 분포",
+"en": "Boltzmann distribution",
+"lv": 3,
+"level": "심화",
+"hint": "온도에 따라 에너지 상태가 차지되는 확률 분포",
+"category": "열·통계물리",
+"domain": "물리학"
+},
+"ph-thermo-10": {
+"ko": "상전이",
+"en": "Phase transition",
+"lv": 3,
+"level": "심화",
+"hint": "고체·액체·기체 등 상태가 바뀌는 현상",
+"category": "열·통계물리",
+"domain": "물리학"
+},
+"ph-wave-01": {
+"ko": "파동",
+"en": "Wave",
+"lv": 1,
+"level": "기초",
+"hint": "진동이 공간으로 퍼져 나가는 현상",
+"category": "파동·광학",
+"domain": "물리학"
+},
+"ph-wave-02": {
+"ko": "굴절",
+"en": "Refraction",
+"lv": 1,
+"level": "기초",
+"hint": "빛이 다른 매질로 들어가며 꺾이는 현상",
+"category": "파동·광학",
+"domain": "물리학"
+},
+"ph-wave-03": {
+"ko": "반사 (물리학)",
+"en": "Reflection (physics)",
+"lv": 1,
+"level": "기초",
+"hint": "파동이 경계면에서 되돌아오는 현상",
+"category": "파동·광학",
+"domain": "물리학"
+},
+"ph-wave-04": {
+"ko": "도플러 효과",
+"en": "Doppler effect",
+"lv": 1,
+"level": "기초",
+"hint": "파원이 움직이면 진동수가 달라지는 현상",
+"category": "파동·광학",
+"domain": "물리학"
+},
+"ph-wave-05": {
+"ko": "간섭 (파동)",
+"en": "Wave interference",
+"lv": 2,
+"level": "중급",
+"hint": "두 파동이 겹쳐 세지거나 약해지는 현상",
+"category": "파동·광학",
+"domain": "물리학"
+},
+"ph-wave-06": {
+"ko": "회절",
+"en": "Diffraction",
+"lv": 2,
+"level": "중급",
+"hint": "파동이 장애물 뒤로 돌아 퍼지는 현상",
+"category": "파동·광학",
+"domain": "물리학"
+},
+"ph-wave-07": {
+"ko": "스넬의 법칙",
+"en": "Snell's law",
+"lv": 2,
+"level": "중급",
+"hint": "굴절 전후 각도와 굴절률의 관계",
+"category": "파동·광학",
+"domain": "물리학"
+},
+"ph-wave-08": {
+"ko": "편광",
+"en": "Polarization (waves)",
+"lv": 2,
+"level": "중급",
+"hint": "횡파의 진동 방향이 한쪽으로 정해진 상태",
+"category": "파동·광학",
+"domain": "물리학"
+},
+"ph-wave-09": {
+"ko": "전반사",
+"en": "Total internal reflection",
+"lv": 3,
+"level": "심화",
+"hint": "임계각보다 크게 입사하면 빛이 모두 반사되는 현상",
+"category": "파동·광학",
+"domain": "물리학"
+},
+"ph-wave-10": {
+"ko": "정상파",
+"en": "Standing wave",
+"lv": 3,
+"level": "심화",
+"hint": "제자리에서 마디와 배가 생기며 진동하는 파동",
+"category": "파동·광학",
+"domain": "물리학"
+},
+"ph-modern-01": {
+"ko": "광전 효과",
+"en": "Photoelectric effect",
+"lv": 1,
+"level": "기초",
+"hint": "빛을 쬐면 금속에서 전자가 튀어나오는 현상",
+"category": "현대물리",
+"domain": "물리학"
+},
+"ph-modern-02": {
+"ko": "원자 모형",
+"en": "Bohr model",
+"lv": 1,
+"level": "기초",
+"hint": "전자가 정해진 궤도에만 있는 보어의 원자 모형",
+"category": "현대물리",
+"domain": "물리학"
+},
+"ph-modern-03": {
+"ko": "특수 상대성 이론",
+"en": "Special relativity",
+"lv": 2,
+"level": "중급",
+"hint": "빛의 속도는 누구에게나 같다는 데서 출발한 이론",
+"category": "현대물리",
+"domain": "물리학"
+},
+"ph-modern-04": {
+"ko": "질량-에너지 등가",
+"en": "Mass–energy equivalence",
+"lv": 2,
+"level": "중급",
+"hint": "질량과 에너지는 E=mc²로 서로 바뀐다",
+"category": "현대물리",
+"domain": "물리학"
+},
+"ph-modern-05": {
+"ko": "불확정성 원리",
+"en": "Uncertainty principle",
+"lv": 2,
+"level": "중급",
+"hint": "위치와 운동량을 동시에 정확히 알 수 없다",
+"category": "현대물리",
+"domain": "물리학"
+},
+"ph-modern-06": {
+"ko": "파동-입자 이중성",
+"en": "Wave–particle duality",
+"lv": 2,
+"level": "중급",
+"hint": "빛과 물질이 파동이자 입자처럼 행동",
+"category": "현대물리",
+"domain": "물리학"
+},
+"ph-modern-07": {
+"ko": "슈뢰딩거 방정식",
+"en": "Schrödinger equation",
+"lv": 3,
+"level": "심화",
+"hint": "양자 상태가 시간에 따라 변하는 방식을 나타내는 방정식",
+"category": "현대물리",
+"domain": "물리학"
+},
+"ph-modern-08": {
+"ko": "양자 터널 효과",
+"en": "Quantum tunnelling",
+"lv": 3,
+"level": "심화",
+"hint": "입자가 에너지 장벽을 뚫고 지나가는 현상",
+"category": "현대물리",
+"domain": "물리학"
+},
+"ph-modern-09": {
+"ko": "방사성 붕괴",
+"en": "Radioactive decay",
+"lv": 2,
+"level": "중급",
+"hint": "불안정한 원자핵이 방사선을 내며 바뀌는 현상",
+"category": "현대물리",
+"domain": "물리학"
+},
+"ph-modern-10": {
+"ko": "핵분열",
+"en": "Nuclear fission",
+"lv": 3,
+"level": "심화",
+"hint": "무거운 원자핵이 쪼개지며 에너지를 내는 반응",
+"category": "현대물리",
+"domain": "물리학"
+},
+"ch-general-01": {
+"ko": "원자",
+"en": "Atom",
+"lv": 1,
+"level": "기초",
+"hint": "원자핵과 전자로 이루어진 물질의 기본 단위",
+"category": "일반화학",
+"domain": "화학"
+},
+"ch-general-02": {
+"ko": "주기율표",
+"en": "Periodic table",
+"lv": 1,
+"level": "기초",
+"hint": "원소를 원자 번호와 성질에 따라 배열한 표",
+"category": "일반화학",
+"domain": "화학"
+},
+"ch-general-03": {
+"ko": "화학 결합",
+"en": "Chemical bond",
+"lv": 1,
+"level": "기초",
+"hint": "원자들을 묶어 분자·결정을 만드는 힘",
+"category": "일반화학",
+"domain": "화학"
+},
+"ch-general-04": {
+"ko": "몰 (단위)",
+"en": "Mole (unit)",
+"lv": 1,
+"level": "기초",
+"hint": "6.022×10²³개의 입자를 한 묶음으로 세는 단위",
+"category": "일반화학",
+"domain": "화학"
+},
+"ch-general-05": {
+"ko": "전기 음성도",
+"en": "Electronegativity",
+"lv": 2,
+"level": "중급",
+"hint": "결합한 원자가 전자를 끌어당기는 정도",
+"category": "일반화학",
+"domain": "화학"
+},
+"ch-general-06": {
+"ko": "산과 염기",
+"en": "Acid–base reaction",
+"lv": 2,
+"level": "중급",
+"hint": "양성자를 주고받는 반응",
+"category": "일반화학",
+"domain": "화학"
+},
+"ch-general-07": {
+"ko": "pH",
+"en": "PH",
+"lv": 1,
+"level": "기초",
+"hint": "용액의 산성·염기성 정도를 나타내는 척도",
+"category": "일반화학",
+"domain": "화학"
+},
+"ch-general-08": {
+"ko": "산화 환원 반응",
+"en": "Redox",
+"lv": 2,
+"level": "중급",
+"hint": "전자를 잃고 얻는 반응",
+"category": "일반화학",
+"domain": "화학"
+},
+"ch-general-09": {
+"ko": "분자 궤도 이론",
+"en": "Molecular orbital theory",
+"lv": 3,
+"level": "심화",
+"hint": "전자가 분자 전체에 퍼진 궤도에 있다는 이론",
+"category": "일반화학",
+"domain": "화학"
+},
+"ch-general-10": {
+"ko": "혼성 궤도",
+"en": "Orbital hybridisation",
+"lv": 3,
+"level": "심화",
+"hint": "원자 궤도가 섞여 새 궤도를 만드는 개념 (sp³ 등)",
+"category": "일반화학",
+"domain": "화학"
+},
+"ch-organic-01": {
+"ko": "유기 화합물",
+"en": "Organic compound",
+"lv": 1,
+"level": "기초",
+"hint": "탄소를 뼈대로 한 화합물",
+"category": "유기화학",
+"domain": "화학"
+},
+"ch-organic-02": {
+"ko": "작용기",
+"en": "Functional group",
+"lv": 1,
+"level": "기초",
+"hint": "분자의 화학적 성질을 정하는 원자 묶음",
+"category": "유기화학",
+"domain": "화학"
+},
+"ch-organic-03": {
+"ko": "탄화수소",
+"en": "Hydrocarbon",
+"lv": 1,
+"level": "기초",
+"hint": "탄소와 수소로만 이루어진 화합물",
+"category": "유기화학",
+"domain": "화학"
+},
+"ch-organic-04": {
+"ko": "이성질체",
+"en": "Isomer",
+"lv": 2,
+"level": "중급",
+"hint": "분자식은 같지만 구조가 다른 화합물",
+"category": "유기화학",
+"domain": "화학"
+},
+"ch-organic-05": {
+"ko": "방향족성",
+"en": "Aromaticity",
+"lv": 2,
+"level": "중급",
+"hint": "벤젠처럼 고리 전자가 퍼져 안정한 성질",
+"category": "유기화학",
+"domain": "화학"
+},
+"ch-organic-06": {
+"ko": "친핵성 치환 반응",
+"en": "Nucleophilic substitution",
+"lv": 2,
+"level": "중급",
+"hint": "친핵체가 이탈기를 밀어내고 자리를 차지하는 반응",
+"category": "유기화학",
+"domain": "화학"
+},
+"ch-organic-07": {
+"ko": "카이랄성",
+"en": "Chirality (chemistry)",
+"lv": 2,
+"level": "중급",
+"hint": "거울상과 겹치지 않는 분자의 성질",
+"category": "유기화학",
+"domain": "화학"
+},
+"ch-organic-08": {
+"ko": "고분자",
+"en": "Polymer",
+"lv": 2,
+"level": "중급",
+"hint": "단위체가 사슬처럼 길게 이어진 거대 분자",
+"category": "유기화학",
+"domain": "화학"
+},
+"ch-organic-09": {
+"ko": "SN2 반응",
+"en": "SN2 reaction",
+"lv": 3,
+"level": "심화",
+"hint": "한 번에 결합이 끊기고 생기는 이분자 치환 반응",
+"category": "유기화학",
+"domain": "화학"
+},
+"ch-organic-10": {
+"ko": "딜스-알더 반응",
+"en": "Diels–Alder reaction",
+"lv": 3,
+"level": "심화",
+"hint": "다이엔과 다이엔친화체가 고리를 만드는 반응",
+"category": "유기화학",
+"domain": "화학"
+},
+"ch-physical-01": {
+"ko": "엔탈피",
+"en": "Enthalpy",
+"lv": 1,
+"level": "기초",
+"hint": "일정 압력에서 계가 가진 열 함량",
+"category": "물리화학",
+"domain": "화학"
+},
+"ch-physical-02": {
+"ko": "반응 속도",
+"en": "Reaction rate",
+"lv": 1,
+"level": "기초",
+"hint": "반응물이 생성물로 바뀌는 빠르기",
+"category": "물리화학",
+"domain": "화학"
+},
+"ch-physical-03": {
+"ko": "화학 평형",
+"en": "Chemical equilibrium",
+"lv": 1,
+"level": "기초",
+"hint": "정반응과 역반응 속도가 같아진 상태",
+"category": "물리화학",
+"domain": "화학"
+},
+"ch-physical-04": {
+"ko": "르 샤틀리에 원리",
+"en": "Le Chatelier's principle",
+"lv": 2,
+"level": "중급",
+"hint": "평형이 깨지면 그 변화를 줄이는 쪽으로 이동",
+"category": "물리화학",
+"domain": "화학"
+},
+"ch-physical-05": {
+"ko": "깁스 자유 에너지",
+"en": "Gibbs free energy",
+"lv": 2,
+"level": "중급",
+"hint": "반응이 저절로 일어날지 판단하는 에너지",
+"category": "물리화학",
+"domain": "화학"
+},
+"ch-physical-06": {
+"ko": "활성화 에너지",
+"en": "Activation energy",
+"lv": 2,
+"level": "중급",
+"hint": "반응이 일어나려면 넘어야 하는 에너지 장벽",
+"category": "물리화학",
+"domain": "화학"
+},
+"ch-physical-07": {
+"ko": "촉매",
+"en": "Catalysis",
+"lv": 2,
+"level": "중급",
+"hint": "자신은 변하지 않고 반응을 빠르게 하는 작용",
+"category": "물리화학",
+"domain": "화학"
+},
+"ch-physical-08": {
+"ko": "아레니우스 식",
+"en": "Arrhenius equation",
+"lv": 3,
+"level": "심화",
+"hint": "온도에 따른 반응 속도 상수의 변화",
+"category": "물리화학",
+"domain": "화학"
+},
+"ch-physical-09": {
+"ko": "헤스의 법칙",
+"en": "Hess's law",
+"lv": 2,
+"level": "중급",
+"hint": "반응열은 경로와 관계없이 처음과 끝 상태로 정해진다",
+"category": "물리화학",
+"domain": "화학"
+},
+"ch-physical-10": {
+"ko": "반응 차수",
+"en": "Rate equation",
+"lv": 3,
+"level": "심화",
+"hint": "반응 속도가 농도에 어떻게 의존하는지 나타내는 식",
+"category": "물리화학",
+"domain": "화학"
+},
+"ch-analytic-01": {
+"ko": "적정",
+"en": "Titration",
+"lv": 1,
+"level": "기초",
+"hint": "농도를 아는 용액으로 미지 농도를 알아내는 방법",
+"category": "분석·전기화학",
+"domain": "화학"
+},
+"ch-analytic-02": {
+"ko": "크로마토그래피",
+"en": "Chromatography",
+"lv": 1,
+"level": "기초",
+"hint": "혼합물을 이동 속도 차이로 분리하는 방법",
+"category": "분석·전기화학",
+"domain": "화학"
+},
+"ch-analytic-03": {
+"ko": "분광학",
+"en": "Spectroscopy",
+"lv": 2,
+"level": "중급",
+"hint": "빛과 물질의 상호작용으로 성분을 분석",
+"category": "분석·전기화학",
+"domain": "화학"
+},
+"ch-analytic-04": {
+"ko": "질량 분석법",
+"en": "Mass spectrometry",
+"lv": 2,
+"level": "중급",
+"hint": "이온의 질량 대 전하 비로 물질을 확인",
+"category": "분석·전기화학",
+"domain": "화학"
+},
+"ch-analytic-05": {
+"ko": "완충 용액",
+"en": "Buffer solution",
+"lv": 2,
+"level": "중급",
+"hint": "산·염기를 넣어도 pH가 잘 변하지 않는 용액",
+"category": "분석·전기화학",
+"domain": "화학"
+},
+"ch-analytic-06": {
+"ko": "갈바니 전지",
+"en": "Galvanic cell",
+"lv": 2,
+"level": "중급",
+"hint": "산화 환원 반응으로 전기를 만드는 전지",
+"category": "분석·전기화학",
+"domain": "화학"
+},
+"ch-analytic-07": {
+"ko": "전기 분해",
+"en": "Electrolysis",
+"lv": 2,
+"level": "중급",
+"hint": "전기를 흘려 화합물을 분해하는 반응",
+"category": "분석·전기화학",
+"domain": "화학"
+},
+"ch-analytic-08": {
+"ko": "표준 전극 전위",
+"en": "Standard electrode potential",
+"lv": 3,
+"level": "심화",
+"hint": "표준 상태에서 전극이 가지는 환원 전위",
+"category": "분석·전기화학",
+"domain": "화학"
+},
+"ch-analytic-09": {
+"ko": "네른스트 식",
+"en": "Nernst equation",
+"lv": 3,
+"level": "심화",
+"hint": "농도에 따른 전극 전위를 구하는 식",
+"category": "분석·전기화학",
+"domain": "화학"
+},
+"ch-analytic-10": {
+"ko": "핵자기 공명 분광법",
+"en": "Nuclear magnetic resonance spectroscopy",
+"lv": 3,
+"level": "심화",
+"hint": "원자핵 스핀으로 분자 구조를 알아내는 분석법",
+"category": "분석·전기화학",
+"domain": "화학"
+},
+"lf-cell-01": {
+"ko": "세포막",
+"en": "Cell membrane",
+"lv": 1,
+"level": "기초",
+"hint": "세포를 둘러싸고 물질 출입을 조절하는 막",
+"category": "세포생물학",
+"domain": "생명과학"
+},
+"lf-cell-02": {
+"ko": "미토콘드리아",
+"en": "Mitochondria",
+"lv": 1,
+"level": "기초",
+"hint": "세포 호흡으로 에너지(ATP)를 만드는 소기관",
+"category": "세포생물학",
+"domain": "생명과학"
+},
+"lf-cell-03": {
+"ko": "엽록체",
+"en": "Chloroplast",
+"lv": 1,
+"level": "기초",
+"hint": "광합성이 일어나는 식물 세포의 소기관",
+"category": "세포생물학",
+"domain": "생명과학"
+},
+"lf-cell-04": {
+"ko": "원핵생물",
+"en": "Prokaryote",
+"lv": 1,
+"level": "기초",
+"hint": "핵막이 없는 세포로 이루어진 생물",
+"category": "세포생물학",
+"domain": "생명과학"
+},
+"lf-cell-05": {
+"ko": "세포 주기",
+"en": "Cell cycle",
+"lv": 2,
+"level": "중급",
+"hint": "세포가 자라고 나뉘기까지 거치는 단계",
+"category": "세포생물학",
+"domain": "생명과학"
+},
+"lf-cell-06": {
+"ko": "체세포 분열",
+"en": "Mitosis",
+"lv": 2,
+"level": "중급",
+"hint": "같은 유전 정보를 가진 두 세포로 나뉘는 분열",
+"category": "세포생물학",
+"domain": "생명과학"
+},
+"lf-cell-07": {
+"ko": "감수 분열",
+"en": "Meiosis",
+"lv": 2,
+"level": "중급",
+"hint": "염색체 수가 절반인 생식세포를 만드는 분열",
+"category": "세포생물학",
+"domain": "생명과학"
+},
+"lf-cell-08": {
+"ko": "광합성",
+"en": "Photosynthesis",
+"lv": 2,
+"level": "중급",
+"hint": "빛 에너지로 이산화탄소와 물에서 포도당을 만듦",
+"category": "세포생물학",
+"domain": "생명과학"
+},
+"lf-cell-09": {
+"ko": "아데노신 삼인산",
+"en": "Adenosine triphosphate",
+"lv": 2,
+"level": "중급",
+"hint": "세포가 쓰는 에너지 화폐 ATP",
+"category": "세포생물학",
+"domain": "생명과학"
+},
+"lf-cell-10": {
+"ko": "세포골격",
+"en": "Cytoskeleton",
+"lv": 3,
+"level": "심화",
+"hint": "세포 모양을 유지하고 이동을 돕는 단백질 섬유망",
+"category": "세포생물학",
+"domain": "생명과학"
+},
+"lf-genetics-01": {
+"ko": "유전자",
+"en": "Gene",
+"lv": 1,
+"level": "기초",
+"hint": "특정 형질을 정하는 DNA의 단위",
+"category": "유전학",
+"domain": "생명과학"
+},
+"lf-genetics-02": {
+"ko": "멘델 유전",
+"en": "Mendelian inheritance",
+"lv": 1,
+"level": "기초",
+"hint": "우열·분리·독립의 법칙으로 설명하는 유전",
+"category": "유전학",
+"domain": "생명과학"
+},
+"lf-genetics-03": {
+"ko": "염색체",
+"en": "Chromosome",
+"lv": 1,
+"level": "기초",
+"hint": "DNA와 단백질이 뭉쳐 있는 구조",
+"category": "유전학",
+"domain": "생명과학"
+},
+"lf-genetics-04": {
+"ko": "돌연변이",
+"en": "Mutation",
+"lv": 1,
+"level": "기초",
+"hint": "DNA 염기서열이 바뀌는 일",
+"category": "유전학",
+"domain": "생명과학"
+},
+"lf-genetics-05": {
+"ko": "전사 (생물학)",
+"en": "Transcription (biology)",
+"lv": 2,
+"level": "중급",
+"hint": "DNA 정보를 RNA로 옮겨 적는 과정",
+"category": "유전학",
+"domain": "생명과학"
+},
+"lf-genetics-06": {
+"ko": "번역 (생물학)",
+"en": "Translation (biology)",
+"lv": 2,
+"level": "중급",
+"hint": "mRNA 정보로 단백질을 만드는 과정",
+"category": "유전학",
+"domain": "생명과학"
+},
+"lf-genetics-07": {
+"ko": "유전 암호",
+"en": "Genetic code",
+"lv": 2,
+"level": "중급",
+"hint": "코돈과 아미노산의 대응 규칙",
+"category": "유전학",
+"domain": "생명과학"
+},
+"lf-genetics-08": {
+"ko": "후성유전학",
+"en": "Epigenetics",
+"lv": 3,
+"level": "심화",
+"hint": "염기서열 변화 없이 유전자 발현이 바뀌는 현상",
+"category": "유전학",
+"domain": "생명과학"
+},
+"lf-genetics-09": {
+"ko": "유전자 발현 조절",
+"en": "Regulation of gene expression",
+"lv": 3,
+"level": "심화",
+"hint": "언제 어떤 유전자를 켤지 정하는 조절 장치",
+"category": "유전학",
+"domain": "생명과학"
+},
+"lf-genetics-10": {
+"ko": "하디-바인베르크 법칙",
+"en": "Hardy–Weinberg principle",
+"lv": 3,
+"level": "심화",
+"hint": "조건이 맞으면 집단의 대립유전자 빈도가 유지된다",
+"category": "유전학",
+"domain": "생명과학"
+},
+"lf-physio-01": {
+"ko": "항상성",
+"en": "Homeostasis",
+"lv": 1,
+"level": "기초",
+"hint": "몸 안의 상태를 일정하게 유지하는 성질",
+"category": "생리학",
+"domain": "생명과학"
+},
+"lf-physio-02": {
+"ko": "뉴런",
+"en": "Neuron",
+"lv": 1,
+"level": "기초",
+"hint": "신호를 전달하는 신경 세포",
+"category": "생리학",
+"domain": "생명과학"
+},
+"lf-physio-03": {
+"ko": "호르몬",
+"en": "Hormone",
+"lv": 1,
+"level": "기초",
+"hint": "혈액을 타고 다른 기관에 신호를 보내는 물질",
+"category": "생리학",
+"domain": "생명과학"
+},
+"lf-physio-04": {
+"ko": "순환계",
+"en": "Circulatory system",
+"lv": 1,
+"level": "기초",
+"hint": "심장과 혈관으로 혈액을 온몸에 보내는 체계",
+"category": "생리학",
+"domain": "생명과학"
+},
+"lf-physio-05": {
+"ko": "활동 전위",
+"en": "Action potential",
+"lv": 2,
+"level": "중급",
+"hint": "뉴런 막 전위가 순간적으로 뒤집히는 신호",
+"category": "생리학",
+"domain": "생명과학"
+},
+"lf-physio-06": {
+"ko": "시냅스",
+"en": "Synapse",
+"lv": 2,
+"level": "중급",
+"hint": "뉴런과 뉴런이 신호를 주고받는 연결 부위",
+"category": "생리학",
+"domain": "생명과학"
+},
+"lf-physio-07": {
+"ko": "면역계",
+"en": "Immune system",
+"lv": 2,
+"level": "중급",
+"hint": "병원체로부터 몸을 지키는 방어 체계",
+"category": "생리학",
+"domain": "생명과학"
+},
+"lf-physio-08": {
+"ko": "항체",
+"en": "Antibody",
+"lv": 2,
+"level": "중급",
+"hint": "특정 항원에 결합하는 면역 단백질",
+"category": "생리학",
+"domain": "생명과학"
+},
+"lf-physio-09": {
+"ko": "음성 되먹임",
+"en": "Negative feedback",
+"lv": 3,
+"level": "심화",
+"hint": "결과가 원인을 억제해 균형을 맞추는 조절",
+"category": "생리학",
+"domain": "생명과학"
+},
+"lf-physio-10": {
+"ko": "네프론",
+"en": "Nephron",
+"lv": 3,
+"level": "심화",
+"hint": "혈액을 걸러 오줌을 만드는 콩팥의 기본 단위",
+"category": "생리학",
+"domain": "생명과학"
+},
+"lf-eco-01": {
+"ko": "자연 선택",
+"en": "Natural selection",
+"lv": 1,
+"level": "기초",
+"hint": "환경에 잘 맞는 형질이 살아남아 퍼지는 과정",
+"category": "생태·진화",
+"domain": "생명과학"
+},
+"lf-eco-02": {
+"ko": "생태계",
+"en": "Ecosystem",
+"lv": 1,
+"level": "기초",
+"hint": "생물과 환경이 상호작용하는 하나의 체계",
+"category": "생태·진화",
+"domain": "생명과학"
+},
+"lf-eco-03": {
+"ko": "먹이 사슬",
+"en": "Food chain",
+"lv": 1,
+"level": "기초",
+"hint": "먹고 먹히는 관계로 이어진 생물의 연결",
+"category": "생태·진화",
+"domain": "생명과학"
+},
+"lf-eco-04": {
+"ko": "종 (생물학)",
+"en": "Species",
+"lv": 1,
+"level": "기초",
+"hint": "서로 교배해 생식 가능한 자손을 낳는 집단",
+"category": "생태·진화",
+"domain": "생명과학"
+},
+"lf-eco-05": {
+"ko": "종 분화",
+"en": "Speciation",
+"lv": 2,
+"level": "중급",
+"hint": "한 종에서 새로운 종이 갈라져 나오는 과정",
+"category": "생태·진화",
+"domain": "생명과학"
+},
+"lf-eco-06": {
+"ko": "탄소 순환",
+"en": "Carbon cycle",
+"lv": 2,
+"level": "중급",
+"hint": "탄소가 대기·생물·바다·땅을 오가는 순환",
+"category": "생태·진화",
+"domain": "생명과학"
+},
+"lf-eco-07": {
+"ko": "생물 다양성",
+"en": "Biodiversity",
+"lv": 2,
+"level": "중급",
+"hint": "생물 종·유전자·생태계의 다양함",
+"category": "생태·진화",
+"domain": "생명과학"
+},
+"lf-eco-08": {
+"ko": "유전적 부동",
+"en": "Genetic drift",
+"lv": 3,
+"level": "심화",
+"hint": "우연에 의해 대립유전자 빈도가 바뀌는 현상",
+"category": "생태·진화",
+"domain": "생명과학"
+},
+"lf-eco-09": {
+"ko": "계통수",
+"en": "Phylogenetic tree",
+"lv": 3,
+"level": "심화",
+"hint": "생물이 갈라져 나온 관계를 나무 모양으로 나타냄",
+"category": "생태·진화",
+"domain": "생명과학"
+},
+"lf-eco-10": {
+"ko": "질소 순환",
+"en": "Nitrogen cycle",
+"lv": 2,
+"level": "중급",
+"hint": "질소가 대기와 생물 사이를 오가는 순환",
+"category": "생태·진화",
+"domain": "생명과학"
+},
+"ea-geo-01": {
+"ko": "판 구조론",
+"en": "Plate tectonics",
+"lv": 1,
+"level": "기초",
+"hint": "지각이 여러 판으로 나뉘어 움직인다는 이론",
+"category": "지질·지구 내부",
+"domain": "지구과학"
+},
+"ea-geo-02": {
+"ko": "지진",
+"en": "Earthquake",
+"lv": 1,
+"level": "기초",
+"hint": "땅속에 쌓인 힘이 풀리며 땅이 흔들리는 현상",
+"category": "지질·지구 내부",
+"domain": "지구과학"
+},
+"ea-geo-03": {
+"ko": "화산",
+"en": "Volcano",
+"lv": 1,
+"level": "기초",
+"hint": "마그마가 지표로 분출하는 곳",
+"category": "지질·지구 내부",
+"domain": "지구과학"
+},
+"ea-geo-04": {
+"ko": "암석의 순환",
+"en": "Rock cycle",
+"lv": 1,
+"level": "기초",
+"hint": "화성암·퇴적암·변성암이 서로 바뀌는 순환",
+"category": "지질·지구 내부",
+"domain": "지구과학"
+},
+"ea-geo-05": {
+"ko": "지구 내부 구조",
+"en": "Internal structure of Earth",
+"lv": 2,
+"level": "중급",
+"hint": "지각·맨틀·외핵·내핵으로 이루어진 층",
+"category": "지질·지구 내부",
+"domain": "지구과학"
+},
+"ea-geo-06": {
+"ko": "지진파",
+"en": "Seismic wave",
+"lv": 2,
+"level": "중급",
+"hint": "지진으로 생겨 땅속을 전달되는 P파·S파 등",
+"category": "지질·지구 내부",
+"domain": "지구과학"
+},
+"ea-geo-07": {
+"ko": "광물",
+"en": "Mineral",
+"lv": 2,
+"level": "중급",
+"hint": "자연에서 생긴 일정한 화학 조성의 결정질 고체",
+"category": "지질·지구 내부",
+"domain": "지구과학"
+},
+"ea-geo-08": {
+"ko": "방사성 연대 측정",
+"en": "Radiometric dating",
+"lv": 2,
+"level": "중급",
+"hint": "방사성 동위원소의 반감기로 나이를 재는 방법",
+"category": "지질·지구 내부",
+"domain": "지구과학"
+},
+"ea-geo-09": {
+"ko": "지자기",
+"en": "Earth's magnetic field",
+"lv": 3,
+"level": "심화",
+"hint": "지구 외핵의 운동으로 생기는 자기장",
+"category": "지질·지구 내부",
+"domain": "지구과학"
+},
+"ea-geo-10": {
+"ko": "지질 시대",
+"en": "Geologic time scale",
+"lv": 3,
+"level": "심화",
+"hint": "지구의 역사를 누대·대·기로 나눈 시간 척도",
+"category": "지질·지구 내부",
+"domain": "지구과학"
+},
+"ea-atmo-01": {
+"ko": "대기권",
+"en": "Atmosphere of Earth",
+"lv": 1,
+"level": "기초",
+"hint": "지구를 둘러싼 공기층과 그 층 구조",
+"category": "대기·해양",
+"domain": "지구과학"
+},
+"ea-atmo-02": {
+"ko": "온실 효과",
+"en": "Greenhouse effect",
+"lv": 1,
+"level": "기초",
+"hint": "대기가 지표의 열을 붙잡아 따뜻하게 하는 현상",
+"category": "대기·해양",
+"domain": "지구과학"
+},
+"ea-atmo-03": {
+"ko": "기압",
+"en": "Atmospheric pressure",
+"lv": 1,
+"level": "기초",
+"hint": "공기의 무게가 누르는 압력",
+"category": "대기·해양",
+"domain": "지구과학"
+},
+"ea-atmo-04": {
+"ko": "전선 (기상)",
+"en": "Weather front",
+"lv": 2,
+"level": "중급",
+"hint": "성질이 다른 두 기단이 만나는 경계",
+"category": "대기·해양",
+"domain": "지구과학"
+},
+"ea-atmo-05": {
+"ko": "코리올리 효과",
+"en": "Coriolis force",
+"lv": 2,
+"level": "중급",
+"hint": "지구 자전 때문에 움직이는 물체가 휘어 보이는 효과",
+"category": "대기·해양",
+"domain": "지구과학"
+},
+"ea-atmo-06": {
+"ko": "태풍",
+"en": "Tropical cyclone",
+"lv": 2,
+"level": "중급",
+"hint": "열대 바다에서 발달하는 강한 저기압 폭풍",
+"category": "대기·해양",
+"domain": "지구과학"
+},
+"ea-atmo-07": {
+"ko": "해류",
+"en": "Ocean current",
+"lv": 2,
+"level": "중급",
+"hint": "바닷물이 일정한 방향으로 흐르는 것",
+"category": "대기·해양",
+"domain": "지구과학"
+},
+"ea-atmo-08": {
+"ko": "엘니뇨-남방 진동",
+"en": "El Niño–Southern Oscillation",
+"lv": 3,
+"level": "심화",
+"hint": "적도 태평양 수온과 기압이 주기적으로 바뀌는 현상",
+"category": "대기·해양",
+"domain": "지구과학"
+},
+"ea-atmo-09": {
+"ko": "열염 순환",
+"en": "Thermohaline circulation",
+"lv": 3,
+"level": "심화",
+"hint": "수온과 염분 차이로 일어나는 깊은 바다의 순환",
+"category": "대기·해양",
+"domain": "지구과학"
+},
+"ea-atmo-10": {
+"ko": "단열 과정",
+"en": "Adiabatic process",
+"lv": 3,
+"level": "심화",
+"hint": "열 출입 없이 공기가 팽창·압축하며 온도가 바뀜",
+"category": "대기·해양",
+"domain": "지구과학"
+},
+"ea-astro-01": {
+"ko": "태양계",
+"en": "Solar System",
+"lv": 1,
+"level": "기초",
+"hint": "태양과 그 주위를 도는 행성·위성 등의 체계",
+"category": "천문학",
+"domain": "지구과학"
+},
+"ea-astro-02": {
+"ko": "케플러 행성 운동 법칙",
+"en": "Kepler's laws of planetary motion",
+"lv": 1,
+"level": "기초",
+"hint": "행성 궤도에 관한 세 가지 법칙",
+"category": "천문학",
+"domain": "지구과학"
+},
+"ea-astro-03": {
+"ko": "항성",
+"en": "Star",
+"lv": 1,
+"level": "기초",
+"hint": "핵융합으로 스스로 빛을 내는 천체",
+"category": "천문학",
+"domain": "지구과학"
+},
+"ea-astro-04": {
+"ko": "은하",
+"en": "Galaxy",
+"lv": 1,
+"level": "기초",
+"hint": "별·가스·암흑 물질이 중력으로 묶인 거대한 집단",
+"category": "천문학",
+"domain": "지구과학"
+},
+"ea-astro-05": {
+"ko": "항성 진화",
+"en": "Stellar evolution",
+"lv": 2,
+"level": "중급",
+"hint": "별이 태어나 죽기까지 변하는 과정",
+"category": "천문학",
+"domain": "지구과학"
+},
+"ea-astro-06": {
+"ko": "헤르츠스프룽-러셀 도표",
+"en": "Hertzsprung–Russell diagram",
+"lv": 2,
+"level": "중급",
+"hint": "별의 광도와 표면 온도를 나타낸 도표",
+"category": "천문학",
+"domain": "지구과학"
+},
+"ea-astro-07": {
+"ko": "허블-르메트르 법칙",
+"en": "Hubble's law",
+"lv": 2,
+"level": "중급",
+"hint": "먼 은하일수록 빠르게 멀어진다는 법칙",
+"category": "천문학",
+"domain": "지구과학"
+},
+"ea-astro-08": {
+"ko": "블랙홀",
+"en": "Black hole",
+"lv": 2,
+"level": "중급",
+"hint": "빛조차 빠져나올 수 없는 중력이 강한 천체",
+"category": "천문학",
+"domain": "지구과학"
+},
+"ea-astro-09": {
+"ko": "빅뱅",
+"en": "Big Bang",
+"lv": 3,
+"level": "심화",
+"hint": "우주가 아주 뜨겁고 조밀한 상태에서 팽창했다는 이론",
+"category": "천문학",
+"domain": "지구과학"
+},
+"ea-astro-10": {
+"ko": "우주 마이크로파 배경",
+"en": "Cosmic microwave background",
+"lv": 3,
+"level": "심화",
+"hint": "빅뱅의 흔적으로 남은 우주 전체의 마이크로파",
+"category": "천문학",
+"domain": "지구과학"
 }
 }
