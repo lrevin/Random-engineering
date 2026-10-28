@@ -36,7 +36,7 @@ export function StudyReader({ page, left, total, running, onClose }: {
         <View style={{ height: 4, backgroundColor: c.chip }}>
           <View style={{ width: `${progress * 100}%`, height: "100%", backgroundColor: urgent ? c.accent : c.gold }} />
         </View>
-        <T size={12} color="muted" center style={{ paddingVertical: 4 }}>공부 시간이 끝나면 이 창이 닫히고 바로 퀴즈가 시작돼요</T>
+        <T size={12} color="muted" center style={{ paddingVertical: 4 }}>공부 시간이 끝나면 이 창은 자동으로 닫혀요</T>
         {page && (
           <WebView
             source={{ uri: page.url }}
