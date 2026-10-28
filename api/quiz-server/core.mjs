@@ -98,6 +98,36 @@ export function toQuestions(raw) {
   return out;
 }
 
+// ───────── 말투 (docs/quiz-authoring.md "말투" — 우리 문제 은행과 같게) ─────────
+// 같은 규칙을 scripts/quizbank.py check 와 Supabase 함수에서도 씁니다.
+const COND = String.raw`(\s*\([^()]*\))?`; // 끝에 붙는 조건 괄호: "… (원소 n개)"
+const MC_END = new RegExp(String.raw`\?` + COND + "$");
+const OX_END = new RegExp(String.raw`다\.` + COND + "$");
+const OX_FORMAL = new RegExp(String.raw`니다\.` + COND + "$"); // OX는 "~입니다."가 아니라 "~이다."
+const HAEYO = /(예요|에요|해요|어요|아요|이죠|죠|네요|군요)[.!?]?(\s|$)/;
+const BANNED_Q = /(고르시오|고르세요|무엇일까|뭘까|인가요\?|일까요\?|\[AI\]|\[연습)/;
+const NUMBERED = /^\s*(\d+[.)]\s|[①-⑳]|[A-Da-d][.)]\s)/;
+
+/** 고쳐도 뜻이 바뀌지 않는 작은 말투 차이만 고침 (보기 번호·마침표, 앞뒤 공백) */
+export function styleFix(q) {
+  const out = { ...q, q: q.q.trim(), explain: q.explain.trim() };
+  if (q.type === "mc") out.choices = q.choices.map((c) => c.trim().replace(NUMBERED, "").replace(/\.$/, "").trim());
+  return out;
+}
+
+/** 말투 규칙에 어긋나는 점 목록 (빈 배열이면 통과) */
+export function styleIssues(q) {
+  const bad = [];
+  if (q.type === "mc" && !MC_END.test(q.q)) bad.push("4지선다 문제는 '~은/는?'으로 끝나야 함");
+  if (q.type === "ox" && (!OX_END.test(q.q) || OX_FORMAL.test(q.q))) bad.push("OX 문제는 해라체 '~다.'로 끝나야 함");
+  if (BANNED_Q.test(q.q)) bad.push("문제에 쓰지 않는 말투");
+  if (!q.explain.includes("니다")) bad.push("해설은 합니다체");
+  if (HAEYO.test(q.explain) || HAEYO.test(q.q)) bad.push("해요체 금지");
+  if (/(정답은?\s*\d+\s*번|\d+\s*번\s*보기|보기\s*\d+)/.test(q.explain)) bad.push("해설에 보기 번호");
+  if (q.type === "mc" && q.choices.some((c) => NUMBERED.test(c) || /[^.]\.$/.test(c))) bad.push("보기에 번호·마침표");
+  return bad;
+}
+
 // ───────── 출제 ─────────
 function userPrompt(topic, existing, count) {
   const list = existing.length
@@ -111,21 +141,23 @@ function userPrompt(topic, existing, count) {
 이미 있는 문제 (이것과 비슷한 문제는 만들지 마세요):
 ${list}
 
-위 문제들과 겹치지 않는 새로운 유형의 퀴즈 ${count}문제를 만들어 주세요.`;
+위 문제들과 겹치지 않는 새로운 유형의 퀴즈 ${count}문제를 만들어 주세요.
+말투는 위 "이미 있는 문제"와 지침의 "말투" 규칙을 그대로 따르세요 (4지선다 "~은/는?", OX "~다.", 해설 "~입니다/~합니다").`;
 }
 
 /** 연습용 가짜 출제 (QUIZ_MOCK=1). API 키 없이 앱·서버 흐름을 시험할 때 씀 */
+// 연습 모드 문장: 주제 이름 뒤에 "개념"을 붙여 받침과 상관없이 조사가 맞게 함
 const MOCK_MC = [
-  (t) => `[연습 AI] 실제 현장에서 ${t.ko}를 떠올려야 하는 상황으로 가장 알맞은 것은?`,
-  (t) => `[연습 AI] 비슷한 개념들과 견주었을 때 ${t.ko}만의 특징을 고르면?`,
-  (t) => `[연습 AI] 학생들이 흔히 잘못 아는 내용을 빼고, ${t.ko}의 올바른 설명만 고르시오.`,
-  (t) => `[연습 AI] 조건이 달라져도 ${t.ko}에서 변하지 않는 핵심은 무엇일까?`,
-  (t) => `[연습 AI] 원인과 결과 관계로 볼 때 ${t.ko}가 일어나는 까닭에 가장 가까운 것은?`,
-  (t) => `[연습 AI] 교과서 예제를 풀 때 ${t.ko}를 이용하는 첫 단계는?`,
+  (t) => `실제 현장에서 ${t.ko} 개념을 떠올려야 하는 상황으로 가장 알맞은 것은?`,
+  (t) => `비슷한 개념들과 견주었을 때 ${t.ko} 개념만의 특징으로 알맞은 것은?`,
+  (t) => `학생들이 흔히 잘못 아는 내용을 빼고 ${t.ko} 개념을 바르게 설명한 것은?`,
+  (t) => `조건이 달라져도 ${t.ko} 개념에서 변하지 않는 핵심은?`,
+  (t) => `원인과 결과로 볼 때 ${t.ko} 개념이 필요한 까닭에 가장 가까운 것은?`,
+  (t) => `교과서 예제를 풀 때 ${t.ko} 개념을 이용하는 첫 단계로 알맞은 것은?`,
 ];
 const MOCK_OX = [
-  (t) => `[연습 AI] ${t.ko}의 요점을 한 줄로 줄이면 "${t.hint}"라고 말할 수 있다.`,
-  (t) => `[연습 AI] ${t.en}라는 영어 이름은 ${t.ko}를 가리킨다.`,
+  (t) => `${t.ko} 개념의 요점은 "${t.hint}"라고 말할 수 있다.`,
+  (t) => `${t.en}라는 영어 이름은 ${t.ko} 개념을 가리킨다.`,
 ];
 
 function mockGenerate(topic, count) {
@@ -134,14 +166,14 @@ function mockGenerate(topic, count) {
   const out = [];
   for (let i = 0; i < count; i++) {
     if (i % 4 === 3 && ox.length) {
-      out.push({ type: "ox", q: ox.pop()(topic), answer: true, explain: `${topic.ko}: ${topic.hint}` });
+      out.push({ type: "ox", q: ox.pop()(topic), answer: true, explain: `연습 모드에서 만든 문제입니다. ${topic.ko} 개념의 핵심은 "${topic.hint}"입니다.` });
     } else if (mc.length) {
       out.push({
         type: "mc",
         q: mc.pop()(topic),
-        choices: [topic.hint, `${topic.ko}와 관계없는 설명 ①`, `${topic.ko}와 관계없는 설명 ②`, `${topic.ko}와 관계없는 설명 ③`],
+        choices: [topic.hint, `${topic.ko} 개념과 관계없는 설명 가`, `${topic.ko} 개념과 관계없는 설명 나`, `${topic.ko} 개념과 관계없는 설명 다`],
         answer: 0,
-        explain: `(연습용 가짜 문제) ${topic.ko}: ${topic.hint}`,
+        explain: `연습 모드에서 만든 문제입니다. ${topic.ko} 개념의 핵심은 "${topic.hint}"입니다.`,
       });
     }
   }
@@ -174,5 +206,7 @@ export async function generate(topic, existing, count) {
     const text = res.content.filter((b) => b.type === "text").map((b) => b.text).join("");
     questions = toQuestions(JSON.parse(text).questions);
   }
-  return distinct(questions, existing);
+  // 말투 검사: 작은 차이는 고치고, 규칙에 어긋나는 문제는 버림
+  const styled = questions.map(styleFix).filter((q) => !styleIssues(q).length);
+  return distinct(styled, existing);
 }

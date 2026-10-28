@@ -16,7 +16,7 @@ import fs from "node:fs";
 import http from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { distinct, generate, loadBank, loadTopics, MODEL } from "./core.mjs";
+import { distinct, generate, loadBank, loadTopics, MODEL, styleIssues } from "./core.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 8787);
@@ -70,7 +70,8 @@ async function refill(id, extra = [], size = BATCH) {
 async function serve(id, count, avoid) {
   return withLock(id, async () => {
     const against = [...bankTexts(id), ...avoid];
-    const usable = () => distinct(readPool(id), against);
+    // 말투 규칙이 바뀌어도 예전에 쌓인 문제가 섞이지 않게 꺼낼 때도 검사
+    const usable = () => distinct(readPool(id).filter((q) => !styleIssues(q).length), against);
     if (usable().length < count) await refill(id, avoid, Math.max(BATCH, count));
     const pool = readPool(id);
     const chosen = usable()

@@ -105,6 +105,28 @@ function distinct(qs: Question[], against: string[]) {
   return kept;
 }
 
+// ───────── 말투 (docs/quiz-authoring.md "말투", api/quiz-server/core.mjs 와 같은 규칙) ─────────
+const COND = String.raw`(\s*\([^()]*\))?`;
+const MC_END = new RegExp(String.raw`\?` + COND + "$");
+const OX_END = new RegExp(String.raw`다\.` + COND + "$");
+const OX_FORMAL = new RegExp(String.raw`니다\.` + COND + "$");
+const HAEYO = /(예요|에요|해요|어요|아요|이죠|죠|네요|군요)[.!?]?(\s|$)/;
+const BANNED_Q = /(고르시오|고르세요|무엇일까|뭘까|인가요\?|일까요\?|\[AI\]|\[연습)/;
+const NUMBERED = /^\s*(\d+[.)]\s|[①-⑳]|[A-Da-d][.)]\s)/;
+
+function styleFix(q: Question): Question {
+  if (q.type !== "mc") return { ...q, q: q.q.trim(), explain: q.explain.trim() };
+  return { ...q, q: q.q.trim(), explain: q.explain.trim(), choices: q.choices.map((c) => c.trim().replace(NUMBERED, "").replace(/\.$/, "").trim()) };
+}
+function styleOk(q: Question) {
+  if (q.type === "mc" && !MC_END.test(q.q)) return false;
+  if (q.type === "ox" && (!OX_END.test(q.q) || OX_FORMAL.test(q.q))) return false;
+  if (BANNED_Q.test(q.q) || !q.explain.includes("니다") || HAEYO.test(q.explain) || HAEYO.test(q.q)) return false;
+  if (/(정답은?\s*\d+\s*번|\d+\s*번\s*보기|보기\s*\d+)/.test(q.explain)) return false;
+  if (q.type === "mc" && q.choices.some((c) => NUMBERED.test(c) || /[^.]\.$/.test(c))) return false;
+  return true;
+}
+
 async function generate(topic: TopicInfo, existing: string[], count: number): Promise<Question[]> {
   const client = new Anthropic(); // ANTHROPIC_API_KEY 환경 변수 사용
   const list = existing.length ? existing.map((q, i) => `${i + 1}. ${q}`).join("\n") : "(아직 없음)";
@@ -116,7 +138,8 @@ async function generate(topic: TopicInfo, existing: string[], count: number): Pr
 이미 있는 문제 (이것과 비슷한 문제는 만들지 마세요):
 ${list}
 
-위 문제들과 겹치지 않는 새로운 유형의 퀴즈 ${count}문제를 만들어 주세요.`;
+위 문제들과 겹치지 않는 새로운 유형의 퀴즈 ${count}문제를 만들어 주세요.
+말투는 위 "이미 있는 문제"와 지침의 "말투" 규칙을 그대로 따르세요 (4지선다 "~은/는?", OX "~다.", 해설 "~입니다/~합니다").`;
 
   const res = await client.beta.messages.create({
     model: MODEL,
@@ -133,7 +156,8 @@ ${list}
   if (msg.stop_reason === "max_tokens") throw new Error("truncated");
   const text = msg.content.filter((b) => b.type === "text").map((b) => b.text ?? "").join("");
   const parsed = JSON.parse(text) as { questions: RawQuestion[] };
-  return distinct(toQuestions(parsed.questions), existing);
+  // 말투 검사: 작은 차이는 고치고, 규칙에 어긋나는 문제는 버림
+  return distinct(toQuestions(parsed.questions).map(styleFix).filter(styleOk), existing);
 }
 
 function sample<T>(xs: T[], n: number) {

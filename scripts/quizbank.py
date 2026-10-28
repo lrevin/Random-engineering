@@ -13,6 +13,7 @@
 import glob
 import json
 import os
+import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -32,6 +33,35 @@ def load_bank():
         for tid, qs in json.load(open(f, encoding="utf8")).items():
             bank.setdefault(tid, []).extend(qs)
     return bank
+
+
+# ───────── 말투 (docs/quiz-authoring.md "말투") — api/quiz-server/core.mjs 의 styleIssues 와 같은 규칙 ─────────
+COND = r"(\s*\([^()]*\))?"
+MC_END = re.compile(r"\?" + COND + "$")
+OX_END = re.compile(r"다\." + COND + "$")
+OX_FORMAL = re.compile(r"니다\." + COND + "$")
+HAEYO = re.compile(r"(예요|에요|해요|어요|아요|이죠|죠|네요|군요)[.!?]?(\s|$)")
+BANNED_Q = re.compile(r"(고르시오|고르세요|무엇일까|뭘까|인가요\?|일까요\?|\[AI\]|\[연습)")
+NUMBERED = re.compile(r"^\s*(\d+[.)]\s|[①-⑳]|[A-Da-d][.)]\s)")
+
+
+def style_issues(q):
+    text, explain, bad = str(q.get("q", "")).strip(), str(q.get("explain", "")).strip(), []
+    if q.get("type") == "mc" and not MC_END.search(text):
+        bad.append("말투: 4지선다 문제는 '~은/는?'으로 끝나야 함")
+    if q.get("type") == "ox" and (not OX_END.search(text) or OX_FORMAL.search(text)):
+        bad.append("말투: OX 문제는 해라체 '~다.'로 끝나야 함")
+    if BANNED_Q.search(text):
+        bad.append("말투: 문제에 쓰지 않는 말투")
+    if "니다" not in explain:
+        bad.append("말투: 해설은 합니다체")
+    if HAEYO.search(explain) or HAEYO.search(text):
+        bad.append("말투: 해요체 금지")
+    if re.search(r"(정답은?\s*\d+\s*번|\d+\s*번\s*보기|보기\s*\d+)", explain):
+        bad.append("말투: 해설에 보기 번호")
+    if q.get("type") == "mc" and any(NUMBERED.search(c) or re.search(r"[^.]\.$", c) for c in q.get("choices") or [] if isinstance(c, str)):
+        bad.append("말투: 보기에 번호·마침표")
+    return bad
 
 
 def check_question(q):
@@ -61,7 +91,7 @@ def check_question(q):
             errs.append("ox must not have choices")
     else:
         errs.append("type must be mc or ox")
-    return errs
+    return errs + style_issues(q)
 
 
 def check():
