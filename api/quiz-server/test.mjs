@@ -5,7 +5,7 @@ import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadBank, similarity, SIMILAR } from "./core.mjs";
+import { loadBank, similarity, SIMILAR, styleIssues } from "./core.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PORT = 18787;
@@ -30,6 +30,14 @@ try {
   const a = await post({ topicId: TOPIC, count: 4, avoid: bank });
   check(a.status === 200 && a.questions.length === 4, `첫 요청: 4문제 (${a.questions?.length})`);
   check(a.questions.every((q) => bank.every((b) => similarity(q.q, b) < SIMILAR)), "문제 은행과 비슷한 문제 없음");
+  check(a.questions.every((q) => !styleIssues(q).length), "AI 문제 말투가 문제 은행 규칙과 같음");
+  check(loadBank()[TOPIC].every((q) => !styleIssues(q).length), "문제 은행도 같은 말투 규칙 통과");
+  const wrongTone = [
+    { type: "mc", q: "다음 중 옳은 것을 고르시오.", choices: ["가", "나", "다", "라"], answer: 0, explain: "가가 맞습니다." },
+    { type: "ox", q: "큐는 선입선출 구조입니다.", answer: true, explain: "큐는 FIFO입니다." },
+    { type: "mc", q: "큐의 특징은?", choices: ["선입선출", "후입선출", "무작위", "우선순위"], answer: 0, explain: "큐는 먼저 넣은 것이 먼저 나와요." },
+  ];
+  check(wrongTone.every((q) => styleIssues(q).length), "말투가 다른 문제는 걸러 냄 (고르시오 / ~입니다. / ~나와요)");
   const b = await post({ topicId: TOPIC, count: 4 });
   check(b.status === 200 && b.questions.length === 4, "두 번째 요청: 4문제");
   const overlap = b.questions.filter((q) => a.questions.some((x) => x.q === q.q)).length;

@@ -95,6 +95,7 @@ export function pickQuestions(pool: QuizQuestion[], n: number): QuizQuestion[] {
 }
 
 // ───────── 오프라인 연습 문제 (AI도 문제 은행도 없을 때) ─────────
+// 말투는 문제 은행과 같게: 4지선다 "~은/는?", OX "~다.", 해설 "~입니다" (docs/quiz-authoring.md)
 const josa = (word: string, withBatchim: string, without: string) => {
   const last = word.replace(/\s*\(.*?\)\s*$/, "").trim().slice(-1);
   const code = last.charCodeAt(0) - 0xac00;
@@ -110,10 +111,10 @@ export function offlineQuestions(topic: Topic): QuizQuestion[] {
 
   const hintToName = (t: Topic): QuizQuestion => ({
     type: "mc",
-    q: `다음 설명에 해당하는 개념은?\n“${t.hint}”`,
+    q: `“${t.hint}”에 해당하는 개념은?`,
     choices: [t.ko, ...pick3(t).map((x) => x.ko)],
     answer: 0,
-    explain: `“${t.hint}”는 ${t.ko}에 대한 설명이에요.`,
+    explain: `“${t.hint}”는 ${t.ko}에 대한 설명입니다.`,
   });
 
   qs.push(hintToName(topic));
@@ -124,14 +125,14 @@ export function offlineQuestions(topic: Topic): QuizQuestion[] {
     q: `‘${topic.ko}’의 영어 이름은?`,
     choices: [topic.en, ...pick3(topic).map((x) => x.en)],
     answer: 0,
-    explain: `${topic.ko}${josa(topic.ko, "은", "는")} 영어로 ${topic.en}이에요.`,
+    explain: `${topic.ko}의 영어 이름은 ${topic.en}입니다.`,
   });
   if (hasHangul) qs.push({
     type: "mc",
     q: `‘${topic.en}’에 해당하는 한국어 개념은?`,
     choices: [topic.ko, ...pick3(topic).map((x) => x.ko)],
     answer: 0,
-    explain: `${topic.en}${josa(topic.en, "은", "는")} ${topic.ko}예요.`,
+    explain: `${topic.en}에 해당하는 한국어 개념은 ${topic.ko}입니다.`,
   });
   // 같은 세부 분야의 관련 개념도 함께 복습
   for (const t of same.slice(0, hasHangul ? 4 : 6)) qs.push(hintToName(t));
@@ -141,23 +142,23 @@ export function offlineQuestions(topic: Topic): QuizQuestion[] {
     type: "ox",
     q: `‘${topic.ko}’${josa(topic.ko, "은", "는")} ${topic.categoryName} 분야의 개념이다.`,
     answer: true,
-    explain: `맞아요. ${topic.ko}${josa(topic.ko, "은", "는")} ${topic.categoryName}에서 다루는 개념이에요.`,
+    explain: `${topic.ko}${josa(topic.ko, "은", "는")} ${topic.categoryName}에서 다루는 개념입니다.`,
   });
   if (wrongCat) {
     qs.push({
       type: "ox",
       q: `‘${topic.ko}’${josa(topic.ko, "은", "는")} ${wrongCat.categoryName} 분야의 개념이다.`,
       answer: false,
-      explain: `${topic.ko}${josa(topic.ko, "은", "는")} ${topic.categoryName} 분야의 개념이에요.`,
+      explain: `${topic.ko}${josa(topic.ko, "은", "는")} ${wrongCat.categoryName}이 아니라 ${topic.categoryName} 분야의 개념입니다.`,
     });
   }
   const decoy = same[4] ?? others[1];
   if (decoy) {
     qs.push({
       type: "ox",
-      q: `‘${topic.ko}’에 대한 올바른 설명이다: “${decoy.hint}”`,
+      q: `“${decoy.hint}”는 ‘${topic.ko}’에 대한 올바른 설명이다.`,
       answer: false,
-      explain: `이 설명은 ${decoy.ko}에 대한 것이에요. ${topic.ko}${josa(topic.ko, "은", "는")} “${topic.hint}”.`,
+      explain: `이 설명은 ${decoy.ko}에 대한 것입니다. ${topic.ko}${josa(topic.ko, "은", "는")} “${topic.hint}”에 해당하는 개념입니다.`,
     });
   }
   return validQuestions(qs).map((q) => ({ ...q, src: "offline" as const }));
@@ -169,7 +170,8 @@ export const offlineQuiz = (topic: Topic): QuizSet => ({
 });
 
 // ───────── 퀴즈 AI 호출 ─────────
-const aiCacheKey = (id: string) => `pg.quiz.ai.${id}`;
+// 말투 규칙(2026-10)이 생기기 전에 저장한 문제는 쓰지 않도록 키에 버전을 붙임
+const aiCacheKey = (id: string) => `pg.quiz.ai2.${id}`;
 
 async function postJson(url: string, body: unknown): Promise<unknown> {
   const ctrl = new AbortController();
