@@ -16,7 +16,9 @@ export function useCountdown(initialLeft: number, onEnd: () => void) {
 
   const read = useCallback(() => (running ? Math.max(0, (endAt.current - Date.now()) / 1000) : leftRef.current), [running]);
 
-  const start = useCallback(() => {
+  /** from을 주면 그 초부터 시작 (reset 직후 같은 틱에서 쓰려고) */
+  const start = useCallback((from?: number) => {
+    if (from !== undefined) leftRef.current = from;
     if (running || leftRef.current <= 0) return;
     endAt.current = Date.now() + leftRef.current * 1000;
     setRunning(true);

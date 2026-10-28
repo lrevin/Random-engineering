@@ -54,6 +54,17 @@ export function useStageTimer(stage: "study", onEnd: () => void) {
     cancelTimerEnd().catch(() => {});
   }, [cd, leftKey, setActive]);
 
+  /** 시간이 끝난 뒤 sec초를 더해서 다시 시작 (톱니바퀴로 시간 추가) */
+  const extend = useCallback(async (sec: number) => {
+    ended.current = false;
+    cd.reset(sec);
+    cd.start(sec);
+    setActive((a) => (a ? { ...a, studyTotal: a.studyTotal + sec, [leftKey]: sec, endAt: Date.now() + sec * 1000 } : a));
+    if (await requestNotificationPermission()) {
+      scheduleTimerEnd(sec, MESSAGES[stage].title, MESSAGES[stage].body).catch(() => {});
+    }
+  }, [cd, leftKey, setActive, stage]);
+
   /** 다음 단계로 넘어갈 때: 쓴 시간을 돌려주고 타이머 정리 */
   const stop = useCallback(() => {
     const left = cd.read();
@@ -73,7 +84,7 @@ export function useStageTimer(stage: "study", onEnd: () => void) {
 
   return {
     left: cd.left, total, running: cd.running, start, pause,
-    toggle: cd.running ? pause : start, stop,
+    toggle: cd.running ? pause : start, stop, extend,
     fresh: !wasRunning && initialLeft >= total - 0.5,
   };
 }

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Pressable, View } from "react-native";
 import { TierBadge, UserRankBar } from "@/components/Rank";
 import { Slot } from "@/components/Slot";
+import { GearCount } from "@/components/TimeUpSheet";
 import { TopicLinks } from "@/components/TopicLinks";
 import { Badge, Btn, Card, Chip, levelTone, Row, Screen, Segment, T } from "@/components/ui";
 import { categoryById, levelText, TOPICS, type Topic } from "@/data";
@@ -14,7 +15,7 @@ import { radius, useColors } from "@/theme";
 type LevelFilter = "0" | "1" | "2" | "3"; // 0 = 전체
 
 export default function Home() {
-  const { prefs, records, active, setActive } = useApp();
+  const { prefs, records, active, setActive, gears } = useApp();
   const c = useColors();
   const [level, setLevel] = useState<LevelFilter>(String(prefs.level) as LevelFilter);
   // 설정에서 기본 난이도를 바꾸면 필터도 따라가게 함
@@ -119,6 +120,10 @@ export default function Home() {
         <View style={{ alignItems: "center", backgroundColor: c.paper, borderWidth: 1, borderColor: c.line, borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 4 }}>
           <T size={22} weight="bold" color={streak ? "flame" : "muted"}>🔥 {streak}</T>
           <T size={11} color="muted">연속 일수</T>
+        </View>
+        <View style={{ alignItems: "center", backgroundColor: c.paper, borderWidth: 1, borderColor: c.line, borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 4 }}>
+          <View style={{ height: 32, justifyContent: "center" }}><GearCount n={gears} size={18} /></View>
+          <T size={11} color="muted">톱니바퀴</T>
         </View>
       </Row>
 
