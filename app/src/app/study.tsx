@@ -3,6 +3,7 @@ import { Redirect, router } from "expo-router";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, TextInput, useWindowDimensions, View } from "react-native";
 import { Ring } from "@/components/Ring";
+import { StudyReader, type ReaderPage } from "@/components/StudyReader";
 import { TopicLinks } from "@/components/TopicLinks";
 import { Badge, Btn, FONT, levelTone, Row, Screen, T } from "@/components/ui";
 import { levelText, topicById } from "@/data";
@@ -30,6 +31,8 @@ function StudyInner() {
     memoRef.current = memo;
   });
   const [saved, setSaved] = useState(true);
+  // 앱 안 문서 창 (웹에서는 react-native-webview가 없어서 새 탭으로 엶)
+  const [reader, setReader] = useState<ReaderPage | null>(null);
   const memoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const goQuiz = useCallback(() => {
@@ -37,7 +40,9 @@ function StudyInner() {
     router.replace("/quiz");
   }, [setActive]);
 
+  // 공부 시간이 끝나면 보고 있던 문서 창을 강제로 닫고 퀴즈로
   const timer = useStageTimer("study", useCallback(() => {
+    setReader(null);
     setActive((a) => (a ? { ...a, memo: memoRef.current, studyLeft: 0, studyUsed: a.studyTotal } : a));
     goQuiz();
   }, [goQuiz, setActive]));
@@ -94,7 +99,7 @@ function StudyInner() {
           </Row>
         </View>
 
-        <TopicLinks topic={topic} />
+        <TopicLinks topic={topic} onOpen={Platform.OS === "web" ? undefined : (url, title) => setReader({ url, title })} />
 
         <View style={{ gap: 6 }}>
           <Row style={{ justifyContent: "space-between" }}>
@@ -117,6 +122,7 @@ function StudyInner() {
           <T size={14} color="muted" style={{ textDecorationLine: "underline" }}>그만두기</T>
         </Pressable>
       </Screen>
+      <StudyReader page={reader} left={timer.left} total={timer.total} running={timer.running} onClose={() => setReader(null)} />
     </KeyboardAvoidingView>
   );
 }

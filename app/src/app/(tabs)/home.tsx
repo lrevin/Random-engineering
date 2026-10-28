@@ -1,13 +1,13 @@
 import { router } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Pressable, Switch, View } from "react-native";
+import { Animated, Pressable, View } from "react-native";
 import { TierBadge, UserRankBar } from "@/components/Rank";
 import { Slot } from "@/components/Slot";
 import { TopicLinks } from "@/components/TopicLinks";
-import { Badge, Btn, Card, levelTone, Row, Screen, Segment, T } from "@/components/ui";
+import { Badge, Btn, Card, Chip, levelTone, Row, Screen, Segment, T } from "@/components/ui";
 import { categoryById, levelText, TOPICS, type Topic } from "@/data";
 import { useApp } from "@/lib/app-state";
-import { maxRpFor, topicMastery, totalRp } from "@/lib/rank";
+import { maxRpFor, TIERS, topicMastery, totalRp } from "@/lib/rank";
 import { calcStreak, lastWeek } from "@/lib/stats";
 import { radius, useColors } from "@/theme";
 
@@ -23,7 +23,7 @@ export default function Home() {
     setPrefLevel(prefs.level);
     setLevel(String(prefs.level) as LevelFilter);
   }
-  const [includeDone, setIncludeDone] = useState(false);
+  const [includeMastered, setIncludeMastered] = useState(false);
   const [shown, setShown] = useState<Topic | null>(null);
   const [drawn, setDrawn] = useState<Topic | null>(null);
   const [spinning, setSpinning] = useState(false);
@@ -34,8 +34,17 @@ export default function Home() {
 
   const { streak, today } = calcStreak(records);
   const week = lastWeek(records);
-  // 같은 개념이 여러 분야에 있을 수 있어서(예: 레이놀즈 수) 이름 기준으로도 공부 여부를 확인
-  const done = useMemo(() => new Set(records.flatMap((r) => [r.topicId, r.topicKo])), [records]);
+  // 마스터 = 주제 랭크가 최고 단계(엔지니어). 같은 개념이 여러 분야에 있을 수 있어서(예: 레이놀즈 수) 이름으로도 확인
+  const mastered = useMemo(() => {
+    const set = new Set<string>();
+    for (const id of new Set(records.map((r) => r.topicId))) {
+      if (topicMastery(id, records).index !== TIERS.length - 1) continue;
+      set.add(id);
+      const ko = records.find((r) => r.topicId === id)?.topicKo;
+      if (ko) set.add(ko);
+    }
+    return set;
+  }, [records]);
 
   const inScope = useMemo(() => {
     const seen = new Set<string>();
@@ -47,8 +56,8 @@ export default function Home() {
     });
   }, [prefs.interests, level]);
   const pool = useMemo(
-    () => (includeDone ? inScope : inScope.filter((t) => !done.has(t.id) && !done.has(t.ko))),
-    [inScope, includeDone, done],
+    () => (includeMastered ? inScope : inScope.filter((t) => !mastered.has(t.id) && !mastered.has(t.ko))),
+    [inScope, includeMastered, mastered],
   );
 
   const draw = () => {
@@ -96,7 +105,7 @@ export default function Home() {
   const emptyText = !prefs.interests.length
     ? "관심 분야를 먼저 골라 주세요."
     : !pool.length
-      ? includeDone ? "조건에 맞는 주제가 없어요." : "이 조건의 주제를 모두 공부했어요! 🎉\n'공부한 주제도 포함'을 켜 보세요."
+      ? includeMastered ? "조건에 맞는 주제가 없어요." : "이 조건의 주제를 모두 마스터했어요! 🎉\n'마스터한 주제 포함'을 눌러 보세요."
       : "레버를 당기거나 아래 버튼을 눌러\n오늘의 주제를 뽑아 보세요";
 
   return (
@@ -148,10 +157,11 @@ export default function Home() {
             onChange={setLevel}
             options={[{ value: "0", label: "전체" }, { value: "1", label: "Lv.1" }, { value: "2", label: "Lv.2" }, { value: "3", label: "Lv.3" }]}
           />
-          <Row gap={6}>
-            <T size={14} color="ink2">공부한 주제도</T>
-            <Switch value={includeDone} onValueChange={setIncludeDone} trackColor={{ true: c.accent, false: c.line2 }} thumbColor={c.paper} accessibilityLabel="공부한 주제도 포함" />
-          </Row>
+          <Chip
+            label={`${includeMastered ? "✓ " : ""}🛠️ 마스터한 주제 포함`}
+            selected={includeMastered}
+            onPress={() => setIncludeMastered((v) => !v)}
+          />
         </Row>
         <Pressable onPress={() => router.push("/interests")} hitSlop={6}>
           <T size={14} color="muted">

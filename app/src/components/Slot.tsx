@@ -3,7 +3,8 @@ import { Animated, Easing, Pressable, View } from "react-native";
 import { radius, useColors } from "@/theme";
 import { tap } from "./ui";
 
-const ROD = 84;
+const ROD = 70;
+const LEVER_W = 36;
 
 /** 로고와 같은 슬롯머신 틀: 불빛 3개 + 릴 창 + 당첨선 + 레버(당기면 onPull) */
 export function Slot({ children, spinning, onPull, disabled }: {
@@ -50,8 +51,10 @@ export function Slot({ children, spinning, onPull, disabled }: {
 
   return (
     <View style={{ flexDirection: "row", alignItems: "center" }}>
+      {/* 레버와 같은 폭의 빈칸: 몸체(글자)가 화면 가운데에 오게 */}
+      <View style={{ width: LEVER_W }} />
       <View style={{
-        flex: 1, backgroundColor: c.slot, borderRadius: radius.lg + 6, padding: 12, paddingTop: 10, gap: 10,
+        flex: 1, backgroundColor: c.slot, borderRadius: radius.lg + 4, padding: 10, paddingTop: 9, gap: 8,
         borderBottomWidth: 6, borderBottomColor: c.slotEdge,
       }}>
         <View style={{ flexDirection: "row", justifyContent: "center", gap: 10 }}>
@@ -66,7 +69,7 @@ export function Slot({ children, spinning, onPull, disabled }: {
             />
           ))}
         </View>
-        <View style={{ backgroundColor: c.slotWindow, borderRadius: radius.lg - 4, minHeight: 220, justifyContent: "center", alignItems: "center", paddingVertical: 18, paddingHorizontal: 22, overflow: "hidden" }}>
+        <View style={{ backgroundColor: c.slotWindow, borderRadius: radius.lg - 4, minHeight: 190, justifyContent: "center", alignItems: "center", paddingVertical: 14, paddingHorizontal: 20, overflow: "hidden" }}>
           {children}
           {triangle("left")}
           {triangle("right")}
@@ -80,13 +83,13 @@ export function Slot({ children, spinning, onPull, disabled }: {
         accessibilityRole="button"
         accessibilityLabel="레버 당겨서 주제 뽑기"
         hitSlop={10}
-        style={{ width: 40, height: 160, justifyContent: "flex-end", paddingBottom: 30, opacity: disabled ? 0.5 : 1 }}
+        style={{ width: LEVER_W, height: 140, justifyContent: "flex-end", paddingBottom: 26, opacity: disabled ? 0.5 : 1 }}
       >
-        <View style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: c.accent, marginLeft: 10, borderBottomWidth: 3, borderBottomColor: c.accentDeep }} />
-        <Animated.View style={{ width: 7, height: rod, backgroundColor: c.lever, marginLeft: 21 }} />
+        <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: c.accent, marginLeft: 6, borderBottomWidth: 3, borderBottomColor: c.accentDeep }} />
+        <Animated.View style={{ width: 7, height: rod, backgroundColor: c.lever, marginLeft: 17 }} />
         <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
-          <View style={{ width: 12, height: 30, borderRadius: 5, backgroundColor: c.lever, marginTop: -12 }} />
-          <View style={{ width: 16, height: 7, backgroundColor: c.lever }} />
+          <View style={{ width: 10, height: 28, borderRadius: 5, backgroundColor: c.lever, marginTop: -11 }} />
+          <View style={{ width: 14, height: 7, backgroundColor: c.lever }} />
         </View>
       </Pressable>
     </View>
