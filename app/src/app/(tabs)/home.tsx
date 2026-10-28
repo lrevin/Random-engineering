@@ -81,7 +81,6 @@ export default function Home() {
     const step = () => {
       const el = Date.now() - t0;
       if (el >= dur) {
-        prefetchQuiz(pick); // 뽑힌 즉시 이 주제의 AI 문제 만들기 + 검수 시작
         setShown(pick);
         setDrawn(pick);
         setSpinning(false);
@@ -98,6 +97,7 @@ export default function Home() {
 
   const start = () => {
     if (!drawn || active) return;
+    prefetchQuiz(drawn); // 공부 시작을 누른 즉시 이 주제의 AI 문제 만들기 + 검수 시작
     setActive({
       topicId: drawn.id, stage: "study", memo: "",
       studyTotal: prefs.studyMinutes * 60, studyLeft: prefs.studyMinutes * 60, studyUsed: 0,
