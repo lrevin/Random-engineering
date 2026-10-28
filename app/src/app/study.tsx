@@ -52,7 +52,7 @@ function StudyInner() {
     if (spendGears(EXTEND_COST)) timer.extend(EXTEND_SECONDS);
   };
 
-  // 처음 들어오면 바로 시작하고, 퀴즈를 미리 받아 둠
+  // 처음 들어오면 바로 시작하고, 퀴즈를 미리 받아 둠 (뽑을 때 이미 시작했으면 그대로 씀)
   useEffect(() => {
     if (timer.fresh) timer.start();
     if (topic) prefetchQuiz(topic);

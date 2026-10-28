@@ -58,7 +58,7 @@ function QuizInner() {
           <>
             <ActivityIndicator size="large" color={c.accent} />
             <T size={17} weight="semibold" center>“{topic.ko}” 퀴즈를 준비하고 있어요</T>
-            <T size={14} color="muted" center>처음 푸는 주제는 AI가 문제를 만드느라 몇 초 걸릴 수 있어요.</T>
+            <T size={14} color="muted" center>AI가 이 주제의 새 문제를 만들고{"\n"}정답이 맞는지 2번 검수하고 있어요.</T>
           </>
         )}
       </SafeAreaView>

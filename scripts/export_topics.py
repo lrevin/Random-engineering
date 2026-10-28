@@ -62,5 +62,10 @@ print(f"exported bank for {len(bank)} topics -> {os.path.relpath(BANK_OUT, ROOT)
 # 출제 지침 (api/quiz-server/gem.md) → 서버 함수에서도 같은 지침을 쓰도록 JSON으로 복사
 GEM = os.path.join(ROOT, "api", "quiz-server", "gem.md")
 GEM_OUT = os.path.join(os.path.dirname(OUT), "gem.json")
-json.dump({"system": open(GEM, encoding="utf8").read()}, open(GEM_OUT, "w", encoding="utf8"), ensure_ascii=False, indent=0)
+QS = os.path.join(ROOT, "api", "quiz-server")
+json.dump({
+    "system": open(GEM, encoding="utf8").read(),
+    "review1": open(os.path.join(QS, "review1.md"), encoding="utf8").read(),  # 1차 검수: 정답표 없이 직접 풀기
+    "review2": open(os.path.join(QS, "review2.md"), encoding="utf8").read(),  # 2차 검수: 정답·해설 대조
+}, open(GEM_OUT, "w", encoding="utf8"), ensure_ascii=False, indent=0)
 print(f"exported gem -> {os.path.relpath(GEM_OUT, ROOT)}")

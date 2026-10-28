@@ -81,6 +81,8 @@
 한 번 푸는 퀴즈는 **7문제 = AI가 새로 만든 4문제 + 우리가 미리 만든 문제 3개**입니다 ([`app/src/lib/quiz.ts`](../app/src/lib/quiz.ts) `buildQuiz`).
 AI 문제는 ① 퀴즈 AI 서버 → ② `generate-quiz` 함수 → ③ 휴대폰에 저장해 둔 AI 문제 순서로 받고, 모자라면 미리 만든 문제 → 오프라인 연습 문제로 채웁니다.
 
+**주제를 뽑은 즉시 출제 + 2번 검수**: 앱은 주제가 뽑히는 순간 `fresh: true`로 AI 문제를 요청합니다. 서버(퀴즈 AI 서버·`generate-quiz` 둘 다)는 새 문제를 만든 직후 모든 문제를 2번 검수합니다 — 1차는 정답표 없이 직접 풀어 정답이 같은지·답이 하나뿐인지·주제에 맞는지·사실에 맞는지 보고, 2차는 정답·해설까지 대조합니다. 둘 다 통과한 문제만 저장·출제합니다 (검수 지침 [`quiz-server/review1.md`](quiz-server/review1.md), [`review2.md`](quiz-server/review2.md)).
+
 **비슷한 문제 막기**: AI에게 새 문제를 시킬 때 그 주제의 문제 은행 + 이미 만든 AI 문제를 먼저 보여 주고 겹치지 않는 새 유형으로 내게 합니다(출제 지침 [`quiz-server/gem.md`](quiz-server/gem.md)). 그래도 비슷한 문제는 글자 2개 묶음 유사도 0.5 이상이면 버립니다 — 퀴즈 AI 서버, 서버 함수, 앱 세 곳에서 같은 방법으로 검사합니다.
 
 ### 퀴즈 AI 서버 `POST /quiz`
@@ -91,7 +93,7 @@ AI 문제는 ① 퀴즈 AI 서버 → ② `generate-quiz` 함수 → ③ 휴대�
 
 요청
 ```json
-{ "topicId": "sec-01", "count": 4, "avoid": ["앱이 이미 고른 문제 문장", "…"] }
+{ "topicId": "sec-01", "count": 4, "avoid": ["앱이 이미 고른 문제 문장", "…"], "fresh": true }
 ```
 응답 `200`
 ```json
@@ -110,7 +112,7 @@ AI 문제는 ① 퀴즈 AI 서버 → ② `generate-quiz` 함수 → ③ 휴대�
 | 502 | AI 오류이고 줄 수 있는 문제도 없음 | `{ "error": "…" }` |
 
 - **주제 목록([`topics.json`](supabase/functions/generate-quiz/topics.json))에 있는 주제만** 받습니다. 임의의 글을 보내 AI 비용을 쓰게 할 수 없도록 하기 위해서입니다. 주제를 바꾸면 `python scripts/export_topics.py` 후 다시 배포합니다 (CI가 어긋나면 실패시킴).
-- `quizzes` 표에 쌓인 그 주제의 AI 문제 중 문제 은행([`bank.json`](supabase/functions/generate-quiz/bank.json))·`avoid`와 비슷하지 않은 것을 골라 줍니다. 모자랄 때만 6문제를 새로 만들어 쌓고, 주제마다 최대 40문제까지만 만들어서 **AI 비용에 상한**이 있습니다.
+- `quizzes` 표에 쌓인 그 주제의 AI 문제 중 문제 은행([`bank.json`](supabase/functions/generate-quiz/bank.json))·`avoid`와 비슷하지 않은 것을 골라 줍니다. 모자라거나 `fresh`일 때 8문제를 새로 만들고 2번 검수해서 통과한 것만 쌓습니다. 주제마다 최대 40문제까지만 만들어서 **AI 비용에 상한**이 있습니다 (그 뒤로는 쌓인 검수 통과 문제로만 냄).
 - 출제 지침은 [`gem.json`](supabase/functions/generate-quiz/gem.json) (= `quiz-server/gem.md`를 `export_topics.py`가 복사한 것)입니다.
 - 둘러보기 사용자도 쓸 수 있게 `--no-verify-jwt`로 배포합니다. 대신 위의 주제 목록 제한과 캐시로 남용을 막습니다.
 - 앱은 응답을 그대로 믿지 않고 `validQuestions()`로 한 번 더 검사합니다. 실패하면 오프라인 연습 문제로 넘어갑니다.

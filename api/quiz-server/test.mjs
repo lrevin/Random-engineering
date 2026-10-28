@@ -5,14 +5,14 @@ import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadBank, similarity, SIMILAR, styleIssues } from "./core.mjs";
+import { loadBank, loadTopics, review, similarity, SIMILAR, styleIssues } from "./core.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PORT = 18787;
-const TOPIC = Object.keys(loadBank())[0]; // 문제 은행이 있는 주제
-const poolFile = path.join(HERE, "data", "pools", `${TOPIC}.json`);
-const backup = fs.existsSync(poolFile) ? fs.readFileSync(poolFile) : null;
-if (backup) fs.rmSync(poolFile);
+const [TOPIC, TOPIC2] = Object.keys(loadBank()); // 문제 은행이 있는 주제 2개
+const poolOf = (id) => path.join(HERE, "data", "pools", `${id}.json`);
+const backups = Object.fromEntries([TOPIC, TOPIC2].map((id) => [id, fs.existsSync(poolOf(id)) ? fs.readFileSync(poolOf(id)) : null]));
+for (const id of [TOPIC, TOPIC2]) if (backups[id]) fs.rmSync(poolOf(id));
 
 const child = spawn(process.execPath, ["server.mjs"], { cwd: HERE, env: { ...process.env, QUIZ_MOCK: "1", PORT: String(PORT) }, stdio: "inherit" });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -38,6 +38,19 @@ try {
     { type: "mc", q: "큐의 특징은?", choices: ["선입선출", "후입선출", "무작위", "우선순위"], answer: 0, explain: "큐는 먼저 넣은 것이 먼저 나와요." },
   ];
   check(wrongTone.every((q) => styleIssues(q).length), "말투가 다른 문제는 걸러 냄 (고르시오 / ~입니다. / ~나와요)");
+  // 검수 2번: 정답표가 틀린 문제·주제와 관계없는 문제는 버림
+  process.env.QUIZ_MOCK = "1";
+  const topic = loadTopics()[TOPIC];
+  const good = { type: "mc", q: `${topic.ko} 개념을 바르게 설명한 것은?`, choices: [topic.hint, "가", "나", "다"], answer: 0, explain: "설명입니다." };
+  const wrongKey = { ...good, q: `${topic.ko} 개념의 핵심으로 알맞은 것은?`, answer: 2 };
+  const offTopic = { ...good, q: "전혀 다른 개념인 광합성을 바르게 설명한 것은?" };
+  const r = await review(topic, [good, wrongKey, offTopic]);
+  check(r.kept.length === 1 && r.kept[0] === good, `검수: 정답표 오류·주제 이탈 문제를 버림 (3 → 1차 ${r.stats.pass1} → 2차 ${r.stats.pass2})`);
+
+  const f = await post({ topicId: TOPIC2, count: 4, fresh: true });
+  check(f.status === 200 && f.fresh === 4, `주제를 뽑은 즉시(fresh) 요청: 방금 만들고 검수한 문제 ${f.fresh}개`);
+  const pool = JSON.parse(fs.readFileSync(poolOf(TOPIC2), "utf8"));
+  check(pool.every((q) => q.reviewed === 2), "창고에는 2번 검수를 통과한 문제만 있음");
   const b = await post({ topicId: TOPIC, count: 4 });
   check(b.status === 200 && b.questions.length === 4, "두 번째 요청: 4문제");
   const overlap = b.questions.filter((q) => a.questions.some((x) => x.q === q.q)).length;
@@ -47,8 +60,10 @@ try {
   check(h.ok && h.stocked >= 4, `창고에 문제가 쌓임 (${h.stocked}개)`);
 } finally {
   child.kill();
-  if (fs.existsSync(poolFile)) fs.rmSync(poolFile);
-  if (backup) fs.writeFileSync(poolFile, backup);
+  for (const id of [TOPIC, TOPIC2]) {
+    if (fs.existsSync(poolOf(id))) fs.rmSync(poolOf(id));
+    if (backups[id]) fs.writeFileSync(poolOf(id), backups[id]);
+  }
 }
 console.log(failed ? `실패 ${failed}개` : "모두 통과");
 process.exit(failed ? 1 : 0);

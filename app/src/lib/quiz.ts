@@ -27,7 +27,8 @@ export const AI_COUNT = 4;
 /** 퀴즈 AI 서버 (api/quiz-server). 개인 PC 등에서 계속 켜 두는 출제 AI. 없으면 Supabase 함수 → 오프라인 문제 */
 const QUIZ_SERVER_URL = (process.env.EXPO_PUBLIC_QUIZ_SERVER_URL ?? "").replace(/\/+$/, "");
 const QUIZ_SERVER_TOKEN = process.env.EXPO_PUBLIC_QUIZ_SERVER_TOKEN ?? "";
-const AI_TIMEOUT_MS = 25000;
+// 새로 만들기 + 검수 2번까지 기다리는 시간 (주제를 뽑은 즉시 시작하므로 보통 공부하는 동안 끝남)
+const AI_TIMEOUT_MS = 150000;
 
 // ───────── 검증 ─────────
 function isQuestion(x: unknown): x is QuizQuestion {
@@ -192,10 +193,11 @@ async function postJson(url: string, body: unknown): Promise<unknown> {
 
 /**
  * 퀴즈 AI에게 새 문제를 받아 옴. 미리 만든 문제(avoid)를 함께 보내서 비슷하지 않은 새 유형으로 만들게 함.
+ * fresh면 그 자리에서 새로 만들고 2번 검수한 문제를 받음 (주제를 뽑은 즉시). 서버는 검수를 통과한 문제만 줌.
  * 1) 퀴즈 AI 서버 → 2) Supabase 함수 → 실패하면 빈 배열
  */
-async function fetchAiQuestions(topic: Topic, avoid: QuizQuestion[]): Promise<QuizQuestion[]> {
-  const body = { topicId: topic.id, count: AI_COUNT, avoid: avoid.map((q) => q.q).slice(0, 40) };
+async function fetchAiQuestions(topic: Topic, avoid: QuizQuestion[], fresh: boolean): Promise<QuizQuestion[]> {
+  const body = { topicId: topic.id, count: AI_COUNT, avoid: avoid.map((q) => q.q).slice(0, 40), fresh };
   if (QUIZ_SERVER_URL) {
     try {
       const data = await postJson(`${QUIZ_SERVER_URL}/quiz`, body);
@@ -233,11 +235,11 @@ async function saveAiCache(topicId: string, qs: QuizQuestion[]) {
 }
 
 // ───────── 한 번 풀 퀴즈 만들기 ─────────
-async function buildQuiz(topic: Topic): Promise<QuizSet> {
+async function buildQuiz(topic: Topic, fresh: boolean): Promise<QuizSet> {
   const bank = distinct(validQuestions(QUIZ_BANK[topic.id]).map((q) => ({ ...q, src: "bank" as const })));
 
   // AI 문제: 미리 만든 문제와 비슷하면 버림
-  let ai: QuizQuestion[] = distinct(await fetchAiQuestions(topic, bank), bank).map((q) => ({ ...q, src: "ai" as const }));
+  let ai: QuizQuestion[] = distinct(await fetchAiQuestions(topic, bank, fresh), bank).map((q) => ({ ...q, src: "ai" as const }));
   if (ai.length) saveAiCache(topic.id, ai).catch(() => {});
   else ai = distinct(shuffle(await readAiCache(topic.id)), bank).map((q) => ({ ...q, src: "ai" as const }));
   ai = pickQuestions(ai, AI_COUNT);
@@ -251,24 +253,29 @@ async function buildQuiz(topic: Topic): Promise<QuizSet> {
   return { topicId: topic.id, source, questions: shuffle(picked).slice(0, QUIZ_LENGTH).map(shuffleChoices) };
 }
 
-// 공부를 시작할 때 미리 만들어 둔 퀴즈 (퀴즈 화면에 들어가면 한 번 꺼내 씀)
+// 주제를 뽑은 즉시 만들기 시작한 퀴즈 (퀴즈 화면에 들어가면 한 번 꺼내 씀)
 const prepared = new Map<string, { at: number; p: Promise<QuizSet> }>();
 const PREPARED_TTL = 3 * 60 * 60 * 1000;
 
 /**
- * 이번에 풀 퀴즈를 가져옵니다. 공부 시작 때 미리 만든 게 있으면 그것을, 없으면 새로 만듭니다.
- * (퀴즈 다시 풀기는 매번 새 문제 조합)
+ * 이번에 풀 퀴즈를 가져옵니다. 주제를 뽑을 때 만들기 시작한 게 있으면 그것을,
+ * 없으면(퀴즈 다시 풀기 등) 서버에 쌓인 검수 통과 문제로 새 조합을 만듭니다.
  */
 export function loadQuiz(topic: Topic): Promise<QuizSet> {
   const ready = prepared.get(topic.id);
   prepared.delete(topic.id);
-  if (ready && Date.now() - ready.at < PREPARED_TTL) return ready.p.catch(() => buildQuiz(topic));
-  return buildQuiz(topic);
+  if (ready && Date.now() - ready.at < PREPARED_TTL) return ready.p.catch(() => buildQuiz(topic, false));
+  return buildQuiz(topic, false);
 }
 
-/** 공부를 시작할 때 미리 만들어 두기 (공부가 끝나면 바로 퀴즈를 시작할 수 있게) */
+/**
+ * 주제를 뽑은 즉시 AI 문제 만들기를 시작 (만든 직후 서버가 2번 검수).
+ * 같은 주제로 이미 시작했으면 다시 만들지 않음 (공부 화면에서도 불러도 됨).
+ */
 export const prefetchQuiz = (topic: Topic) => {
-  const p = buildQuiz(topic);
+  const ready = prepared.get(topic.id);
+  if (ready && Date.now() - ready.at < PREPARED_TTL) return;
+  const p = buildQuiz(topic, true);
   p.catch(() => {});
   prepared.set(topic.id, { at: Date.now(), p });
 };
