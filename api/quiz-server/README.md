@@ -12,6 +12,20 @@ Gemini의 Gems처럼 출제 지침(`gem.md`)을 한 번 정해 두면, 앱이 �
 
 - AI 문제가 모자라면 기본 문제로, 기본 문제도 없으면 앱이 만든 연습 문제로 채웁니다.
 
+## 엉뚱한 문제·틀린 정답을 막는 방법
+
+1. **주제를 뽑은 즉시 출제**: 앱에서 슬롯머신이 주제에 멈추는 순간 그 주제로 새 문제를 만들기 시작합니다 (`fresh: true`).
+   학생이 15분 공부하는 동안 출제와 검수가 끝납니다.
+2. **만든 직후 모든 문제를 2번 검수**합니다. 둘 다 통과한 문제만 창고에 넣고 학생에게 냅니다.
+
+| 검수 | 지침 | 하는 일 | 버리는 경우 |
+|---|---|---|---|
+| 1차 · 직접 풀기 | [`review1.md`](review1.md) | 정답표·해설을 **가리고** 검수 AI가 직접 풉니다 | 푼 답이 정답표와 다름 · 다른 답도 정답일 수 있음(애매함) · 주제와 관계없음 · 사실과 다른 내용 |
+| 2차 · 정답·해설 대조 | [`review2.md`](review2.md) | 정답표·해설까지 보고 다시 판정합니다 | 정답이 틀림 · 정답이 둘 이상 · 부분적으로 맞는 오답 · 참·거짓이 흔들리는 OX · 해설 오류 · 난이도·주제 이탈 |
+
+- 두 검수 모두 "조금이라도 의심스러우면 버리기"가 기준입니다. 버려질 몫을 생각해 한 번에 8문제를 만듭니다.
+- 서버 기록에 `만듦 8 → 1차 검수 7 → 2차 검수 6`처럼 단계별 개수가 남습니다.
+
 ## 비슷한 문제가 나오지 않게 하는 방법
 
 1. AI에게 새 문제를 시킬 때 **우리 문제 은행의 그 주제 문제 + 이미 만든 AI 문제**를 먼저 보여 줍니다.
@@ -55,7 +69,7 @@ EXPO_PUBLIC_QUIZ_SERVER_TOKEN=(서버 .env 의 QUIZ_TOKEN 과 같은 값, 안 �
 
 | 요청 | 본문 | 응답 |
 |---|---|---|
-| `POST /quiz` | `{ topicId, count?: 1~7 (기본 4), avoid?: 문제 문장[] }` | `{ questions: [...] }` |
+| `POST /quiz` | `{ topicId, count?: 1~7 (기본 4), avoid?: 문제 문장[], fresh?: 주제를 뽑은 즉시면 true }` | `{ questions: [...], fresh: 방금 만들고 검수한 문제 수 }` |
 | `GET /health` | – | `{ ok, model, topics, pools, stocked, warm }` |
 
 문제 형식은 앱과 같습니다: `{ type: "mc", q, choices[4], answer, explain }` / `{ type: "ox", q, answer: boolean, explain }`
@@ -71,7 +85,7 @@ EXPO_PUBLIC_QUIZ_SERVER_TOKEN=(서버 .env 의 QUIZ_TOKEN 과 같은 값, 안 �
 | `QUIZ_WARM` | `0` | `1`이면 쉬는 동안 계속 출제 |
 | `QUIZ_POOL_TARGET` | `12` | 주제마다 미리 쌓아 둘 문제 수 |
 | `QUIZ_WARM_INTERVAL` | `30` | 계속 출제할 때 주제 사이 간격(초) |
-| `QUIZ_BATCH` | `6` | 한 번에 새로 만드는 문제 수 |
+| `QUIZ_BATCH` | `8` | 한 번에 새로 만드는 문제 수 (검수에서 버려질 몫까지) |
 | `QUIZ_MOCK` | `0` | `1`이면 API 키 없이 연습용 가짜 문제 |
 
 주제 목록은 `api/supabase/functions/generate-quiz/topics.json`을, 문제 은행은 `app/src/data/quizbank/*.json`을 그대로 읽습니다.

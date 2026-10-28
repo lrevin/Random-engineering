@@ -9,6 +9,7 @@ import { TopicLinks } from "@/components/TopicLinks";
 import { Badge, Btn, Card, Chip, levelTone, Row, Screen, T } from "@/components/ui";
 import { categoryById, levelText, TOPICS, type Topic } from "@/data";
 import { useApp } from "@/lib/app-state";
+import { prefetchQuiz } from "@/lib/quiz";
 import { maxRpFor, TIERS, topicMastery, totalRp } from "@/lib/rank";
 import { calcStreak, lastWeek } from "@/lib/stats";
 import { radius, shadow, useColors } from "@/theme";
@@ -80,6 +81,7 @@ export default function Home() {
     const step = () => {
       const el = Date.now() - t0;
       if (el >= dur) {
+        prefetchQuiz(pick); // 뽑힌 즉시 이 주제의 AI 문제 만들기 + 검수 시작
         setShown(pick);
         setDrawn(pick);
         setSpinning(false);

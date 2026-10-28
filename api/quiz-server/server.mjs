@@ -1,6 +1,6 @@
 // 뽑공 퀴즈 AI 서버 — 개인 PC든 클라우드든 계속 켜 두고 퀴즈를 찍어내는 출제 AI
 //
-//   POST /quiz   { topicId, count?, avoid? }  → { questions }
+//   POST /quiz   { topicId, count?, avoid?, fresh? }  → { questions, fresh }
 //   GET  /health                               → 상태
 //
 // 동작:
@@ -8,6 +8,8 @@
 //   2) 요청이 오면 창고에서 우리 문제 은행(app/src/data/quizbank)·앱이 보낸 문제(avoid)와 비슷하지 않은 문제를
 //      덜 낸 것부터 골라 줍니다. 창고가 모자라면 그때 새로 만듭니다.
 //   3) 새로 만들 때는 우리 문제 은행 + 창고에 이미 있는 문제를 AI에게 먼저 보여 주고 겹치지 않는 새 유형으로 내게 합니다.
+//      만든 직후 모든 문제를 2번 검수합니다 (1차: 정답표 없이 직접 풀기, 2차: 정답·해설 대조). 둘 다 통과한 문제만 창고에 넣습니다.
+//   * fresh: true (앱이 주제를 뽑은 즉시 보내는 요청) 이면 그 자리에서 새로 만들고 검수한 문제를 먼저 줍니다.
 //   4) QUIZ_WARM=1 이면 쉬는 동안에도 창고가 빈 주제부터 계속 문제를 만들어 둡니다.
 //
 // 실행: api/quiz-server/README.md
@@ -22,7 +24,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 8787);
 const HOST = process.env.HOST || "0.0.0.0";
 const TOKEN = process.env.QUIZ_TOKEN || "";
-const BATCH = Number(process.env.QUIZ_BATCH || 6); // 한 번에 새로 만드는 문제 수
+const BATCH = Number(process.env.QUIZ_BATCH || 8); // 한 번에 새로 만드는 문제 수 (검수에서 버려질 몫까지)
 const POOL_TARGET = Number(process.env.QUIZ_POOL_TARGET || 12); // 주제마다 미리 쌓아 둘 문제 수
 const WARM = process.env.QUIZ_WARM === "1";
 const WARM_INTERVAL = Number(process.env.QUIZ_WARM_INTERVAL || 30) * 1000;
@@ -59,30 +61,44 @@ async function refill(id, extra = [], size = BATCH) {
   const pool = readPool(id);
   const existing = [...bankTexts(id), ...pool.map((q) => q.q), ...extra];
   const made = await generate(topic, existing, size);
+  const st = generate.lastStats;
   const now = new Date().toISOString();
-  const fresh = made.map((q) => ({ ...q, createdAt: now, served: 0, model: process.env.QUIZ_MOCK === "1" ? "mock" : MODEL }));
+  const fresh = made.map((q) => ({ ...q, createdAt: now, served: 0, reviewed: 2, model: process.env.QUIZ_MOCK === "1" ? "mock" : MODEL }));
   writePool(id, [...pool, ...fresh]);
-  log(`+${fresh.length} ${id} (${topic.ko}) → 창고 ${pool.length + fresh.length}개`);
-  return fresh.length;
+  log(`+${fresh.length} ${id} (${topic.ko}) 만듦 ${st.drafted} → 1차 검수 ${st.pass1} → 2차 검수 ${st.pass2} · 창고 ${pool.length + fresh.length}개`);
+  return fresh;
 }
 
-/** count개를 골라 줌. 은행·avoid와 비슷하지 않은 것 중 덜 낸 것부터 */
-async function serve(id, count, avoid) {
+/**
+ * count개를 골라 줌. 은행·avoid와 비슷하지 않고 2번 검수를 통과한 것 중에서.
+ * fresh면 지금 새로 만든(검수 통과) 문제를 먼저, 아니면 덜 낸 것부터.
+ */
+async function serve(id, count, avoid, fresh) {
   return withLock(id, async () => {
     const against = [...bankTexts(id), ...avoid];
-    // 말투 규칙이 바뀌어도 예전에 쌓인 문제가 섞이지 않게 꺼낼 때도 검사
-    const usable = () => distinct(readPool(id).filter((q) => !styleIssues(q).length), against);
-    if (usable().length < count) await refill(id, avoid, Math.max(BATCH, count));
+    // 검수를 통과한 문제만, 말투 규칙이 바뀌어도 예전 문제가 섞이지 않게 꺼낼 때도 검사
+    const usable = () => distinct(readPool(id).filter((q) => q.reviewed === 2 && !styleIssues(q).length), against);
+    let made = [];
+    if (fresh || usable().length < count) {
+      try {
+        made = await refill(id, avoid, Math.max(BATCH, count * 2));
+      } catch (e) {
+        if (!usable().length) throw e;
+        log(`! ${id} 새로 만들기 실패, 창고 문제로 대신: ${e.message}`);
+      }
+    }
+    const newQs = new Set(made.map((q) => q.q));
     const pool = readPool(id);
     const chosen = usable()
-      .sort((a, b) => a.served - b.served || Math.random() - 0.5)
+      .sort((a, b) => Number(newQs.has(b.q)) - Number(newQs.has(a.q)) || a.served - b.served || Math.random() - 0.5)
       .slice(0, count);
     for (const q of chosen) {
       const p = pool.find((x) => x.q === q.q);
       if (p) p.served += 1;
     }
     writePool(id, pool);
-    return chosen.map(({ type, q, choices, answer, explain }) => (type === "mc" ? { type, q, choices, answer, explain } : { type, q, answer, explain }));
+    const out = chosen.map(({ type, q, choices, answer, explain }) => (type === "mc" ? { type, q, choices, answer, explain } : { type, q, answer, explain }));
+    return { questions: out, fresh: chosen.filter((q) => newQs.has(q.q)).length };
   });
 }
 
@@ -166,11 +182,12 @@ const server = http.createServer(async (req, res) => {
   if (!TOPICS[id]) return send(res, 400, { error: "unknown topic" });
   const count = Math.min(7, Math.max(1, Number(body?.count) || 4));
   const avoid = (Array.isArray(body?.avoid) ? body.avoid : []).slice(0, 40).map((s) => String(s).slice(0, 400));
+  const fresh = body?.fresh === true;
 
   try {
-    const questions = await serve(id, count, avoid);
-    log(`→ ${id} ${questions.length}문제 보냄`);
-    return send(res, 200, { questions });
+    const { questions, fresh: madeNow } = await serve(id, count, avoid, fresh);
+    log(`→ ${id} ${questions.length}문제 보냄 (방금 만들고 검수한 문제 ${madeNow}개)`);
+    return send(res, 200, { questions, fresh: madeNow });
   } catch (e) {
     log(`! ${id} 실패: ${e.message}`);
     const status = e?.status === 429 ? 429 : 502;
