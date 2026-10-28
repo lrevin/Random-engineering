@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { Image, useWindowDimensions, View } from "react-native";
+import { Image, useColorScheme, useWindowDimensions, View } from "react-native";
 import { Btn, Card, Screen, T } from "@/components/ui";
 import { APP_NAME, APP_SUBTITLE, APP_TAGLINE } from "@/config";
 import { useApp } from "@/lib/app-state";
@@ -13,16 +13,17 @@ const STEPS = [
 
 export default function Welcome() {
   const { width } = useWindowDimensions();
-  const logoW = Math.min(width - 40, 420);
+  const logoW = Math.min(width - 40, 360);
   const { startGuest, serverEnabled } = useApp();
   const c = useColors();
+  const dark = useColorScheme() === "dark";
   return (
     <Screen contentStyle={{ justifyContent: "space-between" }}>
       <View style={{ gap: 10, marginTop: 40 }}>
         <Image
-          source={require("../../assets/logo.png")}
+          source={dark ? require("../../assets/logo-dark.png") : require("../../assets/logo.png")}
           accessibilityLabel={`${APP_NAME} 로고`}
-          style={{ width: logoW, height: (logoW * 345) / 1200 }}
+          style={{ width: logoW, height: (logoW * 504) / 1200 }}
           resizeMode="contain"
         />
         <T size={22} weight="bold" style={{ marginTop: 8 }}>{APP_SUBTITLE}</T>
