@@ -48,7 +48,7 @@ try {
   check(r.kept.length === 1 && r.kept[0] === good, `검수: 정답표 오류·주제 이탈 문제를 버림 (3 → 1차 ${r.stats.pass1} → 2차 ${r.stats.pass2})`);
 
   const f = await post({ topicId: TOPIC2, count: 4, fresh: true });
-  check(f.status === 200 && f.fresh === 4, `주제를 뽑은 즉시(fresh) 요청: 방금 만들고 검수한 문제 ${f.fresh}개`);
+  check(f.status === 200 && f.fresh === 4, `공부 시작 즉시(fresh) 요청: 방금 만들고 검수한 문제 ${f.fresh}개`);
   const pool = JSON.parse(fs.readFileSync(poolOf(TOPIC2), "utf8"));
   check(pool.every((q) => q.reviewed === 2), "창고에는 2번 검수를 통과한 문제만 있음");
   const b = await post({ topicId: TOPIC, count: 4 });

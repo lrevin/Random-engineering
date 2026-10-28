@@ -14,7 +14,8 @@ Gemini의 Gems처럼 출제 지침(`gem.md`)을 한 번 정해 두면, 앱이 �
 
 ## 엉뚱한 문제·틀린 정답을 막는 방법
 
-1. **주제를 뽑은 즉시 출제**: 앱에서 슬롯머신이 주제에 멈추는 순간 그 주제로 새 문제를 만들기 시작합니다 (`fresh: true`).
+1. **공부 시작을 누른 즉시 출제**: 앱에서 주제를 뽑고 "이걸로 시작"을 누르는 순간 그 주제로 새 문제를 만들기 시작합니다 (`fresh: true`).
+   다시 뽑기만 할 때는 AI를 부르지 않아 비용이 들지 않습니다.
    학생이 15분 공부하는 동안 출제와 검수가 끝납니다.
 2. **만든 직후 모든 문제를 2번 검수**합니다. 둘 다 통과한 문제만 창고에 넣고 학생에게 냅니다.
 
@@ -69,7 +70,7 @@ EXPO_PUBLIC_QUIZ_SERVER_TOKEN=(서버 .env 의 QUIZ_TOKEN 과 같은 값, 안 �
 
 | 요청 | 본문 | 응답 |
 |---|---|---|
-| `POST /quiz` | `{ topicId, count?: 1~7 (기본 4), avoid?: 문제 문장[], fresh?: 주제를 뽑은 즉시면 true }` | `{ questions: [...], fresh: 방금 만들고 검수한 문제 수 }` |
+| `POST /quiz` | `{ topicId, count?: 1~7 (기본 4), avoid?: 문제 문장[], fresh?: 공부 시작을 누른 즉시면 true }` | `{ questions: [...], fresh: 방금 만들고 검수한 문제 수 }` |
 | `GET /health` | – | `{ ok, model, topics, pools, stocked, warm }` |
 
 문제 형식은 앱과 같습니다: `{ type: "mc", q, choices[4], answer, explain }` / `{ type: "ox", q, answer: boolean, explain }`
