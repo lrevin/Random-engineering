@@ -111,7 +111,7 @@ export default function Home() {
       : "레버를 당기거나 버튼을 눌러\n오늘의 주제를 뽑아 보세요";
 
   return (
-    <Screen edges={["top"]} scroll>
+    <Screen edges={["top"]} scroll contentStyle={{ flexGrow: 1 }}>
       {/* 인사 + 스트릭 */}
       <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
         <View style={{ flex: 1 }}>
@@ -157,7 +157,7 @@ export default function Home() {
 
       {/* 필터 */}
       <View style={{ gap: 10 }}>
-        <Row style={{ justifyContent: "space-between" }}>
+        <Row gap={10} style={{ flexWrap: "nowrap" }}>
           <LevelButton
             value={Number(level) as typeof prefs.level}
             interests={prefs.interests}
@@ -167,6 +167,7 @@ export default function Home() {
             label={`${includeMastered ? "✓ " : ""}🛠️ 마스터한 주제 포함`}
             selected={includeMastered}
             onPress={() => setIncludeMastered((v) => !v)}
+            fill
           />
         </Row>
         <Pressable onPress={() => router.push("/interests")} hitSlop={6}>
@@ -177,45 +178,47 @@ export default function Home() {
         </Pressable>
       </View>
 
-      {/* 주제 카드 */}
-      <Slot spinning={spinning} onPull={draw} disabled={spinning || !pool.length || !!active}>
-        {shown ? (
-          <Animated.View style={{ alignItems: "center", gap: 8, transform: [{ scale: pop }] }}>
-            <Row gap={6} style={{ justifyContent: "center" }}>
-              <Badge label={`${categoryById(shown.category)?.emoji ?? ""} ${shown.categoryName}`} />
-              <Badge label={levelText(shown.lv)} tone={levelTone(shown.level)} />
-            </Row>
-            <T size={34} weight="bold" center color={spinning ? "ink2" : "ink"} style={{ letterSpacing: -0.8, lineHeight: 44 }}>
-              {shown.ko}
-            </T>
-            {!spinning && (
-              <>
-                <T size={14} color="muted" center>{shown.en}</T>
-                <T size={16} color="ink2" center style={{ marginTop: 4 }}>{shown.hint}</T>
-                <Row gap={8} style={{ justifyContent: "center", marginTop: 4 }}>
-                  <TierBadge index={topicMastery(shown.id, records).index} size="sm" />
-                  <T size={12} color="muted">퀴즈 최대 +{maxRpFor(shown)} RP</T>
-                </Row>
-              </>
-            )}
-          </Animated.View>
-        ) : (
-          <T size={17} color="muted" center>{emptyText}</T>
-        )}
-      </Slot>
+      {/* 주제 카드 ~ 버튼: 남는 세로 공간의 가운데에 배치 */}
+      <View style={{ flex: 1, justifyContent: "center", gap: 18, paddingVertical: 8 }}>
+        <Slot spinning={spinning} onPull={draw} disabled={spinning || !pool.length || !!active}>
+          {shown ? (
+            <Animated.View style={{ alignItems: "center", gap: 8, transform: [{ scale: pop }] }}>
+              <Row gap={6} style={{ justifyContent: "center" }}>
+                <Badge label={`${categoryById(shown.category)?.emoji ?? ""} ${shown.categoryName}`} />
+                <Badge label={levelText(shown.lv)} tone={levelTone(shown.level)} />
+              </Row>
+              <T size={34} weight="bold" center color={spinning ? "ink2" : "ink"} style={{ letterSpacing: -0.8, lineHeight: 44 }}>
+                {shown.ko}
+              </T>
+              {!spinning && (
+                <>
+                  <T size={14} color="muted" center>{shown.en}</T>
+                  <T size={16} color="ink2" center style={{ marginTop: 4 }}>{shown.hint}</T>
+                  <Row gap={8} style={{ justifyContent: "center", marginTop: 4 }}>
+                    <TierBadge index={topicMastery(shown.id, records).index} size="sm" />
+                    <T size={12} color="muted">퀴즈 최대 +{maxRpFor(shown)} RP</T>
+                  </Row>
+                </>
+              )}
+            </Animated.View>
+          ) : (
+            <T size={17} color="muted" center>{emptyText}</T>
+          )}
+        </Slot>
 
-      {drawn && !spinning && <TopicLinks topic={drawn} />}
+        {drawn && !spinning && <TopicLinks topic={drawn} />}
 
-      <View style={{ gap: 10 }}>
-        {drawn && !spinning && !active && <Btn title={`이걸로 시작 · ${prefs.studyMinutes}분 공부 + 퀴즈`} variant="accent" size="lg" onPress={start} />}
-        <Btn
-          title={spinning ? "뽑는 중…" : drawn ? "다시 뽑기" : "주제 뽑기 🎲"}
-          variant={drawn ? "outline" : "primary"}
-          size="lg"
-          onPress={draw}
-          disabled={spinning || !pool.length || !!active}
-        />
-        {active && <T size={13} color="muted" center>진행 중인 주제를 끝내거나 그만둔 뒤 새로 뽑을 수 있어요.</T>}
+        <View style={{ gap: 10 }}>
+          {drawn && !spinning && !active && <Btn title={`이걸로 시작 · ${prefs.studyMinutes}분 공부 + 퀴즈`} variant="accent" size="lg" onPress={start} />}
+          <Btn
+            title={spinning ? "뽑는 중…" : drawn ? "다시 뽑기" : "주제 뽑기 🎲"}
+            variant={drawn ? "outline" : "primary"}
+            size="lg"
+            onPress={draw}
+            disabled={spinning || !pool.length || !!active}
+          />
+          {active && <T size={13} color="muted" center>진행 중인 주제를 끝내거나 그만둔 뒤 새로 뽑을 수 있어요.</T>}
+        </View>
       </View>
     </Screen>
   );

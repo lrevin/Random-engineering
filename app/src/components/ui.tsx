@@ -84,7 +84,10 @@ export function Btn({ title, onPress, variant = "outline", size = "md", disabled
   );
 }
 
-export function Chip({ label, selected, onPress, disabled }: { label: string; selected?: boolean; onPress?: () => void; disabled?: boolean }) {
+/** 나란히 놓는 알약 버튼 크기 (홈의 난이도 버튼과 '마스터한 주제 포함'이 같은 크기) */
+export const PILL_FILL: ViewStyle = { flex: 1, height: 54, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4 };
+
+export function Chip({ label, selected, onPress, disabled, fill }: { label: string; selected?: boolean; onPress?: () => void; disabled?: boolean; fill?: boolean }) {
   const c = useColors();
   return (
     <Pressable
@@ -98,9 +101,16 @@ export function Chip({ label, selected, onPress, disabled }: { label: string; se
         ...raised(selected ? c.navyDeep : c.paperEdge, pressed && !disabled, 3),
         ...(!pressed ? shadow(c, 1) : null),
         opacity: disabled ? 0.4 : 1,
+        ...(fill ? PILL_FILL : null),
       })}
     >
-      <Text style={{ fontFamily: FONT.medium, fontSize: 15, color: selected ? c.navyInk : c.ink2 }}>{label}</Text>
+      <Text
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        style={{ fontFamily: fill ? FONT.semibold : FONT.medium, fontSize: fill ? 16 : 15, color: selected ? c.navyInk : c.ink2 }}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }
