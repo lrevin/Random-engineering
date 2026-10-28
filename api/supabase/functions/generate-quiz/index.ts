@@ -113,7 +113,7 @@ function distinct(qs: Question[], against: string[]) {
 const COND = String.raw`(\s*\([^()]*\))?`;
 const MC_END = new RegExp(String.raw`\?` + COND + "$");
 const OX_END = new RegExp(String.raw`다\.` + COND + "$");
-const OX_FORMAL = new RegExp(String.raw`니다\.` + COND + "$");
+const OX_FORMAL = new RegExp(String.raw`(?<!아)니다\.` + COND + "$"); // "아니다."는 해라체라 허용
 const HAEYO = /(예요|에요|해요|어요|아요|이죠|죠|네요|군요)[.!?]?(\s|$)/;
 const BANNED_Q = /(고르시오|고르세요|무엇일까|뭘까|인가요\?|일까요\?|\[AI\]|\[연습)/;
 const NUMBERED = /^\s*(\d+[.)]\s|[①-⑳]|[A-Da-d][.)]\s)/;

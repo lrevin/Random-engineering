@@ -41,7 +41,7 @@ def load_bank():
 COND = r"(\s*\([^()]*\))?"
 MC_END = re.compile(r"\?" + COND + "$")
 OX_END = re.compile(r"다\." + COND + "$")
-OX_FORMAL = re.compile(r"니다\." + COND + "$")
+OX_FORMAL = re.compile(r"(?<!아)니다\." + COND + "$")  # "아니다."는 해라체라 허용
 HAEYO = re.compile(r"(예요|에요|해요|어요|아요|이죠|죠|네요|군요)[.!?]?(\s|$)")
 BANNED_Q = re.compile(r"(고르시오|고르세요|무엇일까|뭘까|인가요\?|일까요\?|\[AI\]|\[연습)")
 NUMBERED = re.compile(r"^\s*(\d+[.)]\s|[①-⑳]|[A-Da-d][.)]\s)")

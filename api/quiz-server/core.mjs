@@ -103,7 +103,7 @@ export function toQuestions(raw) {
 const COND = String.raw`(\s*\([^()]*\))?`; // 끝에 붙는 조건 괄호: "… (원소 n개)"
 const MC_END = new RegExp(String.raw`\?` + COND + "$");
 const OX_END = new RegExp(String.raw`다\.` + COND + "$");
-const OX_FORMAL = new RegExp(String.raw`니다\.` + COND + "$"); // OX는 "~입니다."가 아니라 "~이다."
+const OX_FORMAL = new RegExp(String.raw`(?<!아)니다\.` + COND + "$"); // OX는 "~입니다."가 아니라 "~이다."
 const HAEYO = /(예요|에요|해요|어요|아요|이죠|죠|네요|군요)[.!?]?(\s|$)/;
 const BANNED_Q = /(고르시오|고르세요|무엇일까|뭘까|인가요\?|일까요\?|\[AI\]|\[연습)/;
 const NUMBERED = /^\s*(\d+[.)]\s|[①-⑳]|[A-Da-d][.)]\s)/;
