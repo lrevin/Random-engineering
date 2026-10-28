@@ -1,236 +1,159 @@
-"""뽑공 로고·앱 아이콘 만들기 (Pillow).
+"""뽑공 로고·앱 아이콘 만들기 (Pillow) — 슬롯머신 한 릴 + 톱니바퀴.
 
 사용법: python scripts/make_logo.py
 결과:
-  docs/images/logo.png          가로형 로고 (계획서·README용)
+  docs/images/logo.png          가로형 로고 (투명, 계획서·README용)
+  docs/images/logo-white.png    흰 배경
   docs/images/logo-dark.png     어두운 배경용
+  docs/images/icon.png          앱 아이콘 미리보기 (둥근 모서리)
   app/assets/icon.png           앱 아이콘 1024×1024
   app/assets/android-icon-foreground.png / -background.png / -monochrome.png  안드로이드 적응형 아이콘
-  app/assets/splash-icon.png    시작 화면 아이콘
+  app/assets/splash-icon.png / splash-icon-dark.png  시작 화면 아이콘
   app/assets/favicon.png        웹 아이콘
-  app/assets/logo.png           앱 첫 화면 로고 (부제 없음)
+  app/assets/logo.png / logo-dark.png  앱 첫 화면 로고 (마크 + 뽑공, 밝은/어두운 화면)
 """
-import math
 import os
 
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
+from PIL import Image, ImageDraw, ImageFilter
+
+from make_logo_concepts2 import F, rounded
+from make_logo_concepts3 import lever, reel, sparkle, symbol
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-FONT = r"C:\Windows\Fonts\NotoSansKR-VF.ttf"
+S = 2048
 
-INK = (17, 22, 38)          # 외곽선
 NAVY = (29, 39, 66)
+NAVY_DEEP = (16, 22, 40)
 RED = (224, 69, 58)
-RED_DARK = (176, 45, 38)
-CREAM = (255, 248, 233)
+YELLOW = (247, 181, 0)
+CREAM = (242, 230, 206)     # 아이콘 배경 = 앱 배경색
+REEL = (255, 250, 240)
 WHITE = (255, 255, 255)
-GOLD = (247, 181, 0)
+CLEAR = (0, 0, 0, 0)
 
 
-def font(size, weight=900):
-    f = ImageFont.truetype(FONT, size)
-    try:
-        f.set_variation_by_axes([weight])
-    except Exception:  # noqa: BLE001
-        pass
-    return f
-
-
-def gear_points(cx, cy, r_out, r_in, teeth, rot=0.0):
-    """톱니바퀴 외곽 다각형"""
-    pts = []
-    step = 2 * math.pi / teeth
-    for i in range(teeth):
-        a = rot + i * step
-        for da, r in ((-0.30, r_in), (-0.18, r_out), (0.18, r_out), (0.30, r_in)):
-            ang = a + da * step * 1.6
-            pts.append((cx + r * math.cos(ang), cy + r * math.sin(ang)))
-    return pts
-
-
-def _face(S, bg, kind, stroke):
-    """주사위 한 면 (정사각형 텍스처)"""
-    im = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+def mark(body=NAVY, window=NAVY_DEEP, mono=None, sparkles=True):
+    """배경 없는 슬롯머신 마크 (S×S RGBA). mono=색 을 주면 한 가지 색 실루엣(창은 뚫림)."""
+    im = Image.new("RGBA", (S, S), CLEAR)
     d = ImageDraw.Draw(im)
-    d.rounded_rectangle([0, 0, S - 1, S - 1], radius=int(S * 0.16), fill=bg)
-    c = S / 2
-    if kind == "gear":
-        gp = gear_points(c, c, S * 0.40, S * 0.31, 10, rot=0.15)
-        d.polygon(gp, fill=GOLD)
-        d.line(gp + [gp[0]], fill=INK, width=int(stroke * 0.9), joint="curve")
-        d.ellipse([c - S * 0.23, c - S * 0.23, c + S * 0.23, c + S * 0.23], fill=GOLD, outline=INK, width=int(stroke * 0.9))
-        d.ellipse([c - S * 0.10, c - S * 0.10, c + S * 0.10, c + S * 0.10], fill=CREAM, outline=INK, width=int(stroke * 0.9))
+    bx = 960
+    if mono:
+        body = window = mono
+    lever(d, bx + 450, 1080, bx + 580, 440, body, mono or RED, None if mono else (240, 120, 108), r=105)
+    d.rounded_rectangle([bx - 450, 420, bx + 450, 1660], radius=190, fill=body)
+    for i, col in enumerate((YELLOW, RED, YELLOW)):
+        x = bx + (i - 1) * 110
+        d.ellipse([x - 32, 498, x + 32, 562], fill=CLEAR if mono else col)
+    d.rounded_rectangle([bx - 330, 630, bx + 330, 1480], radius=110, fill=CLEAR if mono else window)
+    if mono:
+        im.alpha_composite(symbol("gear", 420, mono), (bx - 210, 1055 - 210))
     else:
-        r = S * 0.085
-        spots = {
-            "two": [(0.28, 0.28), (0.72, 0.72)],
-            "three": [(0.26, 0.26), (0.5, 0.5), (0.74, 0.74)],
-        }[kind]
-        for fx, fy in spots:
-            d.ellipse([S * fx - r, S * fy - r, S * fx + r, S * fy + r], fill=NAVY)
+        r = reel(600, 790, [("atom", NAVY), ("gear", RED), ("chip", NAVY)], bg=REEL, shade=120,
+                 sz_ratio=0.70, pitch_ratio=1.08, tint=(29, 39, 66))
+        # 릴 창 모서리를 둥글게
+        m = Image.new("L", r.size, 0)
+        ImageDraw.Draw(m).rounded_rectangle([0, 0, r.width - 1, r.height - 1], radius=80, fill=255)
+        r.putalpha(m)
+        im.alpha_composite(r, (bx - 300, 660))
+        # 유리 반사
+        glass = Image.new("RGBA", (S, S), CLEAR)
+        ImageDraw.Draw(glass).polygon([(bx - 300, 700), (bx - 160, 660), (bx - 300, 1130)], fill=(255, 255, 255, 70))
+        glass.putalpha(Image.composite(glass.split()[3], Image.new("L", (S, S), 0), mask_rect(bx - 300, 660, bx + 300, 1450, 80)))
+        im.alpha_composite(glass)
+        for sgn in (-1, 1):
+            x = bx + sgn * 330
+            d.polygon([(x, 1015), (x, 1095), (x - sgn * 46, 1055)], fill=YELLOW)
+    d.rounded_rectangle([bx - 140, 1546, bx + 140, 1590], radius=22, fill=CLEAR if mono else window)
+    if sparkles:
+        sparkle(d, bx - 560, 520, 90, mono or YELLOW)
+        sparkle(d, bx - 640, 760, 44, mono or RED)
     return im
 
 
-def _paste_face(canvas, tex, p0, p1, p3):
-    """정사각형 텍스처를 평행사변형(p0=왼위, p1=오른위, p3=왼아래)에 붙이기"""
-    S = tex.width
-    ax, ay = (p1[0] - p0[0]) / S, (p1[1] - p0[1]) / S
-    bx, by = (p3[0] - p0[0]) / S, (p3[1] - p0[1]) / S
-    det = ax * by - ay * bx
-    ia, ib, ic, id_ = by / det, -bx / det, -ay / det, ax / det
-    # 출력(x,y) → 입력(u,v):  u = ia*(x-x0) + ib*(y-y0),  v = ic*(x-x0) + id*(y-y0)
-    coeffs = (ia, ib, -(ia * p0[0] + ib * p0[1]), ic, id_, -(ic * p0[0] + id_ * p0[1]))
-    warped = tex.transform(canvas.size, Image.AFFINE, coeffs, resample=Image.BICUBIC)
-    canvas.alpha_composite(warped)
+def mask_rect(x0, y0, x1, y1, r):
+    m = Image.new("L", (S, S), 0)
+    ImageDraw.Draw(m).rounded_rectangle([x0, y0, x1, y1], radius=r, fill=255)
+    return m
 
 
-def capsule(size, stroke):
-    """랜덤 뽑기 주사위 + 톱니바퀴(공학) 아이콘 (정사각형 RGBA)"""
-    S = size
-    im = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-    cx, cy = S / 2, S / 2
-    e = S * 0.40          # 모서리 길이
-    k = math.cos(math.pi / 6)
-    top = (cx, cy - e)
-    right = (cx + e * k, cy - e / 2)
-    left = (cx - e * k, cy - e / 2)
-    mid = (cx, cy)
-    bl = (cx - e * k, cy + e / 2)
-    br = (cx + e * k, cy + e / 2)
-    bot = (cx, cy + e)
-
-    # 그림자
-    sh = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-    off = stroke * 0.9
-    ImageDraw.Draw(sh).polygon([(x + off, y + off) for x, y in (top, right, br, bot, bl, left)], fill=INK)
-    im.alpha_composite(sh)
-
-    T = 600
-    _paste_face(im, _face(T, RED, "gear", stroke * T / S * 1.4), left, top, mid)          # 윗면
-    _paste_face(im, _face(T, CREAM, "three", stroke), left, mid, bl)                       # 왼쪽 면
-    _paste_face(im, _face(T, (243, 226, 196), "two", stroke), mid, right, bot)             # 오른쪽 면
-
-    d = ImageDraw.Draw(im)
-    w = stroke
-    d.line([top, right, br, bot, bl, left, top], fill=INK, width=w, joint="curve")
-    d.line([left, mid, right], fill=INK, width=int(w * 0.8), joint="curve")
-    d.line([mid, bot], fill=INK, width=int(w * 0.8))
-    for p in (top, right, br, bot, bl, left):
-        d.ellipse([p[0] - w / 2, p[1] - w / 2, p[0] + w / 2, p[1] + w / 2], fill=INK)
-    return im
-
-
-def outlined_text(text, size, fill, stroke, shadow=True):
-    f = font(size)
-    tmp = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
-    l, t, r, b = tmp.textbbox((0, 0), text, font=f, stroke_width=stroke)
-    w, h = r - l + stroke * 2, b - t + stroke * 2
-    im = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-    d = ImageDraw.Draw(im)
-    ox, oy = -l + stroke, -t + stroke
-    if shadow:
-        d.text((ox + stroke * 0.5, oy + stroke * 0.7), text, font=f, fill=INK, stroke_width=stroke, stroke_fill=INK)
-    d.text((ox, oy), text, font=f, fill=fill, stroke_width=stroke, stroke_fill=INK)
-    return im
-
-
-def sparkle(d, cx, cy, r, color, outline, w):
-    pts = []
-    for i in range(8):
-        a = i * math.pi / 4 - math.pi / 2
-        rr = r if i % 2 == 0 else r * 0.38
-        pts.append((cx + rr * math.cos(a), cy + rr * math.sin(a)))
-    d.polygon(pts, fill=color)
-    d.line(pts + [pts[0]], fill=outline, width=w, joint="curve")
-
-
-def wide_logo(dark=False, subtitle=True):
-    W, H = 2600, 1200
-    im = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    stroke = 26
-
-    cap = capsule(720, 26)
-    im.alpha_composite(cap, (60, 90))
-
-    ppob = outlined_text("뽑", 560, WHITE, stroke)
-    gong = outlined_text("공", 560, RED, stroke)
-    x = 820
-    im.alpha_composite(ppob, (x, 150))
-    im.alpha_composite(gong, (x + ppob.width - 40, 150))
-
-    d = ImageDraw.Draw(im)
-    sparkle(d, 760, 190, 70, GOLD, INK, 12)
-    sparkle(d, 2440, 260, 52, GOLD, INK, 10)
-    sparkle(d, 2330, 120, 30, RED, INK, 8)
-
-    if not subtitle:
-        return im.crop(im.getbbox())
-    sub_color = CREAM if dark else NAVY
-    f = font(118, 800)
-    d.text((W / 2 + 140, 960), "뽑는 공학 공부", font=f, fill=sub_color, anchor="mm")
-    f2 = font(56, 700)
-    d.text((W / 2 + 140, 1080), "R A N D O M   E N G I N E E R I N G", font=f2, fill=RED if not dark else GOLD, anchor="mm")
-    return im.crop(im.getbbox())
-
-
-def save_flat(im, path, bg):
-    out = Image.new("RGBA", im.size, bg)
-    out.alpha_composite(im)
-    out.convert("RGB").save(path)
+def centered(im, size, box):
+    """마크를 잘라서 size×size 캔버스 가운데 box 크기로 넣음"""
+    c = im.crop(im.getbbox())
+    c.thumbnail((box, box), Image.LANCZOS)
+    out = Image.new("RGBA", (size, size), CLEAR)
+    out.alpha_composite(c, ((size - c.width) // 2, (size - c.height) // 2))
+    return out
 
 
 def app_icon():
-    S = 1024
-    bg = Image.new("RGBA", (S, S), NAVY + (255,))
-    d = ImageDraw.Draw(bg)
-    # 은은한 격자 (모눈 공책 느낌)
-    for i in range(0, S, 64):
-        d.line([(i, 0), (i, S)], fill=(40, 52, 86), width=2)
-        d.line([(0, i), (S, i)], fill=(40, 52, 86), width=2)
-    cap = capsule(900, 30)
-    bg.alpha_composite(cap, ((S - cap.width) // 2, (S - cap.height) // 2))
-    sparkle(d, 820, 210, 62, GOLD, INK, 10)
-    sparkle(d, 210, 820, 40, RED, INK, 8)
-    return bg
+    bg = Image.new("RGBA", (S, S), CREAM + (255,))
+    bg.alpha_composite(mark())
+    return bg.resize((1024, 1024), Image.LANCZOS)
+
+
+def wordmark(dark=False, subtitle=True):
+    """마크 + 뽑공 (+ 부제)"""
+    m = mark(body=(52, 66, 108) if dark else NAVY, sparkles=False)
+    m = m.crop(m.getbbox())
+    H = 900
+    m = m.resize((int(m.width * H / m.height), H), Image.LANCZOS)
+    W = m.width + 1500
+    im = Image.new("RGBA", (W, H + (330 if subtitle else 0)), CLEAR)
+    im.alpha_composite(m, (0, 0))
+    d = ImageDraw.Draw(im)
+    f = F(620, 900)
+    x = m.width + 90
+    d.text((x, H * 0.47), "뽑", font=f, fill=(250, 244, 230) if dark else NAVY, anchor="lm")
+    w = d.textlength("뽑", font=f)
+    d.text((x + w - 10, H * 0.47), "공", font=f, fill=RED, anchor="lm")
+    sparkle(d, x + 2 * w + 60, H * 0.12, 80, YELLOW)
+    if subtitle:
+        d.text((W / 2, H + 120), "뽑는 공학 공부", font=F(130, 800), fill=(250, 244, 230) if dark else NAVY, anchor="mm")
+        d.text((W / 2, H + 260), "R A N D O M   E N G I N E E R I N G", font=F(62, 700), fill=YELLOW if dark else RED, anchor="mm")
+    return im.crop(im.getbbox())
+
+
+def pad(im, p, bg=CLEAR):
+    out = Image.new("RGBA", (im.width + 2 * p, im.height + 2 * p), bg)
+    out.alpha_composite(im, (p, p))
+    return out
 
 
 def main():
-    os.makedirs(os.path.join(ROOT, "docs", "images"), exist_ok=True)
+    docs = os.path.join(ROOT, "docs", "images")
     assets = os.path.join(ROOT, "app", "assets")
+    os.makedirs(docs, exist_ok=True)
 
-    logo = wide_logo()
-    pad = Image.new("RGBA", (logo.width + 160, logo.height + 160), (0, 0, 0, 0))
-    pad.alpha_composite(logo, (80, 80))
-    pad.save(os.path.join(ROOT, "docs", "images", "logo.png"))
-    save_flat(pad, os.path.join(ROOT, "docs", "images", "logo-white.png"), WHITE + (255,))
-    dark = wide_logo(dark=True)
-    padd = Image.new("RGBA", (dark.width + 160, dark.height + 160), NAVY + (255,))
-    padd.alpha_composite(dark, (80, 80))
-    padd.convert("RGB").save(os.path.join(ROOT, "docs", "images", "logo-dark.png"))
-
-    # 앱 첫 화면용 (부제 없이)
-    mark = wide_logo(subtitle=False)
-    mark.thumbnail((1200, 1200), Image.LANCZOS)
-    mark.save(os.path.join(assets, "logo.png"))
+    logo = pad(wordmark(), 80)
+    logo.thumbnail((1600, 1600), Image.LANCZOS)
+    logo.save(os.path.join(docs, "logo.png"))
+    pad(logo, 0, WHITE + (255,)).convert("RGB").save(os.path.join(docs, "logo-white.png"))
+    dark = pad(wordmark(dark=True), 80, NAVY + (255,))
+    dark.thumbnail((1600, 1600), Image.LANCZOS)
+    dark.convert("RGB").save(os.path.join(docs, "logo-dark.png"))
 
     icon = app_icon()
     icon.convert("RGB").save(os.path.join(assets, "icon.png"))
+    rounded(icon).save(os.path.join(docs, "icon.png"))
     icon.resize((48, 48), Image.LANCZOS).save(os.path.join(assets, "favicon.png"))
 
-    # 안드로이드 적응형 아이콘: 전경(캡슐, 안전 영역 안쪽), 배경(남색), 단색
-    fg = Image.new("RGBA", (1024, 1024), (0, 0, 0, 0))
-    cap = capsule(700, 26)
-    fg.alpha_composite(cap, ((1024 - cap.width) // 2, (1024 - cap.height) // 2))
-    fg.save(os.path.join(assets, "android-icon-foreground.png"))
-    Image.new("RGBA", (1024, 1024), NAVY + (255,)).save(os.path.join(assets, "android-icon-background.png"))
-    mono = Image.new("RGBA", (1024, 1024), (0, 0, 0, 0))
-    alpha = fg.split()[3]
-    mono.paste((255, 255, 255, 255), mask=alpha)
-    mono.save(os.path.join(assets, "android-icon-monochrome.png"))
+    # 앱 첫 화면용 (부제 없이)
+    w = wordmark(subtitle=False)
+    w.thumbnail((1200, 1200), Image.LANCZOS)
+    w.save(os.path.join(assets, "logo.png"))
+    wd = wordmark(dark=True, subtitle=False)
+    wd.thumbnail((1200, 1200), Image.LANCZOS)
+    wd.save(os.path.join(assets, "logo-dark.png"))
+    print("app logo.png", w.size)
 
-    splash = capsule(900, 30)
-    splash.save(os.path.join(assets, "splash-icon.png"))
-    print("logo", pad.size, "icon", icon.size)
+    # 안드로이드 적응형 아이콘: 안전 영역(가운데 약 66%) 안쪽에 마크
+    centered(mark(), 1024, 560).save(os.path.join(assets, "android-icon-foreground.png"))
+    Image.new("RGBA", (1024, 1024), CREAM + (255,)).save(os.path.join(assets, "android-icon-background.png"))
+    centered(mark(mono=WHITE + (255,)), 1024, 560).save(os.path.join(assets, "android-icon-monochrome.png"))
+
+    centered(mark(), 1024, 1000).save(os.path.join(assets, "splash-icon.png"))
+    centered(mark(body=(52, 66, 108), window=NAVY_DEEP), 1024, 1000).save(os.path.join(assets, "splash-icon-dark.png"))
+    print("done")
 
 
 if __name__ == "__main__":

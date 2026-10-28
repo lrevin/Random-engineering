@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Pressable, Switch, View } from "react-native";
 import { TierBadge, UserRankBar } from "@/components/Rank";
+import { Slot } from "@/components/Slot";
 import { TopicLinks } from "@/components/TopicLinks";
 import { Badge, Btn, Card, levelTone, Row, Screen, Segment, T } from "@/components/ui";
 import { categoryById, levelText, TOPICS, type Topic } from "@/data";
@@ -96,7 +97,7 @@ export default function Home() {
     ? "관심 분야를 먼저 골라 주세요."
     : !pool.length
       ? includeDone ? "조건에 맞는 주제가 없어요." : "이 조건의 주제를 모두 공부했어요! 🎉\n'공부한 주제도 포함'을 켜 보세요."
-      : "아래 버튼을 눌러\n오늘의 주제를 뽑아 보세요";
+      : "레버를 당기거나 아래 버튼을 눌러\n오늘의 주제를 뽑아 보세요";
 
   return (
     <Screen edges={["top"]} scroll>
@@ -161,7 +162,7 @@ export default function Home() {
       </View>
 
       {/* 주제 카드 */}
-      <Card accent style={{ minHeight: 230, justifyContent: "center", alignItems: "center", gap: 8 }}>
+      <Slot spinning={spinning} onPull={draw} disabled={spinning || !pool.length || !!active}>
         {shown ? (
           <Animated.View style={{ alignItems: "center", gap: 8, transform: [{ scale: pop }] }}>
             <Row gap={6} style={{ justifyContent: "center" }}>
@@ -185,12 +186,12 @@ export default function Home() {
         ) : (
           <T size={17} color="muted" center>{emptyText}</T>
         )}
-      </Card>
+      </Slot>
 
       {drawn && !spinning && <TopicLinks topic={drawn} />}
 
       <View style={{ gap: 10 }}>
-        {drawn && !spinning && !active && <Btn title={`이걸로 시작 (${prefs.studyMinutes}분 공부 → 퀴즈 10문제)`} variant="accent" size="lg" onPress={start} />}
+        {drawn && !spinning && !active && <Btn title={`이걸로 시작 · ${prefs.studyMinutes}분 공부 + 퀴즈`} variant="accent" size="lg" onPress={start} />}
         <Btn
           title={spinning ? "뽑는 중…" : drawn ? "다시 뽑기" : "주제 뽑기 🎲"}
           variant={drawn ? "outline" : "primary"}

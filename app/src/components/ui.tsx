@@ -21,7 +21,7 @@ export const tap = () => {
 type TProps = TextProps & {
   size?: number;
   weight?: keyof typeof FONT;
-  color?: "ink" | "ink2" | "muted" | "accent" | "navyInk" | "accentInk" | "flame" | "success";
+  color?: "ink" | "ink2" | "muted" | "accent" | "navyInk" | "accentInk" | "flame" | "success" | "gold";
   center?: boolean;
 };
 
@@ -56,6 +56,9 @@ export function Btn({ title, onPress, variant = "outline", size = "md", disabled
   const bg = { primary: c.navy, accent: c.accent, outline: c.paper, ghost: "transparent" }[variant];
   const fg = { primary: c.navyInk, accent: c.accentInk, outline: c.ink, ghost: c.ink2 }[variant];
   const border = { primary: c.navy, accent: c.accent, outline: c.line2, ghost: "transparent" }[variant];
+  // 슬롯머신 버튼처럼 아래쪽이 두꺼운 입체 버튼 (누르면 내려감)
+  const under = { primary: c.navyDeep, accent: c.accentDeep, outline: c.line2, ghost: "transparent" }[variant];
+  const depth = variant === "ghost" ? 0 : variant === "outline" ? 3 : 4;
   const pad = { sm: [7, 14], md: [12, 20], lg: [17, 28] }[size];
   const fs = { sm: 14, md: 16, lg: 19 }[size];
   return (
@@ -67,9 +70,10 @@ export function Btn({ title, onPress, variant = "outline", size = "md", disabled
       style={({ pressed }) => [
         {
           backgroundColor: bg, borderColor: border, borderWidth: 1, borderRadius: size === "lg" ? radius.lg : radius.md,
+          borderBottomColor: under, borderBottomWidth: pressed && !disabled ? 1 : depth || 1,
+          marginTop: pressed && !disabled ? Math.max(0, depth - 1) : 0,
           paddingVertical: pad[0], paddingHorizontal: pad[1], flexDirection: "row", alignItems: "center",
-          justifyContent: "center", gap: 8, opacity: disabled ? 0.45 : pressed ? 0.8 : 1,
-          transform: [{ scale: pressed ? 0.98 : 1 }],
+          justifyContent: "center", gap: 8, opacity: disabled ? 0.45 : pressed ? 0.92 : 1,
         },
         style,
       ]}
@@ -128,7 +132,7 @@ export function Card({ children, style, accent }: { children: ReactNode; style?:
     <View
       style={[
         { backgroundColor: c.paper, borderColor: c.line, borderWidth: 1, borderRadius: radius.lg, padding: 18 },
-        accent && { borderTopWidth: 4, borderTopColor: c.accent },
+        accent && { borderTopWidth: 4, borderTopColor: c.gold },
         style,
       ]}
     >
