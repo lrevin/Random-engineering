@@ -1,5 +1,5 @@
 import { Pressable, View } from "react-native";
-import { radius, useColors } from "@/theme";
+import { radius, raised, shadow, useColors } from "@/theme";
 import { Chip, Row, T, tap } from "./ui";
 
 const PRESETS = ["07:30", "12:30", "18:00", "21:00", "22:30"];
@@ -12,7 +12,7 @@ function Step({ label, onPress }: { label: string; onPress: () => void }) {
       accessibilityRole="button"
       accessibilityLabel={label === "−" ? "줄이기" : "늘리기"}
       onPress={() => { tap(); onPress(); }}
-      style={({ pressed }) => ({ width: 44, height: 44, borderRadius: radius.md, borderWidth: 1, borderColor: c.line2, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.6 : 1, backgroundColor: c.paper })}
+      style={({ pressed }) => ({ width: 44, height: 44, borderRadius: radius.md, borderWidth: 1.5, borderColor: c.line2, alignItems: "center", justifyContent: "center", backgroundColor: c.paper, ...raised(c.paperEdge, pressed, 4), ...(!pressed ? shadow(c, 1) : null) })}
     >
       <T size={22} weight="semibold">{label}</T>
     </Pressable>

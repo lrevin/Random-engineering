@@ -11,7 +11,7 @@ import { loadQuiz, pickQuestions, type QuizQuestion } from "@/lib/quiz";
 import { calcRp, topicMastery, totalRp, userRank } from "@/lib/rank";
 import { calcStreak } from "@/lib/stats";
 import type { WrongAnswer } from "@/lib/types";
-import { radius, useColors } from "@/theme";
+import { radius, raised, shadow, useColors } from "@/theme";
 
 const isCorrect = (q: QuizQuestion, a: number | boolean | undefined) => a !== undefined && a === q.answer;
 const answerText = (q: QuizQuestion) => (q.type === "mc" ? q.choices[q.answer] : q.answer ? "O (맞다)" : "X (틀리다)");
@@ -135,10 +135,10 @@ function QuestionView({ q, index, count, offline, topicName, badges, saving, onQ
   };
 
   const optionStyle = (isThis: boolean, isAnswer: boolean) => {
-    let border = c.line2, bg = c.paper;
-    if (answered && isAnswer) { border = c.success; bg = c.successSoft; }
-    else if (answered && isThis) { border = c.accent; bg = c.accentSoft; }
-    return { borderColor: border, backgroundColor: bg };
+    let border = c.line2, bg = c.paper, edge = c.paperEdge;
+    if (answered && isAnswer) { border = c.success; bg = c.successSoft; edge = c.successDeep; }
+    else if (answered && isThis) { border = c.accent; bg = c.accentSoft; edge = c.accentDeep; }
+    return { borderColor: border, backgroundColor: bg, edge };
   };
 
   return (
@@ -170,12 +170,16 @@ function QuestionView({ q, index, count, offline, topicName, badges, saving, onQ
                 accessibilityRole="radio"
                 accessibilityState={{ selected: picked === i, disabled: answered }}
                 onPress={() => { tap(); choose(i); }}
-                style={({ pressed }) => ({
-                  flexDirection: "row", gap: 12, alignItems: "center", padding: 16, borderRadius: radius.lg,
-                  borderWidth: 2, ...optionStyle(picked === i, i === q.answer), opacity: pressed && !answered ? 0.8 : 1,
-                })}
+                style={({ pressed }) => {
+                  const { edge, ...o } = optionStyle(picked === i, i === q.answer);
+                  const down = pressed && !answered;
+                  return {
+                    flexDirection: "row", gap: 12, alignItems: "center", padding: 16, borderRadius: radius.lg,
+                    borderWidth: 2, ...o, ...raised(edge, down, 5), ...(!down ? shadow(c, 1) : null),
+                  };
+                }}
               >
-                <View style={{ width: 28, height: 28, borderRadius: 8, borderWidth: 1.5, borderColor: c.line2, alignItems: "center", justifyContent: "center" }}>
+                <View style={{ width: 30, height: 30, borderRadius: 9, borderWidth: 1.5, borderBottomWidth: 3, borderColor: c.line2, backgroundColor: c.bg, alignItems: "center", justifyContent: "center" }}>
                   <T size={14} weight="bold" color="ink2">{i + 1}</T>
                 </View>
                 <T size={16} style={{ flex: 1 }}>{ch}</T>
@@ -191,10 +195,14 @@ function QuestionView({ q, index, count, offline, topicName, badges, saving, onQ
                 accessibilityLabel={v ? "O 맞다" : "X 틀리다"}
                 accessibilityState={{ selected: picked === v, disabled: answered }}
                 onPress={() => { tap(); choose(v); }}
-                style={({ pressed }) => ({
-                  flex: 1, aspectRatio: 1.2, borderRadius: radius.lg, borderWidth: 2, alignItems: "center", justifyContent: "center",
-                  ...optionStyle(picked === v, v === q.answer), opacity: pressed && !answered ? 0.8 : 1,
-                })}
+                style={({ pressed }) => {
+                  const { edge, ...o } = optionStyle(picked === v, v === q.answer);
+                  const down = pressed && !answered;
+                  return {
+                    flex: 1, aspectRatio: 1.2, borderRadius: radius.lg, borderWidth: 2, alignItems: "center", justifyContent: "center",
+                    ...o, ...raised(edge, down, 6), ...(!down ? shadow(c, 1) : null),
+                  };
+                }}
               >
                 <T size={56} weight="bold" style={{ lineHeight: 66, color: v ? c.success : c.accent }}>{v ? "O" : "X"}</T>
               </Pressable>
@@ -205,7 +213,7 @@ function QuestionView({ q, index, count, offline, topicName, badges, saving, onQ
 
       {/* 하단 피드백 (듀오링고식) */}
       {answered && (
-        <View style={{ padding: 20, gap: 10, backgroundColor: correct ? c.successSoft : c.accentSoft, borderTopWidth: 2, borderTopColor: correct ? c.success : c.accent }}>
+        <View style={{ padding: 20, gap: 10, backgroundColor: correct ? c.successSoft : c.accentSoft, borderTopWidth: 2, borderTopColor: correct ? c.success : c.accent, boxShadow: `0px -4px 12px ${c.shadow}` }}>
           <T size={18} weight="bold" color={correct ? "success" : "accent"}>{correct ? "정답이에요! 🎉" : `아쉬워요. 정답: ${answerText(q)}`}</T>
           <T size={15} color="ink2">{q.explain}</T>
           <Btn

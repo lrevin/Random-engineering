@@ -9,7 +9,7 @@ import { UserRankBar, TierBadge } from "@/components/Rank";
 import { topicMastery, totalRp } from "@/lib/rank";
 import { averageScore, calcStreak, fmtDate } from "@/lib/stats";
 import type { StudyRecord } from "@/lib/types";
-import { radius, useColors } from "@/theme";
+import { radius, raised, shadow, useColors } from "@/theme";
 
 type Filter = "all" | "review";
 
@@ -95,8 +95,14 @@ export default function History() {
   );
 
   const item = ({ item: r }: { item: StudyRecord }) => (
-    <Pressable onPress={() => router.push(`/record/${r.id}`)} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
-      <View style={{ backgroundColor: c.paper, borderWidth: 1, borderColor: c.line, borderRadius: radius.md, padding: 14, marginBottom: 8, gap: 2 }}>
+    <Pressable
+      onPress={() => router.push(`/record/${r.id}`)}
+      style={({ pressed }) => ({
+        backgroundColor: c.paper, borderWidth: 1, borderColor: c.line, borderRadius: radius.md, padding: 14, marginBottom: 10,
+        ...raised(c.paperEdge, pressed, 4), ...(!pressed ? shadow(c, 1) : null),
+      })}
+    >
+      <View style={{ gap: 2 }}>
         <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
           <T size={16} weight="semibold" numberOfLines={1} style={{ flex: 1 }}>{r.topicKo}</T>
           <Score r={r} />

@@ -1,7 +1,7 @@
 import * as WebBrowser from "expo-web-browser";
 import { Pressable, View } from "react-native";
 import { topicLinks, type Topic } from "@/data";
-import { radius, useColors } from "@/theme";
+import { radius, raised, shadow, useColors } from "@/theme";
 import { Row, T, tap } from "./ui";
 
 const openExternal = (url: string) => {
@@ -18,8 +18,10 @@ function LinkButton({ icon, title, sub, onPress, primary }: { icon: string; titl
       onPress={onPress}
       style={({ pressed }) => ({
         flex: 1, minWidth: 140, flexDirection: "row", alignItems: "center", gap: 10, padding: 12,
-        borderRadius: radius.md, borderWidth: 1,
-        borderColor: primary ? c.navy : c.line2, backgroundColor: c.paper, opacity: pressed ? 0.7 : 1,
+        borderRadius: radius.md, borderWidth: 1.5,
+        borderColor: primary ? c.navy : c.line2, backgroundColor: c.paper,
+        ...raised(primary ? c.navy : c.paperEdge, pressed),
+        ...(!pressed ? shadow(c, 1) : null),
       })}
     >
       <T size={22}>{icon}</T>

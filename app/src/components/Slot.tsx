@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Animated, Easing, Pressable, View } from "react-native";
-import { radius, useColors } from "@/theme";
+import { radius, shadow, useColors } from "@/theme";
 import { tap } from "./ui";
 
 const ROD = 70;
@@ -55,7 +55,7 @@ export function Slot({ children, spinning, onPull, disabled }: {
       <View style={{ width: LEVER_W }} />
       <View style={{
         flex: 1, backgroundColor: c.slot, borderRadius: radius.lg + 4, padding: 10, paddingTop: 9, gap: 8,
-        borderBottomWidth: 6, borderBottomColor: c.slotEdge,
+        borderBottomWidth: 6, borderBottomColor: c.slotEdge, ...shadow(c, 3),
       }}>
         <View style={{ flexDirection: "row", justifyContent: "center", gap: 10 }}>
           {lights.map((col, i) => (
@@ -69,7 +69,7 @@ export function Slot({ children, spinning, onPull, disabled }: {
             />
           ))}
         </View>
-        <View style={{ backgroundColor: c.slotWindow, borderRadius: radius.lg - 4, minHeight: 190, justifyContent: "center", alignItems: "center", paddingVertical: 14, paddingHorizontal: 20, overflow: "hidden" }}>
+        <View style={{ backgroundColor: c.slotWindow, borderRadius: radius.lg - 4, minHeight: 190, justifyContent: "center", alignItems: "center", paddingVertical: 14, paddingHorizontal: 20, overflow: "hidden", boxShadow: "inset 0px 6px 10px rgba(0, 0, 0, 0.18)" }}>
           {children}
           {triangle("left")}
           {triangle("right")}
@@ -85,7 +85,7 @@ export function Slot({ children, spinning, onPull, disabled }: {
         hitSlop={10}
         style={{ width: LEVER_W, height: 140, justifyContent: "flex-end", paddingBottom: 26, opacity: disabled ? 0.5 : 1 }}
       >
-        <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: c.accent, marginLeft: 6, borderBottomWidth: 3, borderBottomColor: c.accentDeep }} />
+        <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: c.accent, marginLeft: 6, borderBottomWidth: 3, borderBottomColor: c.accentDeep, ...shadow(c, 1) }} />
         <Animated.View style={{ width: 7, height: rod, backgroundColor: c.lever, marginLeft: 17 }} />
         <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
           <View style={{ width: 10, height: 28, borderRadius: 5, backgroundColor: c.lever, marginTop: -11 }} />

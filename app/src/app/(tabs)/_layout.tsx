@@ -11,7 +11,7 @@ export default function TabLayout() {
         headerShown: false,
         tabBarActiveTintColor: c.accent,
         tabBarInactiveTintColor: c.muted,
-        tabBarStyle: { backgroundColor: c.paper, borderTopColor: c.line },
+        tabBarStyle: { backgroundColor: c.paper, borderTopWidth: 0, boxShadow: `0px -3px 12px ${c.shadow}` },
         tabBarLabelStyle: { fontFamily: FONT.medium, fontSize: 12 },
         sceneStyle: { backgroundColor: c.bg },
       }}

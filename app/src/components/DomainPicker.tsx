@@ -1,6 +1,6 @@
 import { Pressable, View } from "react-native";
 import { DOMAINS, topicCount } from "@/data";
-import { radius, useColors } from "@/theme";
+import { radius, raised, shadow, useColors } from "@/theme";
 import { T, tap } from "./ui";
 
 /** 듀오링고식 분야 고르기: 큰 카드 2열, 여러 개 선택 */
@@ -21,10 +21,11 @@ export function DomainPicker({ value, onChange }: { value: string[]; onChange: (
             onPress={() => { tap(); toggle(d.id); }}
             style={({ pressed }) => ({
               width: "48%", flexGrow: 1, minHeight: 112, padding: 14, gap: 4,
-              borderRadius: radius.lg, borderWidth: on ? 2 : 1,
+              borderRadius: radius.lg, borderWidth: 2,
               borderColor: on ? c.accent : c.line2,
               backgroundColor: on ? c.accentSoft : c.paper,
-              transform: [{ scale: pressed ? 0.97 : 1 }],
+              ...raised(on ? c.accentDeep : c.paperEdge, pressed),
+              ...(!pressed ? shadow(c, 1) : null),
             })}
           >
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>

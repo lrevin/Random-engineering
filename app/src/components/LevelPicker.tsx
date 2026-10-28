@@ -1,7 +1,7 @@
 import { Pressable, View } from "react-native";
 import { topicCount } from "@/data";
 import type { Prefs } from "@/lib/types";
-import { radius, useColors } from "@/theme";
+import { radius, raised, shadow, useColors } from "@/theme";
 import { T, tap } from "./ui";
 
 const OPTIONS: { value: Prefs["level"]; title: string; body: string; dots: number }[] = [
@@ -29,9 +29,10 @@ export function LevelPicker({ value, onChange, interests }: {
             onPress={() => { tap(); onChange(o.value); }}
             style={({ pressed }) => ({
               flexDirection: "row", alignItems: "center", gap: 14, padding: 16,
-              borderRadius: radius.lg, borderWidth: on ? 2 : 1,
+              borderRadius: radius.lg, borderWidth: 2,
               borderColor: on ? c.accent : c.line2, backgroundColor: on ? c.accentSoft : c.paper,
-              opacity: pressed ? 0.85 : 1,
+              ...raised(on ? c.accentDeep : c.paperEdge, pressed),
+              ...(!pressed ? shadow(c, 1) : null),
             })}
           >
             <View style={{ flexDirection: "row", gap: 3, width: 46 }}>

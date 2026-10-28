@@ -10,7 +10,7 @@ import { categoryById, levelText, TOPICS, type Topic } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { maxRpFor, TIERS, topicMastery, totalRp } from "@/lib/rank";
 import { calcStreak, lastWeek } from "@/lib/stats";
-import { radius, useColors } from "@/theme";
+import { radius, shadow, useColors } from "@/theme";
 
 type LevelFilter = "0" | "1" | "2" | "3"; // 0 = 전체
 
@@ -117,11 +117,11 @@ export default function Home() {
           <T size={14} color="muted">{today ? "오늘 공부 완료 ✓" : "오늘은 아직이에요"}</T>
           <T size={22} weight="bold" numberOfLines={1}>{prefs.nickname || "학습자"}님, 안녕하세요</T>
         </View>
-        <View style={{ alignItems: "center", backgroundColor: c.paper, borderWidth: 1, borderColor: c.line, borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 4 }}>
+        <View style={{ alignItems: "center", backgroundColor: c.paper, borderWidth: 1, borderColor: c.line, borderBottomWidth: 3, borderBottomColor: c.paperEdge, borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 4, ...shadow(c, 1) }}>
           <T size={22} weight="bold" color={streak ? "flame" : "muted"}>🔥 {streak}</T>
           <T size={11} color="muted">연속 일수</T>
         </View>
-        <View style={{ alignItems: "center", backgroundColor: c.paper, borderWidth: 1, borderColor: c.line, borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 4 }}>
+        <View style={{ alignItems: "center", backgroundColor: c.paper, borderWidth: 1, borderColor: c.line, borderBottomWidth: 3, borderBottomColor: c.paperEdge, borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 4, ...shadow(c, 1) }}>
           <View style={{ height: 32, justifyContent: "center" }}><GearCount n={gears} size={18} /></View>
           <T size={11} color="muted">톱니바퀴</T>
         </View>
@@ -136,7 +136,7 @@ export default function Home() {
           <View key={i} style={{ alignItems: "center", gap: 4, flex: 1 }}>
             <View style={{
               width: 30, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center",
-              backgroundColor: d.done ? c.flame : "transparent", borderWidth: d.done ? 0 : 1.5,
+              backgroundColor: d.done ? c.flame : c.paper, borderWidth: d.done ? 0 : 1.5, ...(d.done ? shadow(c, 1) : null),
               borderColor: d.isToday ? c.accent : c.line2, borderStyle: d.isToday && !d.done ? "dashed" : "solid",
             }}>
               {d.done && <T size={13} weight="bold" color="accentInk">✓</T>}

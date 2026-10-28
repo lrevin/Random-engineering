@@ -4,7 +4,7 @@ import { KeyboardAvoidingView, Platform, Pressable, View } from "react-native";
 import { Btn, Card, Field, Row, Screen, T, tap } from "@/components/ui";
 import { useApp } from "@/lib/app-state";
 import { authErrorMessage } from "@/lib/supabase";
-import { radius, useColors } from "@/theme";
+import { radius, shadow, useColors } from "@/theme";
 
 function Check({ checked, onToggle, label, onOpen }: { checked: boolean; onToggle: () => void; label: string; onOpen?: () => void }) {
   const c = useColors();
@@ -78,7 +78,7 @@ export default function Signup() {
         <Field label="비밀번호 (8자 이상)" value={pw} onChangeText={setPw} secureTextEntry autoComplete="new-password" textContentType="newPassword" />
         <Field label="비밀번호 확인" value={pw2} onChangeText={setPw2} secureTextEntry autoComplete="new-password" textContentType="newPassword" />
 
-        <View style={{ borderWidth: 1, borderColor: c.line, borderRadius: radius.md, padding: 14, gap: 12, backgroundColor: c.paper }}>
+        <View style={{ borderWidth: 1, borderColor: c.line, borderBottomWidth: 3, borderBottomColor: c.paperEdge, borderRadius: radius.md, padding: 14, gap: 12, backgroundColor: c.paper, ...shadow(c, 1) }}>
           <Check
             checked={allAgreed}
             onToggle={() => { const v = !allAgreed; setAgeOk(v); setTermsOk(v); setPrivacyOk(v); }}
