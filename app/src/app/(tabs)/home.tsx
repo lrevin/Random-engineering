@@ -4,8 +4,9 @@ import { Animated, Pressable, View } from "react-native";
 import { TierBadge, UserRankBar } from "@/components/Rank";
 import { Slot } from "@/components/Slot";
 import { GearCount } from "@/components/TimeUpSheet";
+import { LevelButton } from "@/components/LevelSheet";
 import { TopicLinks } from "@/components/TopicLinks";
-import { Badge, Btn, Card, Chip, levelTone, Row, Screen, Segment, T } from "@/components/ui";
+import { Badge, Btn, Card, Chip, levelTone, Row, Screen, T } from "@/components/ui";
 import { categoryById, levelText, TOPICS, type Topic } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { maxRpFor, TIERS, topicMastery, totalRp } from "@/lib/rank";
@@ -15,7 +16,7 @@ import { radius, shadow, useColors } from "@/theme";
 type LevelFilter = "0" | "1" | "2" | "3"; // 0 = 전체
 
 export default function Home() {
-  const { prefs, records, active, setActive, gears } = useApp();
+  const { prefs, records, active, setActive, gears, updatePrefs } = useApp();
   const c = useColors();
   const [level, setLevel] = useState<LevelFilter>(String(prefs.level) as LevelFilter);
   // 설정에서 기본 난이도를 바꾸면 필터도 따라가게 함
@@ -157,10 +158,10 @@ export default function Home() {
       {/* 필터 */}
       <View style={{ gap: 10 }}>
         <Row style={{ justifyContent: "space-between" }}>
-          <Segment<LevelFilter>
-            value={level}
-            onChange={setLevel}
-            options={[{ value: "0", label: "전체" }, { value: "1", label: "Lv.1" }, { value: "2", label: "Lv.2" }, { value: "3", label: "Lv.3" }]}
+          <LevelButton
+            value={Number(level) as typeof prefs.level}
+            interests={prefs.interests}
+            onChange={(v) => { setLevel(String(v) as LevelFilter); updatePrefs({ level: v }).catch(() => {}); }}
           />
           <Chip
             label={`${includeMastered ? "✓ " : ""}🛠️ 마스터한 주제 포함`}

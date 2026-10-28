@@ -11,14 +11,14 @@ const OPTIONS: { value: Prefs["level"]; title: string; body: string; dots: numbe
   { value: 0, title: "골고루 섞기", body: "난이도 상관없이 모두 랜덤으로", dots: 0 },
 ];
 
-/** 주로 공부할 난이도 고르기 (하나 선택) */
-export function LevelPicker({ value, onChange, interests }: {
-  value: Prefs["level"]; onChange: (v: Prefs["level"]) => void; interests: string[];
+/** 주로 공부할 난이도 고르기 (하나 선택). onlyLevels면 Lv.1~3만 (골고루 섞기 없음) */
+export function LevelPicker({ value, onChange, interests, onlyLevels }: {
+  value: Prefs["level"]; onChange: (v: Prefs["level"]) => void; interests: string[]; onlyLevels?: boolean;
 }) {
   const c = useColors();
   return (
     <View style={{ gap: 10 }}>
-      {OPTIONS.map((o) => {
+      {OPTIONS.filter((o) => !onlyLevels || o.value !== 0).map((o) => {
         const on = o.value === value;
         const n = topicCount((t) => interests.includes(t.category) && (o.value === 0 || t.lv === o.value));
         return (
