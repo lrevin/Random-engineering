@@ -86,15 +86,15 @@ def dashed_rect(d, x1, y1, x2, y2, color=GRAY, width=3, seg=16):
 
 
 def architecture():
-    W, H = 2400, 1180
+    W, H = 2400, 1560
     im = Image.new("RGB", (W, H), WHITE)
     d = ImageDraw.Draw(im)
 
     d.text((60, 50), "사용자 화면", font=F(30, 700), fill=GRAY)
     box(d, 60, 100, 560, 420, "모바일 앱 (iOS · Android)",
-        ["**React Native 0.86 · Expo SDK 57**", "TypeScript · Expo Router", "주제 뽑기 · 15분 공부 타이머", "퀴즈 10문제 · 랭크 · 기록"])
+        ["**React Native 0.86 · Expo SDK 57**", "TypeScript · Expo Router", "주제 뽑기(슬롯머신) · 15분 공부", "퀴즈 7문제 (AI 4 + 기본 3) · 랭크"])
     box(d, 60, 600, 560, 440, "휴대폰 안 (오프라인에서도 동작)",
-        ["**내장 퀴즈 문제 은행**", "주제 854개 데이터 (11개 분야)", "기록·설정 저장 (AsyncStorage)", "매일 알림 · 타이머 알림", "(expo-notifications)"], head=NAVY)
+        ["**내장 퀴즈 문제 은행**", "주제 1,054개 (공학 11 · 과학 5)", "기록·설정 저장 (AsyncStorage)", "매일 알림 · 타이머 알림", "(expo-notifications)"], head=NAVY)
     arrow(d, [(340, 520), (340, 600)], both=True)
 
     dashed_rect(d, 760, 60, 1660, 1120)
@@ -107,15 +107,19 @@ def architecture():
     box(d, 800, 450, 820, 240, "REST API (PostgREST)",
         ["profiles · study_records 조회·저장", "rpc/delete_my_account (회원 탈퇴)"], accent=NAVY)
     box(d, 800, 730, 820, 340, "서버 함수 (Edge Function · Deno)",
-        ["**generate-quiz**", "주제 목록에 있는 주제만 받음", "만든 문제는 DB에 저장해 재사용", "→ AI 호출은 최대 주제 수만큼"], accent=RED)
+        ["**generate-quiz** (퀴즈 AI 서버가 꺼졌을 때)", "출제 → 2번 검수 → 통과한 문제만 저장", "주제당 최대 40문제 → AI 비용 상한"], accent=RED)
     for y in (410, 690):
         arrow(d, [(1210, y), (1210, y + 40)])
 
+    # 퀴즈 AI 서버 (개인 PC 등에서 계속 켜 두는 출제 AI)
+    box(d, 760, 1200, 900, 300, "퀴즈 AI 서버 (PC 등에서 상시 구동)",
+        ["**api/quiz-server** · Node · 출제 지침 gem.md", "공부 시작 즉시 출제 → 1차·2차 검수", "주제별 문제 창고 · 쉬는 동안 계속 출제"], head=RED)
+
     box(d, 1800, 110, 540, 300, "데이터베이스",
-        ["**PostgreSQL**", "profiles · study_records", "quizzes (AI 문제 은행)"])
-    box(d, 1800, 470, 540, 260, "AI 퀴즈 생성",
-        ["**Anthropic Claude API**", "claude-opus-5-5 · JSON 출력", "주제 정보만 전달 (개인정보 X)"], head=RED)
-    box(d, 1800, 790, 540, 300, "학습 자료 (외부)",
+        ["**PostgreSQL**", "profiles · study_records", "quizzes (검수 통과 AI 문제)"])
+    box(d, 1800, 470, 540, 300, "AI 퀴즈 생성 · 검수",
+        ["**Anthropic Claude API**", "claude-opus-5-5 · JSON 출력", "출제 + 1차(직접 풀기)·2차 검수", "주제 정보만 전달 (개인정보 X)"], head=RED)
+    box(d, 1800, 830, 540, 300, "학습 자료 (외부)",
         ["**한국어 위키백과** 718개 문서", "**공식 문서** 60개", "RFC · NIST · W3C · ISO 등"], head=NAVY)
 
     # 앱 ↔ Supabase
@@ -123,16 +127,22 @@ def architecture():
     chip(d, 710, 222, "HTTPS · JWT")
     arrow(d, [(620, 430), (700, 430), (700, 900), (800, 900)])
     chip(d, 700, 660, "topicId")
+    # 앱 → 퀴즈 AI 서버
+    arrow(d, [(620, 470), (680, 470), (680, 1350), (760, 1350)])
+    chip(d, 680, 1180, "공부 시작 즉시")
     # REST ↔ DB
     arrow(d, [(1620, 570), (1700, 570), (1700, 260), (1800, 260)], both=True)
     chip(d, 1700, 420, "SQL · RLS")
-    # Edge → DB (캐시), Edge → Claude
+    # Edge → DB (저장), Edge → Claude
     arrow(d, [(1620, 820), (1740, 820), (1740, 340), (1800, 340)], both=True, dash=True)
-    arrow(d, [(1620, 960), (1760, 960), (1760, 600), (1800, 600)])
-    chip(d, 1745, 740, "퀴즈 캐시 / 생성")
+    arrow(d, [(1620, 960), (1760, 960), (1760, 620), (1800, 620)])
+    chip(d, 1745, 740, "출제 · 검수")
+    # 퀴즈 AI 서버 → Claude
+    arrow(d, [(1660, 1420), (2380, 1420), (2380, 620), (2340, 620)])
+    chip(d, 1880, 1420, "출제 · 1차 · 2차 검수")
     # 앱 → 학습 자료 (인앱 브라우저)
-    arrow(d, [(340, 1040), (340, 1150), (2070, 1150), (2070, 1090)], dash=True)
-    chip(d, 1200, 1150, "인앱 브라우저로 위키백과 · 공식 문서 열기")
+    arrow(d, [(340, 1040), (340, 1530), (2300, 1530), (2300, 1130)], dash=True)
+    chip(d, 1200, 1530, "앱 안 문서 창으로 위키백과 · 공식 문서 열기 (시간이 끝나면 자동으로 닫힘)")
     im.save(os.path.join(OUT, "architecture.png"))
 
 
@@ -168,7 +178,7 @@ def erd():
         ("score / quiz_total", "smallint", ""), ("rp", "int 랭크 포인트", ""), ("wrong", "jsonb 오답", ""),
         ("memo · study_sec", "text · int", ""), ("quiz_source", "bank·ai·offline", ""), ("studied_at", "timestamptz", "")])
     table_box(d, 1480, 380, 660, "quizzes", [
-        ("topic_id", "text", "PK"), ("questions", "jsonb (15문제)", ""), ("model", "text", ""), ("created_at", "timestamptz", "")], head=RED)
+        ("topic_id", "text", "PK"), ("questions", "jsonb 검수 통과 AI 문제", ""), ("model", "text", ""), ("created_at", "timestamptz", "")], head=RED)
 
     def rel(p1, p2, label, l1="1", l2="N"):
         arrow(d, [p1, ((p1[0] + p2[0]) / 2, p1[1]), ((p1[0] + p2[0]) / 2, p2[1]), p2], width=4)
