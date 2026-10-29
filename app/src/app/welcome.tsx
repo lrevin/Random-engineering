@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { Image, useWindowDimensions, View } from "react-native";
+import { Image, useColorScheme, useWindowDimensions, View } from "react-native";
 import { Btn, Card, Screen, T } from "@/components/ui";
 import { APP_NAME, APP_SUBTITLE, APP_TAGLINE } from "@/config";
 import { useApp } from "@/lib/app-state";
@@ -8,21 +8,22 @@ import { useColors } from "@/theme";
 const STEPS = [
   { n: "1", title: "뽑기", body: "관심 분야에서 랜덤 주제 하나" },
   { n: "2", title: "15분 공부", body: "AI 없이 위키·백과사전으로" },
-  { n: "3", title: "퀴즈 10문제", body: "맞힐수록 RP를 얻고 랭크가 올라가요" },
+  { n: "3", title: "퀴즈 7문제", body: "AI가 새로 낸 문제 + 기본 문제, 맞힐수록 랭크 UP" },
 ];
 
 export default function Welcome() {
   const { width } = useWindowDimensions();
-  const logoW = Math.min(width - 40, 420);
+  const logoW = Math.min(width - 40, 360);
   const { startGuest, serverEnabled } = useApp();
   const c = useColors();
+  const dark = useColorScheme() === "dark";
   return (
     <Screen contentStyle={{ justifyContent: "space-between" }}>
       <View style={{ gap: 10, marginTop: 40 }}>
         <Image
-          source={require("../../assets/logo.png")}
+          source={dark ? require("../../assets/logo-dark.png") : require("../../assets/logo.png")}
           accessibilityLabel={`${APP_NAME} 로고`}
-          style={{ width: logoW, height: (logoW * 345) / 1200 }}
+          style={{ width: logoW, height: (logoW * 504) / 1200 }}
           resizeMode="contain"
         />
         <T size={22} weight="bold" style={{ marginTop: 8 }}>{APP_SUBTITLE}</T>

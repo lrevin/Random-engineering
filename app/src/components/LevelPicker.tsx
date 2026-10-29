@@ -1,7 +1,7 @@
 import { Pressable, View } from "react-native";
 import { topicCount } from "@/data";
 import type { Prefs } from "@/lib/types";
-import { radius, useColors } from "@/theme";
+import { radius, raised, shadow, useColors } from "@/theme";
 import { T, tap } from "./ui";
 
 const OPTIONS: { value: Prefs["level"]; title: string; body: string; dots: number }[] = [
@@ -11,14 +11,14 @@ const OPTIONS: { value: Prefs["level"]; title: string; body: string; dots: numbe
   { value: 0, title: "골고루 섞기", body: "난이도 상관없이 모두 랜덤으로", dots: 0 },
 ];
 
-/** 주로 공부할 난이도 고르기 (하나 선택) */
-export function LevelPicker({ value, onChange, interests }: {
-  value: Prefs["level"]; onChange: (v: Prefs["level"]) => void; interests: string[];
+/** 주로 공부할 난이도 고르기 (하나 선택). onlyLevels면 Lv.1~3만 (골고루 섞기 없음) */
+export function LevelPicker({ value, onChange, interests, onlyLevels }: {
+  value: Prefs["level"]; onChange: (v: Prefs["level"]) => void; interests: string[]; onlyLevels?: boolean;
 }) {
   const c = useColors();
   return (
     <View style={{ gap: 10 }}>
-      {OPTIONS.map((o) => {
+      {OPTIONS.filter((o) => !onlyLevels || o.value !== 0).map((o) => {
         const on = o.value === value;
         const n = topicCount((t) => interests.includes(t.category) && (o.value === 0 || t.lv === o.value));
         return (
@@ -29,9 +29,10 @@ export function LevelPicker({ value, onChange, interests }: {
             onPress={() => { tap(); onChange(o.value); }}
             style={({ pressed }) => ({
               flexDirection: "row", alignItems: "center", gap: 14, padding: 16,
-              borderRadius: radius.lg, borderWidth: on ? 2 : 1,
+              borderRadius: radius.lg, borderWidth: 2,
               borderColor: on ? c.accent : c.line2, backgroundColor: on ? c.accentSoft : c.paper,
-              opacity: pressed ? 0.85 : 1,
+              ...raised(on ? c.accentDeep : c.paperEdge, pressed),
+              ...(!pressed ? shadow(c, 1) : null),
             })}
           >
             <View style={{ flexDirection: "row", gap: 3, width: 46 }}>

@@ -38,7 +38,23 @@ jobs:
           python-version: '3.12'
       - name: 퀴즈 문제 은행 형식 검사
         run: python scripts/quizbank.py check
-      - name: 서버 함수용 주제 목록이 앱 데이터와 같은지 확인
+      - name: 서버 함수용 주제 목록·문제 은행·출제 지침이 앱 데이터와 같은지 확인
         run: |
           python scripts/export_topics.py
-          git diff --exit-code api/supabase/functions/generate-quiz/topics.json
+          git diff --exit-code api/supabase/functions/generate-quiz/
+
+  quiz-server:
+    name: 퀴즈 AI 서버 점검 (연습 모드)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api/quiz-server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: api/quiz-server/package-lock.json
+      - run: npm ci
+      - run: npm test

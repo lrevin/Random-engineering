@@ -16,7 +16,11 @@ const K = {
   onboarded: "pg.onboarded",
   records: "pg.records",
   active: "pg.active",
+  gears: "pg.gears",
 };
+
+/** 처음 시작할 때 주는 톱니바퀴 (유료 재화). 결제는 아직 없음 */
+export const STARTER_GEARS = 30;
 
 type NewRecord = Omit<StudyRecord, "id" | "synced" | "studiedAt">;
 
@@ -29,6 +33,10 @@ interface AppStateValue {
   onboarded: boolean;
   records: StudyRecord[];
   active: ActiveSession | null;
+  /** 톱니바퀴 잔액 */
+  gears: number;
+  /** 톱니바퀴를 n개 씁니다. 모자라면 false */
+  spendGears(n: number): boolean;
   startGuest(): Promise<void>;
   signUp(email: string, password: string): Promise<{ needsConfirm: boolean }>;
   signIn(email: string, password: string): Promise<void>;
@@ -113,15 +121,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [onboarded, setOnboarded] = useState(false);
   const [records, setRecords] = useState<StudyRecord[]>([]);
   const [active, setActiveState] = useState<ActiveSession | null>(null);
+  const [gears, setGears] = useState(0);
 
   // 비동기 함수 안에서 최신 값을 읽기 위한 ref
   const recordsRef = useRef(records);
   const prefsRef = useRef(prefs);
   const activeRef = useRef(active);
+  const gearsRef = useRef(gears);
   useLayoutEffect(() => {
     recordsRef.current = records;
     prefsRef.current = prefs;
     activeRef.current = active;
+    gearsRef.current = gears;
   });
 
   const saveRecordsLocal = useCallback((rs: StudyRecord[]) => {
@@ -190,6 +201,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setOnboarded(false);
     saveRecordsLocal([]);
     setActiveState(null);
+    gearsRef.current = STARTER_GEARS;
+    setGears(STARTER_GEARS);
     setMode("none");
   }, [saveRecordsLocal]);
 
@@ -197,12 +210,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let alive = true;
     (async () => {
-      const [m, p, ob, rawRecords, rawActive] = await Promise.all([
+      const [m, p, ob, rawRecords, rawActive, g] = await Promise.all([
         readJSON<Mode>(K.mode, "none"),
         readJSON<Prefs>(K.prefs, DEFAULT_PREFS),
         readJSON<boolean>(K.onboarded, false),
         readJSON<Partial<StudyRecord>[]>(K.records, []),
         readJSON<ActiveSession | null>(K.active, null),
+        readJSON<number | null>(K.gears, null),
       ]);
       const rs = Array.isArray(rawRecords) ? rawRecords.map(normalizeRecord) : [];
       // 이전 버전(설명 단계)에서 진행 중이던 주제는 이어갈 수 없으므로 비움
@@ -215,6 +229,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setRecords(rs);
       activeRef.current = ac;
       setActiveState(ac);
+      const gs = typeof g === "number" ? g : STARTER_GEARS;
+      gearsRef.current = gs;
+      setGears(gs);
+      if (g == null) writeJSON(K.gears, gs);
 
       if (supabase) {
         const { data } = await supabase.auth.getSession();
@@ -311,6 +329,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     writeJSON(K.active, next);
   }, []);
 
+  const spendGears = useCallback((n: number) => {
+    if (gearsRef.current < n) return false;
+    const next = gearsRef.current - n;
+    gearsRef.current = next;
+    setGears(next);
+    writeJSON(K.gears, next);
+    return true;
+  }, []);
+
   const addRecord = useCallback(async (r: NewRecord) => {
     const rec: StudyRecord = { ...r, id: Crypto.randomUUID(), studiedAt: new Date().toISOString(), synced: false };
     saveRecordsLocal(sortRecords([...recordsRef.current, rec]));
@@ -330,9 +357,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AppStateValue>(() => ({
     ready, mode, email: session?.user.email ?? null, serverEnabled: !!supabase,
-    prefs, onboarded, records, active,
+    prefs, onboarded, records, active, gears, spendGears,
     startGuest, signUp, signIn, signOut, deleteAccount, updatePrefs, setActive, addRecord, removeRecord,
-  }), [ready, mode, session, prefs, onboarded, records, active,
+  }), [ready, mode, session, prefs, onboarded, records, active, gears, spendGears,
     startGuest, signUp, signIn, signOut, deleteAccount, updatePrefs, setActive, addRecord, removeRecord]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

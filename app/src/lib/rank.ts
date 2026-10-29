@@ -1,4 +1,5 @@
 import type { LevelNum, Topic } from "@/data";
+import { QUIZ_LENGTH } from "./quiz";
 import type { StudyRecord } from "./types";
 
 /** 랭크 단계 (사용자 전체 랭크와 주제별 숙련 랭크가 같은 이름을 씁니다) */
@@ -35,8 +36,8 @@ export function userRank(totalRp: number) {
 export const totalRp = (records: StudyRecord[]) => records.reduce((a, r) => a + (r.rp || 0), 0);
 
 // ───────── 주제별 숙련 랭크: 그 주제에서 맞힌 문제 수 누적 ─────────
-/** 브론즈는 한 번 풀면 획득. 엔지니어는 누적 75문제 + 만점 1회 이상 */
-export const TOPIC_TIER_MIN = [0, 15, 30, 45, 60, 75];
+/** 브론즈는 한 번 풀면 획득. 엔지니어는 누적 50문제 + 만점 1회 이상 (한 번에 7문제라 약 7~8번 풀면 엔지니어) */
+export const TOPIC_TIER_MIN = [0, 10, 20, 30, 40, 50];
 
 export function topicMastery(topicId: string, records: StudyRecord[]) {
   const rs = records.filter((r) => r.topicId === topicId);
@@ -62,7 +63,7 @@ export function topicMastery(topicId: string, records: StudyRecord[]) {
 
 // ───────── 이번 퀴즈로 얻는 RP ─────────
 /** 난이도별 정답 1개당 RP — 주제마다 얻는 점수가 다릅니다 */
-export const RP_PER_CORRECT: Record<LevelNum, number> = { 1: 4, 2: 6, 3: 9 };
+export const RP_PER_CORRECT: Record<LevelNum, number> = { 1: 6, 2: 9, 3: 13 };
 
 export interface RpPart {
   label: string;
@@ -84,7 +85,7 @@ export function calcRp(opts: { topic: Topic; correct: number; total: number; pri
 }
 
 /** 주제 카드에 보여 줄 "최대 획득 RP" (처음 풀어서 만점일 때) */
-export const maxRpFor = (topic: Topic, total = 10) => {
+export const maxRpFor = (topic: Topic, total = QUIZ_LENGTH) => {
   const base = total * RP_PER_CORRECT[topic.lv];
   return base + Math.round(base * 0.2) + topic.lv * 10;
 };

@@ -8,7 +8,7 @@ import { categoryById } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { notificationsSupported, requestNotificationPermission } from "@/lib/notify";
 import { authErrorMessage } from "@/lib/supabase";
-import { radius, useColors } from "@/theme";
+import { radius, raised, shadow, useColors } from "@/theme";
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -43,7 +43,7 @@ function Minutes({ value, min, max, onChange }: { value: number; min: number; ma
       accessibilityRole="button"
       accessibilityLabel={d > 0 ? "늘리기" : "줄이기"}
       onPress={() => { tap(); onChange(Math.min(max, Math.max(min, value + d))); }}
-      style={{ width: 34, height: 34, borderRadius: radius.sm, borderWidth: 1, borderColor: c.line2, alignItems: "center", justifyContent: "center" }}
+      style={({ pressed }) => ({ width: 36, height: 36, borderRadius: radius.sm, borderWidth: 1.5, borderColor: c.line2, backgroundColor: c.paper, alignItems: "center", justifyContent: "center", ...raised(c.paperEdge, pressed, 3), ...(!pressed ? shadow(c, 1) : null) })}
     >
       <T size={18} weight="semibold">{label}</T>
     </Pressable>
@@ -124,7 +124,7 @@ export default function Settings() {
             options={[{ value: "0", label: "골고루" }, { value: "1", label: "Lv.1 기초" }, { value: "2", label: "Lv.2 중급" }, { value: "3", label: "Lv.3 심화" }]}
           />
         </View>
-        <Item label="공부 시간" sub="기본 15분 · 끝나면 퀴즈 10문제" right={<Minutes value={prefs.studyMinutes} min={1} max={120} onChange={(v) => updatePrefs({ studyMinutes: v })} />} last />
+        <Item label="공부 시간" sub="기본 15분 · 끝나면 퀴즈 7문제" right={<Minutes value={prefs.studyMinutes} min={1} max={120} onChange={(v) => updatePrefs({ studyMinutes: v })} />} last />
       </Section>
 
       <Section title="매일 알림">

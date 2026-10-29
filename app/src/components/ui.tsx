@@ -5,7 +5,7 @@ import {
   type StyleProp, type TextInputProps, type TextProps, type TextStyle, type ViewStyle,
 } from "react-native";
 import { SafeAreaView, type Edge } from "react-native-safe-area-context";
-import { radius, useColors } from "@/theme";
+import { inset, radius, raised, shadow, useColors } from "@/theme";
 
 export const FONT = {
   regular: "IBMPlexSansKR_400Regular",
@@ -21,7 +21,7 @@ export const tap = () => {
 type TProps = TextProps & {
   size?: number;
   weight?: keyof typeof FONT;
-  color?: "ink" | "ink2" | "muted" | "accent" | "navyInk" | "accentInk" | "flame" | "success";
+  color?: "ink" | "ink2" | "muted" | "accent" | "navyInk" | "accentInk" | "flame" | "success" | "gold";
   center?: boolean;
 };
 
@@ -56,6 +56,9 @@ export function Btn({ title, onPress, variant = "outline", size = "md", disabled
   const bg = { primary: c.navy, accent: c.accent, outline: c.paper, ghost: "transparent" }[variant];
   const fg = { primary: c.navyInk, accent: c.accentInk, outline: c.ink, ghost: c.ink2 }[variant];
   const border = { primary: c.navy, accent: c.accent, outline: c.line2, ghost: "transparent" }[variant];
+  // 슬롯머신 버튼처럼 아래쪽이 두꺼운 입체 버튼 (누르면 내려감)
+  const under = { primary: c.navyDeep, accent: c.accentDeep, outline: c.paperEdge, ghost: "transparent" }[variant];
+  const depth = variant === "ghost" ? 0 : variant === "outline" ? 4 : 5;
   const pad = { sm: [7, 14], md: [12, 20], lg: [17, 28] }[size];
   const fs = { sm: 14, md: 16, lg: 19 }[size];
   return (
@@ -66,10 +69,11 @@ export function Btn({ title, onPress, variant = "outline", size = "md", disabled
       onPress={() => { tap(); onPress?.(); }}
       style={({ pressed }) => [
         {
-          backgroundColor: bg, borderColor: border, borderWidth: 1, borderRadius: size === "lg" ? radius.lg : radius.md,
+          backgroundColor: bg, borderColor: border, borderWidth: variant === "outline" ? 1.5 : 1, borderRadius: size === "lg" ? radius.lg : radius.md,
+          ...(depth ? raised(under, pressed && !disabled, depth) : null),
+          ...(depth && !pressed && !disabled ? shadow(c, 1) : null),
           paddingVertical: pad[0], paddingHorizontal: pad[1], flexDirection: "row", alignItems: "center",
-          justifyContent: "center", gap: 8, opacity: disabled ? 0.45 : pressed ? 0.8 : 1,
-          transform: [{ scale: pressed ? 0.98 : 1 }],
+          justifyContent: "center", gap: 8, opacity: disabled ? 0.45 : pressed ? 0.92 : 1,
         },
         style,
       ]}
@@ -80,7 +84,10 @@ export function Btn({ title, onPress, variant = "outline", size = "md", disabled
   );
 }
 
-export function Chip({ label, selected, onPress, disabled }: { label: string; selected?: boolean; onPress?: () => void; disabled?: boolean }) {
+/** 나란히 놓는 알약 버튼 크기 (홈의 난이도 버튼과 '마스터한 주제 포함'이 같은 크기) */
+export const PILL_FILL: ViewStyle = { flex: 1, height: 54, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4 };
+
+export function Chip({ label, selected, onPress, disabled, fill }: { label: string; selected?: boolean; onPress?: () => void; disabled?: boolean; fill?: boolean }) {
   const c = useColors();
   return (
     <Pressable
@@ -89,12 +96,21 @@ export function Chip({ label, selected, onPress, disabled }: { label: string; se
       disabled={disabled}
       onPress={() => { tap(); onPress?.(); }}
       style={({ pressed }) => ({
-        borderWidth: 1, borderRadius: radius.pill, paddingVertical: 7, paddingHorizontal: 14,
-        borderColor: selected ? c.navy : c.line2, backgroundColor: selected ? c.navy : "transparent",
-        opacity: disabled ? 0.4 : pressed ? 0.75 : 1,
+        borderWidth: 1.5, borderRadius: radius.pill, paddingVertical: 6, paddingHorizontal: 14,
+        borderColor: selected ? c.navy : c.line2, backgroundColor: selected ? c.navy : c.paper,
+        ...raised(selected ? c.navyDeep : c.paperEdge, pressed && !disabled, 3),
+        ...(!pressed ? shadow(c, 1) : null),
+        opacity: disabled ? 0.4 : 1,
+        ...(fill ? PILL_FILL : null),
       })}
     >
-      <Text style={{ fontFamily: FONT.medium, fontSize: 15, color: selected ? c.navyInk : c.ink2 }}>{label}</Text>
+      <Text
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        style={{ fontFamily: fill ? FONT.semibold : FONT.medium, fontSize: fill ? 16 : 15, color: selected ? c.navyInk : c.ink2 }}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -103,8 +119,8 @@ export function Chip({ label, selected, onPress, disabled }: { label: string; se
 export function Segment<V extends string>({ options, value, onChange }: { options: { value: V; label: string }[]; value: V; onChange: (v: V) => void }) {
   const c = useColors();
   return (
-    <View style={{ flexDirection: "row", borderWidth: 1, borderColor: c.line2, borderRadius: radius.md, overflow: "hidden", backgroundColor: c.paper }}>
-      {options.map((o, i) => {
+    <View style={{ flexDirection: "row", borderRadius: radius.md, backgroundColor: c.chip, padding: 3, gap: 2, ...inset(c) }}>
+      {options.map((o) => {
         const on = o.value === value;
         return (
           <Pressable
@@ -112,7 +128,11 @@ export function Segment<V extends string>({ options, value, onChange }: { option
             accessibilityRole="radio"
             accessibilityState={{ selected: on }}
             onPress={() => { tap(); onChange(o.value); }}
-            style={{ paddingVertical: 7, paddingHorizontal: 14, backgroundColor: on ? c.navy : "transparent", borderLeftWidth: i ? 1 : 0, borderLeftColor: c.line2 }}
+            style={{
+              paddingVertical: 6, paddingHorizontal: 13, borderRadius: radius.md - 3,
+              backgroundColor: on ? c.navy : "transparent", borderBottomWidth: 3, borderBottomColor: on ? c.navyDeep : "transparent",
+              ...(on ? shadow(c, 1) : null),
+            }}
           >
             <Text style={{ fontFamily: FONT.medium, fontSize: 14, color: on ? c.navyInk : c.ink2 }}>{o.label}</Text>
           </Pressable>
@@ -127,8 +147,8 @@ export function Card({ children, style, accent }: { children: ReactNode; style?:
   return (
     <View
       style={[
-        { backgroundColor: c.paper, borderColor: c.line, borderWidth: 1, borderRadius: radius.lg, padding: 18 },
-        accent && { borderTopWidth: 4, borderTopColor: c.accent },
+        { backgroundColor: c.paper, borderColor: c.line, borderWidth: 1, borderBottomWidth: 3, borderBottomColor: c.paperEdge, borderRadius: radius.lg, padding: 18, ...shadow(c, 2) },
+        accent && { borderTopWidth: 4, borderTopColor: c.gold },
         style,
       ]}
     >
@@ -160,7 +180,7 @@ export function Field({ label, error, ...props }: TextInputProps & { label: stri
         {...props}
         style={[
           {
-            borderWidth: 1, borderColor: error ? c.accent : c.line2, backgroundColor: c.paper, borderRadius: radius.md,
+            borderWidth: 1.5, borderColor: error ? c.accent : c.line2, backgroundColor: c.paper, borderRadius: radius.md, ...inset(c),
             paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, color: c.ink, fontFamily: FONT.regular,
           },
           props.style as StyleProp<TextStyle>,

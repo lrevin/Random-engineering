@@ -1,5 +1,6 @@
-"""앱의 주제 데이터(app/src/data/*.ts)를 서버 함수용 JSON으로 내보냅니다.
+"""앱의 주제 데이터(app/src/data/*.ts)와 문제 은행 문장을 서버 함수용 JSON으로 내보냅니다.
 퀴즈 생성 함수는 이 목록에 있는 주제만 받아서, 임의의 요청으로 AI 비용이 나가는 것을 막습니다.
+bank.json(주제별 미리 만든 문제 문장)은 AI가 먼저 보고 겹치지 않는 문제를 내는 데 씁니다.
 사용법: python scripts/export_topics.py   (주제를 추가·수정한 뒤 다시 실행하고 함수를 재배포하세요)
 """
 import json
@@ -46,3 +47,25 @@ for dom_id, dom_name, prefix in domains:
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 json.dump(topics, open(OUT, "w", encoding="utf8"), ensure_ascii=False, indent=0)
 print(f"exported {len(topics)} topics -> {os.path.relpath(OUT, ROOT)}")
+
+# 문제 은행 문장 (주제 id → 문제 문장 목록)
+BANK_DIR = os.path.join(DATA, "quizbank")
+bank = {}
+for f in sorted(os.listdir(BANK_DIR)):
+    if f.endswith(".json"):
+        for tid, qs in json.load(open(os.path.join(BANK_DIR, f), encoding="utf8")).items():
+            bank[tid] = [q["q"] for q in qs]
+BANK_OUT = os.path.join(os.path.dirname(OUT), "bank.json")
+json.dump(dict(sorted(bank.items())), open(BANK_OUT, "w", encoding="utf8"), ensure_ascii=False, indent=0)
+print(f"exported bank for {len(bank)} topics -> {os.path.relpath(BANK_OUT, ROOT)}")
+
+# 출제 지침 (api/quiz-server/gem.md) → 서버 함수에서도 같은 지침을 쓰도록 JSON으로 복사
+GEM = os.path.join(ROOT, "api", "quiz-server", "gem.md")
+GEM_OUT = os.path.join(os.path.dirname(OUT), "gem.json")
+QS = os.path.join(ROOT, "api", "quiz-server")
+json.dump({
+    "system": open(GEM, encoding="utf8").read(),
+    "review1": open(os.path.join(QS, "review1.md"), encoding="utf8").read(),  # 1차 검수: 정답표 없이 직접 풀기
+    "review2": open(os.path.join(QS, "review2.md"), encoding="utf8").read(),  # 2차 검수: 정답·해설 대조
+}, open(GEM_OUT, "w", encoding="utf8"), ensure_ascii=False, indent=0)
+print(f"exported gem -> {os.path.relpath(GEM_OUT, ROOT)}")
