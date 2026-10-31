@@ -274,69 +274,62 @@ def erd():
 
 
 def gantt():
+    # (이름, 시작, 끝(그날 포함), 담당) — 추진 기간 11/2 ~ 11/23
     tasks = [
-        ("기획 · 요구사항 분석", "2026-09-01", "2026-09-21", "공통", True),
-        ("화면 설계 · 앱 MVP (뽑기·타이머·기록)", "2026-09-15", "2026-10-12", "이재빈", True),
-        ("공학·과학 주제 데이터 (1,054개)", "2026-10-06", "2026-10-26", "이재빈", True),
-        ("퀴즈 · 레벨 · 랭크 · 오답 노트", "2026-10-19", "2026-11-02", "이재빈", True),
-        ("퀴즈 문제 은행 작성 · 분야별 검수", "2026-10-26", "2026-11-30", "이재빈", False),
-        ("AI 출제 · 2번 검수 지침, 문제 품질 점검", "2026-10-26", "2026-11-23", "김주안", False),
-        ("Supabase DB · RLS · 기록 동기화", "2026-11-02", "2026-11-16", "김창원", False),
-        ("카카오 · Apple 로그인 (Supabase Auth)", "2026-11-09", "2026-11-23", "김창원", False),
-        ("퀴즈 AI 서버 · 서버 함수 배포 · CI", "2026-11-02", "2026-11-23", "강건우", False),
-        ("화면 디자인 다듬기", "2026-11-16", "2026-11-30", "이재빈", False),
-        ("사용자 테스트 · 개선", "2026-11-23", "2026-12-07", "이재빈", False),
-        ("발표 준비 · 최종 보고서", "2026-12-01", "2026-12-14", "공통", False),
+        ("기획 · 요구사항 분석", "2026-11-02", "2026-11-03", "공통"),
+        ("화면 설계 · 앱 MVP (뽑기·타이머·기록)", "2026-11-02", "2026-11-06", "이재빈"),
+        ("공학·과학 주제 데이터 (1,054개)", "2026-11-03", "2026-11-07", "이재빈"),
+        ("퀴즈 · 레벨 · 랭크 · 오답 노트", "2026-11-05", "2026-11-10", "이재빈"),
+        ("퀴즈 문제 은행 작성 · 분야별 검수", "2026-11-08", "2026-11-19", "이재빈"),
+        ("AI 출제 · 2번 검수 지침, 문제 품질 점검", "2026-11-04", "2026-11-16", "김주안"),
+        ("Supabase DB · RLS · 기록 동기화", "2026-11-03", "2026-11-11", "김창원"),
+        ("카카오 · Apple 로그인 (Supabase Auth)", "2026-11-10", "2026-11-17", "김창원"),
+        ("퀴즈 AI 서버 · 서버 함수 배포 · CI", "2026-11-04", "2026-11-17", "강건우"),
+        ("화면 디자인 다듬기", "2026-11-12", "2026-11-18", "이재빈"),
+        ("사용자 테스트 · 개선", "2026-11-17", "2026-11-21", "이재빈"),
+        ("발표 준비 · 최종 보고서", "2026-11-20", "2026-11-23", "공통"),
     ]
     colors = {"이재빈": RED, "강건우": NAVY, "김창원": GREEN, "김주안": GOLD, "공통": GRAY}
-    start, end = dt.date(2026, 9, 1), dt.date(2026, 12, 20)
+    start, end = dt.date(2026, 11, 2), dt.date(2026, 11, 24)  # end는 다음 날 0시
     days = (end - start).days
     W, left, top, rowh = 2400, 640, 150, 78
-    H = top + rowh * len(tasks) + 170
+    H = top + rowh * len(tasks) + 130
     im = Image.new("RGB", (W, H), WHITE)
     d = ImageDraw.Draw(im)
-    x0, x1 = left, W - 60
+    x0, x1 = left, W - 160
     px = (x1 - x0) / days
-    # 달 표시
-    for m in (9, 10, 11, 12):
-        ms = dt.date(2026, m, 1)
-        me = dt.date(2026, m + 1, 1) if m < 12 else end
-        a, b = x0 + (ms - start).days * px, x0 + min((me - start).days, days) * px
-        d.rectangle([a, 60, b, 110], fill=NAVY if m % 2 else (52, 64, 98))
-        d.text(((a + b) / 2, 85), f"{m}월", font=F(30, 800), fill=WHITE, anchor="mm")
-    # 주 눈금
-    wk = start
-    while wk <= end:
-        x = x0 + (wk - start).days * px
-        d.line([x, 120, x, H - 150], fill=(236, 232, 224), width=2)
-        wk += dt.timedelta(days=7)
-    # 오늘
-    today = dt.date(2026, 10, 31)
-    tx = x0 + (today - start).days * px
-    for y in range(120, H - 150, 20):
-        d.line([tx, y, tx, y + 10], fill=RED, width=4)
-    d.text((tx + 8, 128), "현재 (10/31)", font=F(22, 700), fill=RED)
-    for i, (name, s, e, who, done) in enumerate(tasks):
+    # 주차 표시 (월요일 시작)
+    weeks = -(-days // 7)
+    for k in range(weeks):
+        ws = start + dt.timedelta(days=7 * k)
+        we = min(ws + dt.timedelta(days=7), end)
+        a, b = x0 + (ws - start).days * px, x0 + (we - start).days * px
+        d.rectangle([a, 60, b, 110], fill=NAVY if k % 2 == 0 else (52, 64, 98))
+        last = we - dt.timedelta(days=1)
+        d.text(((a + b) / 2, 85), f"{k + 1}주차  {ws.month}/{ws.day}~{last.month}/{last.day}" if (we - ws).days == 7 else f"{last.month}/{last.day}",
+               font=F(26 if (we - ws).days == 7 else 22, 800), fill=WHITE, anchor="mm")
+    # 날짜 눈금 (하루마다 옅게, 주마다 진하게)
+    for i in range(days + 1):
+        x = x0 + i * px
+        d.line([x, 120, x, H - 110], fill=(225, 220, 210) if i % 7 == 0 else (243, 240, 234), width=3 if i % 7 == 0 else 1)
+    for i, (name, s, e, who) in enumerate(tasks):
         y = top + i * rowh
         d.text((60, y + rowh / 2), name, font=F(27, 650), fill=INK, anchor="lm")
-        a = x0 + (dt.date.fromisoformat(s) - start).days * px
-        b = x0 + (dt.date.fromisoformat(e) - start).days * px
-        c = colors[who]
-        if done:
-            d.rounded_rectangle([a, y + 16, b, y + rowh - 16], radius=12, fill=c)
+        sd, ed = dt.date.fromisoformat(s), dt.date.fromisoformat(e)
+        a = x0 + (sd - start).days * px
+        b = x0 + ((ed - start).days + 1) * px
+        d.rounded_rectangle([a + 2, y + 16, b - 2, y + rowh - 16], radius=12, fill=colors[who])
+        label, lf = f"{who}  {sd.month}/{sd.day}~{ed.month}/{ed.day}", F(21, 600)
+        if b + 12 + d.textlength(label, font=lf) > W - 20:  # 오른쪽 끝을 넘으면 막대 왼쪽에
+            d.text((a - 12, y + rowh / 2), label, font=lf, fill=GRAY, anchor="rm")
         else:
-            d.rounded_rectangle([a, y + 16, b, y + rowh - 16], radius=12, fill=WHITE, outline=c, width=5)
-        d.text((b + 12, y + rowh / 2), who, font=F(22, 600), fill=GRAY, anchor="lm")
+            d.text((b + 12, y + rowh / 2), label, font=lf, fill=GRAY, anchor="lm")
     # 범례
-    lx, ly = 60, H - 110
+    lx, ly = 60, H - 80
     for who, c in colors.items():
         d.rounded_rectangle([lx, ly, lx + 40, ly + 28], radius=6, fill=c)
         d.text((lx + 52, ly + 14), who, font=F(24, 600), fill=INK, anchor="lm")
         lx += 200
-    d.rounded_rectangle([lx + 40, ly, lx + 80, ly + 28], radius=6, fill=GRAY)
-    d.text((lx + 92, ly + 14), "완료", font=F(24, 600), fill=INK, anchor="lm")
-    d.rounded_rectangle([lx + 200, ly, lx + 240, ly + 28], radius=6, fill=WHITE, outline=GRAY, width=4)
-    d.text((lx + 252, ly + 14), "예정", font=F(24, 600), fill=INK, anchor="lm")
     im.save(os.path.join(OUT, "schedule.png"))
 
 
