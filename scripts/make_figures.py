@@ -85,42 +85,120 @@ def dashed_rect(d, x1, y1, x2, y2, color=GRAY, width=3, seg=16):
         d.line([x2, y, x2, min(y + seg, y2)], fill=color, width=width)
 
 
+LOGOS = os.path.join(OUT, "logos")
+
+
+def logo(im, name, x, y, h):
+    """로고를 높이 h로 붙이고 너비를 돌려줌"""
+    lg = Image.open(os.path.join(LOGOS, name + ".png")).convert("RGBA")
+    lg = lg.crop(lg.getbbox())
+    w = round(lg.width * h / lg.height)
+    lg = lg.resize((w, h), Image.LANCZOS)
+    im.paste(lg, (int(x), int(y)), lg)
+    return w
+
+
+def tech(im, d, x, y, name, label, sub=None, h=60, size=28):
+    """로고 + 이름(+ 작은 설명) 한 덩어리. 차지한 너비를 돌려줌"""
+    w = logo(im, name, x, y, h)
+    tx = x + w + 14
+    if sub:
+        d.text((tx, y + h / 2 - 4), label, font=F(size, 800), fill=INK, anchor="ls")
+        d.text((tx, y + h / 2 + 6), sub, font=F(size - 6, 450), fill=GRAY, anchor="lt")
+        tw = max(d.textlength(label, font=F(size, 800)), d.textlength(sub, font=F(size - 6, 450)))
+    else:
+        d.text((tx, y + h / 2), label, font=F(size, 800), fill=INK, anchor="lm")
+        tw = d.textlength(label, font=F(size, 800))
+    return w + 14 + tw
+
+
+def hero(im, d, x, w, y, name, label, h=96, size=36):
+    """박스 가운데에 큰 로고 + 이름"""
+    lg = Image.open(os.path.join(LOGOS, name + ".png"))
+    lw = round(lg.crop(lg.getbbox()).width * h / lg.crop(lg.getbbox()).height)
+    tw = d.textlength(label, font=F(size, 800))
+    sx = x + (w - (lw + 20 + tw)) / 2
+    logo(im, name, sx, y, h)
+    d.text((sx + lw + 20, y + h / 2), label, font=F(size, 800), fill=INK, anchor="lm")
+
+
+def lines_at(d, x, y, lines, size=26, center=None):
+    for ln in lines:
+        bold = ln.startswith("**")
+        t = ln.replace("**", "")
+        f = F(size, 700 if bold else 450)
+        col = INK if bold else (60, 66, 84)
+        if center is not None:
+            d.text((center, y), t, font=f, fill=col, anchor="mt")
+        else:
+            d.text((x, y), t, font=f, fill=col)
+        y += size + 18
+
+
 def architecture():
     W, H = 2400, 1560
     im = Image.new("RGB", (W, H), WHITE)
     d = ImageDraw.Draw(im)
 
     d.text((60, 50), "사용자 화면", font=F(30, 700), fill=GRAY)
-    box(d, 60, 100, 560, 420, "모바일 앱 (iOS · Android)",
-        ["**React Native 0.86 · Expo SDK 57**", "TypeScript · Expo Router", "주제 뽑기(슬롯머신) · 15분 공부", "퀴즈 7문제 (AI 4 + 기본 3) · 랭크"])
-    box(d, 60, 600, 560, 440, "휴대폰 안 (오프라인에서도 동작)",
-        ["**내장 퀴즈 문제 은행**", "주제 1,054개 (공학 11 · 과학 5)", "기록·설정 저장 (AsyncStorage)", "매일 알림 · 타이머 알림", "(expo-notifications)"], head=NAVY)
+    box(d, 60, 100, 560, 420, "모바일 앱 (iOS · Android)", [])
+    tech(im, d, 104, 200, "react", "React Native", "0.86")
+    tech(im, d, 390, 200, "expo", "Expo", "SDK 57")
+    tech(im, d, 104, 290, "typescript", "TypeScript", "Expo Router")
+    lines_at(d, 104, 390, ["주제 뽑기(슬롯머신) · 15분 공부", "퀴즈 7문제 (AI 4 + 기본 3) · 레벨"])
+
+    box(d, 60, 600, 560, 440, "휴대폰 안 (오프라인에서도 동작)", [], head=NAVY)
+    tech(im, d, 104, 700, "android", "Android")
+    tech(im, d, 370, 700, "apple", "iOS")
+    lines_at(d, 104, 800, ["**내장 퀴즈 문제 은행**", "주제 1,054개 (공학 11 · 과학 5)", "기록 저장 (AsyncStorage)", "매일 알림 (expo-notifications)"])
     arrow(d, [(340, 520), (340, 600)], both=True)
 
     dashed_rect(d, 760, 60, 1660, 1120)
     lab = F(32, 700)
     lw = d.textlength(" Supabase Cloud ", font=lab)
-    d.rectangle([786, 40, 790 + lw + 4, 80], fill=WHITE)
-    d.text((790, 60), " Supabase Cloud ", font=lab, fill=GRAY, anchor="lm")
-    box(d, 800, 110, 820, 300, "인증 · 보안",
-        ["**Supabase Auth** (이메일 · 카카오 · Apple 예정)", "JWT 토큰 · 자동 갱신", "**RLS** — 본인 데이터만 읽고 쓰기"], accent=GOLD)
-    box(d, 800, 450, 820, 240, "REST API (PostgREST)",
-        ["profiles · study_records 조회·저장", "rpc/delete_my_account (회원 탈퇴)"], accent=NAVY)
-    box(d, 800, 730, 820, 340, "서버 함수 (Edge Function · Deno)",
-        ["**generate-quiz** (퀴즈 AI 서버가 꺼졌을 때)", "출제 → 2번 검수 → 통과한 문제만 저장", "주제당 최대 40문제 → AI 비용 상한"], accent=RED)
+    d.rectangle([786, 34, 790 + 48 + lw + 4, 86], fill=WHITE)
+    logo(im, "supabase", 792, 40, 40)
+    d.text((838, 60), " Supabase Cloud ", font=lab, fill=GRAY, anchor="lm")
+
+    box(d, 800, 110, 820, 300, "인증 · 보안", [], accent=GOLD)
+    x = 844
+    x += tech(im, d, x, 200, "supabase", "Supabase Auth", "이메일 로그인", h=56) + 50
+    x += tech(im, d, x, 200, "jsonwebtokens", "JWT", "토큰 자동 갱신", h=56) + 50
+    lines_at(d, x, 205, ["**RLS**", "본인 데이터만"], size=24)
+    x = 844
+    x += logo(im, "kakaotalk", x, 300, 40) + 10
+    x += logo(im, "apple", x, 300, 40) + 14
+    d.text((x, 320), "카카오 · Apple 로그인 (예정)", font=F(24, 450), fill=(60, 66, 84), anchor="lm")
+
+    box(d, 800, 450, 820, 240, "REST API (PostgREST)", [], accent=NAVY)
+    tech(im, d, 844, 545, "postgresql", "PostgREST", "DB 표를 바로 REST API로", h=56)
+    lines_at(d, 1260, 548, ["profiles · study_records", "조회·저장 · 회원 탈퇴"], size=24)
+
+    box(d, 800, 730, 820, 340, "서버 함수 (Edge Function)", [], accent=RED)
+    tech(im, d, 844, 825, "denojs", "Deno", "TypeScript", h=60)
+    tech(im, d, 1110, 825, "claude", "generate-quiz", "퀴즈 AI 서버가 꺼졌을 때", h=60)
+    lines_at(d, 844, 925, ["출제 → 2번 검수 → 통과한 문제만 저장", "주제당 최대 40문제 → AI 비용 상한"])
     for y in (410, 690):
         arrow(d, [(1210, y), (1210, y + 40)])
 
     # 퀴즈 AI 서버 (개인 PC 등에서 계속 켜 두는 출제 AI)
-    box(d, 760, 1200, 900, 300, "퀴즈 AI 서버 (PC 등에서 상시 구동)",
-        ["**api/quiz-server** · Node · 출제 지침 gem.md", "공부 시작 즉시 출제 → 1차·2차 검수", "주제별 문제 창고 · 쉬는 동안 계속 출제"], head=RED)
+    box(d, 760, 1200, 900, 300, "퀴즈 AI 서버 (PC 등에서 상시 구동)", [], head=RED)
+    tech(im, d, 804, 1295, "nodejs", "Node.js", "api/quiz-server", h=60)
+    tech(im, d, 1150, 1295, "claude", "출제 지침", "gem.md (Gems처럼)", h=60)
+    lines_at(d, 804, 1395, ["공부 시작 즉시 출제 → 1차·2차 검수", "주제별 문제 창고 · 쉬는 동안 계속 출제"])
 
-    box(d, 1800, 110, 540, 300, "데이터베이스",
-        ["**PostgreSQL**", "profiles · study_records", "quizzes (검수 통과 AI 문제)"])
-    box(d, 1800, 470, 540, 300, "AI 퀴즈 생성 · 검수",
-        ["**Anthropic Claude API**", "claude-opus-5-5 · JSON 출력", "출제 + 1차(직접 풀기)·2차 검수", "주제 정보만 전달 (개인정보 X)"], head=RED)
-    box(d, 1800, 830, 540, 300, "학습 자료 (외부)",
-        ["**한국어 위키백과** 718개 문서", "**공식 문서** 60개", "RFC · NIST · W3C · ISO 등"], head=NAVY)
+    box(d, 1800, 110, 540, 300, "데이터베이스", [])
+    hero(im, d, 1800, 540, 205, "postgresql", "PostgreSQL")
+    lines_at(d, 0, 330, ["profiles · study_records · quizzes"], size=24, center=2070)
+
+    box(d, 1800, 470, 540, 300, "AI 퀴즈 생성 · 검수", [], head=RED)
+    hero(im, d, 1800, 540, 560, "claude", "Claude API", h=84)
+    logo(im, "anthropic", 2070 - 60, 655, 22)
+    lines_at(d, 0, 700, ["claude-opus-5-5 · 개인정보 전송 X"], size=24, center=2070)
+
+    box(d, 1800, 830, 540, 300, "학습 자료 (외부)", [], head=NAVY)
+    hero(im, d, 1800, 540, 925, "wikipedia", "한국어 위키백과", h=80, size=32)
+    lines_at(d, 0, 1030, ["문서 718개 · 공식 문서 60개", "RFC · NIST · W3C · ISO 등"], size=24, center=2070)
 
     # 앱 ↔ Supabase
     arrow(d, [(620, 260), (800, 260)], both=True)
