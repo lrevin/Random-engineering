@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Pressable, View } from "react-native";
-import { TierBadge, UserRankBar } from "@/components/Rank";
+import { TierBadge, UserLevelBar } from "@/components/Rank";
 import { Slot } from "@/components/Slot";
 import { GearCount } from "@/components/TimeUpSheet";
 import { LevelButton } from "@/components/LevelSheet";
@@ -131,7 +131,7 @@ export default function Home() {
       </Row>
 
       <Card style={{ paddingVertical: 12 }}>
-        <UserRankBar rp={totalRp(records)} compact />
+        <UserLevelBar xp={totalRp(records)} compact />
       </Card>
 
       <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
@@ -198,7 +198,7 @@ export default function Home() {
                   <T size={16} color="ink2" center style={{ marginTop: 4 }}>{shown.hint}</T>
                   <Row gap={8} style={{ justifyContent: "center", marginTop: 4 }}>
                     <TierBadge index={topicMastery(shown.id, records).index} size="sm" />
-                    <T size={12} color="muted">퀴즈 최대 +{maxRpFor(shown)} RP</T>
+                    <T size={12} color="muted">퀴즈 최대 +{maxRpFor(shown)} XP</T>
                   </Row>
                 </>
               )}

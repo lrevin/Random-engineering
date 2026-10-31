@@ -5,7 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Btn, Card, Row, Segment, T } from "@/components/ui";
 import { ALL_CATEGORIES } from "@/data";
 import { useApp } from "@/lib/app-state";
-import { UserRankBar, TierBadge } from "@/components/Rank";
+import { UserLevelBar, TierBadge } from "@/components/Rank";
 import { topicMastery, totalRp } from "@/lib/rank";
 import { averageScore, calcStreak, fmtDate } from "@/lib/stats";
 import type { StudyRecord } from "@/lib/types";
@@ -68,8 +68,8 @@ export default function History() {
       </Row>
 
       <Card style={{ gap: 6 }}>
-        <T size={14} weight="semibold" color="ink2">내 랭크</T>
-        <UserRankBar rp={totalRp(records)} />
+        <T size={14} weight="semibold" color="ink2">내 레벨</T>
+        <UserLevelBar xp={totalRp(records)} />
       </Card>
 
       {bars.counts.length > 0 && (
@@ -108,7 +108,7 @@ export default function History() {
           <Score r={r} />
         </Row>
         <T size={13} color="muted">
-          {fmtDate(r.studiedAt)} · {ALL_CATEGORIES.find((x) => x.id === r.category)?.name ?? r.category} · +{r.rp} RP
+          {fmtDate(r.studiedAt)} · {ALL_CATEGORIES.find((x) => x.id === r.category)?.name ?? r.category} · +{r.rp} XP
           {!r.synced && mode === "user" ? " · 동기화 대기" : ""}
         </T>
         <Row gap={6}>

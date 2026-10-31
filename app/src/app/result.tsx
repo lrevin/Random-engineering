@@ -1,7 +1,7 @@
 import { Redirect, router } from "expo-router";
 import { useState } from "react";
 import { View } from "react-native";
-import { TierBadge, UserRankBar } from "@/components/Rank";
+import { LevelBadge, TierBadge, UserLevelBar } from "@/components/Rank";
 import { Btn, Card, Row, Screen, T } from "@/components/ui";
 import { topicById } from "@/data";
 import { useApp } from "@/lib/app-state";
@@ -31,7 +31,7 @@ function ResultInner({ snapshot }: { snapshot: NonNullable<ReturnType<typeof use
   const r = snapshot.result!;
   const topic = topicById(snapshot.topicId);
   const mastery = topicMastery(snapshot.topicId, records);
-  const rankUp = r.userTierAfter > r.userTierBefore;
+  const levelUp = (r.userLevelAfter ?? 0) > (r.userLevelBefore ?? 0);
   const topicUp = r.topicTierAfter > r.topicTierBefore;
   const pct = r.total ? r.score / r.total : 0;
 
@@ -46,10 +46,10 @@ function ResultInner({ snapshot }: { snapshot: NonNullable<ReturnType<typeof use
 
   return (
     <Screen scroll>
-      {rankUp && (
-        <Card style={{ backgroundColor: TIERS[r.userTierAfter].color + "22", borderColor: TIERS[r.userTierAfter].color, alignItems: "center", gap: 6 }}>
-          <T size={40}>{TIERS[r.userTierAfter].emoji}</T>
-          <T size={20} weight="bold" center>랭크 승급! {TIERS[r.userTierAfter].name} 달성</T>
+      {levelUp && (
+        <Card style={{ backgroundColor: c.goldSoft, borderColor: c.gold, alignItems: "center", gap: 8 }}>
+          <LevelBadge level={r.userLevelAfter} size="lg" />
+          <T size={20} weight="bold" center>레벨 업! {r.userLevelAfter}레벨 달성</T>
         </Card>
       )}
 
@@ -64,8 +64,8 @@ function ResultInner({ snapshot }: { snapshot: NonNullable<ReturnType<typeof use
 
       <Card style={{ gap: 10 }}>
         <Row style={{ justifyContent: "space-between" }}>
-          <T size={16} weight="bold">획득 RP</T>
-          <T size={22} weight="bold" color="accent">+{r.rp}</T>
+          <T size={16} weight="bold">획득 경험치</T>
+          <T size={22} weight="bold" color="accent">+{r.rp} XP</T>
         </Row>
         {r.parts.filter((p) => p.value > 0).map((p) => (
           <Row key={p.label} style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
@@ -74,8 +74,8 @@ function ResultInner({ snapshot }: { snapshot: NonNullable<ReturnType<typeof use
           </Row>
         ))}
         <View style={{ height: 1, backgroundColor: c.line, marginVertical: 4 }} />
-        <T size={13} weight="semibold" color="ink2">내 랭크</T>
-        <UserRankBar rp={totalRp(records)} />
+        <T size={13} weight="semibold" color="ink2">내 레벨</T>
+        <UserLevelBar xp={totalRp(records)} />
       </Card>
 
       <Card style={{ gap: 8 }}>

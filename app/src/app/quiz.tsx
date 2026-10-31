@@ -8,7 +8,7 @@ import { levelText, topicById } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { confirmQuit } from "@/lib/confirm";
 import { loadQuiz, type QuizQuestion } from "@/lib/quiz";
-import { calcRp, topicMastery, totalRp, userRank } from "@/lib/rank";
+import { calcRp, topicMastery, totalRp, userLevel } from "@/lib/rank";
 import { calcStreak } from "@/lib/stats";
 import type { WrongAnswer } from "@/lib/types";
 import { radius, raised, shadow, useColors } from "@/theme";
@@ -91,7 +91,7 @@ function QuizInner() {
       ...x, stage: "result", quiz: { ...quiz, answers },
       result: {
         recordId: rec.id, score, total, rp: rp.total, parts: rp.parts, streak,
-        userTierBefore: userRank(rpBefore).index, userTierAfter: userRank(rpBefore + rp.total).index,
+        userLevelBefore: userLevel(rpBefore).level, userLevelAfter: userLevel(rpBefore + rp.total).level,
         topicTierBefore: topicBefore.index, topicTierAfter: topicAfter.index,
       },
     } : x);
