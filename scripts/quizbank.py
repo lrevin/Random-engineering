@@ -3,7 +3,9 @@
 사용법:
   python scripts/quizbank.py plan      # 주제당 30문제가 안 된 주제를 묶은 작업 목록 출력 (JSON, 묶음당 약 300문제)
   python scripts/quizbank.py check     # 모든 문제 파일 검사 (형식·개수·중복)
-  python scripts/quizbank.py index     # app/src/data/quizbank/index.ts 다시 만들기
+  python scripts/quizbank.py index     # app/src/data/quizbank/index.ts 다시 만들기 (문제 은행 전체를 앱에 넣음)
+  python scripts/quizbank.py index --remote  # 서버(quiz_bank 표)에서 받아 쓰는 방식: 앱에는 주제당 4문제만 넣음
+  python scripts/quizbank.py upload    # 문제 은행을 Supabase quiz_bank 표에 올림 (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY 환경 변수)
   python scripts/quizbank.py status    # 진행 현황
 
 문제 파일 형식 (app/src/data/quizbank/<이름>.json):
@@ -15,6 +17,7 @@ import json
 import os
 import re
 import sys
+import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BANK = os.path.join(ROOT, "app", "src", "data", "quizbank")
@@ -23,6 +26,8 @@ TOPICS = os.path.join(ROOT, "api", "supabase", "functions", "generate-quiz", "to
 TARGET, TARGET_MC, TARGET_OX = 30, 22, 8
 MIN_TOTAL, MIN_MC, MIN_OX = 12, 8, 3  # 이보다 적으면 오류 (작성 중인 주제 포함)
 CHUNK_QUESTIONS = 300  # 작성 묶음 하나에 새로 쓸 문제 수
+STARTER = os.path.join(ROOT, "app", "src", "data", "quizbank-starter.json")
+STARTER_MC, STARTER_OX = 3, 1  # --remote 일 때 앱에 남기는 주제당 문제 (서버에 못 닿을 때 쓰는 기본 문제)
 
 
 def load_topics():
@@ -128,23 +133,57 @@ def check():
     return len(merged), problems
 
 
-def write_index():
-    files = sorted(os.path.basename(f)[:-5] for f in glob.glob(os.path.join(BANK, "*.json")))
-    ident = lambda n: "b_" + n.replace("-", "_")
-    lines = [
-        "// 자동 생성 파일: python scripts/quizbank.py index",
+def write_index(remote=False):
+    head = [
+        "// 자동 생성 파일: python scripts/quizbank.py index" + (" --remote" if remote else ""),
         "// 앱에 내장된 퀴즈 문제 은행. 문제 파일을 추가한 뒤 위 명령으로 다시 만드세요.",
         "",
         'import type { QuizQuestion } from "@/lib/quiz";',
     ]
-    lines += [f'import {ident(n)} from "./{n}.json";' for n in files]
+    if remote:
+        # 주제당 몇 문제만 남기고 나머지는 서버(quiz_bank 표)에서 받음
+        starter = {}
+        for tid, qs in sorted(load_bank().items()):
+            mc = [q for q in qs if q.get("type") == "mc"][:STARTER_MC]
+            ox = [q for q in qs if q.get("type") == "ox"][:STARTER_OX]
+            starter[tid] = mc + ox
+        json.dump(starter, open(STARTER, "w", encoding="utf8"), ensure_ascii=False, separators=(",", ":"))
+        lines = head + ['import starter from "../quizbank-starter.json";', "",
+                        "/** 앱에 든 문제가 일부뿐이라 서버에서 나머지를 받아 씀 */",
+                        "export const BANK_BUNDLED_FULL = false;",
+                        "export const QUIZ_BANK = starter as Record<string, QuizQuestion[]>;", ""]
+        open(os.path.join(BANK, "index.ts"), "w", encoding="utf8").write("\n".join(lines))
+        return len(starter)
+    if os.path.exists(STARTER):
+        os.remove(STARTER)
+    files = sorted(os.path.basename(f)[:-5] for f in glob.glob(os.path.join(BANK, "*.json")))
+    ident = lambda n: "b_" + n.replace("-", "_")
+    lines = head + [f'import {ident(n)} from "./{n}.json";' for n in files]
     lines += ["", "const FILES = ["]
     lines += [f"  {ident(n)}," for n in files]
     lines += ["] as Record<string, QuizQuestion[]>[];", ""]
+    lines += ["/** 문제 은행 전체가 앱에 들어 있음 (서버에서 받을 필요 없음) */", "export const BANK_BUNDLED_FULL = true;", ""]
     lines += ["// 한 주제의 문제가 여러 파일에 나뉘어 있으면 합칩니다", "export const QUIZ_BANK: Record<string, QuizQuestion[]> = {};"]
     lines += ["for (const f of FILES) for (const [id, qs] of Object.entries(f)) (QUIZ_BANK[id] ??= []).push(...qs);", ""]
     open(os.path.join(BANK, "index.ts"), "w", encoding="utf8").write("\n".join(lines))
     return len(files)
+
+
+def upload(batch=50):
+    """문제 은행을 quiz_bank 표에 올림 (같은 주제는 덮어씀). service role 키는 DB 담당자 PC의 환경 변수에만 둠"""
+    url, key = os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+    if not url or not key:
+        sys.exit("SUPABASE_URL 과 SUPABASE_SERVICE_ROLE_KEY 환경 변수를 먼저 정해 주세요.")
+    rows = [{"topic_id": t, "questions": qs} for t, qs in sorted(load_bank().items())]
+    for i in range(0, len(rows), batch):
+        req = urllib.request.Request(
+            url.rstrip("/") + "/rest/v1/quiz_bank", method="POST",
+            data=json.dumps(rows[i:i + batch], ensure_ascii=False).encode("utf8"),
+            headers={"apikey": key, "Authorization": "Bearer " + key, "Content-Type": "application/json",
+                     "Prefer": "resolution=merge-duplicates,return=minimal"})
+        urllib.request.urlopen(req, timeout=60).read()
+        print(f"올림 {min(i + batch, len(rows))}/{len(rows)}")
+    return len(rows)
 
 
 def need_of(qs):
@@ -193,7 +232,12 @@ if __name__ == "__main__":
             print("  " + p)
         sys.exit(1 if problems else 0)
     elif cmd == "index":
-        print(f"index.ts: 파일 {write_index()}개")
+        if "--remote" in sys.argv:
+            print(f"index.ts: 서버에서 받는 방식, 앱에는 주제 {write_index(remote=True)}개 × {STARTER_MC + STARTER_OX}문제")
+        else:
+            print(f"index.ts: 파일 {write_index()}개")
+    elif cmd == "upload":
+        print(f"주제 {upload()}개를 quiz_bank 표에 올렸습니다.")
     else:
         t, b = load_topics(), load_bank()
         full = sum(1 for k in t if sum(need_of(b.get(k, []))) == 0)
