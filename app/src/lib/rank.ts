@@ -2,7 +2,7 @@ import type { LevelNum, Topic } from "@/data";
 import { QUIZ_LENGTH } from "./quiz";
 import type { StudyRecord } from "./types";
 
-/** 랭크 단계 (사용자 전체 랭크와 주제별 숙련 랭크가 같은 이름을 씁니다) */
+/** 주제별 숙련 랭크 단계 (사용자는 랭크 대신 1~100 레벨을 씁니다) */
 export const TIERS = [
   { id: "bronze", name: "브론즈", emoji: "🥉", color: "#a9714b" },
   { id: "silver", name: "실버", emoji: "🥈", color: "#8e9aaf" },
@@ -13,23 +13,30 @@ export const TIERS = [
 ] as const;
 export type Tier = (typeof TIERS)[number];
 
-// ───────── 사용자 전체 랭크: 누적 RP ─────────
-/** 각 랭크에 도달하는 데 필요한 누적 RP */
-export const USER_TIER_MIN = [0, 300, 900, 2000, 4000, 7000];
+// ───────── 사용자 레벨: 누적 경험치(XP) ─────────
+// 기록의 rp 필드에 그 퀴즈로 얻은 XP가 저장됩니다 (DB 열 이름은 그대로 rp)
+export const MAX_LEVEL = 100;
 
-export function userRank(totalRp: number) {
-  let i = 0;
-  while (i + 1 < USER_TIER_MIN.length && totalRp >= USER_TIER_MIN[i + 1]) i++;
-  const next = i + 1 < USER_TIER_MIN.length ? USER_TIER_MIN[i + 1] : null;
-  const floor = USER_TIER_MIN[i];
+/** 레벨 n → n+1에 필요한 XP: 1레벨 50, 레벨마다 10씩 늘어남 (100레벨까지 누적 53,460 XP, 퀴즈 한 번에 보통 50~110 XP) */
+export const xpToNext = (level: number) => 50 + 10 * (level - 1);
+
+export function userLevel(totalXp: number) {
+  let level = 1;
+  let floor = 0;
+  while (level < MAX_LEVEL && totalXp >= floor + xpToNext(level)) {
+    floor += xpToNext(level);
+    level++;
+  }
+  const need = level < MAX_LEVEL ? xpToNext(level) : 0;
   return {
-    index: i,
-    tier: TIERS[i],
-    rp: totalRp,
-    next,
-    /** 다음 랭크까지 진행률 0~1 (최고 랭크면 1) */
-    progress: next === null ? 1 : (totalRp - floor) / (next - floor),
-    toNext: next === null ? 0 : next - totalRp,
+    level,
+    xp: totalXp,
+    /** 이번 레벨에서 모은 XP / 다음 레벨까지 필요한 XP */
+    into: totalXp - floor,
+    need,
+    /** 다음 레벨까지 진행률 0~1 (MAX면 1) */
+    progress: need ? (totalXp - floor) / need : 1,
+    toNext: need ? floor + need - totalXp : 0,
   };
 }
 
@@ -61,8 +68,8 @@ export function topicMastery(topicId: string, records: StudyRecord[]) {
   };
 }
 
-// ───────── 이번 퀴즈로 얻는 RP ─────────
-/** 난이도별 정답 1개당 RP — 주제마다 얻는 점수가 다릅니다 */
+// ───────── 이번 퀴즈로 얻는 XP ─────────
+/** 난이도별 정답 1개당 XP — 주제마다 얻는 점수가 다릅니다 */
 export const RP_PER_CORRECT: Record<LevelNum, number> = { 1: 6, 2: 9, 3: 13 };
 
 export interface RpPart {
@@ -76,7 +83,7 @@ export function calcRp(opts: { topic: Topic; correct: number; total: number; pri
   const repeat = priorAttempts === 0 ? 1 : priorAttempts === 1 ? 0.7 : 0.5;
   const base = Math.round(correct * rate * repeat);
   const parts: RpPart[] = [
-    { label: `정답 ${correct}개 × ${rate} RP (Lv.${topic.lv})${repeat < 1 ? ` × ${repeat} 복습` : ""}`, value: base },
+    { label: `정답 ${correct}개 × ${rate} XP (Lv.${topic.lv})${repeat < 1 ? ` × ${repeat} 복습` : ""}`, value: base },
   ];
   if (total > 0 && correct === total) parts.push({ label: "만점 보너스 +20%", value: Math.round(base * 0.2) });
   if (priorAttempts === 0 && correct >= Math.ceil(total * 0.6)) parts.push({ label: "첫 클리어", value: topic.lv * 10 });
@@ -84,7 +91,7 @@ export function calcRp(opts: { topic: Topic; correct: number; total: number; pri
   return { total: parts.reduce((a, p) => a + p.value, 0), parts };
 }
 
-/** 주제 카드에 보여 줄 "최대 획득 RP" (처음 풀어서 만점일 때) */
+/** 주제 카드에 보여 줄 "최대 획득 XP" (처음 풀어서 만점일 때) */
 export const maxRpFor = (topic: Topic, total = QUIZ_LENGTH) => {
   const base = total * RP_PER_CORRECT[topic.lv];
   return base + Math.round(base * 0.2) + topic.lv * 10;

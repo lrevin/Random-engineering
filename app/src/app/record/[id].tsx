@@ -70,7 +70,7 @@ export default function RecordDetail() {
         </Row>
         <T size={26} weight="bold">{r.topicKo}</T>
         <T size={14} color="muted">
-          {fmtDate(r.studiedAt)} · {r.studySec ? `공부 ${fmtDuration(r.studySec)}` : "퀴즈만 풂"} · +{r.rp} RP
+          {fmtDate(r.studiedAt)} · {r.studySec ? `공부 ${fmtDuration(r.studySec)}` : "퀴즈만 풂"} · +{r.rp} XP
           {r.quizSource === "offline" ? " · 오프라인 연습 퀴즈" : ""}
         </T>
         <T size={40} weight="bold" style={{ lineHeight: 50, color: ok ? c.success : c.accent }}>
