@@ -83,6 +83,23 @@ create table if not exists public.quizzes (
 alter table public.quizzes enable row level security;
 -- 정책을 만들지 않음 = 일반 사용자는 직접 읽거나 쓸 수 없음 (service role은 RLS를 무시)
 
+-- ───────────────────────── 미리 만든 문제 은행 (초안 — DB 담당 검토 필요) ─────────────────────────
+-- 주제당 30문제 × 1,054주제를 앱에 다 넣으면 약 12.6MB라, 서버에 두고 앱이 주제별로 받아 씁니다.
+-- 한 주제 = 한 행. 앱은 공부를 시작한 주제의 행 하나만 읽고 휴대폰에 저장해 둡니다.
+-- 올리기: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY 를 환경 변수로 두고 python scripts/quizbank.py upload
+create table if not exists public.quiz_bank (
+  topic_id    text primary key,
+  questions   jsonb not null,
+  updated_at  timestamptz not null default now()
+);
+
+alter table public.quiz_bank enable row level security;
+
+-- 문제는 비밀이 아니라서 로그인 여부와 관계없이 읽기만 허용 (쓰기 정책 없음 = 앱에서는 못 바꿈)
+drop policy if exists "quiz_bank: 누구나 조회" on public.quiz_bank;
+create policy "quiz_bank: 누구나 조회" on public.quiz_bank
+  for select to anon, authenticated using (true);
+
 -- ───────────────────────── 회원 탈퇴 ─────────────────────────
 -- 앱스토어 규정상 앱 안에서 탈퇴할 수 있어야 합니다.
 -- 로그인한 본인 계정만 지우며, 프로필과 기록은 on delete cascade 로 함께 지워집니다.

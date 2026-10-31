@@ -48,6 +48,9 @@ const FILES = [
   b_sec_4,
 ] as Record<string, QuizQuestion[]>[];
 
+/** 문제 은행 전체가 앱에 들어 있음 (서버에서 받을 필요 없음) */
+export const BANK_BUNDLED_FULL = true;
+
 // 한 주제의 문제가 여러 파일에 나뉘어 있으면 합칩니다
 export const QUIZ_BANK: Record<string, QuizQuestion[]> = {};
 for (const f of FILES) for (const [id, qs] of Object.entries(f)) (QUIZ_BANK[id] ??= []).push(...qs);
