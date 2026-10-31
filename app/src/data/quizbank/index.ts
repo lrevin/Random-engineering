@@ -13,8 +13,13 @@ import b_arch_2 from "./arch-2.json";
 import b_arch_3 from "./arch-3.json";
 import b_db_1 from "./db-1.json";
 import b_db_2 from "./db-2.json";
+import b_db_3 from "./db-3.json";
 import b_ds_1 from "./ds-1.json";
 import b_ds_2 from "./ds-2.json";
+import b_net_1 from "./net-1.json";
+import b_net_2 from "./net-2.json";
+import b_net_3 from "./net-3.json";
+import b_os_1 from "./os-1.json";
 import b_sec_1 from "./sec-1.json";
 import b_sec_3 from "./sec-3.json";
 import b_sec_4 from "./sec-4.json";
@@ -31,8 +36,13 @@ const FILES = [
   b_arch_3,
   b_db_1,
   b_db_2,
+  b_db_3,
   b_ds_1,
   b_ds_2,
+  b_net_1,
+  b_net_2,
+  b_net_3,
+  b_os_1,
   b_sec_1,
   b_sec_3,
   b_sec_4,
