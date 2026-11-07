@@ -5,9 +5,15 @@ import { connect, safeError } from './db.mjs';
 import { databaseStore } from './db-store.mjs';
 import { createAuth } from './auth.mjs';
 import { authRoutes } from './auth-http.mjs';
+import { createAccountService } from '../mysql/account-service.mjs';
+import { accountRoutes } from '../mysql/account-http.mjs';
+import { createRecordService } from '../mysql/record-service.mjs';
+import { recordRoutes } from '../mysql/record-http.mjs';
 
 export function createServer({ topics = loadTopics(), bank, store, auth, authLimits } = {}) {
   const handleAuth=auth ? authRoutes(auth,{limits:authLimits}) : null;
+  const handleAccount=auth ? accountRoutes(createAccountService({auth})) : null;
+  const handleRecords=auth ? recordRoutes(createRecordService({auth})) : null;
   if (!store) {
     bank ??= loadBank(undefined, topics);
     store = {
@@ -17,7 +23,7 @@ export function createServer({ topics = loadTopics(), bank, store, auth, authLim
     };
   }
   return http.createServer(async (req, res) => {
-    const headers = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    const headers = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'content-type, if-none-match, authorization',
       'Access-Control-Expose-Headers': 'etag', 'Content-Type': 'application/json; charset=utf-8' };
     const send = (status, body, extra = {}) => {
@@ -30,7 +36,9 @@ export function createServer({ topics = loadTopics(), bank, store, auth, authLim
     catch { return send(400, { error: 'bad_request' }); }
     try {
     if(handleAuth && await handleAuth(req,pathname,send)) return;
-    if (req.method === 'GET' && pathname === '/health') return send(200, {...await store.health(),auth:auth?'mysql':'not_implemented'});
+    if(handleAccount && await handleAccount(req,pathname,send)) return;
+    if(handleRecords && await handleRecords(req,pathname,send)) return;
+    if (req.method === 'GET' && pathname === '/health') return send(200, {...await store.health(),auth:auth?'mysql':'not_implemented',profile:auth?'mysql':'not_implemented',accountDeletion:auth?'mysql':'not_implemented',records:auth?'mysql':'not_implemented'});
     const match = /^\/quiz-bank\/([a-z0-9-]{1,32})$/.exec(pathname);
     if (req.method !== 'GET' || !match) return send(404, { error: 'not_found' });
     const questions = await store.questions(match[1]);

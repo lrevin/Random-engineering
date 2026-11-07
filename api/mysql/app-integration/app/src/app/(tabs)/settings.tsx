@@ -157,7 +157,7 @@ export default function Settings() {
           onPress={() =>
             confirm(
               mode === "user" ? "회원 탈퇴" : "데이터 지우기",
-              mode === "user" ? "계정과 모든 공부 기록이 영구 삭제되고 되돌릴 수 없어요." : "이 휴대폰의 기록과 설정이 모두 지워져요.",
+              mode === "user" ? (mysqlAuth ? "지금부터 계정 이용이 중지되고 7일 뒤 서버 데이터가 삭제돼요. 7일 이내에는 로그인 화면에서 취소할 수 있어요. 이 기기의 학습 기록과 설정은 즉시 지워져요." : "계정과 모든 공부 기록이 영구 삭제되고 되돌릴 수 없어요.") : "이 휴대폰의 기록과 설정이 모두 지워져요.",
               mode === "user" ? "탈퇴하기" : "지우기",
               () => deleteAccount().catch((e) => setNotice(authErrorMessage(e))),
             )

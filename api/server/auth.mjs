@@ -8,6 +8,9 @@ export const tokenHash = token => createHash('sha256').update(token).digest();
 export class AuthError extends Error {
   constructor(code, status=400) { super(code); this.code=code; this.status=status; }
 }
+export async function passwordMatches(value, hash) {
+  return typeof value==='string' && Buffer.byteLength(value,'utf8')<=72 && !!value && typeof hash==='string' ? bcrypt.compare(value,hash) : false;
+}
 export function normalizeEmail(value) {
   if (typeof value !== 'string') throw new AuthError('bad_request');
   const email=value.trim().toLowerCase();
@@ -39,7 +42,16 @@ export function createAuth({ secret=process.env.JWT_SECRET, connectionFactory=co
     await db.execute('INSERT INTO refresh_tokens(token_hash,session_id,expires_at) SELECT ?,id,expires_at FROM auth_sessions WHERE id=?',[tokenHash(token),id]);
     return { accessToken:await access(user),refreshToken:token,expiresIn:accessSeconds,user:{id:user.id,email} };
   }
+  async function verifyAccess(header) {
+    if(typeof header!=='string' || !header.startsWith('Bearer ')) throw new AuthError('unauthorized',401);
+    let payload;
+    try { ({payload}=await jwtVerify(header.slice(7),key,{algorithms:['HS256'],issuer:ISSUER,audience:AUDIENCE})); }
+    catch { throw new AuthError('unauthorized',401); }
+    if(typeof payload.sub!=='string' || !Number.isInteger(payload.av)) throw new AuthError('unauthorized',401);
+    return payload;
+  }
   return {
+    verifyAccess,
     async signup(body) {
       const email=normalizeEmail(body.email), hash=await bcrypt.hash(password(body.password,true),12);
       try {
@@ -62,7 +74,9 @@ export function createAuth({ secret=process.env.JWT_SECRET, connectionFactory=co
         return transaction(db,async()=>{
           const [[user]]=await db.execute('SELECT id,status,auth_version FROM users WHERE id=? FOR UPDATE',[identity.user_id]);
           const [[current]]=await db.execute("SELECT password_hash FROM auth_identities WHERE user_id=? AND provider='email'",[identity.user_id]);
-          if(!user || user.status!=='active' || current?.password_hash!==identity.password_hash) throw new AuthError('invalid_credentials',401);
+          if(!user || current?.password_hash!==identity.password_hash) throw new AuthError('invalid_credentials',401);
+          if(user.status==='deleting') throw new AuthError('account_deleting',401);
+          if(user.status!=='active') throw new AuthError('invalid_credentials',401);
           return newSession(db,user,email);
         });
       });
@@ -108,11 +122,7 @@ export function createAuth({ secret=process.env.JWT_SECRET, connectionFactory=co
       });
     },
     async me(header) {
-      if(typeof header!=='string' || !header.startsWith('Bearer ')) throw new AuthError('unauthorized',401);
-      let payload;
-      try { ({payload}=await jwtVerify(header.slice(7),key,{algorithms:['HS256'],issuer:ISSUER,audience:AUDIENCE})); }
-      catch { throw new AuthError('unauthorized',401); }
-      if(typeof payload.sub!=='string' || !Number.isInteger(payload.av)) throw new AuthError('unauthorized',401);
+      const payload=await verifyAccess(header);
       return withDb(async db=>{
         const [[user]]=await db.execute("SELECT u.id,u.status,u.auth_version,i.email FROM users u LEFT JOIN auth_identities i ON i.user_id=u.id AND i.provider='email' WHERE u.id=?",[payload.sub]);
         if(!user || user.status!=='active' || user.auth_version!==payload.av) throw new AuthError('unauthorized',401);

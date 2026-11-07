@@ -60,7 +60,7 @@ MYSQL_USER가 설정돼 있으면 MySQL을 직접 조회한다. DB 연결 실패
 - `npm test`: JSON 검증·병합·식별자·파일 처리·기존 HTTP 회귀 테스트.
 - `npm run db:test`: 19개 테이블·FK·CHECK·UNIQUE, 5,520문제 원본 대조, 중복 없는 재적재, MySQL HTTP 조회, 실패 시 롤백, 메모 순번 UPDATE 및 기록 삭제·XP 취소·삭제 표식의 SQL 처리 검증.
 
-이메일 가입·로그인·세션 유지 API는 MySQL로 구현했다. 프로필·회원 탈퇴·학습 기록·XP·동기화 업무 API는 아직 전환하지 않았다. MySQL 인증 모드의 앱 프로필·기록은 기기에 보관하며 Supabase로 전송하지 않는다.
+이메일 가입·로그인·세션 유지 API는 MySQL로 구현했다. 프로필 조회·저장과 7일 유예 회원 탈퇴·취소·정리 기능도 MySQL로 구현했다. 학습 기록·XP·동기화 업무 API는 아직 미전환이며 학습 기록은 기기에 보관한다.
 
 AI pool은 아직 별도 JSON 저장이다. AI 문제의 MySQL 수신·적재는 LLM 전달 형식 확정 후 연결한다. 톱니바퀴 테이블은 결제 모델 확정 전이므로 생성하지 않는다.
 ## 이메일 인증과 로그인 유지
@@ -83,10 +83,40 @@ Refresh Token은 48바이트 무작위 값이며 DB에는 SHA-256만 저장한�
 
 모바일 로그인 정보는 expo-secure-store, 웹 미리보기는 탭 단위 sessionStorage에 보관한다. 앱 재시작·화면 복귀·활성 중 주기 확인으로 세션을 검증·갱신한다. 네트워크 오류 시 로그인 정보를 유지하고, 갱신 거절 시 로그인 정보를 지운다. 오프라인 로그아웃은 기기 정보를 지우지만 통신 실패 시 서버 세션 폐기까지 보장하지 않는다.
 
-MySQL 인증 모드에서 회원 탈퇴는 미전환 안내 오류를 반환하며 성공한 것처럼 처리하지 않는다. 프로필·학습 기록은 계정별로 기기에만 보관·복원한다. 실제 서버 동기화는 후속 전환 대상이다.
+MySQL 전환 후보 앱은 프로필을 서버에서 조회·저장하고, 탈퇴 신청 성공 시 로그인을 지운다. 탈퇴는 즉시 접근 차단 후 7일 뒤 데이터 삭제이며 7일 이내 비밀번호 확인으로 취소할 수 있다. 학습 기록의 MySQL 동기화는 별도 전환 후보 앱에 연결했다.
 
 ```powershell
 npm run auth:test
 ```
 
 실제 MySQL·HTTP API와 앱의 인증 클라이언트를 함께 테스트한다. 테스트 계정은 종료 시 삭제한다. IP 요청 제한·형식 검사·16KB 요청 크기 제한·인증 응답 no-store·비밀번호 및 토큰 원문 로그 금지를 적용했다. 운영 배포 시 HTTPS가 필요하다.
+## 프로필·회원 탈퇴 API
+
+| 메서드 | 경로 | 동작 |
+|---|---|---|
+| GET | /me/profile | 인증한 본인 프로필, 미등록 시 404 |
+| PUT | /me/profile | 본인 프로필 전체 생성·수정, 입력·관심 분야 코드 검사 |
+| DELETE | /me | 7일 유예 탈퇴 신청, 모든 세션 폐기, auth_version 증가, 202 |
+| POST | /auth/cancel-deletion | email/password 확인 후 7일 이내 신청 취소, 취소 후 새 로그인 필요 |
+
+프로필은 nickname·interests·level·studyMinutes·reminderEnabled·reminderTime을 사용한다. 요청 사용자 ID는 소유권에 사용하지 않는다. `npm run accounts:purge`는 기간이 지난 deleting 계정과 소유 데이터를 FK 순서에 맞춰 트랜잭션으로 삭제한다. 실패 시 해당 사용자 삭제를 롤백한다. 이 명령의 일일 스케줄 등록은 운영 작업이며 자동 설정하지 않았다. 현재 취소는 이메일·비밀번호 계정만 지원한다. `npm run account:test`로 검증한다.
+## 학습 기록 API
+
+모든 /me 경로는 본인 Access Token이 필요하며 요청의 userId를 신뢰하지 않는다.
+
+| 메서드 | 경로 | 동작 |
+|---|---|---|
+| PUT | /me/records | records 배열 1~100개, 각 7문제·답안·학습 시각·메모 저장. 항목별 성공/실패 반환 |
+| GET | /me/records | limit 1~100과 cursor로 기록 목록 조회 |
+| GET | /me/records/snapshot | 일관된 전체 기록과 변경 커서 조회. 전환 후보 앱에서 사용 |
+| GET | /me/records/changes | cursor 이후 변경·삭제 조회. 만료된 커서는 409 full_resync_required |
+| GET | /me/records/:id | 문제 스냅샷·제출 답안·오답을 포함한 기록 상세 |
+| PUT | /me/records/:id/memo | memo·baseChangeSeq로 수정. 충돌 시 409와 서버 기록 반환 |
+| DELETE | /me/records/:id | 기록·답안 삭제, XP 원지급 취소, 삭제 표식 저장. 같은 요청 재전송은 204 |
+| GET | /me/stats | XP 원장 합계·주제별 기록 통계 |
+
+기록 ID와 attemptId를 재사용해 XP를 재지급할 수 없다. 삭제 후에도 완료된 시도와 XP 원장을 보관한다. 기록 내용은 불변이며 메모만 별도로 수정한다. XP·오답·주제 정보는 서버에서 계산한다. 문제와 정답 자체는 앱이 보낸 스냅샷이므로 검증 상태는 client_reported다. 오래된 기록(30일 초과)·5분 초과 미래 시각은 연속 학습 날짜에 포함하지 않는다. 오래된 기록의 기본 XP는 지급한다.
+
+기록 업로드는 최대 4MB, 그 외 JSON 요청은 16KB다. 삭제 표식에 90일 만료 시각을 저장하지만 정리 작업은 아직 자동화하지 않았다. 현재 표식을 계속 보존하므로 삭제 동기화가 일찍 끊기지 않는다. 운영 전 정리 작업과 min_available_seq 갱신을 함께 구현해야 한다.
+
+기본 문제는 GET /quiz-bank/:topicId로 MySQL의 공개 문제만 읽는다. 빈 주제는 빈 배열, 비활성·없는 주제는 404이며 ETag를 지원한다. JSON 원본 적재는 기존 db:import 명령을 사용한다.

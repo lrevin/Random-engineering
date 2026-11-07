@@ -1,12 +1,17 @@
+import type { StudyRecord } from "./types";
 export interface AuthSession {
   accessToken: string; refreshToken: string; expiresAt: number;
   user: { id: string; email: string | null };
+}
+export interface AccountProfile {
+  nickname: string; interests: string[]; level: 0 | 1 | 2 | 3;
+  studyMinutes: number; reminderEnabled: boolean; reminderTime: string;
 }
 export interface SessionStorage {
   read(): Promise<string | null>; write(value: string): Promise<void>; remove(): Promise<void>;
 }
 export class AuthApiError extends Error {
-  constructor(public code: string, public status = 0) { super(code); }
+  constructor(public code: string, public status = 0, public details: {record?: StudyRecord} = {}) { super(code); }
 }
 /** Pure client; platform token storage is injected. */
 export function createAuthClient(url: string, storage: SessionStorage, fetcher: typeof fetch = fetch) {
@@ -22,17 +27,17 @@ export function createAuthClient(url: string, storage: SessionStorage, fetcher: 
     await write;
     if (expected === epoch) for (const listener of listeners) listener(value);
   }
-  async function request(path: string, body?: unknown, token?: string) {
+  async function request(path: string, body?: unknown, token?: string, method?: "GET" | "POST" | "PUT" | "DELETE") {
     const ctrl = new AbortController(), timeout = setTimeout(() => ctrl.abort(), 10000);
     try {
       const response = await fetcher(`${url}${path}`, {
-        method: body === undefined ? "GET" : "POST",
+        method: method ?? (body === undefined ? "GET" : "POST"),
         headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: body === undefined ? undefined : JSON.stringify(body), signal: ctrl.signal,
       });
       if (response.status === 204) return null;
       const data = await response.json();
-      if (!response.ok) throw new AuthApiError(typeof data?.error === "string" ? data.error : "server_error", response.status);
+      if (!response.ok) throw new AuthApiError(typeof data?.error === "string" ? data.error : "server_error", response.status, data);
       return data;
     } catch (error) {
       if (error instanceof AuthApiError) throw error;
@@ -75,7 +80,41 @@ export function createAuthClient(url: string, storage: SessionStorage, fetcher: 
       throw error;
     }
   }
+  async function authorized(path: string, body?: unknown, method?: "GET" | "PUT" | "DELETE") {
+    const version = epoch;
+    const current = await ensure();
+    try { const result = await request(path, body, current.accessToken, method); if (version !== epoch) throw new AuthApiError("session_changed"); return result; }
+    catch (error) {
+      if (!(error instanceof AuthApiError) || error.status !== 401 || version !== epoch) throw error;
+      const next = await refresh();
+      const result = await request(path, body, next.accessToken, method); if (version !== epoch) throw new AuthApiError("session_changed"); return result;
+    }
+  }
   return {
+    async uploadRecords(records: StudyRecord[]): Promise<{results: {id: string; ok: boolean; record?: StudyRecord; error?: string}[]}> {
+      return authorized("/me/records", {records}, "PUT");
+    },
+    async recordSnapshot(): Promise<{records: StudyRecord[]; cursor: string}> {return authorized("/me/records/snapshot");},
+    async saveRecordMemo(id: string, memo: string, baseChangeSeq: string): Promise<{record: StudyRecord}> {
+      return authorized("/me/records/" + id + "/memo", {memo, baseChangeSeq}, "PUT");
+    },
+    async deleteRecord(id: string) {await authorized("/me/records/" + id, undefined, "DELETE");},
+    async getProfile(): Promise<AccountProfile | null> {
+      try { return (await authorized("/me/profile")).profile; }
+      catch (error) { if (error instanceof AuthApiError && error.status === 404) return null; throw error; }
+    },
+    async saveProfile(value: AccountProfile): Promise<AccountProfile> {
+      return (await authorized("/me/profile", value, "PUT")).profile;
+    },
+    async deleteAccount() {
+      const result = await authorized("/me", undefined, "DELETE");
+      ++epoch; await commit(null); return result;
+    },
+    async cancelDeletion(email: string, password: string): Promise<AuthSession> {
+      await request("/auth/cancel-deletion", { email, password });
+      const version = ++epoch, next = parse(await request("/auth/login", { email, password }));
+      await commit(next, version); return next;
+    },
     subscribe(listener: (value: AuthSession | null) => void) { listeners.add(listener); return () => { listeners.delete(listener); }; },
     async signIn(email: string, password: string) {
       const version = ++epoch, next = parse(await request("/auth/login", { email, password }));

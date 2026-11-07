@@ -1,13 +1,13 @@
 import { AuthError } from './auth.mjs';
 
-async function body(req) {
+export async function readJsonBody(req,{maxBytes=16384}={}) {
   if(!req.headers['content-type']?.toLowerCase().startsWith('application/json')) throw new AuthError('bad_request');
   let size=0; const chunks=[];
   for await (const chunk of req) {
     size+=chunk.length;
-    if(size<=16384) chunks.push(chunk);
+    if(size<=maxBytes) chunks.push(chunk);
   }
-  if(size>16384) throw new AuthError('payload_too_large',413);
+  if(size>maxBytes) throw new AuthError('payload_too_large',413);
   let value;
   try { value=JSON.parse(Buffer.concat(chunks).toString('utf8')); } catch { throw new AuthError('bad_request'); }
   if(!value || typeof value!=='object' || Array.isArray(value)) throw new AuthError('bad_request');
@@ -30,7 +30,7 @@ export function authRoutes(auth,{limits={signup:5,login:10,refresh:60,logout:60,
     hit.count++;hits.set(key,hit);
     if(hit.count>(limits[route] ?? 60)) {reply(429,{error:'rate_limited'});return true;}
     try {
-      const result=route==='me'? await auth.me(req.headers.authorization): await auth[route](await body(req));
+      const result=route==='me'? await auth.me(req.headers.authorization): await auth[route](await readJsonBody(req));
       reply(route==='signup'?201:route==='logout'?204:200,result);
     } catch(error) {
       if(!(error instanceof AuthError)) throw error;

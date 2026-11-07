@@ -6,6 +6,7 @@ import { AppState as RNAppState } from "react-native";
 import { cancelAllNotifications, rescheduleReminders } from "./notify";
 import { supabase } from "./supabase";
 import { mysqlAuth } from "./auth";
+import { enqueueRecordOperation, syncMySqlRecords } from "./record-sync";
 import { AuthApiError, type AuthSession } from "./auth-client";
 import { DEFAULT_PREFS, type ActiveSession, type Prefs, type StudyRecord, type WrongAnswer } from "./types";
 
@@ -44,11 +45,14 @@ interface AppStateValue {
   signUp(email: string, password: string): Promise<{ needsConfirm: boolean }>;
   signIn(email: string, password: string): Promise<void>;
   signOut(): Promise<void>;
+  cancelDeletion(email: string, password: string): Promise<void>;
   deleteAccount(): Promise<void>;
   updatePrefs(p: Partial<Prefs>, opts?: { finishOnboarding?: boolean }): Promise<void>;
   setActive(a: ActiveSession | null | ((prev: ActiveSession | null) => ActiveSession | null)): void;
   addRecord(r: NewRecord): Promise<StudyRecord>;
   removeRecord(id: string): Promise<void>;
+  refreshRecords(): Promise<void>;
+  updateRecordMemo(id: string, memo: string, choice?: "local" | "server"): Promise<void>;
 }
 
 const Ctx = createContext<AppStateValue | null>(null);
@@ -89,7 +93,7 @@ const fromRow = (x: RecordRow): StudyRecord => ({
 
 /** 이전 버전(별점 방식) 기록을 새 형식으로 바꿉니다. */
 const normalizeRecord = (r: Partial<StudyRecord> & { rating?: number }): StudyRecord => ({
-  id: r.id ?? "", topicId: r.topicId ?? "", topicKo: r.topicKo ?? "", domain: r.domain ?? "it",
+  ...r, id: r.id ?? "", topicId: r.topicId ?? "", topicKo: r.topicKo ?? "", domain: r.domain ?? "it",
   category: r.category ?? "", level: r.level ?? "", memo: r.memo ?? "",
   score: typeof r.score === "number" ? r.score : Math.round((r.rating ?? 0) * 2),
   total: typeof r.total === "number" ? r.total : 10,
@@ -132,6 +136,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const prefsRef = useRef(prefs);
   const activeRef = useRef(active);
   const gearsRef = useRef(gears);
+  const ownerRef = useRef<string | null>(null);
+  const syncQueue = useRef<Promise<void>>(Promise.resolve());
   useLayoutEffect(() => {
     recordsRef.current = records;
     prefsRef.current = prefs;
@@ -152,7 +158,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   /** 서버에 아직 안 올라간 기록을 올립니다. */
   const syncPending = useCallback(async (userId: string) => {
-    if (mysqlAuth || !supabase) return;
+    if (mysqlAuth) {
+      const client = mysqlAuth;
+      const task = enqueueRecordOperation(syncQueue, async () => {
+        if (ownerRef.current !== userId) return;
+        await syncMySqlRecords(client, () => recordsRef.current, saveRecordsLocal,
+          () => ownerRef.current === userId,
+          r => AsyncStorage.setItem("pg.mysql.memo-draft." + userId + "." + r.id, JSON.stringify(r)));
+      });
+      return task;
+    }
+    if (!supabase) return;
     const pending = recordsRef.current.filter((r) => !r.synced);
     if (!pending.length) return;
     const { error } = await supabase.from("study_records").upsert(pending.map((r) => toRow(r, userId)));
@@ -198,6 +214,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [saveRecordsLocal, setModePersist, syncPending]);
 
   const clearLocal = useCallback(async () => {
+    ownerRef.current = null;
     await AsyncStorage.multiRemove(Object.values(K)).catch(() => {});
     await cancelAllNotifications().catch(() => {});
     setSession(null);
@@ -211,7 +228,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setMode("none");
   }, [saveRecordsLocal]);
 
-  // Until records/profile APIs migrate, retain each MySQL account's local data.
+  // Keep each MySQL account's offline cache separate.
   const archiveApiAccount = useCallback(async () => {
     const owner = await readJSON<string | null>(K.account, null);
     if (!owner) return;
@@ -219,6 +236,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
       prefs: prefsRef.current, records: recordsRef.current, active: activeRef.current,
       gears: gearsRef.current, onboarded: await readJSON(K.onboarded, false),
     }));
+  }, []);
+
+  const refreshApiProfile = useCallback(async () => {
+    if (!mysqlAuth) return;
+    try {
+      let remote = await mysqlAuth.getProfile();
+      const localOnboarded = await readJSON(K.onboarded, false);
+      if (!remote && localOnboarded && prefsRef.current.nickname && prefsRef.current.interests.length) {
+        remote = await mysqlAuth.saveProfile(prefsRef.current);
+      }
+      if (remote) {
+        prefsRef.current = remote; setPrefs(remote);
+        const complete = !!remote.nickname && remote.interests.length > 0;
+        setOnboarded(complete);
+        await AsyncStorage.multiSet([[K.prefs, JSON.stringify(remote)], [K.onboarded, JSON.stringify(complete)]]);
+      }
+    } catch { /* Offline/temporary failure keeps the account's cached profile. */ }
   }, []);
 
   const loadApiAccount = useCallback(async (s: AuthSession) => {
@@ -238,10 +272,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         ]);
       }
     }
+    ownerRef.current = s.user.id;
     await writeJSON(K.account, s.user.id);
     setApiSession(s);
     setModePersist("user");
-  }, [archiveApiAccount, clearLocal, saveRecordsLocal, setModePersist]);
+    await refreshApiProfile();
+    await syncPending(s.user.id).catch(() => {});
+  }, [archiveApiAccount, clearLocal, refreshApiProfile, saveRecordsLocal, setModePersist, syncPending]);
 
   // ───────── 앱 시작 ─────────
   useEffect(() => {
@@ -321,11 +358,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const sub = RNAppState.addEventListener("change", (st) => {
       if (st !== "active") return;
-      if (mode === "user" && session) syncPending(session.user.id).catch(() => {});
+      if (mode === "user" && apiSession) syncPending(apiSession.user.id).catch(() => {});
+      else if (mode === "user" && session) syncPending(session.user.id).catch(() => {});
       if (onboarded) rescheduleReminders(prefsRef.current, recordsRef.current).catch(() => {});
     });
     return () => sub.remove();
-  }, [mode, session, onboarded, syncPending]);
+  }, [mode, session, apiSession, onboarded, syncPending]);
 
   useEffect(() => {
     if (ready && onboarded) rescheduleReminders(prefs, records).catch(() => {});
@@ -371,17 +409,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [archiveApiAccount, clearLocal]);
 
   const deleteAccount = useCallback(async () => {
-    if (mysqlAuth && mode === "user") throw new AuthApiError("feature_not_migrated");
+    if (mysqlAuth && mode === "user") {
+      const id = apiSession?.user.id;
+      await mysqlAuth.deleteAccount();
+      if (id) {
+        const keys = (await AsyncStorage.getAllKeys()).filter(key => key.startsWith("pg.mysql.memo-draft." + id + ".") || key === "pg.mysql.local." + id);
+        await AsyncStorage.multiRemove(keys);
+      }
+      await clearLocal(); return;
+    }
     if (mode === "user" && supabase) {
       const { error } = await supabase.rpc("delete_my_account");
       if (error) throw error;
       await supabase.auth.signOut({ scope: "local" }).catch(() => {});
     }
     await clearLocal();
-  }, [mode, clearLocal]);
+  }, [mode, apiSession, clearLocal]);
+
+  const cancelDeletion = useCallback(async (email: string, password: string) => {
+    if (!mysqlAuth) throw new AuthApiError("feature_not_migrated");
+    await loadApiAccount(await mysqlAuth.cancelDeletion(email, password));
+  }, [loadApiAccount]);
 
   const updatePrefs = useCallback(async (patch: Partial<Prefs>, opts?: { finishOnboarding?: boolean }) => {
-    const next = { ...prefsRef.current, ...patch };
+    let next = { ...prefsRef.current, ...patch };
+    if (mysqlAuth && mode === "user") next = await mysqlAuth.saveProfile(next);
     prefsRef.current = next;
     setPrefs(next);
     writeJSON(K.prefs, next);
@@ -414,13 +466,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const addRecord = useCallback(async (r: NewRecord) => {
     const rec: StudyRecord = { ...r, id: Crypto.randomUUID(), studiedAt: new Date().toISOString(), synced: false };
     saveRecordsLocal(sortRecords([...recordsRef.current, rec]));
-    if (mode === "user" && session) syncPending(session.user.id).catch(() => {});
-    return rec;
-  }, [mode, session, saveRecordsLocal, syncPending]);
+    if (mode === "user" && apiSession) await syncPending(apiSession.user.id).catch(() => {});
+    else if (mode === "user" && session) syncPending(session.user.id).catch(() => {});
+    return recordsRef.current.find(x => x.id === rec.id) ?? rec;
+  }, [mode, session, apiSession, saveRecordsLocal, syncPending]);
 
   const removeRecord = useCallback(async (id: string) => {
     const target = recordsRef.current.find((r) => r.id === id);
     if (!target) return;
+    if (mysqlAuth && mode === "user") {
+      const owner = ownerRef.current, client = mysqlAuth;
+      await enqueueRecordOperation(syncQueue, async () => {
+        if (ownerRef.current !== owner) return;
+        try { await client.deleteRecord(id); }
+        catch (e) { if (!(e instanceof AuthApiError) || e.status !== 404 || target.synced) throw e; }
+        if (ownerRef.current === owner) saveRecordsLocal(recordsRef.current.filter(r => r.id !== id));
+      });
+      return;
+    }
     if (!mysqlAuth && mode === "user" && supabase && target.synced) {
       const { error } = await supabase.from("study_records").delete().eq("id", id);
       if (error) throw error;
@@ -428,12 +491,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
     saveRecordsLocal(recordsRef.current.filter((r) => r.id !== id));
   }, [mode, saveRecordsLocal]);
 
+  const refreshRecords = useCallback(async () => {
+    const id = apiSession?.user.id ?? session?.user.id;
+    if (mode === "user" && id) await syncPending(id);
+  }, [apiSession, session, mode, syncPending]);
+
+  const updateRecordMemo = useCallback(async (id: string, memo: string, choice?: "local" | "server") => {
+    if ([...memo].length > 5000) throw new Error("메모는 5,000자까지 저장할 수 있어요.");
+    const r = recordsRef.current.find(x => x.id === id);
+    if (!r) return;
+    const conflict = r.memoConflict;
+    if (choice === "server" && conflict) {
+      saveRecordsLocal(recordsRef.current.map(x => x.id === id ? {...x, memo: conflict.memo, changeSeq: conflict.changeSeq, memoPending: undefined, memoConflict: undefined} : x));
+      return;
+    }
+    const changed = {...r, memo, memoConflict: undefined,
+      memoPending: mysqlAuth && mode === "user" ? {version: Crypto.randomUUID(), baseChangeSeq: choice === "local" ? conflict?.changeSeq : r.memoPending?.baseChangeSeq ?? r.changeSeq} : undefined};
+    saveRecordsLocal(recordsRef.current.map(x => x.id === id ? changed : x));
+    if (mysqlAuth && mode === "user" && apiSession) await syncPending(apiSession.user.id).catch(() => {});
+  }, [mode, apiSession, saveRecordsLocal, syncPending]);
+
   const value = useMemo<AppStateValue>(() => ({
     ready, mode, email: apiSession?.user.email ?? session?.user.email ?? null, serverEnabled: !!mysqlAuth || !!supabase,
     prefs, onboarded, records, active, gears, spendGears,
-    startGuest, signUp, signIn, signOut, deleteAccount, updatePrefs, setActive, addRecord, removeRecord,
+    startGuest, signUp, signIn, signOut, cancelDeletion, deleteAccount, updatePrefs, setActive, addRecord, removeRecord, refreshRecords, updateRecordMemo,
   }), [ready, mode, session, apiSession, prefs, onboarded, records, active, gears, spendGears,
-    startGuest, signUp, signIn, signOut, deleteAccount, updatePrefs, setActive, addRecord, removeRecord]);
+    startGuest, signUp, signIn, signOut, cancelDeletion, deleteAccount, updatePrefs, setActive, addRecord, removeRecord, refreshRecords, updateRecordMemo]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

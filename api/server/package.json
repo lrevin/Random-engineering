@@ -13,7 +13,10 @@
     "db:import": "node --env-file-if-exists=.env import-bank.mjs",
     "db:test": "node --env-file-if-exists=.env --test db-test.mjs",
     "auth:test": "node --env-file-if-exists=.env --test auth-test.mjs",
-    "export": "node --env-file-if-exists=.env import-bank.mjs"
+    "export": "node --env-file-if-exists=.env import-bank.mjs",
+    "account:test": "node --env-file-if-exists=.env --test ../mysql/account-test.mjs",
+    "accounts:purge": "node --env-file-if-exists=.env ../mysql/purge-accounts.mjs",
+    "records:test": "node --env-file-if-exists=.env --test ../mysql/record-test.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
