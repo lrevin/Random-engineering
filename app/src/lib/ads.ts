@@ -8,7 +8,7 @@ import { Platform } from "react-native";
  * - 실제 광고 단위 ID가 없으면 구글 공개 시험용 광고를 씀 (시험용 광고는 클릭해도 수익이 없음).
  */
 export const AD_REWARD = 20;
-export const AD_DAILY_LIMIT = 2;
+export const AD_DAILY_LIMIT = 5;
 
 export const adsSimulated = Constants.executionEnvironment === ExecutionEnvironment.StoreClient || Platform.OS === "web";
 
