@@ -3,6 +3,7 @@ import type { Session } from "@supabase/supabase-js";
 import * as Crypto from "expo-crypto";
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AppState as RNAppState } from "react-native";
+import { FREE_BATTLE_TICKETS, FREEZE_COST, MAX_FREEZES, planStreakRescue, refillTickets, RESTORE_COST_PER_DAY, type StreakRescue, type Tickets } from "./economy";
 import { cancelAllNotifications, rescheduleReminders } from "./notify";
 import { supabase } from "./supabase";
 import { DEFAULT_PREFS, type ActiveSession, type Prefs, type StudyRecord, type WrongAnswer } from "./types";
@@ -17,7 +18,19 @@ const K = {
   records: "pg.records",
   active: "pg.active",
   gears: "pg.gears",
+  freezes: "pg.freezes",
+  kept: "pg.keptDays",
+  premium: "pg.premium",
+  tickets: "pg.battleTickets",
+  battleXp: "pg.battleXp",
+  battlesApplied: "pg.battlesApplied",
+  uid: "pg.uid",
+  rescueAsked: "pg.rescueAsked",
 };
+
+/** 친구 추가용 UID: 헷갈리는 글자(0/O, 1/I)를 뺀 8자리 */
+const UID_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const newUid = () => Array.from(Crypto.getRandomBytes(8), (b) => UID_CHARS[b % UID_CHARS.length]).join("");
 
 /** 처음 시작할 때 주는 톱니바퀴 (유료 재화). 결제는 아직 없음 */
 export const STARTER_GEARS = 30;
@@ -37,6 +50,29 @@ interface AppStateValue {
   gears: number;
   /** 톱니바퀴를 n개 씁니다. 모자라면 false */
   spendGears(n: number): boolean;
+  /** 경험치 합계 = 공부 기록에서 얻은 경험치 + 배틀로 얻고 잃은 경험치 */
+  xp: number;
+  /** 연속 기록 보호권 개수 · 보호권/톱니바퀴로 지킨 날짜 */
+  freezes: number;
+  keptDays: string[];
+  buyFreeze(): boolean;
+  /** 앱을 열었을 때 끊긴 연속 기록 안내 (보호권 자동 사용 결과 + 톱니바퀴 복구 제안) */
+  rescue: StreakRescue | null;
+  restoreStreak(): boolean;
+  dismissRescue(): void;
+  /** 유료 버전 여부 (결제 연동 전이라 시험용으로 켜고 끔) */
+  premium: boolean;
+  setPremium(v: boolean): void;
+  /** 무료 버전 배틀권 (유료 버전이면 무제한) */
+  battleTickets: number;
+  spendBattleTicket(): boolean;
+  refundBattleTicket(): void;
+  /** 배틀 결과 경험치 반영 (같은 배틀은 한 번만) */
+  applyBattleXp(battleId: string, delta: number): void;
+  /** key로 처음 부르면 true, 그다음부터는 false (배틀권 환불 · 배틀 기록 저장을 한 번만 하려고) */
+  claimOnce(key: string): boolean;
+  /** 친구 추가용 내 UID */
+  uid: string;
   startGuest(): Promise<void>;
   signUp(email: string, password: string): Promise<{ needsConfirm: boolean }>;
   signIn(email: string, password: string): Promise<void>;
@@ -122,17 +158,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [records, setRecords] = useState<StudyRecord[]>([]);
   const [active, setActiveState] = useState<ActiveSession | null>(null);
   const [gears, setGears] = useState(0);
+  const [freezes, setFreezes] = useState(0);
+  const [keptDays, setKeptDays] = useState<string[]>([]);
+  const [premium, setPremiumState] = useState(false);
+  const [tickets, setTickets] = useState<Tickets>(() => refillTickets(null));
+  const [battleXp, setBattleXp] = useState(0);
+  const [uid, setUid] = useState("");
+  const [rescue, setRescue] = useState<StreakRescue | null>(null);
 
   // 비동기 함수 안에서 최신 값을 읽기 위한 ref
   const recordsRef = useRef(records);
   const prefsRef = useRef(prefs);
   const activeRef = useRef(active);
   const gearsRef = useRef(gears);
+  const keptRef = useRef(keptDays);
+  const freezesRef = useRef(freezes);
+  const appliedRef = useRef<string[]>([]);
   useLayoutEffect(() => {
     recordsRef.current = records;
     prefsRef.current = prefs;
     activeRef.current = active;
     gearsRef.current = gears;
+    keptRef.current = keptDays;
+    freezesRef.current = freezes;
   });
 
   const saveRecordsLocal = useCallback((rs: StudyRecord[]) => {
@@ -203,6 +251,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setActiveState(null);
     gearsRef.current = STARTER_GEARS;
     setGears(STARTER_GEARS);
+    setFreezes(0);
+    setKeptDays([]);
+    setPremiumState(false);
+    setTickets(refillTickets(null));
+    setBattleXp(0);
+    appliedRef.current = [];
+    setUid(newUid());
+    setRescue(null);
     setMode("none");
   }, [saveRecordsLocal]);
 
@@ -210,13 +266,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let alive = true;
     (async () => {
-      const [m, p, ob, rawRecords, rawActive, g] = await Promise.all([
+      const [m, p, ob, rawRecords, rawActive, g, fz, kd, pm, tk, bx, ba, id] = await Promise.all([
         readJSON<Mode>(K.mode, "none"),
         readJSON<Prefs>(K.prefs, DEFAULT_PREFS),
         readJSON<boolean>(K.onboarded, false),
         readJSON<Partial<StudyRecord>[]>(K.records, []),
         readJSON<ActiveSession | null>(K.active, null),
         readJSON<number | null>(K.gears, null),
+        readJSON<number>(K.freezes, 0),
+        readJSON<string[]>(K.kept, []),
+        readJSON<boolean>(K.premium, false),
+        readJSON<Tickets | null>(K.tickets, null),
+        readJSON<number>(K.battleXp, 0),
+        readJSON<string[]>(K.battlesApplied, []),
+        readJSON<string>(K.uid, ""),
       ]);
       const rs = Array.isArray(rawRecords) ? rawRecords.map(normalizeRecord) : [];
       // 이전 버전(설명 단계)에서 진행 중이던 주제는 이어갈 수 없으므로 비움
@@ -233,6 +296,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
       gearsRef.current = gs;
       setGears(gs);
       if (g == null) writeJSON(K.gears, gs);
+      const fzn = Math.min(MAX_FREEZES, Math.max(0, fz));
+      freezesRef.current = fzn;
+      setFreezes(fzn);
+      const kdl = Array.isArray(kd) ? kd : [];
+      keptRef.current = kdl;
+      setKeptDays(kdl);
+      setPremiumState(!!pm);
+      const t = refillTickets(tk); // 매월 1일 00시가 지났으면 다시 채움
+      setTickets(t);
+      writeJSON(K.tickets, t);
+      setBattleXp(typeof bx === "number" ? bx : 0);
+      appliedRef.current = Array.isArray(ba) ? ba : [];
+      const myUid = id || newUid();
+      setUid(myUid);
+      if (!id) writeJSON(K.uid, myUid);
 
       if (supabase) {
         const { data } = await supabase.auth.getSession();
@@ -273,6 +351,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (ready && onboarded) rescheduleReminders(prefs, records).catch(() => {});
   }, [ready, onboarded, prefs, records]);
+
 
   // ───────── 동작 ─────────
   const startGuest = useCallback(async () => setModePersist("guest"), [setModePersist]);
@@ -338,6 +417,100 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return true;
   }, []);
 
+  // ───────── 연속 기록 지키기 ─────────
+  const saveKept = useCallback((days: string[]) => {
+    const next = [...new Set([...keptRef.current, ...days])].sort();
+    keptRef.current = next;
+    setKeptDays(next);
+    writeJSON(K.kept, next);
+  }, []);
+
+  /** 앱을 열 때: 빠진 날에 보호권을 자동으로 쓰고, 모자라면 톱니바퀴 복구를 제안 (복구 제안은 하루 한 번) */
+  const checkStreak = useCallback(async () => {
+    const plan = planStreakRescue(recordsRef.current, keptRef.current, freezesRef.current);
+    if (!plan || plan.tooLate) return;
+    const today = new Date().toDateString();
+    if (!plan.auto.length && (await readJSON<string>(K.rescueAsked, "")) === today) return;
+    if (plan.auto.length) {
+      saveKept(plan.auto);
+      const left = freezesRef.current - plan.auto.length;
+      freezesRef.current = left;
+      setFreezes(left);
+      writeJSON(K.freezes, left);
+    }
+    writeJSON(K.rescueAsked, today);
+    setRescue(plan);
+  }, [saveKept]);
+
+  const buyFreeze = useCallback(() => {
+    if (freezesRef.current >= MAX_FREEZES || !spendGears(FREEZE_COST)) return false;
+    const n = freezesRef.current + 1;
+    freezesRef.current = n;
+    setFreezes(n);
+    writeJSON(K.freezes, n);
+    return true;
+  }, [spendGears]);
+
+  const restoreStreak = useCallback(() => {
+    if (!rescue?.restore.length || !spendGears(rescue.restore.length * RESTORE_COST_PER_DAY)) return false;
+    saveKept(rescue.restore);
+    setRescue(null);
+    return true;
+  }, [rescue, saveKept, spendGears]);
+
+  const dismissRescue = useCallback(() => setRescue(null), []);
+
+  // 연속 기록 확인: 앱을 열 때와 앱으로 돌아올 때
+  useEffect(() => {
+    if (!ready || !onboarded) return;
+    checkStreak().catch(() => {});
+    const sub = RNAppState.addEventListener("change", (st) => { if (st === "active") checkStreak().catch(() => {}); });
+    return () => sub.remove();
+  }, [ready, onboarded, checkStreak]);
+
+  // ───────── 유료 버전 · 배틀권 · 배틀 경험치 ─────────
+  const setPremium = useCallback((v: boolean) => {
+    setPremiumState(v);
+    writeJSON(K.premium, v);
+  }, []);
+
+  const spendBattleTicket = useCallback(() => {
+    if (premium) return true;
+    const t = refillTickets(tickets);
+    if (t.n <= 0) return false;
+    const next = { ...t, n: t.n - 1 };
+    setTickets(next);
+    writeJSON(K.tickets, next);
+    return true;
+  }, [premium, tickets]);
+
+  /** 상대가 거절했거나 응답이 없어 배틀이 안 열리면 배틀권을 돌려줌 */
+  const refundBattleTicket = useCallback(() => {
+    if (premium) return;
+    setTickets((t) => {
+      const cur = refillTickets(t);
+      const next = { ...cur, n: Math.min(cur.n + 1, FREE_BATTLE_TICKETS) };
+      writeJSON(K.tickets, next);
+      return next;
+    });
+  }, [premium]);
+
+  const claimOnce = useCallback((key: string) => {
+    if (appliedRef.current.includes(key)) return false;
+    appliedRef.current = [...appliedRef.current, key].slice(-300);
+    writeJSON(K.battlesApplied, appliedRef.current);
+    return true;
+  }, []);
+
+  const applyBattleXp = useCallback((battleId: string, delta: number) => {
+    if (!claimOnce("xp:" + battleId)) return;
+    setBattleXp((x) => {
+      const nx = x + delta;
+      writeJSON(K.battleXp, nx);
+      return nx;
+    });
+  }, [claimOnce]);
+
   const addRecord = useCallback(async (r: NewRecord) => {
     const rec: StudyRecord = { ...r, id: Crypto.randomUUID(), studiedAt: new Date().toISOString(), synced: false };
     saveRecordsLocal(sortRecords([...recordsRef.current, rec]));
@@ -355,11 +528,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     saveRecordsLocal(recordsRef.current.filter((r) => r.id !== id));
   }, [mode, saveRecordsLocal]);
 
+  const xp = useMemo(() => records.reduce((a, r) => a + (r.rp || 0), 0) + battleXp, [records, battleXp]);
+
   const value = useMemo<AppStateValue>(() => ({
     ready, mode, email: session?.user.email ?? null, serverEnabled: !!supabase,
     prefs, onboarded, records, active, gears, spendGears,
+    xp, freezes, keptDays, buyFreeze, rescue, restoreStreak, dismissRescue,
+    premium, setPremium, battleTickets: premium ? Infinity : refillTickets(tickets).n, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid,
     startGuest, signUp, signIn, signOut, deleteAccount, updatePrefs, setActive, addRecord, removeRecord,
   }), [ready, mode, session, prefs, onboarded, records, active, gears, spendGears,
+    xp, freezes, keptDays, buyFreeze, rescue, restoreStreak, dismissRescue,
+    premium, setPremium, tickets, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid,
     startGuest, signUp, signIn, signOut, deleteAccount, updatePrefs, setActive, addRecord, removeRecord]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

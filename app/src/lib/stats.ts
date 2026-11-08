@@ -14,6 +14,9 @@ export const fmtClock = (sec: number) => {
   return `${Math.floor(s / 60)}:${pad(s % 60)}`;
 };
 
+/** 공부 시간 짧게: 1분 미만이면 초로 (시험용 짧은 배틀) */
+export const fmtStudyTime = (sec: number) => (sec < 60 ? `${sec}초` : `${Math.round(sec / 60)}분`);
+
 export const fmtDuration = (sec: number) => (sec ? `${Math.floor(sec / 60)}분 ${sec % 60}초` : "-");
 
 export function studiedToday(records: StudyRecord[], now = new Date()) {
@@ -21,9 +24,16 @@ export function studiedToday(records: StudyRecord[], now = new Date()) {
   return records.some((r) => dateKey(new Date(r.studiedAt)) === k);
 }
 
-/** 연속 공부 일수. 오늘 아직 안 했으면 어제까지의 연속 일수를 돌려줍니다. */
-export function calcStreak(records: StudyRecord[], now = new Date()) {
-  const days = new Set(records.map((r) => dateKey(new Date(r.studiedAt))));
+/** 공부한 날 (+ 보호권·톱니바퀴로 지킨 날) */
+export const studyDays = (records: StudyRecord[], kept: readonly string[] = []) =>
+  new Set([...records.map((r) => dateKey(new Date(r.studiedAt))), ...kept]);
+
+/**
+ * 연속 공부 일수. 오늘 아직 안 했으면 어제까지의 연속 일수를 돌려줍니다.
+ * kept: 연속 기록 보호권이나 톱니바퀴로 지킨 날짜 ("YYYY-MM-DD") — 공부한 날처럼 이어 줌
+ */
+export function calcStreak(records: StudyRecord[], now = new Date(), kept: readonly string[] = []) {
+  const days = studyDays(records, kept);
   const d = new Date(now);
   const today = days.has(dateKey(d));
   if (!today) d.setDate(d.getDate() - 1);
@@ -35,13 +45,15 @@ export function calcStreak(records: StudyRecord[], now = new Date()) {
   return { streak: n, today };
 }
 
-/** 최근 7일 (오래된 날 → 오늘) 공부 여부 */
-export function lastWeek(records: StudyRecord[], now = new Date()) {
-  const days = new Set(records.map((r) => dateKey(new Date(r.studiedAt))));
+/** 최근 7일 (오래된 날 → 오늘) 공부 여부. kept인 날은 지킨 날로 따로 표시 */
+export function lastWeek(records: StudyRecord[], now = new Date(), kept: readonly string[] = []) {
+  const days = studyDays(records);
+  const keptSet = new Set(kept);
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(now);
     d.setDate(d.getDate() - (6 - i));
-    return { label: DOW[d.getDay()], done: days.has(dateKey(d)), isToday: i === 6 };
+    const k = dateKey(d);
+    return { label: DOW[d.getDay()], done: days.has(k), kept: !days.has(k) && keptSet.has(k), isToday: i === 6 };
   });
 }
 

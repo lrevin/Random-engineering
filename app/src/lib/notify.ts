@@ -133,3 +133,13 @@ export async function cancelAllNotifications() {
   if (!enabled) return;
   await Notifications.cancelAllScheduledNotificationsAsync();
 }
+
+/** 지금 바로 알림 (배틀 신청이 왔을 때). 알림을 못 쓰는 환경(웹 · 안드로이드 Expo Go)에서는 아무것도 안 함 */
+export async function notifyNow(title: string, body: string) {
+  if (!enabled || !(await requestNotificationPermission())) return;
+  await ensureChannels();
+  await Notifications.scheduleNotificationAsync({
+    content: { title, body, sound: true, data: { kind: "battle" } },
+    trigger: Platform.OS === "android" ? { channelId: "timer" } as never : null,
+  });
+}

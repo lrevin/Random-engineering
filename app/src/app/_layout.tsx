@@ -5,6 +5,8 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
+import { BattleWatcher } from "@/components/BattleWatcher";
+import { StreakSheet } from "@/components/StreakSheet";
 import { AppProvider, useApp } from "@/lib/app-state";
 import { useColors } from "@/theme";
 
@@ -49,6 +51,8 @@ function RootNav() {
           <Stack.Screen name="record/[id]" options={{ presentation: "modal" }} />
           <Stack.Screen name="wrong/[id]" options={{ presentation: "modal" }} />
           <Stack.Screen name="interests" options={{ presentation: "modal" }} />
+          <Stack.Screen name="shop" options={{ presentation: "modal" }} />
+          <Stack.Screen name="battle" options={flow} />
         </Stack.Protected>
         <Stack.Protected guard={mode !== "user"}>
           <Stack.Screen name="login" options={{ presentation: "modal" }} />
@@ -56,6 +60,8 @@ function RootNav() {
         </Stack.Protected>
         <Stack.Screen name="privacy" options={{ presentation: "modal" }} />
       </Stack>
+      {inApp && <StreakSheet />}
+      {inApp && <BattleWatcher />}
     </>
   );
 }
