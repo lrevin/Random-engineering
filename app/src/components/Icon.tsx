@@ -11,7 +11,7 @@ export type IconName =
   | "flame" | "gear" | "shield" | "ticket" | "swords" | "trophy" | "star" | "crown" | "dice" | "book" | "globe"
   | "tree" | "doc" | "door" | "trash" | "offline" | "hourglass" | "bell" | "bolt" | "medal" | "target" | "robot"
   | "books" | "party" | "mail" | "check" | "close" | "slot" | "handshake" | "dizzy" | "nope" | "lock" | "user-plus"
-  | "share" | "clock" | "chart" | "warning" | "calendar" | "chest" | "chest-open";
+  | "share" | "clock" | "chart" | "warning" | "calendar" | "chest" | "chest-open" | "play";
 
 const NAVY = "#1d2742";
 const NAVY_D = "#0e1424";
@@ -59,6 +59,7 @@ function Gear({ cx = 16, cy = 16, r = 10, fill = GOLD, shade = GOLD_D, hole = PA
 }
 
 const ICONS: Record<IconName, () => ReactNode> = {
+  play: () => <Path d="M10 6.5v19a1.5 1.5 0 0 0 2.3 1.3l15-9.5a1.5 1.5 0 0 0 0-2.6l-15-9.5A1.5 1.5 0 0 0 10 6.5z" fill="currentColor" />,
   chest: () => (
     <G>
       <Rect x={3} y={14} width={26} height={15} rx={2.5} fill={BROWN} />

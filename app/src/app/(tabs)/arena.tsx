@@ -1,6 +1,7 @@
 import { router, useFocusEffect, useIsFocused } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, View } from "react-native";
+import { AdRewardButton } from "@/components/AdRewardButton";
 import { BattleIntro, useBattleIntroFirstTime } from "@/components/BattleIntro";
 import { MatchOverlay } from "@/components/MatchOverlay";
 import { Btn, Card, Row, Screen, T } from "@/components/ui";
@@ -158,6 +159,9 @@ export default function Arena() {
           {premium && <T size={13} color="muted">유료 멤버십 사용 중이에요.</T>}
         </Card>
       </Pressable>
+
+      {/* 광고 보고 톱니바퀴 (배틀권은 톱니바퀴로 살 수 있음) */}
+      <AdRewardButton />
 
       {!socialEnabled ? (
         <Card><T size={15} color="ink2">배틀 서버가 아직 연결되지 않았어요. (개발용: app/.env.local 에 EXPO_PUBLIC_SOCIAL_URL)</T></Card>

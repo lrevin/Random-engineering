@@ -81,7 +81,7 @@ export interface Battle {
   quizCount?: number;
   /** 퀴즈 시작 시각 = 공부 끝 (문제가 늦게 올라오면 올라온 시각) */
   quizStartAt?: string | null;
-  /** 두 사람 다 만점이면 열리는 연장전 */
+  /** 점수가 같으면 열리는 연장전 */
   overtime?: Overtime | null;
   results: Record<string, BattleResult>;
   /** 끝나면: 이긴 사람 uid(비기면 null)와 넘어간 경험치 */

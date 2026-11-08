@@ -57,9 +57,9 @@ function settle(b) {
   const deadline = quizStart(b) + b.quizSec * 1000 + GRACE_MS;
   if (Object.keys(b.results).length === 2 || now() > deadline) {
     const [a, c] = [b.from.uid, b.to.uid];
-    const perfect = (u) => b.results[u] && b.results[u].score === b.results[u].total && b.results[u].total > 0;
-    // 두 사람 다 만점이면 비기지 않고 연장전 (AI가 2문제씩 만들어 한 문제씩 풂)
-    if (b.kind === 'random' && perfect(a) && perfect(c)) {
+    // 점수가 같으면 비기지 않고 연장전 (AI가 2문제씩 만들어 한 문제씩 풂). 둘 다 안 냈으면 그냥 무승부
+    const tied = b.results[a] && b.results[c] && b.results[a].score === b.results[c].score;
+    if (b.kind === 'random' && tied) {
       b.ot = { round: 0, roundStartAt: null, needSince: now(), answers: { [a]: [], [c]: [] } };
       return settleOvertime(b);
     }

@@ -7,6 +7,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { BattleWatcher } from "@/components/BattleWatcher";
 import { DialogHost } from "@/components/Dialog";
+import { initAds } from "@/lib/ads";
 import { StreakSheet } from "@/components/StreakSheet";
 import { AppProvider, useApp } from "@/lib/app-state";
 import { useColors } from "@/theme";
@@ -69,6 +70,9 @@ function RootNav() {
     </>
   );
 }
+
+// 구글 광고 SDK 준비 (Expo Go에서는 아무것도 안 함)
+initAds();
 
 export default function RootLayout() {
   return (
