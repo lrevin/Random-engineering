@@ -28,14 +28,16 @@ export function useQuests(period: Period) {
   };
 }
 
-/** 진행 막대 (가운데에 7 / 10 글자) */
-export function ProgressBar({ value, goal, color, height = 18, unit = "" }: { value: number; goal: number; color?: string; height?: number; unit?: string }) {
+/** 진행 막대 + 오른쪽에 7 / 10 (다크 모드에서도 잘 보이게 숫자는 막대 밖에) */
+export function ProgressBar({ value, goal, color, height = 14, unit = "" }: { value: number; goal: number; color?: string; height?: number; unit?: string }) {
   const c = useColors();
   const p = Math.min(1, goal ? value / goal : 0);
   return (
-    <View style={{ height, borderRadius: radius.pill, backgroundColor: c.chip, overflow: "hidden", justifyContent: "center" }}>
-      <View style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${Math.round(p * 100)}%`, backgroundColor: color ?? c.gold, borderRadius: radius.pill }} />
-      <T size={11} weight="bold" center style={{ lineHeight: height, color: p >= 1 ? "#ffffff" : c.ink }}>{Math.min(value, goal).toLocaleString()} / {goal.toLocaleString()}{unit}</T>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+      <View style={{ flex: 1, height, borderRadius: radius.pill, backgroundColor: c.chip, overflow: "hidden" }}>
+        <View style={{ width: `${Math.round(p * 100)}%`, height: "100%", backgroundColor: color ?? c.gold, borderRadius: radius.pill }} />
+      </View>
+      <T size={12} weight="bold" color={p >= 1 ? "success" : "ink2"}>{Math.min(value, goal).toLocaleString()} / {goal.toLocaleString()}{unit}</T>
     </View>
   );
 }

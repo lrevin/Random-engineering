@@ -5,7 +5,7 @@ import { showDialog } from "@/components/Dialog";
 import { StudyReader, type ReaderPage } from "@/components/StudyReader";
 import { TopicLinks } from "@/components/TopicLinks";
 import { Badge, Btn, Card, levelTone, Row, Screen, T } from "@/components/ui";
-import { domainById, levelText, topicById, TOPICS } from "@/data";
+import { categoryById, domainById, levelText, topicById, TOPICS } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { battleXpTransfer } from "@/lib/economy";
 import { calcRp } from "@/lib/rank";
@@ -130,7 +130,14 @@ export default function BattleScreen() {
   // 주제 공개 연출: 시작 직후 잠깐 같은 분야 주제 이름을 돌림
   const revealing = phase === "study" && now - start < REVEAL_MS;
   // '아무 분야'(any) 매칭이면 전체 주제에서 돌림
-  const pool = useMemo(() => (!battle ? [] : battle.domain === "any" ? TOPICS : TOPICS.filter((t) => t.domain === battle.domain)), [battle?.domain]); // eslint-disable-line react-hooks/exhaustive-deps
+  // 매칭 배틀의 domain은 세부 분야 id(예: "os"), 예전 배틀은 분야 id(예: "it") — 둘 다 받음
+  const pool = useMemo(() => {
+    if (!battle) return [];
+    const byCat = TOPICS.filter((t) => t.category === battle.domain);
+    if (byCat.length) return byCat;
+    const byDomain = TOPICS.filter((t) => t.domain === battle.domain);
+    return byDomain.length ? byDomain : TOPICS;
+  }, [battle?.domain]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!revealing || !pool.length) return;
     const t = setInterval(() => setSpinName(pool[Math.floor(Math.random() * pool.length)].ko), 70);
@@ -198,10 +205,12 @@ export default function BattleScreen() {
     );
   }
   const b = battle!;
-  const d = domainById(b.domain);
+  // 배지: 주제가 공개되면 그 세부 분야, 아직이면 분야
+  const d = domainById(topic?.domain ?? b.domain);
+  const cat = categoryById(b.domain);
   const header = (
     <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
-      <Badge label={`${d ? d.name : "랜덤 분야"} 배틀`} tone="accent" icon={d ? <DomainIcon id={d.id} size={20} /> : <Icon name="dice" size={20} />} />
+      <Badge label={`${cat?.name ?? d?.name ?? "랜덤"} 배틀`} tone="accent" icon={d || cat ? <DomainIcon id={d?.id ?? cat!.domain} size={20} /> : <Icon name="dice" size={20} />} />
       <T size={14} color="ink2">vs {opp?.nickname}</T>
     </Row>
   );

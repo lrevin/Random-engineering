@@ -6,7 +6,7 @@ import { GearCount } from "./TimeUpSheet";
 import { Btn, T } from "./ui";
 import { Icon } from "./Icon";
 
-const md = (k: string) => `${Number(k.slice(5, 7))}/${Number(k.slice(8, 10))}`;
+const md = (k: string) => `${Number(k.slice(5, 7))}월 ${Number(k.slice(8, 10))}일`;
 
 /**
  * 앱을 열었을 때 연속 기록이 끊길 뻔했으면 뜨는 창.
@@ -39,7 +39,7 @@ export function StreakSheet() {
             )}
             {!saved && (
               <T size={14} color="ink2" center>
-                보호권이 없어서 {rescue.restore.map(md).join(", ")}이(가) 비어 있어요.{"\n"}
+                보호권이 없어서 {rescue.restore.map(md).join(", ")}이 비어 있어요.{"\n"}
                 톱니바퀴로 복구하면 연속 기록이 그대로 이어져요.
               </T>
             )}

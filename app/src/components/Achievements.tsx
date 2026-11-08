@@ -1,8 +1,9 @@
 import { View } from "react-native";
 import Svg, { Circle, G, Path, Polygon, Rect } from "react-native-svg";
 import type { Achievement, AchievementId } from "@/lib/achievements";
-import { radius, useColors } from "@/theme";
+import { useColors } from "@/theme";
 import { Icon, type IconName } from "./Icon";
+import { ProgressBar } from "./Quests";
 import { T } from "./ui";
 
 const LOOK: Record<AchievementId, { icon: IconName; color: string; deep: string }> = {
@@ -52,7 +53,6 @@ export function AchievementBadge({ a, size = 76 }: { a: Achievement; size?: numb
 export function AchievementRow({ a, last }: { a: Achievement; last?: boolean }) {
   const c = useColors();
   const goal = a.next ?? a.goals[a.goals.length - 1];
-  const p = Math.min(1, a.value / goal);
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingVertical: 14, borderBottomWidth: last ? 0 : 1, borderBottomColor: c.line }}>
       <AchievementBadge a={a} size={58} />
@@ -62,10 +62,7 @@ export function AchievementRow({ a, last }: { a: Achievement; last?: boolean }) 
           <T size={12} color="muted">{a.stage} / {a.goals.length}단계</T>
         </View>
         <T size={13} color="ink2">{a.next ? a.desc.replace("{n}", a.next.toLocaleString()) : "모든 단계를 달성했어요!"}</T>
-        <View style={{ height: 14, borderRadius: radius.pill, backgroundColor: c.chip, overflow: "hidden", justifyContent: "center" }}>
-          <View style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${Math.round(p * 100)}%`, backgroundColor: a.next ? c.gold : c.success, borderRadius: radius.pill }} />
-          <T size={10} weight="bold" center style={{ lineHeight: 14, color: c.ink }}>{Math.min(a.value, goal).toLocaleString()} / {goal.toLocaleString()}</T>
-        </View>
+        <ProgressBar value={a.value} goal={goal} color={a.next ? c.gold : c.success} />
       </View>
     </View>
   );
