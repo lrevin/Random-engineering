@@ -5,7 +5,7 @@ import { AdRewardButton } from "@/components/AdRewardButton";
 import { BattleIntro, useBattleIntroFirstTime } from "@/components/BattleIntro";
 import { MatchOverlay } from "@/components/MatchOverlay";
 import { Btn, Card, Row, Screen, T } from "@/components/ui";
-import { TOPICS } from "@/data";
+import { categoryById, TOPICS } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { BATTLE_TICKET_COST, FREE_BATTLE_TICKETS } from "@/lib/economy";
 import { BATTLE_QUIZ_LENGTH } from "@/lib/quiz";
@@ -168,6 +168,9 @@ export default function Arena() {
       ) : (
         <Card style={{ gap: 12 }}>
           <Row gap={10}><Icon name="swords" size={34} /><T size={18} weight="bold">랜덤 매칭 배틀</T></Row>
+          <T size={13} color="ink2">
+            내 관심 분야에서만 출제돼요{prefs.interests.length ? ` · ${prefs.interests.slice(0, 3).map((id) => categoryById(id)?.name ?? id).join(", ")}${prefs.interests.length > 3 ? ` 외 ${prefs.interests.length - 3}개` : ""}` : ""}
+          </T>
           {noTicket ? (
             <View style={{ gap: 10 }}>
               <Btn
@@ -180,11 +183,11 @@ export default function Arena() {
                 onPress={() => { if (buyBattleTicket()) start(); }}
               />
               {gears < BATTLE_TICKET_COST && <T size={13} color="accent" center>톱니바퀴가 {BATTLE_TICKET_COST - gears}개 부족해요. 퀘스트로 모아 보세요.</T>}
-              <Btn title="뽑공 프리미엄으로 무제한 매칭" variant="premium" size="md" icon={<Icon name="crown" size={24} />} onPress={() => router.push("/shop")} />
             </View>
           ) : (
             <Btn title={busy ? "매칭 준비하는 중…" : premium ? "랜덤 매칭 시작" : "랜덤 매칭 시작 (배틀권 1개)"} variant="accent" size="lg" loading={busy} onPress={start} />
           )}
+          {!premium && <Btn title="뽑공 프리미엄으로 무제한 매칭" variant="premium" size="md" icon={<Icon name="crown" size={24} />} onPress={() => router.push("/shop")} />}
         </Card>
       )}
       {notice ? <T size={13} color="accent" center>{notice}</T> : null}
