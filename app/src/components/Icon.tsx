@@ -11,7 +11,7 @@ export type IconName =
   | "flame" | "gear" | "shield" | "ticket" | "swords" | "trophy" | "star" | "crown" | "dice" | "book" | "globe"
   | "tree" | "doc" | "door" | "trash" | "offline" | "hourglass" | "bell" | "bolt" | "medal" | "target" | "robot"
   | "books" | "party" | "mail" | "check" | "close" | "slot" | "handshake" | "dizzy" | "nope" | "lock" | "user-plus"
-  | "share" | "clock" | "chart" | "warning" | "calendar";
+  | "share" | "clock" | "chart" | "warning" | "calendar" | "chest" | "chest-open";
 
 const NAVY = "#1d2742";
 const NAVY_D = "#0e1424";
@@ -59,6 +59,31 @@ function Gear({ cx = 16, cy = 16, r = 10, fill = GOLD, shade = GOLD_D, hole = PA
 }
 
 const ICONS: Record<IconName, () => ReactNode> = {
+  chest: () => (
+    <G>
+      <Rect x={3} y={14} width={26} height={15} rx={2.5} fill={BROWN} />
+      <Rect x={3} y={24} width={26} height={5} rx={2.5} fill="#6b4426" />
+      <Path d="M3 14v-2.5A7.5 7.5 0 0 1 10.5 4h11A7.5 7.5 0 0 1 29 11.5V14z" fill="#a8703f" />
+      <Rect x={3} y={13} width={26} height={3} fill={GOLD} />
+      {[7.5, 24.5].map((x) => <Rect key={x} x={x - 1.5} y={4.5} width={3} height={24.5} fill={GOLD_D} />)}
+      <Rect x={13} y={12} width={6} height={8} rx={1.5} fill={GOLD} stroke={GOLD_D} strokeWidth={1} />
+      <Circle cx={16} cy={15.5} r={1.2} fill={NAVY} />
+    </G>
+  ),
+  "chest-open": () => (
+    <G>
+      <Path d="M5 3.5l22 0-2.5 9h-17z" fill="#6b4426" />
+      <Path d="M8 11c2-4 4-5 8-5s6 1 8 5" fill={GOLD_L} />
+      <Circle cx={11} cy={10} r={3} fill={GOLD} stroke={GOLD_D} strokeWidth={1} />
+      <Circle cx={16.5} cy={8.5} r={3} fill={GOLD} stroke={GOLD_D} strokeWidth={1} />
+      <Circle cx={21.5} cy={10.5} r={3} fill={GOLD} stroke={GOLD_D} strokeWidth={1} />
+      <Rect x={3} y={13} width={26} height={16} rx={2.5} fill={BROWN} />
+      <Rect x={3} y={24} width={26} height={5} rx={2.5} fill="#6b4426" />
+      <Rect x={3} y={13} width={26} height={3} fill={GOLD} />
+      {[7.5, 24.5].map((x) => <Rect key={x} x={x - 1.5} y={13} width={3} height={16} fill={GOLD_D} />)}
+      <Rect x={13} y={14} width={6} height={6} rx={1.5} fill={GOLD} stroke={GOLD_D} strokeWidth={1} />
+    </G>
+  ),
   flame: () => (
     <G>
       <Path d="M16 2c1.5 5 9.5 8.5 9.5 17.5a9.5 9.5 0 0 1-19 0c0-5.5 3.5-8 4.5-12.5 1.8 2.6 3 3.6 4 3.6C17 7.6 16.6 4.8 16 2z" fill={ORANGE} />
