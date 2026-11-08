@@ -64,7 +64,7 @@ const confirm = (title: string, msg: string, ok: string, run: () => void) =>
   showDialog({ title, message: msg, buttons: [{ text: "취소", style: "cancel" }, { text: ok, style: "destructive", onPress: run }] });
 
 export default function Settings() {
-  const { prefs, updatePrefs, mode, email, signOut, deleteAccount, premium, xp, uid } = useApp();
+  const { prefs, updatePrefs, mode, email, signOut, deleteAccount, premium, xp, uid, devPreviewRescue } = useApp();
   const c = useColors();
   const [nick, setNick] = useState(prefs.nickname);
   const [notice, setNotice] = useState("");
@@ -172,6 +172,12 @@ export default function Settings() {
           </View>
         )}
       </Section>
+
+      {__DEV__ && (
+        <Section title="개발용 (출시 빌드에서는 안 보임)">
+          <Item label="연속 기록 복구 창 미리 보기" sub="어제·그제를 빠진 날로 보고 창을 띄워요" onPress={devPreviewRescue} last />
+        </Section>
+      )}
 
       <Section title="정보">
         <Item label="개인정보처리방침" onPress={() => router.push("/privacy")} />

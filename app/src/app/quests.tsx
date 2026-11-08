@@ -45,7 +45,7 @@ export default function Quests() {
             <Pressable onPress={() => router.back()} hitSlop={10} accessibilityRole="button" accessibilityLabel="닫기">
               <Icon name="close" size={24} color="#ffffff" />
             </Pressable>
-            <View style={{ backgroundColor: "rgba(255,255,255,0.92)", borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 4 }}>
+            <View style={{ backgroundColor: c.paper, borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 4 }}>
               <GearCount n={gears} size={15} />
             </View>
           </View>

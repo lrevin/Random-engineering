@@ -23,7 +23,7 @@ export default function Welcome() {
         <Image
           source={dark ? require("../../assets/logo-dark.png") : require("../../assets/logo.png")}
           accessibilityLabel={`${APP_NAME} 로고`}
-          style={{ width: logoW, height: (logoW * 504) / 1200 }}
+          style={{ width: logoW, height: (logoW * 504) / 1298 }}
           resizeMode="contain"
         />
         <T size={22} weight="bold" style={{ marginTop: 8 }}>{APP_SUBTITLE}</T>

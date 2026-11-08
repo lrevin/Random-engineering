@@ -64,6 +64,8 @@ interface AppStateValue {
   rescue: StreakRescue | null;
   restoreStreak(): boolean;
   dismissRescue(): void;
+  /** 개발용: 연속 기록 복구 창 미리 보기 (어제·그제를 빠진 날로) */
+  devPreviewRescue(): void;
   /** 유료 버전 여부 (결제 연동 전이라 시험용으로 켜고 끔) */
   premium: boolean;
   setPremium(v: boolean): void;
@@ -491,6 +493,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [rescue, saveKept, spendGears]);
 
   const dismissRescue = useCallback(() => setRescue(null), []);
+  const devPreviewRescue = useCallback(() => {
+    const d = (n: number) => { const x = new Date(); x.setDate(x.getDate() - n); return dateKey(x); };
+    setRescue({ streak: 5, auto: freezesRef.current > 0 ? [d(2)] : [], restore: freezesRef.current > 0 ? [d(1)] : [d(2), d(1)], tooLate: false });
+  }, []);
 
   // 연속 기록 확인: 앱을 열 때와 앱으로 돌아올 때
   useEffect(() => {
@@ -606,11 +612,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AppStateValue>(() => ({
     ready, mode, email: session?.user.email ?? null, serverEnabled: !!supabase,
     prefs, onboarded, records, active, gears, spendGears,
-    xp, freezes, keptDays, buyFreeze, rescue, restoreStreak, dismissRescue,
+    xp, freezes, keptDays, buyFreeze, rescue, restoreStreak, dismissRescue, devPreviewRescue,
     premium, setPremium, battleTickets: premium ? Infinity : refillTickets(tickets).n + (refillTickets(tickets).bought ?? 0), freeTickets: refillTickets(tickets).n, boughtTickets: refillTickets(tickets).bought ?? 0, buyBattleTicket, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid, questClaims, claimQuest, adViewsToday: adViews.day === dateKey(new Date()) ? adViews.n : 0, grantAdReward,
     startGuest, signUp, signIn, signOut, deleteAccount, updatePrefs, setActive, addRecord, removeRecord,
   }), [ready, mode, session, prefs, onboarded, records, active, gears, spendGears,
-    xp, freezes, keptDays, buyFreeze, rescue, restoreStreak, dismissRescue,
+    xp, freezes, keptDays, buyFreeze, rescue, restoreStreak, dismissRescue, devPreviewRescue,
     premium, setPremium, tickets, buyBattleTicket, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid, questClaims, claimQuest, adViews, grantAdReward,
     startGuest, signUp, signIn, signOut, deleteAccount, updatePrefs, setActive, addRecord, removeRecord]);
 
