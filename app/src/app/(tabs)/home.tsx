@@ -5,7 +5,6 @@ import { TierBadge, UserLevelBar } from "@/components/Rank";
 import { Slot, SlotReel } from "@/components/Slot";
 import { GearCount } from "@/components/TimeUpSheet";
 import { LevelButton } from "@/components/LevelSheet";
-import { TopicLinks } from "@/components/TopicLinks";
 import { Badge, Btn, Card, Chip, levelTone, Row, Screen, T } from "@/components/ui";
 import { categoryById, levelText, TOPICS, type Topic } from "@/data";
 import { useApp } from "@/lib/app-state";
@@ -183,7 +182,6 @@ export default function Home() {
           )}
         </Slot>
 
-        {drawn && !spinning && <TopicLinks topic={drawn} />}
 
         <View style={{ gap: 10 }}>
           {drawn && !spinning && !active && <Btn title={`이걸로 시작 · ${prefs.studyMinutes}분 공부 + 퀴즈`} variant="accent" size="lg" onPress={start} />}
