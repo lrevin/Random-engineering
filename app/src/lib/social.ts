@@ -120,7 +120,7 @@ export function socialMessage(e: unknown) {
     already_requested: "이미 친구 신청을 보냈어요.",
     not_friends: "친구끼리만 배틀할 수 있어요.",
     busy: "이미 진행 중인 배틀이 있어요.",
-    opponent_busy: "친구가 다른 배틀을 하고 있어요.",
+    opponent_busy: "상대가 다른 배틀을 하고 있어요.",
     not_pending: "이미 끝났거나 취소된 배틀이에요.",
   } as Record<string, string>)[code] ?? "문제가 생겼어요. 잠시 후 다시 시도해 주세요.";
 }
@@ -145,3 +145,15 @@ export const cancelBattle = (id: string) => call<Battle>("POST", `/battles/${id}
 /** 퀴즈 결과 제출. xp: 내 누적 경험치 (지면 이 값의 5%, 최대 100을 잃음) */
 export const submitBattle = (id: string, r: { score: number; total: number; xp: number }) =>
   call<Battle>("POST", `/battles/${id}/result`, r);
+
+// ───────── 랜덤 매칭 ─────────
+export type MatchState =
+  | { status: "none" }
+  | { status: "waiting"; id: string; joinedAt: string }
+  | { status: "matched"; battle: Battle };
+
+/** 매칭 대기열에 들어감. domain이 "any"면 아무 분야와 맞음. 조건 맞는 상대가 이미 기다리고 있으면 바로 matched */
+export const joinMatch = (m: { domain: string; studySec: number; topicId: string; questions: QuizQuestion[] }) =>
+  call<MatchState>("POST", "/match", m);
+export const getMatch = () => call<MatchState>("GET", "/match");
+export const leaveMatch = () => call<MatchState>("DELETE", "/match");

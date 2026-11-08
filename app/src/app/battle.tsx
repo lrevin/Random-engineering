@@ -70,7 +70,8 @@ export default function BattleScreen() {
 
   // 주제 공개 연출: 시작 직후 잠깐 같은 분야 주제 이름을 돌림
   const revealing = phase === "study" && now - start < REVEAL_MS;
-  const pool = useMemo(() => (battle ? TOPICS.filter((t) => t.domain === battle.domain) : []), [battle?.domain]); // eslint-disable-line react-hooks/exhaustive-deps
+  // '아무 분야'(any) 매칭이면 전체 주제에서 돌림
+  const pool = useMemo(() => (!battle ? [] : battle.domain === "any" ? TOPICS : TOPICS.filter((t) => t.domain === battle.domain)), [battle?.domain]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!revealing || !pool.length) return;
     const t = setInterval(() => setSpinName(pool[Math.floor(Math.random() * pool.length)].ko), 70);
@@ -141,7 +142,7 @@ export default function BattleScreen() {
   const d = domainById(b.domain);
   const header = (
     <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
-      <Badge label={`⚔️ ${d ? `${d.emoji} ${d.name}` : ""} 배틀`} tone="accent" />
+      <Badge label={`⚔️ ${d ? `${d.emoji} ${d.name}` : "🎲 랜덤 분야"} 배틀`} tone="accent" />
       <T size={14} color="ink2">vs {opp?.nickname}</T>
     </Row>
   );

@@ -18,6 +18,8 @@ const users = new Map();           // uid → { uid, nickname, level, xp, lastSe
 const friends = new Set();         // "A|B" (사전순)
 const requests = new Set();        // "from>to"
 const battles = new Map();         // id → battle
+const queue = new Map();           // 랜덤 매칭 대기: uid → { id, uid, domain, studySec, topicId, questions, joinedAt }
+const MATCH_WAIT_MS = 180_000;     // 매칭 대기 최대 3분
 
 const pair = (a, b) => [a, b].sort().join('|');
 const isFriend = (a, b) => friends.has(pair(a, b));
@@ -55,6 +57,15 @@ function finish(b) {
     b.outcome = { winner: sa > sc ? a : c, xp: Math.min(XP_MAX, Math.floor(Math.max(0, loserXp) * XP_RATE)) };
   }
   b.status = 'finished';
+}
+
+/** 랜덤 매칭: 같은 공부 시간 + 분야가 맞는(한쪽이 '아무 분야'(any)면 맞음) 대기자를 찾아 바로 배틀 시작 */
+function compatible(a, b) {
+  return a.studySec === b.studySec && (a.domain === 'any' || b.domain === 'any' || a.domain === b.domain);
+}
+
+function dropStaleQueue() {
+  for (const [id, e] of queue) if (now() - e.joinedAt > MATCH_WAIT_MS) queue.delete(id);
 }
 
 function view(b, uid) {
@@ -126,7 +137,45 @@ const server = http.createServer(async (req, res) => {
       return send(res, 200, friendsState(uid));
     }
 
-    // ── 배틀
+    // ── 랜덤 매칭
+    if (path === '/match') {
+      dropStaleQueue();
+      const mine = [...battles.values()].filter((b) => { settle(b); return active(b) && isIn(b, uid); });
+      if (req.method === 'GET') {
+        if (mine[0]?.status === 'accepted') return send(res, 200, { status: 'matched', battle: view(mine[0], uid) });
+        const e = queue.get(uid);
+        return send(res, 200, e ? { status: 'waiting', id: e.id, joinedAt: iso(e.joinedAt) } : { status: 'none' });
+      }
+      if (req.method === 'DELETE') {
+        queue.delete(uid);
+        return send(res, 200, { status: 'none' });
+      }
+      if (req.method === 'POST') {
+        if (mine.length) return send(res, 409, { error: 'busy' });
+        const studySec = [300, 600, 900].includes(body.studySec) ? body.studySec : 600;
+        if (!Array.isArray(body.questions) || body.questions.length < 1 || typeof body.topicId !== 'string') return send(res, 400, { error: 'bad_request' });
+        const entry = { id: randomUUID(), uid, domain: String(body.domain || 'any'), studySec, topicId: body.topicId, questions: body.questions.slice(0, 10), joinedAt: now() };
+        const other = [...queue.values()].find((e) => e.uid !== uid && compatible(e, entry));
+        if (!other) {
+          queue.set(uid, entry);
+          return send(res, 200, { status: 'waiting', id: entry.id, joinedAt: iso(entry.joinedAt) });
+        }
+        queue.delete(other.uid);
+        queue.delete(uid);
+        // 분야를 정한 사람의 주제·문제를 씀 (둘 다 정했거나 둘 다 '아무 분야'면 먼저 기다린 사람 것)
+        const pick = other.domain !== 'any' || entry.domain === 'any' ? other : entry;
+        const b = {
+          id: randomUUID(), kind: 'random', status: 'accepted',
+          from: { uid: other.uid, nickname: users.get(other.uid)?.nickname ?? '상대' }, to: { uid, nickname: me.nickname },
+          domain: pick.domain, studySec: FAST ? 20 : studySec, quizSec: QUIZ_SEC, createdAt: iso(now()), startAt: iso(now() + START_DELAY_MS),
+          topicId: pick.topicId, questions: pick.questions, results: {}, outcome: null, xpAtSubmit: {},
+        };
+        battles.set(b.id, b);
+        return send(res, 200, { status: 'matched', battle: view(b, uid) });
+      }
+    }
+
+    // ── 친구 배틀 (지금 앱은 랜덤 매칭만 씀)
     if (req.method === 'POST' && path === '/battles') {
       const to = String(body.opponentUid || '').toUpperCase();
       if (!isFriend(uid, to)) return send(res, 403, { error: 'not_friends' });
