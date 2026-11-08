@@ -13,6 +13,7 @@ import { maxRpFor, TIERS, topicMastery } from "@/lib/rank";
 import { calcStreak } from "@/lib/stats";
 import { radius, shadow, useColors } from "@/theme";
 import { DomainIcon, Icon, TierIcon } from "@/components/Icon";
+import { QuestSummary } from "@/components/Quests";
 
 type LevelFilter = "0" | "1" | "2" | "3"; // 0 = 전체
 
@@ -125,6 +126,8 @@ export default function Home() {
         </Pressable>
       </Row>
 
+
+      <QuestSummary />
 
       {active && (
         <Pressable onPress={() => router.push(`/${active.stage}`)}>

@@ -26,6 +26,7 @@ const K = {
   battlesApplied: "pg.battlesApplied",
   uid: "pg.uid",
   rescueAsked: "pg.rescueAsked",
+  questClaims: "pg.questClaims",
 };
 
 /** 친구 추가용 UID: 헷갈리는 글자(0/O, 1/I)를 뺀 8자리 */
@@ -73,6 +74,10 @@ interface AppStateValue {
   claimOnce(key: string): boolean;
   /** 친구 추가용 내 UID */
   uid: string;
+  /** 받은 퀘스트 보상 키 (quest:날짜:id) */
+  questClaims: string[];
+  /** 퀘스트 보상 받기 (같은 키는 한 번만). 톱니바퀴를 reward개 더함 */
+  claimQuest(key: string, reward: number): boolean;
   startGuest(): Promise<void>;
   signUp(email: string, password: string): Promise<{ needsConfirm: boolean }>;
   signIn(email: string, password: string): Promise<void>;
@@ -163,6 +168,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [premium, setPremiumState] = useState(false);
   const [tickets, setTickets] = useState<Tickets>(() => refillTickets(null));
   const [battleXp, setBattleXp] = useState(0);
+  const [questClaims, setQuestClaims] = useState<string[]>([]);
+  const questRef = useRef<string[]>([]);
   const [uid, setUid] = useState("");
   const [rescue, setRescue] = useState<StreakRescue | null>(null);
 
@@ -256,6 +263,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setPremiumState(false);
     setTickets(refillTickets(null));
     setBattleXp(0);
+    questRef.current = [];
+    setQuestClaims([]);
     appliedRef.current = [];
     setUid(newUid());
     setRescue(null);
@@ -266,7 +275,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let alive = true;
     (async () => {
-      const [m, p, ob, rawRecords, rawActive, g, fz, kd, pm, tk, bx, ba, id] = await Promise.all([
+      const [m, p, ob, rawRecords, rawActive, g, fz, kd, pm, tk, bx, ba, id, qc] = await Promise.all([
         readJSON<Mode>(K.mode, "none"),
         readJSON<Prefs>(K.prefs, DEFAULT_PREFS),
         readJSON<boolean>(K.onboarded, false),
@@ -280,6 +289,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         readJSON<number>(K.battleXp, 0),
         readJSON<string[]>(K.battlesApplied, []),
         readJSON<string>(K.uid, ""),
+        readJSON<string[]>(K.questClaims, []),
       ]);
       const rs = Array.isArray(rawRecords) ? rawRecords.map(normalizeRecord) : [];
       // 이전 버전(설명 단계)에서 진행 중이던 주제는 이어갈 수 없으므로 비움
@@ -308,6 +318,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       writeJSON(K.tickets, t);
       setBattleXp(typeof bx === "number" ? bx : 0);
       appliedRef.current = Array.isArray(ba) ? ba : [];
+      questRef.current = Array.isArray(qc) ? qc : [];
+      setQuestClaims(questRef.current);
       const myUid = id || newUid();
       setUid(myUid);
       if (!id) writeJSON(K.uid, myUid);
@@ -511,6 +523,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, [claimOnce]);
 
+  // ───────── 오늘의 퀘스트 보상 ─────────
+  const claimQuest = useCallback((key: string, reward: number) => {
+    if (questRef.current.includes(key)) return false;
+    questRef.current = [...questRef.current, key].slice(-60);
+    setQuestClaims(questRef.current);
+    writeJSON(K.questClaims, questRef.current);
+    gearsRef.current += reward;
+    setGears(gearsRef.current);
+    writeJSON(K.gears, gearsRef.current);
+    return true;
+  }, []);
+
   const addRecord = useCallback(async (r: NewRecord) => {
     const rec: StudyRecord = { ...r, id: Crypto.randomUUID(), studiedAt: new Date().toISOString(), synced: false };
     saveRecordsLocal(sortRecords([...recordsRef.current, rec]));
@@ -534,11 +558,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     ready, mode, email: session?.user.email ?? null, serverEnabled: !!supabase,
     prefs, onboarded, records, active, gears, spendGears,
     xp, freezes, keptDays, buyFreeze, rescue, restoreStreak, dismissRescue,
-    premium, setPremium, battleTickets: premium ? Infinity : refillTickets(tickets).n, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid,
+    premium, setPremium, battleTickets: premium ? Infinity : refillTickets(tickets).n, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid, questClaims, claimQuest,
     startGuest, signUp, signIn, signOut, deleteAccount, updatePrefs, setActive, addRecord, removeRecord,
   }), [ready, mode, session, prefs, onboarded, records, active, gears, spendGears,
     xp, freezes, keptDays, buyFreeze, rescue, restoreStreak, dismissRescue,
-    premium, setPremium, tickets, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid,
+    premium, setPremium, tickets, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid, questClaims, claimQuest,
     startGuest, signUp, signIn, signOut, deleteAccount, updatePrefs, setActive, addRecord, removeRecord]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
