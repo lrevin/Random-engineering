@@ -196,8 +196,8 @@ async function postJson(url: string, body: unknown): Promise<unknown> {
  * fresh면 그 자리에서 새로 만들고 2번 검수한 문제를 받음 (공부 시작을 누른 즉시). 서버는 검수를 통과한 문제만 줌.
  * 1) 퀴즈 AI 서버 → 2) Supabase 함수 → 실패하면 빈 배열
  */
-async function fetchAiQuestions(topic: Topic, avoid: QuizQuestion[], fresh: boolean): Promise<QuizQuestion[]> {
-  const body = { topicId: topic.id, count: AI_COUNT, avoid: avoid.map((q) => q.q).slice(0, 40), fresh };
+async function fetchAiQuestions(topic: Topic, avoid: QuizQuestion[], fresh: boolean, count = AI_COUNT): Promise<QuizQuestion[]> {
+  const body = { topicId: topic.id, count, avoid: avoid.map((q) => q.q).slice(0, 40), fresh };
   if (QUIZ_SERVER_URL) {
     try {
       const data = await postJson(`${QUIZ_SERVER_URL}/quiz`, body);
@@ -315,3 +315,25 @@ export const prefetchQuiz = (topic: Topic) => {
   p.catch(() => {});
   prepared.set(topic.id, { at: Date.now(), p });
 };
+
+// ───────── 배틀 문제: 전부 AI가 새로 만들고 2번 검수한 문제 ─────────
+/** 배틀 본 문제 수 · 연장전에 한 번에 만드는 문제 수 */
+export const BATTLE_QUIZ_LENGTH = 5;
+export const OVERTIME_BATCH = 2;
+
+/**
+ * 배틀용 AI 문제 count개. 퀴즈 AI 서버에 fresh로 요청해 그 자리에서 만들고 2번 검수한 문제만 받음.
+ * avoid(이미 낸 배틀 문제 · 문제 은행)와 비슷한 문제는 버림.
+ * AI 서버가 꺼져 있으면 이 휴대폰에 모아 둔 AI 문제 → 문제 은행 → 연습 문제 순으로 채워 배틀이 멈추지 않게 함.
+ */
+export async function battleQuestions(topic: Topic, count: number, avoid: QuizQuestion[] = []): Promise<QuizQuestion[]> {
+  const bank = distinct((await bankQuestions(topic.id)).map((q) => ({ ...q, src: "bank" as const })));
+  const against = [...avoid, ...bank];
+  let ai = distinct(await fetchAiQuestions(topic, against, true, count), against).map((q) => ({ ...q, src: "ai" as const }));
+  if (ai.length) saveAiCache(topic.id, ai).catch(() => {});
+  if (ai.length < count) ai = [...ai, ...distinct(shuffle(await readAiCache(topic.id)), [...against, ...ai]).map((q) => ({ ...q, src: "ai" as const }))];
+  let out = pickQuestions(ai, count);
+  if (out.length < count) out = [...out, ...pickQuestions(distinct(bank, [...avoid, ...out]), count - out.length)];
+  if (out.length < count) out = [...out, ...pickQuestions(distinct(offlineQuestions(topic), [...avoid, ...out]), count - out.length)];
+  return shuffle(out).slice(0, count).map(shuffleChoices);
+}

@@ -43,7 +43,7 @@ export function T({ size = 16, weight = "regular", color = "ink", center, style,
 type BtnProps = {
   title: string;
   onPress?: () => void;
-  variant?: "primary" | "accent" | "outline" | "ghost";
+  variant?: "primary" | "accent" | "outline" | "ghost" | "premium";
   size?: "sm" | "md" | "lg";
   disabled?: boolean;
   loading?: boolean;
@@ -53,11 +53,11 @@ type BtnProps = {
 
 export function Btn({ title, onPress, variant = "outline", size = "md", disabled, loading, icon, style }: BtnProps) {
   const c = useColors();
-  const bg = { primary: c.navy, accent: c.accent, outline: c.paper, ghost: "transparent" }[variant];
-  const fg = { primary: c.navyInk, accent: c.accentInk, outline: c.ink, ghost: c.ink2 }[variant];
-  const border = { primary: c.navy, accent: c.accent, outline: c.line2, ghost: "transparent" }[variant];
+  const bg = { primary: c.navy, accent: c.accent, outline: c.paper, ghost: "transparent", premium: "#7d4bc7" }[variant];
+  const fg = { primary: c.navyInk, accent: c.accentInk, outline: c.ink, ghost: c.ink2, premium: "#ffffff" }[variant];
+  const border = { primary: c.navy, accent: c.accent, outline: c.line2, ghost: "transparent", premium: "#7d4bc7" }[variant];
   // 슬롯머신 버튼처럼 아래쪽이 두꺼운 입체 버튼 (누르면 내려감)
-  const under = { primary: c.navyDeep, accent: c.accentDeep, outline: c.paperEdge, ghost: "transparent" }[variant];
+  const under = { primary: c.navyDeep, accent: c.accentDeep, outline: c.paperEdge, ghost: "transparent", premium: "#55309a" }[variant];
   const depth = variant === "ghost" ? 0 : variant === "outline" ? 4 : 5;
   const pad = { sm: [7, 14], md: [12, 20], lg: [17, 28] }[size];
   const fs = { sm: 14, md: 16, lg: 19 }[size];

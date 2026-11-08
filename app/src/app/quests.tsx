@@ -88,8 +88,15 @@ export default function Quests() {
         </View>
 
         <View style={{ paddingHorizontal: 20, gap: 18, marginTop: -44, maxWidth: 640, width: "100%", alignSelf: "center" }}>
+          {/* 출석 (일일 탭) */}
+          {q.attendance && (
+            <Card style={{ paddingVertical: 2, borderTopWidth: 4, borderTopColor: def.color }}>
+              <QuestRow q={q.attendance} claimed={q.claimed(q.attendance.id)} onClaim={() => { if (q.claim(q.attendance!)) setGot(q.attendance!.reward); }} last />
+            </Card>
+          )}
+
           {/* 모두 완료 보너스 */}
-          <Card style={{ gap: 10, borderTopWidth: 4, borderTopColor: def.color }}>
+          <Card style={{ gap: 10, ...(q.attendance ? null : { borderTopWidth: 4, borderTopColor: def.color }) }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
               <T size={17} weight="bold">퀘스트 {q.quests.length}개 모두 끝내기</T>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
