@@ -34,7 +34,7 @@ export function TimeUpSheet({ visible, gears, onExtend, onQuiz }: {
           borderTopWidth: 5, borderTopColor: c.gold, ...shadow(c, 3),
         }}>
           <View style={{ alignItems: "center", gap: 4 }}>
-            <T size={40}>⏰</T>
+            <Icon name="hourglass" size={60} style={{ marginBottom: 4 }} />
             <T size={22} weight="bold" center>공부 시간이 끝났어요</T>
             <T size={15} color="ink2" center>조금 더 볼까요, 아니면 바로 퀴즈를 풀까요?</T>
           </View>
