@@ -55,15 +55,9 @@ export function TopicLinks({ topic, compact, onOpen }: { topic: Topic; compact?:
         {l.official && <LinkButton icon="📄" title="공식 문서" sub={l.official.label} onPress={() => open(l.official!.url, l.official!.label)} />}
       </Row>
       {!compact && (
-        <Row gap={14} style={{ justifyContent: "center" }}>
-          {l.koWiki && (
-            <Pressable onPress={() => open(l.enWiki.url, l.enWiki.title)} hitSlop={6}>
-              <T size={13} color="muted" style={{ textDecorationLine: "underline" }}>영어 위키피디아</T>
-            </Pressable>
-          )}
-          <Pressable onPress={() => open(l.namu, `나무위키: ${topic.ko}`)} hitSlop={6}>
-            <T size={13} color="muted" style={{ textDecorationLine: "underline" }}>나무위키 검색</T>
-          </Pressable>
+        <Row gap={8} style={{ alignItems: "stretch" }}>
+          {l.koWiki && <LinkButton icon="🌐" title="영어 위키피디아" sub={l.enWiki.title} onPress={() => open(l.enWiki.url, l.enWiki.title)} />}
+          <LinkButton icon="🌳" title="나무위키" sub={`'${topic.ko}' 검색`} onPress={() => open(l.namu, `나무위키: ${topic.ko}`)} />
         </Row>
       )}
     </View>
