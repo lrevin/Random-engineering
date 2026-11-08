@@ -149,8 +149,15 @@ export function SlotReel({ names, duration = 2300, onDone }: { names: string[]; 
   const [h, setH] = useState(0);
   const [y] = useState(() => new Animated.Value(0));
 
-  // 맨 아래(names 끝)에서 시작해 맨 위(names[0])가 가운데 오도록 아래로 내려옴
-  const center = (h - ITEM_H) / 2;
+  // 창의 위아래가 비어 보이지 않게 앞뒤로 채움 이름을 붙임 (당첨 이름은 위아래로 다른 이름에 둘러싸여 가운데에 멈춤)
+  const pad = Math.ceil(h / ITEM_H / 2) + 1;
+  const [items] = useState(() => {
+    const fill = (n: number, from: number) => Array.from({ length: n }, (_, i) => names[1 + ((from + i) % Math.max(1, names.length - 1))] ?? names[0]);
+    return { before: fill(8, 5), after: fill(8, 11) };
+  });
+  const list = [...items.before.slice(0, pad), ...names, ...items.after.slice(0, pad)];
+  // 맨 아래(names 끝)에서 시작해 당첨 이름(names[0])이 가운데 오도록 아래로 내려옴
+  const center = (h - ITEM_H) / 2 - pad * ITEM_H;
   const startY = center - (names.length - 1) * ITEM_H;
 
   useEffect(() => {
@@ -170,7 +177,7 @@ export function SlotReel({ names, duration = 2300, onDone }: { names: string[]; 
     <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, overflow: "hidden" }} onLayout={(e) => setH(e.nativeEvent.layout.height)}>
       {h > 0 && (
         <Animated.View style={{ position: "absolute", left: 0, right: 0, top: 0, transform: [{ translateY: y }] }}>
-          {names.map((n, i) => (
+          {list.map((n, i) => (
             <View key={i} style={{ height: ITEM_H, alignItems: "center", justifyContent: "center", paddingHorizontal: 24 }}>
               <Text numberOfLines={1} adjustsFontSizeToFit style={{ fontFamily: FONT.bold, fontSize: 30, color: c.ink, letterSpacing: -0.8 }}>{n}</Text>
             </View>
