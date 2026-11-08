@@ -2,11 +2,14 @@ import { dateKey, studyDays } from "./stats";
 import type { StudyRecord } from "./types";
 
 // ───────── 톱니바퀴(유료 재화) 쓰는 곳 ─────────
+// 물가 기준 (2026-11): 부지런한 무료 사용자가 하루 약 30~35개를 벌어
+// (출석 2 + 일일 퀘스트 약 8 + 주간·이달 퀘스트 하루치 약 6 + 광고 3번 30)
+// 배틀권(50)은 하루 반에 한 판, 보호권(30)은 하루치 정도. 전부 다 하면 하루 최대 약 60개.
 /** 연속 기록 보호권 1개 가격 · 최대 보유 수 */
-export const FREEZE_COST = 20;
+export const FREEZE_COST = 30;
 export const MAX_FREEZES = 2;
 /** 보호권이 모자라 끊긴 날을 톱니바퀴로 복구: 하루당 가격 · 최대 복구 일수 */
-export const RESTORE_COST_PER_DAY = 20;
+export const RESTORE_COST_PER_DAY = 30;
 export const MAX_RESTORE_DAYS = 2;
 
 // ───────── 무료 / 유료 버전 ─────────
@@ -16,7 +19,7 @@ export const FREE_BATTLE_TICKETS = 2;
 export const monthKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 
 /** 톱니바퀴로 사는 배틀권 1개 가격 (무료 버전). 산 배틀권은 달이 바뀌어도 남음 */
-export const BATTLE_TICKET_COST = 40;
+export const BATTLE_TICKET_COST = 50;
 /** 사 둘 수 있는 배틀권 최대 개수 */
 export const MAX_BOUGHT_TICKETS = 5;
 

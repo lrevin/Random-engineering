@@ -10,9 +10,9 @@ import type { StudyRecord } from "./types";
  *  - 출석: 앱을 열기만 해도 하루 2개 (일일 탭 맨 위, 받기 버튼)
  *  - 일일: 3개 2~4개 + 모두 완료 상자 2개 → 하루 최대 12개 (출석 포함 14개)
  *  - 주간: 3개 10~14개 + 상자 8개 → 주 최대 약 48개
- *  - 이달: 3개 30~40개 + 상자 25개 → 달 최대 약 140개
- * 매일·매주·매달 다 깨는 사람도 한 달에 약 680개, 보통은 300개 안팎.
- * 쓰는 곳: 보호권 20 · 연속 기록 복구 하루 20 · 공부 시간 추가 10 · 배틀권 40.
+ *  - 이달: 3개 40~50개 + 상자 40개 → 달 최대 약 180개
+ *  - 광고: 1번 10개, 하루 3번 (lib/ads.ts)
+ * 쓰는 곳: 보호권 30 · 연속 기록 복구 하루 30 · 공부 시간 추가 10 · 배틀권 50. (물가 기준은 lib/economy.ts)
  */
 export type Period = "day" | "week" | "month";
 
@@ -97,14 +97,14 @@ export const PERIODS: Record<Period, PeriodDef> = {
     ],
   },
   month: {
-    title: "이달의 퀘스트", tab: "이달", color: "#7d4bc7", soft: "#efe5fb", bonus: 25,
-    fixed: { id: "days15", kind: "days", title: "이번 달 15일 공부하기", icon: "calendar", goal: 15, reward: 40, measure: days },
+    title: "이달의 퀘스트", tab: "이달", color: "#7d4bc7", soft: "#efe5fb", bonus: 40,
+    fixed: { id: "days15", kind: "days", title: "이번 달 15일 공부하기", icon: "calendar", goal: 15, reward: 50, measure: days },
     pool: [
-      { id: "finish30", kind: "finish", title: "주제 30개 공부 끝내기", icon: "books", goal: 30, reward: 35, measure: finished },
-      { id: "correct150", kind: "correct", title: "퀴즈 정답 150개 맞히기", icon: "target", goal: 150, reward: 35, measure: correct },
-      { id: "perfect10", kind: "perfect", title: "퀴즈 만점 10번 받기", icon: "medal", goal: 10, reward: 40, measure: perfect },
-      { id: "study600", kind: "study", title: "10시간 이상 공부하기", icon: "hourglass", goal: 600, reward: 35, measure: minutes },
-      { id: "new20", kind: "new", title: "처음 보는 주제 20개 공부하기", icon: "globe", goal: 20, reward: 30, measure: newTopics },
+      { id: "finish30", kind: "finish", title: "주제 30개 공부 끝내기", icon: "books", goal: 30, reward: 45, measure: finished },
+      { id: "correct150", kind: "correct", title: "퀴즈 정답 150개 맞히기", icon: "target", goal: 150, reward: 45, measure: correct },
+      { id: "perfect10", kind: "perfect", title: "퀴즈 만점 10번 받기", icon: "medal", goal: 10, reward: 50, measure: perfect },
+      { id: "study600", kind: "study", title: "10시간 이상 공부하기", icon: "hourglass", goal: 600, reward: 45, measure: minutes },
+      { id: "new20", kind: "new", title: "처음 보는 주제 20개 공부하기", icon: "globe", goal: 20, reward: 40, measure: newTopics },
     ],
   },
 };

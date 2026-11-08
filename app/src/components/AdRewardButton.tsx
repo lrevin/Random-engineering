@@ -37,7 +37,7 @@ function SimulatedAd({ onDone }: { onDone: (earned: boolean) => void }) {
   );
 }
 
-/** "광고 보고 톱니바퀴 20개 받기" 버튼 (하루 AD_DAILY_LIMIT번) */
+/** "광고 보고 톱니바퀴 AD_REWARD개 받기" 버튼 (하루 AD_DAILY_LIMIT번) */
 export function AdRewardButton() {
   const c = useColors();
   const { adViewsToday, grantAdReward } = useApp();
