@@ -8,13 +8,13 @@ import { levelText, topicById } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { confirmQuit } from "@/lib/confirm";
 import { loadQuiz, type QuizQuestion } from "@/lib/quiz";
-import { calcRp, topicMastery, totalRp, userLevel } from "@/lib/rank";
+import { calcRp, topicMastery, userLevel } from "@/lib/rank";
 import { calcStreak } from "@/lib/stats";
 import type { WrongAnswer } from "@/lib/types";
 import { radius, raised, shadow, useColors } from "@/theme";
 
-const isCorrect = (q: QuizQuestion, a: number | boolean | undefined) => a !== undefined && a === q.answer;
-const answerText = (q: QuizQuestion) => (q.type === "mc" ? q.choices[q.answer] : q.answer ? "O (맞다)" : "X (틀리다)");
+export const isCorrect = (q: QuizQuestion, a: number | boolean | undefined) => a !== undefined && a === q.answer;
+export const answerText = (q: QuizQuestion) => (q.type === "mc" ? q.choices[q.answer] : q.answer ? "O (맞다)" : "X (틀리다)");
 
 export default function Quiz() {
   const { active } = useApp();
@@ -23,7 +23,7 @@ export default function Quiz() {
 }
 
 function QuizInner() {
-  const { active, setActive, records, addRecord } = useApp();
+  const { active, setActive, records, addRecord, xp, keptDays } = useApp();
   const c = useColors();
   const a = active!;
   const topic = topicById(a.topicId);
@@ -76,11 +76,11 @@ function QuizInner() {
     const wrong: WrongAnswer[] = quiz.questions
       .filter((qq, i) => !isCorrect(qq, answers[i]))
       .map((qq) => ({ q: qq.q, answer: answerText(qq), explain: qq.explain }));
-    const before = calcStreak(records);
+    const before = calcStreak(records, new Date(), keptDays);
     const streak = before.today ? before.streak : before.streak + 1;
     const priorAttempts = records.filter((r) => r.topicId === topic.id).length;
     const rp = calcRp({ topic, correct: score, total, priorAttempts, streak });
-    const rpBefore = totalRp(records);
+    const rpBefore = xp;
     const topicBefore = topicMastery(topic.id, records);
     const rec = await addRecord({
       topicId: topic.id, topicKo: topic.ko, domain: topic.domain, category: topic.category, level: topic.level,
@@ -115,7 +115,7 @@ function QuizInner() {
   />;
 }
 
-function QuestionView({ q, index, count, topicName, badges, saving, onQuit, onNext }: {
+export function QuestionView({ q, index, count, topicName, badges, saving, onQuit, onNext }: {
   q: QuizQuestion; index: number; count: number; topicName: string;
   badges: ReactNode; saving: boolean;
   onQuit: () => void; onNext: (answer: number | boolean) => void;

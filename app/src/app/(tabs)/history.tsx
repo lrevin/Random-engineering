@@ -6,7 +6,7 @@ import { Btn, Card, Row, Segment, T } from "@/components/ui";
 import { ALL_CATEGORIES } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { UserLevelBar, TierBadge } from "@/components/Rank";
-import { topicMastery, totalRp } from "@/lib/rank";
+import { topicMastery } from "@/lib/rank";
 import { averageScore, calcStreak, fmtDate } from "@/lib/stats";
 import type { StudyRecord } from "@/lib/types";
 import { radius, raised, shadow, useColors } from "@/theme";
@@ -27,11 +27,11 @@ function Score({ r }: { r: StudyRecord }) {
 }
 
 export default function History() {
-  const { records, mode } = useApp();
+  const { records, mode, xp, keptDays } = useApp();
   const c = useColors();
   const [filter, setFilter] = useState<Filter>("all");
 
-  const { streak, today } = calcStreak(records);
+  const { streak, today } = calcStreak(records, new Date(), keptDays);
   const avg = averageScore(records);
   const list = useMemo(
     () => [...records].filter((r) => filter === "all" || needsReview(r)).reverse(),
@@ -69,7 +69,7 @@ export default function History() {
 
       <Card style={{ gap: 6 }}>
         <T size={14} weight="semibold" color="ink2">내 레벨</T>
-        <UserLevelBar xp={totalRp(records)} />
+        <UserLevelBar xp={xp} />
       </Card>
 
       {bars.counts.length > 0 && (

@@ -5,7 +5,7 @@ import { LevelBadge, TierBadge, UserLevelBar } from "@/components/Rank";
 import { Btn, Card, Row, Screen, T } from "@/components/ui";
 import { topicById } from "@/data";
 import { useApp } from "@/lib/app-state";
-import { TIERS, TOPIC_TIER_MIN, topicMastery, totalRp } from "@/lib/rank";
+import { TIERS, TOPIC_TIER_MIN, topicMastery } from "@/lib/rank";
 import { useColors } from "@/theme";
 
 const scoreMessage = (score: number, total: number) => {
@@ -26,7 +26,7 @@ export default function Result() {
 }
 
 function ResultInner({ snapshot }: { snapshot: NonNullable<ReturnType<typeof useApp>["active"]> }) {
-  const { records, setActive } = useApp();
+  const { records, setActive, xp } = useApp();
   const c = useColors();
   const r = snapshot.result!;
   const topic = topicById(snapshot.topicId);
@@ -75,7 +75,7 @@ function ResultInner({ snapshot }: { snapshot: NonNullable<ReturnType<typeof use
         ))}
         <View style={{ height: 1, backgroundColor: c.line, marginVertical: 4 }} />
         <T size={13} weight="semibold" color="ink2">내 레벨</T>
-        <UserLevelBar xp={totalRp(records)} />
+        <UserLevelBar xp={xp} />
       </Card>
 
       <Card style={{ gap: 8 }}>

@@ -10,14 +10,14 @@ import { Badge, Btn, Card, Chip, levelTone, Row, Screen, T } from "@/components/
 import { categoryById, levelText, TOPICS, type Topic } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { prefetchQuiz } from "@/lib/quiz";
-import { maxRpFor, TIERS, topicMastery, totalRp } from "@/lib/rank";
+import { maxRpFor, TIERS, topicMastery } from "@/lib/rank";
 import { calcStreak, lastWeek } from "@/lib/stats";
 import { radius, shadow, useColors } from "@/theme";
 
 type LevelFilter = "0" | "1" | "2" | "3"; // 0 = 전체
 
 export default function Home() {
-  const { prefs, records, active, setActive, gears, updatePrefs } = useApp();
+  const { prefs, records, active, setActive, gears, updatePrefs, xp, keptDays, freezes } = useApp();
   const c = useColors();
   const [level, setLevel] = useState<LevelFilter>(String(prefs.level) as LevelFilter);
   // 설정에서 기본 난이도를 바꾸면 필터도 따라가게 함
@@ -35,8 +35,8 @@ export default function Home() {
 
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
 
-  const { streak, today } = calcStreak(records);
-  const week = lastWeek(records);
+  const { streak, today } = calcStreak(records, new Date(), keptDays);
+  const week = lastWeek(records, new Date(), keptDays);
   // 마스터 = 주제 랭크가 최고 단계(엔지니어). 같은 개념이 여러 분야에 있을 수 있어서(예: 레이놀즈 수) 이름으로도 확인
   const mastered = useMemo(() => {
     const set = new Set<string>();
@@ -120,18 +120,18 @@ export default function Home() {
           <T size={14} color="muted">{today ? "오늘 공부 완료 ✓" : "오늘은 아직이에요"}</T>
           <T size={22} weight="bold" numberOfLines={1}>{prefs.nickname || "학습자"}님, 안녕하세요</T>
         </View>
-        <View style={{ alignItems: "center", backgroundColor: c.paper, borderWidth: 1, borderColor: c.line, borderBottomWidth: 3, borderBottomColor: c.paperEdge, borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 4, ...shadow(c, 1) }}>
+        <Pressable onPress={() => router.push("/shop")} accessibilityRole="button" accessibilityLabel="연속 일수, 보호권 보기" style={{ alignItems: "center", backgroundColor: c.paper, borderWidth: 1, borderColor: c.line, borderBottomWidth: 3, borderBottomColor: c.paperEdge, borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 4, ...shadow(c, 1) }}>
           <T size={22} weight="bold" color={streak ? "flame" : "muted"}>🔥 {streak}</T>
-          <T size={11} color="muted">연속 일수</T>
-        </View>
-        <View style={{ alignItems: "center", backgroundColor: c.paper, borderWidth: 1, borderColor: c.line, borderBottomWidth: 3, borderBottomColor: c.paperEdge, borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 4, ...shadow(c, 1) }}>
+          <T size={11} color="muted">연속 일수{freezes ? ` · 🛡${freezes}` : ""}</T>
+        </Pressable>
+        <Pressable onPress={() => router.push("/shop")} accessibilityRole="button" accessibilityLabel="톱니바퀴 상점" style={{ alignItems: "center", backgroundColor: c.paper, borderWidth: 1, borderColor: c.line, borderBottomWidth: 3, borderBottomColor: c.paperEdge, borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 4, ...shadow(c, 1) }}>
           <View style={{ height: 32, justifyContent: "center" }}><GearCount n={gears} size={18} /></View>
-          <T size={11} color="muted">톱니바퀴</T>
-        </View>
+          <T size={11} color="muted">톱니바퀴 ›</T>
+        </Pressable>
       </Row>
 
       <Card style={{ paddingVertical: 12 }}>
-        <UserLevelBar xp={totalRp(records)} compact />
+        <UserLevelBar xp={xp} compact />
       </Card>
 
       <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
@@ -139,10 +139,11 @@ export default function Home() {
           <View key={i} style={{ alignItems: "center", gap: 4, flex: 1 }}>
             <View style={{
               width: 30, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center",
-              backgroundColor: d.done ? c.flame : c.paper, borderWidth: d.done ? 0 : 1.5, ...(d.done ? shadow(c, 1) : null),
-              borderColor: d.isToday ? c.accent : c.line2, borderStyle: d.isToday && !d.done ? "dashed" : "solid",
+              backgroundColor: d.done ? c.flame : d.kept ? c.goldSoft : c.paper, borderWidth: d.done ? 0 : 1.5, ...(d.done ? shadow(c, 1) : null),
+              borderColor: d.kept ? c.gold : d.isToday ? c.accent : c.line2, borderStyle: d.isToday && !d.done ? "dashed" : "solid",
             }}>
               {d.done && <T size={13} weight="bold" color="accentInk">✓</T>}
+              {d.kept && <T size={13}>🛡</T>}
             </View>
             <T size={12} color={d.isToday ? "accent" : "muted"} weight={d.isToday ? "semibold" : "regular"}>{d.label}</T>
           </View>
