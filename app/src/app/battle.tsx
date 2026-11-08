@@ -127,7 +127,7 @@ export default function BattleScreen() {
     if (battle && me === "from" && ["declined", "expired", "canceled"].includes(battle.status) && claimOnce("refund:" + battle.id)) refundBattleTicket();
   }, [battle, me, claimOnce, refundBattleTicket]);
 
-  const leave = () => router.replace("/friends");
+  const leave = () => router.replace("/arena");
 
   // ───────── 화면 ─────────
   if (phase === "loading") {
@@ -172,7 +172,7 @@ export default function BattleScreen() {
           <T size={18} weight="bold" center>{why}</T>
           {me === "from" && <T size={14} color="muted" center>배틀권은 돌려받았어요.</T>}
         </Card>
-        <Btn title="친구 목록으로" variant="primary" size="lg" onPress={leave} />
+        <Btn title="배틀 메뉴로" variant="primary" size="lg" onPress={leave} />
       </Screen>
     );
   }
@@ -294,7 +294,7 @@ export default function BattleScreen() {
         </T>
         <T size={13} color="muted" center>진 사람 누적 경험치의 5% (최대 {battleXpTransfer(1e9)} XP)</T>
       </Card>
-      <Btn title="친구 목록으로" variant="primary" size="lg" onPress={leave} />
+      <Btn title="배틀 메뉴로" variant="primary" size="lg" onPress={leave} />
     </Screen>
   );
 }

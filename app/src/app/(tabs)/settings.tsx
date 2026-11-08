@@ -66,7 +66,7 @@ const confirm = (title: string, msg: string, ok: string, run: () => void) => {
 };
 
 export default function Settings() {
-  const { prefs, updatePrefs, mode, email, signOut, deleteAccount } = useApp();
+  const { prefs, updatePrefs, mode, email, signOut, deleteAccount, premium } = useApp();
   const c = useColors();
   const [nick, setNick] = useState(prefs.nickname);
   const [notice, setNotice] = useState("");
@@ -98,6 +98,20 @@ export default function Settings() {
     <Screen edges={["top"]} scroll>
       <T size={26} weight="bold">설정</T>
       {notice ? <T size={14} color="accent">{notice}</T> : null}
+
+      {/* 유료 멤버십 */}
+      <Card accent style={{ gap: 10 }}>
+        <T size={17} weight="bold">⭐ {premium ? "유료 멤버십 사용 중" : "유료 멤버십"}</T>
+        <T size={14} color="ink2">
+          {premium ? "1:1 친구 배틀을 무제한으로 할 수 있어요." : "1:1 친구 배틀을 무제한으로 즐길 수 있어요. 무료 버전은 매월 2회예요."}
+        </T>
+        <Btn
+          title={premium ? "멤버십 관리" : "유료 멤버십으로 업그레이드"}
+          variant={premium ? "outline" : "accent"}
+          size={premium ? "md" : "lg"}
+          onPress={() => router.push("/shop")}
+        />
+      </Card>
 
       <Section title="계정">
         <View style={{ paddingVertical: 12, gap: 8, borderBottomWidth: 1, borderBottomColor: c.line }}>
