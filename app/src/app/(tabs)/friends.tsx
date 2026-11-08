@@ -1,27 +1,24 @@
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { Pressable, Share, View } from "react-native";
-import { BattleSetupSheet } from "@/components/BattleSetupSheet";
 import { LevelBadge } from "@/components/Rank";
 import { Btn, Card, Field, Row, Screen, T } from "@/components/ui";
 import { useApp } from "@/lib/app-state";
-import { FREE_BATTLE_TICKETS } from "@/lib/economy";
 import {
   getFriends, removeFriend, requestFriend, respondFriend, socialEnabled, socialMessage,
-  type Friend, type FriendsState,
+  type FriendsState,
 } from "@/lib/social";
-import { radius, useColors } from "@/theme";
+import { useColors } from "@/theme";
 
 const EMPTY: FriendsState = { friends: [], incoming: [], outgoing: [] };
 
 export default function Friends() {
-  const { uid, premium, battleTickets } = useApp();
+  const { uid } = useApp();
   const c = useColors();
   const [state, setState] = useState<FriendsState>(EMPTY);
   const [code, setCode] = useState("");
   const [notice, setNotice] = useState<{ text: string; ok: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
-  const [target, setTarget] = useState<Friend | null>(null);
   const [offline, setOffline] = useState(false);
 
   const refresh = useCallback(() => {
@@ -68,14 +65,6 @@ export default function Friends() {
         </Row>
       </Card>
 
-      {/* 배틀권 */}
-      <Pressable onPress={() => router.push("/shop")} accessibilityRole="button">
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: c.chip, borderRadius: radius.md, paddingHorizontal: 16, paddingVertical: 12 }}>
-          <T size={14} color="ink2">⚔️ 배틀권 {premium ? "· 유료 버전" : "· 매월 1일 다시 채움"}</T>
-          <T size={15} weight="bold">{premium ? "무제한" : `${battleTickets} / ${FREE_BATTLE_TICKETS}`} ›</T>
-        </View>
-      </Pressable>
-
       {!socialEnabled ? (
         <Card><T size={15} color="ink2">친구 서버가 아직 연결되지 않았어요. (개발용: app/.env.local 에 EXPO_PUBLIC_SOCIAL_URL)</T></Card>
       ) : (
@@ -116,10 +105,14 @@ export default function Friends() {
                   <T size={12} color="muted">{f.online ? "접속 중" : "접속 안 함"} · {f.uid}</T>
                 </Pressable>
                 <LevelBadge level={f.level} size="sm" />
-                <Btn title="⚔️ 배틀" size="sm" variant="accent" onPress={() => setTarget(f)} />
               </Row>
             ))}
-            {state.friends.length > 0 && <T size={12} color="muted">친구를 길게 누르면 친구에서 뺄 수 있어요. 상대도 앱을 켜 두고 있어야 배틀을 받을 수 있어요.</T>}
+            {state.friends.length > 0 && (
+              <>
+                <T size={12} color="muted">친구를 길게 누르면 친구에서 뺄 수 있어요.</T>
+                <Btn title="⚔️ 친구와 배틀하기" size="sm" variant="accent" onPress={() => router.push("/arena")} />
+              </>
+            )}
           </Card>
 
           {state.outgoing.length > 0 && (
@@ -128,7 +121,6 @@ export default function Friends() {
         </>
       )}
 
-      <BattleSetupSheet friend={target} onClose={() => setTarget(null)} />
     </Screen>
   );
 }

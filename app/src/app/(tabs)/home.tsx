@@ -11,7 +11,7 @@ import { categoryById, levelText, TOPICS, type Topic } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { prefetchQuiz } from "@/lib/quiz";
 import { maxRpFor, TIERS, topicMastery } from "@/lib/rank";
-import { calcStreak, lastWeek } from "@/lib/stats";
+import { calcStreak } from "@/lib/stats";
 import { radius, shadow, useColors } from "@/theme";
 
 type LevelFilter = "0" | "1" | "2" | "3"; // 0 = 전체
@@ -36,7 +36,6 @@ export default function Home() {
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
 
   const { streak, today } = calcStreak(records, new Date(), keptDays);
-  const week = lastWeek(records, new Date(), keptDays);
   // 마스터 = 주제 랭크가 최고 단계(엔지니어). 같은 개념이 여러 분야에 있을 수 있어서(예: 레이놀즈 수) 이름으로도 확인
   const mastered = useMemo(() => {
     const set = new Set<string>();
@@ -134,21 +133,6 @@ export default function Home() {
         <UserLevelBar xp={xp} compact />
       </Card>
 
-      <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
-        {week.map((d, i) => (
-          <View key={i} style={{ alignItems: "center", gap: 4, flex: 1 }}>
-            <View style={{
-              width: 30, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center",
-              backgroundColor: d.done ? c.flame : d.kept ? c.goldSoft : c.paper, borderWidth: d.done ? 0 : 1.5, ...(d.done ? shadow(c, 1) : null),
-              borderColor: d.kept ? c.gold : d.isToday ? c.accent : c.line2, borderStyle: d.isToday && !d.done ? "dashed" : "solid",
-            }}>
-              {d.done && <T size={13} weight="bold" color="accentInk">✓</T>}
-              {d.kept && <T size={13}>🛡</T>}
-            </View>
-            <T size={12} color={d.isToday ? "accent" : "muted"} weight={d.isToday ? "semibold" : "regular"}>{d.label}</T>
-          </View>
-        ))}
-      </Row>
 
       {active && (
         <Pressable onPress={() => router.push(`/${active.stage}`)}>
