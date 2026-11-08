@@ -3,7 +3,7 @@ import type { Session } from "@supabase/supabase-js";
 import * as Crypto from "expo-crypto";
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AppState as RNAppState } from "react-native";
-import { FREE_BATTLE_TICKETS, FREEZE_COST, MAX_FREEZES, planStreakRescue, refillTickets, RESTORE_COST_PER_DAY, type StreakRescue, type Tickets } from "./economy";
+import { BATTLE_TICKET_COST, FREE_BATTLE_TICKETS, FREEZE_COST, MAX_BOUGHT_TICKETS, MAX_FREEZES, planStreakRescue, refillTickets, RESTORE_COST_PER_DAY, type StreakRescue, type Tickets } from "./economy";
 import { cancelAllNotifications, rescheduleReminders } from "./notify";
 import { supabase } from "./supabase";
 import { DEFAULT_PREFS, type ActiveSession, type Prefs, type StudyRecord, type WrongAnswer } from "./types";
@@ -66,6 +66,11 @@ interface AppStateValue {
   setPremium(v: boolean): void;
   /** 무료 버전 배틀권 (유료 버전이면 무제한) */
   battleTickets: number;
+  /** 이번 달 무료 배틀권 / 톱니바퀴로 산 배틀권 */
+  freeTickets: number;
+  boughtTickets: number;
+  /** 톱니바퀴 BATTLE_TICKET_COST개로 배틀권 1개 사기 (최대 MAX_BOUGHT_TICKETS개까지 보유) */
+  buyBattleTicket(): boolean;
   spendBattleTicket(): boolean;
   refundBattleTicket(): void;
   /** 배틀 결과 경험치 반영 (같은 배틀은 한 번만) */
@@ -167,6 +172,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [keptDays, setKeptDays] = useState<string[]>([]);
   const [premium, setPremiumState] = useState(false);
   const [tickets, setTickets] = useState<Tickets>(() => refillTickets(null));
+  const ticketsRef = useRef<Tickets>(refillTickets(null));
   const [battleXp, setBattleXp] = useState(0);
   const [questClaims, setQuestClaims] = useState<string[]>([]);
   const questRef = useRef<string[]>([]);
@@ -261,6 +267,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setFreezes(0);
     setKeptDays([]);
     setPremiumState(false);
+    ticketsRef.current = refillTickets(null);
     setTickets(refillTickets(null));
     setBattleXp(0);
     questRef.current = [];
@@ -314,6 +321,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setKeptDays(kdl);
       setPremiumState(!!pm);
       const t = refillTickets(tk); // 매월 1일 00시가 지났으면 다시 채움
+      ticketsRef.current = t;
       setTickets(t);
       writeJSON(K.tickets, t);
       setBattleXp(typeof bx === "number" ? bx : 0);
@@ -486,26 +494,41 @@ export function AppProvider({ children }: { children: ReactNode }) {
     writeJSON(K.premium, v);
   }, []);
 
-  const spendBattleTicket = useCallback(() => {
-    if (premium) return true;
-    const t = refillTickets(tickets);
-    if (t.n <= 0) return false;
-    const next = { ...t, n: t.n - 1 };
+  // 배틀권: 사자마자 바로 쓰는 경우(톱니바퀴로 사서 매칭)가 있어서 최신 값을 ref로 들고 있음
+  const saveTickets = useCallback((next: Tickets) => {
+    ticketsRef.current = next;
     setTickets(next);
     writeJSON(K.tickets, next);
+  }, []);
+  // 마지막으로 쓴 배틀권 종류 (돌려줄 때 같은 곳으로)
+  const lastTicketRef = useRef<"free" | "bought">("free");
+  const spendBattleTicket = useCallback(() => {
+    if (premium) return true;
+    const t = refillTickets(ticketsRef.current);
+    const bought = t.bought ?? 0;
+    if (t.n <= 0 && bought <= 0) return false;
+    // 무료 배틀권부터 씀 (산 배틀권은 달이 바뀌어도 남으니까)
+    lastTicketRef.current = t.n > 0 ? "free" : "bought";
+    saveTickets(t.n > 0 ? { ...t, n: t.n - 1 } : { ...t, bought: bought - 1 });
     return true;
-  }, [premium, tickets]);
+  }, [premium, saveTickets]);
+
+  /** 톱니바퀴로 배틀권 1개 사기 */
+  const buyBattleTicket = useCallback(() => {
+    const t = refillTickets(ticketsRef.current);
+    if ((t.bought ?? 0) >= MAX_BOUGHT_TICKETS || !spendGears(BATTLE_TICKET_COST)) return false;
+    saveTickets({ ...t, bought: (t.bought ?? 0) + 1 });
+    return true;
+  }, [spendGears, saveTickets]);
 
   /** 상대가 거절했거나 응답이 없어 배틀이 안 열리면 배틀권을 돌려줌 */
   const refundBattleTicket = useCallback(() => {
     if (premium) return;
-    setTickets((t) => {
-      const cur = refillTickets(t);
-      const next = { ...cur, n: Math.min(cur.n + 1, FREE_BATTLE_TICKETS) };
-      writeJSON(K.tickets, next);
-      return next;
-    });
-  }, [premium]);
+    const cur = refillTickets(ticketsRef.current);
+    saveTickets(lastTicketRef.current === "bought"
+      ? { ...cur, bought: (cur.bought ?? 0) + 1 }
+      : { ...cur, n: Math.min(cur.n + 1, FREE_BATTLE_TICKETS) });
+  }, [premium, saveTickets]);
 
   const claimOnce = useCallback((key: string) => {
     if (appliedRef.current.includes(key)) return false;
@@ -526,7 +549,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // ───────── 오늘의 퀘스트 보상 ─────────
   const claimQuest = useCallback((key: string, reward: number) => {
     if (questRef.current.includes(key)) return false;
-    questRef.current = [...questRef.current, key].slice(-60);
+    questRef.current = [...questRef.current, key].slice(-200);
     setQuestClaims(questRef.current);
     writeJSON(K.questClaims, questRef.current);
     gearsRef.current += reward;
@@ -558,11 +581,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     ready, mode, email: session?.user.email ?? null, serverEnabled: !!supabase,
     prefs, onboarded, records, active, gears, spendGears,
     xp, freezes, keptDays, buyFreeze, rescue, restoreStreak, dismissRescue,
-    premium, setPremium, battleTickets: premium ? Infinity : refillTickets(tickets).n, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid, questClaims, claimQuest,
+    premium, setPremium, battleTickets: premium ? Infinity : refillTickets(tickets).n + (refillTickets(tickets).bought ?? 0), freeTickets: refillTickets(tickets).n, boughtTickets: refillTickets(tickets).bought ?? 0, buyBattleTicket, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid, questClaims, claimQuest,
     startGuest, signUp, signIn, signOut, deleteAccount, updatePrefs, setActive, addRecord, removeRecord,
   }), [ready, mode, session, prefs, onboarded, records, active, gears, spendGears,
     xp, freezes, keptDays, buyFreeze, rescue, restoreStreak, dismissRescue,
-    premium, setPremium, tickets, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid, questClaims, claimQuest,
+    premium, setPremium, tickets, buyBattleTicket, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid, questClaims, claimQuest,
     startGuest, signUp, signIn, signOut, deleteAccount, updatePrefs, setActive, addRecord, removeRecord]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

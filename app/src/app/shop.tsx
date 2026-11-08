@@ -7,7 +7,7 @@ import { SectionTitle } from "@/components/StatTile";
 import { GearCount } from "@/components/TimeUpSheet";
 import { Btn, Row, Screen, T } from "@/components/ui";
 import { useApp } from "@/lib/app-state";
-import { FREE_BATTLE_TICKETS, FREEZE_COST, MAX_FREEZES, MAX_RESTORE_DAYS, RESTORE_COST_PER_DAY } from "@/lib/economy";
+import { BATTLE_TICKET_COST, FREE_BATTLE_TICKETS, FREEZE_COST, MAX_BOUGHT_TICKETS, MAX_FREEZES, MAX_RESTORE_DAYS, RESTORE_COST_PER_DAY } from "@/lib/economy";
 import { inset, radius, shadow, useColors } from "@/theme";
 
 /** 체크 표시 한 줄 */
@@ -63,11 +63,13 @@ function PlanCard({ ribbon, title, art, children, footer, highlight }: {
 
 /** 톱니바퀴 쓰는 곳 + 무료/유료 버전 */
 export default function Shop() {
-  const { gears, freezes, buyFreeze, premium, setPremium, battleTickets } = useApp();
+  const { gears, freezes, buyFreeze, premium, setPremium, battleTickets, freeTickets, boughtTickets, buyBattleTicket } = useApp();
   const c = useColors();
   const [askUpgrade, setAskUpgrade] = useState(false);
   const [notice, setNotice] = useState("");
   const full = freezes >= MAX_FREEZES;
+  const [ticketNotice, setTicketNotice] = useState("");
+  const ticketsFull = boughtTickets >= MAX_BOUGHT_TICKETS;
 
   const buy = () => {
     if (buyFreeze()) setNotice("보호권을 1개 샀어요");
@@ -116,6 +118,36 @@ export default function Shop() {
         </T>
       </PlanCard>
 
+      <PlanCard
+        title="배틀권"
+        art={
+          <View style={{ alignItems: "center", gap: 4 }}>
+            <Icon name="ticket" size={64} />
+            <T size={13} weight="bold" color="ink2">{premium ? "무제한" : `${battleTickets}개`}</T>
+          </View>
+        }
+        footer={
+          premium ? (
+            <T size={13} color="success" weight="semibold">프리미엄이라 배틀권 없이 매칭할 수 있어요.</T>
+          ) : (
+            <View style={{ gap: 8 }}>
+              <Btn
+                title={ticketsFull ? `산 배틀권은 ${MAX_BOUGHT_TICKETS}개까지 가질 수 있어요` : `배틀권 사기 · 톱니바퀴 ${BATTLE_TICKET_COST}개`}
+                variant="accent"
+                icon={ticketsFull ? undefined : <Icon name="gear" size={22} />}
+                onPress={() => { if (buyBattleTicket()) setTicketNotice("배틀권을 1개 샀어요"); }}
+                disabled={ticketsFull || gears < BATTLE_TICKET_COST}
+              />
+              {!ticketsFull && gears < BATTLE_TICKET_COST && <T size={13} color="accent" center>톱니바퀴가 {BATTLE_TICKET_COST - gears}개 부족해요</T>}
+              {ticketNotice ? <T size={13} color="success" center>{ticketNotice}</T> : null}
+            </View>
+          )
+        }
+      >
+        <T size={14} color="ink2">랜덤 매칭 배틀을 한 번 더 할 수 있어요. 매칭을 취소하거나 상대를 못 찾으면 돌려받아요.</T>
+        {!premium && <T size={13} color="muted">이번 달 무료 {freeTickets} / {FREE_BATTLE_TICKETS} · 산 배틀권 {boughtTickets}개 (산 배틀권은 달이 바뀌어도 남아요)</T>}
+      </PlanCard>
+
       <SectionTitle title="요금제 비교" />
       <PlanCard
         highlight
@@ -151,11 +183,11 @@ export default function Shop() {
         footer={
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: c.chip, borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 10, ...inset(c) }}>
             <T size={14} color="ink2">남은 배틀권</T>
-            <T size={16} weight="bold">{premium ? "무제한" : `${battleTickets} / ${FREE_BATTLE_TICKETS}회`}</T>
+            <T size={16} weight="bold">{premium ? "무제한" : `${battleTickets}개`}</T>
           </View>
         }
       >
-        <Perk>랜덤 매칭 배틀 매월 {FREE_BATTLE_TICKETS}회</Perk>
+        <Perk>랜덤 매칭 배틀 매월 {FREE_BATTLE_TICKETS}회 (톱니바퀴 {BATTLE_TICKET_COST}개로 더 하기)</Perk>
         <Perk>친구 추가 · 친구 목록</Perk>
         <Perk>공부 기록 · 업적 모두 이용</Perk>
       </PlanCard>

@@ -5,7 +5,7 @@ import { MatchOverlay } from "@/components/MatchOverlay";
 import { Btn, Card, Chip, Row, Screen, Segment, T } from "@/components/ui";
 import { domainById, DOMAINS, TOPICS } from "@/data";
 import { useApp } from "@/lib/app-state";
-import { BATTLE_MINUTES, BATTLE_XP_MAX, FREE_BATTLE_TICKETS } from "@/lib/economy";
+import { BATTLE_MINUTES, BATTLE_TICKET_COST, BATTLE_XP_MAX, FREE_BATTLE_TICKETS } from "@/lib/economy";
 import { loadQuiz } from "@/lib/quiz";
 import { userLevel } from "@/lib/rank";
 import { getMatch, joinMatch, leaveMatch, serverNow, socialEnabled, socialMessage, type Battle, type MatchState } from "@/lib/social";
@@ -17,7 +17,7 @@ const MATCH_WAIT_SEC = 180;
 
 /** 배틀 메뉴: 랜덤 상대와 1:1 매칭 배틀. 매칭을 돌리는 두 사람 모두 배틀권 1개씩 씀 */
 export default function Arena() {
-  const { premium, battleTickets, records, spendBattleTicket, refundBattleTicket, claimOnce, uid, prefs, xp } = useApp();
+  const { premium, battleTickets, freeTickets, boughtTickets, buyBattleTicket, gears, records, spendBattleTicket, refundBattleTicket, claimOnce, uid, prefs, xp } = useApp();
   const focused = useIsFocused();
   const c = useColors();
   const [domain, setDomain] = useState("any");
@@ -82,7 +82,7 @@ export default function Arena() {
     setNotice("");
     const pool = domain === "any" ? TOPICS : TOPICS.filter((t) => t.domain === domain);
     if (!pool.length) return setNotice("이 분야에는 아직 주제가 없어요.");
-    if (!spendBattleTicket()) return setNotice("배틀권이 없어요. 다음 달 1일에 다시 채워져요.");
+    if (!spendBattleTicket()) return setNotice("배틀권이 없어요. 톱니바퀴로 사거나 다음 달 1일을 기다려 주세요.");
     setBusy(true);
     try {
       // 내가 먼저 기다리게 되면 이 주제·문제로 배틀이 열림 (상대가 분야를 정했으면 상대 것)
@@ -133,10 +133,13 @@ export default function Arena() {
         <Card style={{ gap: 6 }}>
           <Row style={{ justifyContent: "space-between" }}>
             <Row gap={8}><Icon name="ticket" size={30} /><T size={16} weight="bold">남은 배틀권</T></Row>
-            <T size={20} weight="bold" color="accent">{premium ? "무제한" : `${battleTickets} / ${FREE_BATTLE_TICKETS}`}</T>
+            <T size={20} weight="bold" color="accent">{premium ? "무제한" : `${battleTickets}개`}</T>
           </Row>
+          {!premium && (
+            <T size={13} color="ink2">이번 달 무료 {freeTickets} / {FREE_BATTLE_TICKETS} · 톱니바퀴로 산 배틀권 {boughtTickets}개</T>
+          )}
           <T size={13} color="muted">
-            {premium ? "유료 멤버십 사용 중이에요." : `무료 버전은 매월 1일 00시에 ${FREE_BATTLE_TICKETS}회로 다시 채워져요. 유료 멤버십은 무제한 ›`}
+            {premium ? "유료 멤버십 사용 중이에요." : `무료 배틀권은 매월 1일 00시에 ${FREE_BATTLE_TICKETS}개로 다시 채워지고, 산 배틀권은 사라지지 않아요. 유료 멤버십은 무제한 ›`}
           </T>
         </Card>
       </Pressable>
@@ -167,7 +170,19 @@ export default function Arena() {
             </T>
           </View>
           {noTicket ? (
-            <Btn title="유료 멤버십 알아보기" variant="primary" size="lg" onPress={() => router.push("/shop")} />
+            <View style={{ gap: 10 }}>
+              <Btn
+                title={`톱니바퀴 ${BATTLE_TICKET_COST}개로 매칭 시작`}
+                variant="accent"
+                size="lg"
+                icon={<Icon name="gear" size={24} />}
+                loading={busy}
+                disabled={gears < BATTLE_TICKET_COST}
+                onPress={() => { if (buyBattleTicket()) start(); }}
+              />
+              {gears < BATTLE_TICKET_COST && <T size={13} color="accent" center>톱니바퀴가 {BATTLE_TICKET_COST - gears}개 부족해요. 퀘스트로 모아 보세요.</T>}
+              <Btn title="유료 멤버십 알아보기 (무제한)" size="md" onPress={() => router.push("/shop")} />
+            </View>
           ) : (
             <Btn title={busy ? "문제 준비하는 중…" : premium ? "랜덤 매칭 시작" : "랜덤 매칭 시작 (배틀권 1개)"} variant="accent" size="lg" loading={busy} onPress={start} />
           )}
