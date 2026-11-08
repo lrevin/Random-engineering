@@ -32,11 +32,11 @@ export default function RecordDetail() {
         await removeRecord(r.id);
         router.back();
       } catch {
-        showDialog({ icon: "📡", title: "삭제하지 못했어요", message: "인터넷 연결을 확인하고 다시 시도해 주세요." });
+        showDialog({ icon: "offline", title: "삭제하지 못했어요", message: "인터넷 연결을 확인하고 다시 시도해 주세요." });
       }
     };
     showDialog({
-      icon: "🗑️",
+      icon: "trash",
       title: "기록을 삭제할까요?",
       message: `"${r.topicKo}" 기록이 지워지고 되돌릴 수 없어요.`,
       buttons: [{ text: "취소", style: "cancel" }, { text: "삭제", style: "destructive", onPress: run }],
@@ -47,7 +47,7 @@ export default function RecordDetail() {
   const retryQuiz = () => {
     if (!topic) return;
     if (active) {
-      showDialog({ icon: "⏳", title: "진행 중인 주제가 있어요", message: "먼저 끝내거나 그만둔 뒤 다시 풀 수 있어요." });
+      showDialog({ icon: "hourglass", title: "진행 중인 주제가 있어요", message: "먼저 끝내거나 그만둔 뒤 다시 풀 수 있어요." });
       return;
     }
     setActive({

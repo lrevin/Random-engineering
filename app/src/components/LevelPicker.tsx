@@ -3,6 +3,7 @@ import { topicCount } from "@/data";
 import type { Prefs } from "@/lib/types";
 import { radius, raised, shadow, useColors } from "@/theme";
 import { T, tap } from "./ui";
+import { Icon } from "./Icon";
 
 const OPTIONS: { value: Prefs["level"]; title: string; body: string; dots: number }[] = [
   { value: 0, title: "전체", body: "난이도 상관없이 골고루 랜덤으로", dots: 0 },
@@ -37,7 +38,7 @@ export function LevelPicker({ value, onChange, interests }: {
           >
             <View style={{ flexDirection: "row", gap: 3, width: 46 }}>
               {o.dots === 0 ? (
-                <T size={22}>🎲</T>
+                <Icon name="dice" size={30} />
               ) : (
                 [1, 2, 3].map((i) => (
                   <View key={i} style={{ width: 12, height: 6 + i * 6, alignSelf: "flex-end", borderRadius: 3, backgroundColor: i <= o.dots ? c.accent : c.line2 }} />

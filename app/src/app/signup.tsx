@@ -5,6 +5,7 @@ import { Btn, Card, Field, Row, Screen, T, tap } from "@/components/ui";
 import { useApp } from "@/lib/app-state";
 import { authErrorMessage } from "@/lib/supabase";
 import { radius, shadow, useColors } from "@/theme";
+import { Icon } from "@/components/Icon";
 
 function Check({ checked, onToggle, label, onOpen }: { checked: boolean; onToggle: () => void; label: string; onOpen?: () => void }) {
   const c = useColors();
@@ -12,7 +13,7 @@ function Check({ checked, onToggle, label, onOpen }: { checked: boolean; onToggl
     <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
       <Pressable accessibilityRole="checkbox" accessibilityState={{ checked }} onPress={() => { tap(); onToggle(); }} style={{ flexDirection: "row", gap: 10, alignItems: "center", flex: 1 }}>
         <View style={{ width: 22, height: 22, borderRadius: 6, borderWidth: 1.5, borderColor: checked ? c.accent : c.line2, backgroundColor: checked ? c.accent : "transparent", alignItems: "center", justifyContent: "center" }}>
-          {checked && <T size={13} weight="bold" color="accentInk">✓</T>}
+          {checked && <Icon name="check" size={15} color="#ffffff" />}
         </View>
         <T size={15} style={{ flexShrink: 1 }}>{label}</T>
       </Pressable>
@@ -61,7 +62,8 @@ export default function Signup() {
     return (
       <Screen contentStyle={{ justifyContent: "center" }}>
         <Card accent style={{ gap: 10 }}>
-          <T size={22} weight="bold">메일함을 확인해 주세요 ✉️</T>
+          <Icon name="mail" size={52} />
+          <T size={22} weight="bold">메일함을 확인해 주세요</T>
           <T color="ink2">{email} 로 인증 메일을 보냈어요. 메일의 링크를 누른 뒤 로그인하면 가입이 끝나요.</T>
         </Card>
         <Btn title="로그인하러 가기" variant="primary" size="lg" onPress={() => router.replace("/login")} />

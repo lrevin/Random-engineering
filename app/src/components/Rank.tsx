@@ -2,8 +2,9 @@ import { View } from "react-native";
 import { MAX_LEVEL, TIERS, userLevel } from "@/lib/rank";
 import { radius, useColors } from "@/theme";
 import { T } from "./ui";
+import { Icon, TierIcon } from "./Icon";
 
-/** 랭크 배지: 🥇 골드 */
+/** 랭크 배지: 메달 + 골드 */
 export function TierBadge({ index, size = "md", suffix }: { index: number; size?: "sm" | "md"; suffix?: string }) {
   const c = useColors();
   if (index < 0) {
@@ -21,13 +22,13 @@ export function TierBadge({ index, size = "md", suffix }: { index: number; size?
       paddingHorizontal: size === "sm" ? 8 : 10, paddingVertical: size === "sm" ? 1 : 3,
       backgroundColor: t.color + "22", borderWidth: 1, borderColor: t.color,
     }}>
-      <T size={fs}>{t.emoji}</T>
+      <TierIcon index={index} size={fs + 4} />
       <T size={fs} weight="semibold" style={{ color: t.color }}>{t.name}{suffix ? ` ${suffix}` : ""}</T>
     </View>
   );
 }
 
-/** 레벨 배지: ⭐ 23 */
+/** 레벨 배지: 별 + 23레벨 */
 export function LevelBadge({ level, size = "md" }: { level: number; size?: "sm" | "md" | "lg" }) {
   const c = useColors();
   const fs = size === "sm" ? 12 : size === "lg" ? 22 : 14;
@@ -38,7 +39,7 @@ export function LevelBadge({ level, size = "md" }: { level: number; size?: "sm" 
       paddingHorizontal: size === "lg" ? 16 : size === "sm" ? 8 : 10, paddingVertical: size === "lg" ? 6 : size === "sm" ? 1 : 3,
       backgroundColor: c.goldSoft, borderWidth: 1, borderColor: c.gold, borderBottomWidth: 3, borderBottomColor: c.goldDeep,
     }}>
-      <T size={fs}>⭐</T>
+      <Icon name="star" size={fs + 4} />
       <T size={fs} weight="bold" color="ink">{max ? "MAX" : `${level}레벨`}</T>
     </View>
   );

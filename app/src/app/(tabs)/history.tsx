@@ -10,6 +10,8 @@ import { topicMastery } from "@/lib/rank";
 import { averageScore, calcStreak, fmtDate } from "@/lib/stats";
 import type { StudyRecord } from "@/lib/types";
 import { radius, raised, shadow, useColors } from "@/theme";
+import { DomainIcon, Icon } from "@/components/Icon";
+import { SectionTitle, StatGrid, StatTile } from "@/components/StatTile";
 
 type Filter = "all" | "review";
 
@@ -54,18 +56,13 @@ export default function History() {
         </Card>
       )}
 
-      <Row gap={10} style={{ flexWrap: "nowrap" }}>
-        {[
-          { v: `${records.length}`, u: "회", l: "총 공부" },
-          { v: `${streak}`, u: "일", l: streak && !today ? "연속 · 오늘 아직!" : "연속 공부" },
-          { v: records.length ? avg.toFixed(1) : "-", u: records.length ? "점" : "", l: "평균 점수 (10점)" },
-        ].map((t) => (
-          <Card key={t.l} style={{ flex: 1, padding: 12 }}>
-            <T size={26} weight="bold">{t.v}<T size={14} color="ink2"> {t.u}</T></T>
-            <T size={12} color="muted">{t.l}</T>
-          </Card>
-        ))}
-      </Row>
+      <SectionTitle title="학습 현황" right={<Pressable onPress={() => router.push("/profile")} hitSlop={8}><T size={14} weight="semibold" color="accent">프로필 · 업적 ›</T></Pressable>} />
+      <StatGrid>
+        <StatTile icon={<Icon name="flame" size={30} />} value={`${streak}일`} label={streak && !today ? "연속 · 오늘 아직!" : "연속 공부"} dim={!streak} />
+        <StatTile icon={<Icon name="calendar" size={30} />} value={`${records.length}회`} label="총 공부" />
+        <StatTile icon={<Icon name="target" size={30} />} value={records.length ? `${avg.toFixed(1)}점` : "-"} label="평균 점수 (10점)" />
+        <StatTile icon={<Icon name="bolt" size={30} />} value={`${xp.toLocaleString()}`} label="누적 XP" />
+      </StatGrid>
 
       <Card style={{ gap: 6 }}>
         <T size={14} weight="semibold" color="ink2">내 레벨</T>
@@ -77,7 +74,10 @@ export default function History() {
           <T size={14} weight="semibold" color="ink2">분야별 횟수</T>
           {bars.counts.map((b) => (
             <Row key={b.id} gap={10} style={{ flexWrap: "nowrap" }}>
-              <T size={13} style={{ width: 96 }} numberOfLines={1}>{b.emoji} {b.name}</T>
+              <Row gap={6} style={{ width: 118, flexWrap: "nowrap" }}>
+                <DomainIcon id={b.domain} size={20} />
+                <T size={13} numberOfLines={1} style={{ flex: 1 }}>{b.name}</T>
+              </Row>
               <View style={{ flex: 1, height: 10, borderRadius: 5, backgroundColor: c.chip, overflow: "hidden" }}>
                 <View style={{ width: `${(b.n / bars.max) * 100}%`, height: "100%", backgroundColor: b.id === "sec" ? c.accent : c.navy, borderRadius: 5 }} />
               </View>

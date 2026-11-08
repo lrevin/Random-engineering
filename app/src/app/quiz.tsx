@@ -12,6 +12,7 @@ import { calcRp, topicMastery, userLevel } from "@/lib/rank";
 import { calcStreak } from "@/lib/stats";
 import type { WrongAnswer } from "@/lib/types";
 import { radius, raised, shadow, useColors } from "@/theme";
+import { Icon } from "@/components/Icon";
 
 export const isCorrect = (q: QuizQuestion, a: number | boolean | undefined) => a !== undefined && a === q.answer;
 export const answerText = (q: QuizQuestion) => (q.type === "mc" ? q.choices[q.answer] : q.answer ? "O (맞다)" : "X (틀리다)");
@@ -145,7 +146,7 @@ export function QuestionView({ q, index, count, topicName, badges, saving, onQui
       {/* 상단: 닫기 + 진행 막대 */}
       <Row gap={12} style={{ paddingHorizontal: 20, paddingTop: 8, flexWrap: "nowrap" }}>
         <Pressable onPress={onQuit} hitSlop={10} accessibilityRole="button" accessibilityLabel="그만두기">
-          <T size={22} color="muted">✕</T>
+          <Icon name="close" size={22} color={c.muted} />
         </Pressable>
         <View style={{ flex: 1, height: 12, borderRadius: 6, backgroundColor: c.chip, overflow: "hidden" }}>
           <View style={{ width: `${((index + (answered ? 1 : 0)) / count) * 100}%`, height: "100%", backgroundColor: c.success, borderRadius: 6 }} />
@@ -158,7 +159,7 @@ export function QuestionView({ q, index, count, topicName, badges, saving, onQui
           {badges}
           <T size={13} color="muted">
             {topicName} · {q.type === "mc" ? "4지선다" : "O / X"}
-            {q.src === "ai" ? " · 🤖 AI 출제" : q.src === "bank" ? " · 📚 기본 문제" : ""}
+            {q.src === "ai" ? " · AI 출제" : q.src === "bank" ? " · 기본 문제" : ""}
           </T>
           {q.src === "offline" && <T size={12} color="accent">연습 문제예요 (퀴즈 AI에 연결되면 새 문제로 바뀌어요)</T>}
         </View>
@@ -216,7 +217,12 @@ export function QuestionView({ q, index, count, topicName, badges, saving, onQui
       {/* 하단 피드백 (듀오링고식) */}
       {answered && (
         <View style={{ padding: 20, gap: 10, backgroundColor: correct ? c.successSoft : c.accentSoft, borderTopWidth: 2, borderTopColor: correct ? c.success : c.accent, boxShadow: `0px -4px 12px ${c.shadow}` }}>
-          <T size={18} weight="bold" color={correct ? "success" : "accent"}>{correct ? "정답이에요! 🎉" : `아쉬워요. 정답: ${answerText(q)}`}</T>
+          <Row gap={8} style={{ flexWrap: "nowrap" }}>
+            <View style={{ width: 30, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: correct ? c.success : c.accent }}>
+              <Icon name={correct ? "check" : "close"} size={16} color="#ffffff" />
+            </View>
+            <T size={18} weight="bold" color={correct ? "success" : "accent"} style={{ flex: 1 }}>{correct ? "정답이에요!" : `아쉬워요. 정답: ${answerText(q)}`}</T>
+          </Row>
           <T size={15} color="ink2">{q.explain}</T>
           <Btn
             title={index + 1 >= count ? "결과 보기" : "다음 문제"}

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Animated, Easing, Modal, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FONT } from "./ui";
+import { Icon } from "./Icon";
 
 // 매칭 창은 앱 테마와 상관없이 늘 어두운 경기장 느낌으로 (남색 + 금색)
 const BG = "#0f1630";
@@ -49,7 +50,7 @@ type Props = {
   visible: boolean;
   me: string;
   myLevel: number;
-  /** 예: "💻 컴퓨터공학 · 공부 10분" */
+  /** 예: "컴퓨터공학 · 공부 10분" */
   setting: string;
   waitedSec: number;
   maxSec: number;
@@ -103,14 +104,14 @@ function OverlayBody({ me, myLevel, setting, waitedSec, maxSec, opponent, onCanc
         <View style={{ flex: 1, paddingHorizontal: 24, paddingVertical: 20, justifyContent: "space-between", maxWidth: 520, width: "100%", alignSelf: "center" }}>
           {/* 위: 제목 */}
           <View style={{ gap: 6, alignItems: "center" }}>
-            <Label size={15} color={GOLD} bold>⚔️ 랜덤 매칭 배틀</Label>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}><Icon name="swords" size={22} /><Label size={15} color={GOLD} bold>랜덤 매칭 배틀</Label></View>
             <Label size={30} bold>{found ? "매칭 완료!" : `상대를 찾는 중${".".repeat(dots)}`}</Label>
             <Label size={14} color={MUTED}>{setting}</Label>
           </View>
 
           {/* 가운데: 나 VS 상대 */}
           <View style={{ alignItems: "center", gap: 18 }}>
-            <PlayerCard name={me} sub={`⭐ ${myLevel}레벨 · 나`} color={GOLD} />
+            <PlayerCard name={me} sub={`${myLevel}레벨 · 나`} color={GOLD} />
             <View style={{ width: 150, height: 150, alignItems: "center", justifyContent: "center" }}>
               {[0, 1].map((i) => (
                 <Animated.View

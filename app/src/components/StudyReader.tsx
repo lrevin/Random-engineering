@@ -2,7 +2,8 @@ import { ActivityIndicator, Modal, Pressable, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { WebView } from "react-native-webview";
 import { radius, useColors } from "@/theme";
-import { T, tap } from "./ui";
+import { Row, T, tap } from "./ui";
+import { Icon } from "./Icon";
 
 export type ReaderPage = { url: string; title: string };
 
@@ -26,7 +27,7 @@ export function StudyReader({ page, left, total, running, onClose }: {
       <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: c.bg }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 14, paddingVertical: 8 }}>
           <Pressable onPress={() => { tap(); onClose(); }} hitSlop={10} accessibilityRole="button" accessibilityLabel="문서 닫기">
-            <T size={15} weight="semibold" color="accent">✕ 닫기</T>
+            <Row gap={4} style={{ flexWrap: "nowrap" }}><Icon name="close" size={14} color={c.accent} /><T size={15} weight="semibold" color="accent">닫기</T></Row>
           </Pressable>
           <T size={15} weight="semibold" numberOfLines={1} style={{ flex: 1 }}>{page?.title}</T>
           <View style={{ backgroundColor: urgent ? c.accent : c.navy, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 2 }}>

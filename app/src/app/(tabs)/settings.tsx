@@ -10,6 +10,8 @@ import { useApp } from "@/lib/app-state";
 import { notificationsSupported, requestNotificationPermission } from "@/lib/notify";
 import { authErrorMessage } from "@/lib/supabase";
 import { radius, raised, shadow, useColors } from "@/theme";
+import { Icon } from "@/components/Icon";
+import { userLevel } from "@/lib/rank";
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -62,7 +64,7 @@ const confirm = (title: string, msg: string, ok: string, run: () => void) =>
   showDialog({ title, message: msg, buttons: [{ text: "취소", style: "cancel" }, { text: ok, style: "destructive", onPress: run }] });
 
 export default function Settings() {
-  const { prefs, updatePrefs, mode, email, signOut, deleteAccount, premium } = useApp();
+  const { prefs, updatePrefs, mode, email, signOut, deleteAccount, premium, xp, uid } = useApp();
   const c = useColors();
   const [nick, setNick] = useState(prefs.nickname);
   const [notice, setNotice] = useState("");
@@ -95,9 +97,29 @@ export default function Settings() {
       <T size={26} weight="bold">설정</T>
       {notice ? <T size={14} color="accent">{notice}</T> : null}
 
+      {/* 내 프로필 */}
+      <Pressable
+        onPress={() => { tap(); router.push("/profile"); }}
+        accessibilityRole="button"
+        accessibilityLabel="내 프로필 보기"
+        style={({ pressed }) => ({
+          flexDirection: "row", alignItems: "center", gap: 14, padding: 16, borderRadius: radius.lg, borderWidth: 1, borderColor: c.line,
+          backgroundColor: c.paper, ...raised(c.paperEdge, pressed), ...(!pressed ? shadow(c, 2) : null),
+        })}
+      >
+        <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: c.gold, borderWidth: 3, borderColor: c.goldSoft, alignItems: "center", justifyContent: "center" }}>
+          <T size={24} weight="bold" style={{ color: "#1d2742" }}>{(prefs.nickname || "나").slice(0, 1)}</T>
+        </View>
+        <View style={{ flex: 1, gap: 2 }}>
+          <T size={18} weight="bold" numberOfLines={1}>{prefs.nickname || "나"}</T>
+          <T size={13} color="muted">{userLevel(xp).level}레벨 · @{uid}</T>
+        </View>
+        <T size={14} weight="semibold" color="accent">프로필 ›</T>
+      </Pressable>
+
       {/* 유료 멤버십 */}
       <Card accent style={{ gap: 10 }}>
-        <T size={17} weight="bold">⭐ {premium ? "유료 멤버십 사용 중" : "유료 멤버십"}</T>
+        <Row gap={8}><Icon name="crown" size={28} /><T size={17} weight="bold">{premium ? "유료 멤버십 사용 중" : "유료 멤버십"}</T></Row>
         <T size={14} color="ink2">
           {premium ? "랜덤 매칭 배틀을 무제한으로 할 수 있어요." : "랜덤 매칭 배틀을 무제한으로 즐길 수 있어요. 무료 버전은 매월 2회예요."}
         </T>
@@ -131,7 +153,7 @@ export default function Settings() {
           <Segment<"0" | "1" | "2" | "3">
             value={String(prefs.level) as "0" | "1" | "2" | "3"}
             onChange={(v) => updatePrefs({ level: Number(v) as 0 | 1 | 2 | 3 })}
-            options={[{ value: "0", label: "골고루" }, { value: "1", label: "Lv.1 기초" }, { value: "2", label: "Lv.2 중급" }, { value: "3", label: "Lv.3 심화" }]}
+            options={[{ value: "0", label: "전체" }, { value: "1", label: "Lv.1 기초" }, { value: "2", label: "Lv.2 중급" }, { value: "3", label: "Lv.3 심화" }]}
           />
         </View>
         <Item label="공부 시간" sub="기본 15분 · 끝나면 퀴즈 7문제" right={<Minutes value={prefs.studyMinutes} min={1} max={120} onChange={(v) => updatePrefs({ studyMinutes: v })} />} last />

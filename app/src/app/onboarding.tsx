@@ -11,6 +11,7 @@ import { useApp } from "@/lib/app-state";
 import { requestNotificationPermission } from "@/lib/notify";
 import type { Prefs } from "@/lib/types";
 import { useColors } from "@/theme";
+import { Icon } from "@/components/Icon";
 
 const STEPS = ["닉네임", "분야", "세부 분야", "연관 분야", "난이도", "알림"];
 const LAST = STEPS.length - 1;
@@ -96,7 +97,8 @@ export default function Onboarding() {
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 18, paddingBottom: 12 }} keyboardShouldPersistTaps="handled">
           {step === 0 && (
             <>
-              <T size={26} weight="bold">반가워요! 👋{"\n"}뭐라고 불러 드릴까요?</T>
+              <Icon name="slot" size={64} />
+              <T size={26} weight="bold">반가워요!{"\n"}뭐라고 불러 드릴까요?</T>
               <Field label="닉네임" value={nickname} onChangeText={setNickname} maxLength={20} placeholder="예: 공대생" autoFocus onSubmitEditing={next} returnKeyType="next" />
             </>
           )}
@@ -139,7 +141,8 @@ export default function Onboarding() {
           {step === LAST && (
             <>
               <View style={{ gap: 4 }}>
-                <T size={26} weight="bold">매일 언제 알려 드릴까요? 🔔</T>
+                <Icon name="bell" size={56} style={{ marginBottom: 6 }} />
+                <T size={26} weight="bold">매일 언제 알려 드릴까요?</T>
                 <T color="ink2">하루 한 주제씩, 연속 기록을 이어 가도록 알려 드려요. 그날 이미 공부했다면 알림은 오지 않아요.</T>
               </View>
               <TimeStepper value={time} onChange={setTime} />

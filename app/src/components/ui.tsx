@@ -87,7 +87,7 @@ export function Btn({ title, onPress, variant = "outline", size = "md", disabled
 /** 나란히 놓는 알약 버튼 크기 (홈의 난이도 버튼과 '마스터한 주제 포함'이 같은 크기) */
 export const PILL_FILL: ViewStyle = { flex: 1, height: 54, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4 };
 
-export function Chip({ label, selected, onPress, disabled, fill }: { label: string; selected?: boolean; onPress?: () => void; disabled?: boolean; fill?: boolean }) {
+export function Chip({ label, selected, onPress, disabled, fill, icon }: { label: string; selected?: boolean; onPress?: () => void; disabled?: boolean; fill?: boolean; icon?: ReactNode }) {
   const c = useColors();
   return (
     <Pressable
@@ -102,8 +102,10 @@ export function Chip({ label, selected, onPress, disabled, fill }: { label: stri
         ...(!pressed ? shadow(c, 1) : null),
         opacity: disabled ? 0.4 : 1,
         ...(fill ? PILL_FILL : null),
+        ...(icon ? { flexDirection: "row", alignItems: "center", gap: 6 } : null),
       })}
     >
+      {icon}
       <Text
         numberOfLines={1}
         adjustsFontSizeToFit
@@ -157,12 +159,13 @@ export function Card({ children, style, accent }: { children: ReactNode; style?:
   );
 }
 
-export function Badge({ label, tone = "plain" }: { label: string; tone?: "plain" | "navy" | "accent" | "outline" }) {
+export function Badge({ label, tone = "plain", icon }: { label: string; tone?: "plain" | "navy" | "accent" | "outline"; icon?: ReactNode }) {
   const c = useColors();
   const bg = { plain: c.chip, navy: c.navy, accent: c.accent, outline: "transparent" }[tone];
   const fg = { plain: c.ink2, navy: c.navyInk, accent: c.accentInk, outline: c.ink2 }[tone];
   return (
-    <View style={{ backgroundColor: bg, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 2, borderWidth: tone === "outline" ? 1 : 0, borderColor: c.line2 }}>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: bg, borderRadius: radius.pill, paddingLeft: icon ? 4 : 10, paddingRight: 10, paddingVertical: 2, borderWidth: tone === "outline" ? 1 : 0, borderColor: c.line2 }}>
+      {icon}
       <Text style={{ fontFamily: FONT.medium, fontSize: 13, color: fg }}>{label}</Text>
     </View>
   );

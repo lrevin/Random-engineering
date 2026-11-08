@@ -7,10 +7,11 @@ import { topicById } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { TIERS, TOPIC_TIER_MIN, topicMastery } from "@/lib/rank";
 import { useColors } from "@/theme";
+import { Icon } from "@/components/Icon";
 
 const scoreMessage = (score: number, total: number) => {
   const p = total ? score / total : 0;
-  if (p === 1) return "완벽해요! 이 주제는 확실히 알고 있어요 🎉";
+  if (p === 1) return "완벽해요! 이 주제는 확실히 알고 있어요";
   if (p >= 0.8) return "아주 잘했어요! 거의 다 알고 있어요";
   if (p >= 0.6) return "좋아요. 틀린 문제만 한 번 더 보면 돼요";
   if (p >= 0.4) return "절반 정도 이해했어요. 다시 공부해 볼까요?";
@@ -59,7 +60,12 @@ function ResultInner({ snapshot }: { snapshot: NonNullable<ReturnType<typeof use
           {r.score}<T size={30} color="muted"> / {r.total}</T>
         </T>
         <T size={16} color="ink2" center>{scoreMessage(r.score, r.total)}</T>
-        {r.streak > 0 && <T size={15} weight="semibold" color="flame">🔥 {r.streak}일 연속 공부</T>}
+        {r.streak > 0 && (
+          <Row gap={4} style={{ justifyContent: "center" }}>
+            <Icon name="flame" size={22} />
+            <T size={15} weight="semibold" color="flame">{r.streak}일 연속 공부</T>
+          </Row>
+        )}
       </View>
 
       <Card style={{ gap: 10 }}>

@@ -6,12 +6,13 @@ import { Slot, SlotReel } from "@/components/Slot";
 import { GearCount } from "@/components/TimeUpSheet";
 import { LevelButton } from "@/components/LevelSheet";
 import { Badge, Btn, Card, Chip, levelTone, Row, Screen, T } from "@/components/ui";
-import { categoryById, levelText, TOPICS, type Topic } from "@/data";
+import { levelText, TOPICS, type Topic } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { prefetchQuiz } from "@/lib/quiz";
 import { maxRpFor, TIERS, topicMastery } from "@/lib/rank";
 import { calcStreak } from "@/lib/stats";
 import { radius, shadow, useColors } from "@/theme";
+import { DomainIcon, Icon, TierIcon } from "@/components/Icon";
 
 type LevelFilter = "0" | "1" | "2" | "3"; // 0 = 전체
 
@@ -100,19 +101,23 @@ export default function Home() {
   const emptyText = !prefs.interests.length
     ? "관심 분야를 먼저 골라 주세요."
     : !pool.length
-      ? includeMastered ? "조건에 맞는 주제가 없어요." : "이 조건의 주제를 모두 마스터했어요! 🎉\n'마스터한 주제 포함'을 눌러 보세요."
+      ? includeMastered ? "조건에 맞는 주제가 없어요." : "이 조건의 주제를 모두 마스터했어요!\n'마스터한 주제 포함'을 눌러 보세요."
       : "레버를 당기거나 버튼을 눌러\n오늘의 주제를 뽑아 보세요";
 
   return (
     <Screen edges={["top"]} scroll contentStyle={{ flexGrow: 1 }}>
       {/* 레벨 + 연속 일수 + 톱니바퀴 */}
       <Row gap={8} style={{ justifyContent: "space-between", flexWrap: "nowrap", alignItems: "stretch" }}>
-        <View style={{ flex: 1, justifyContent: "center", backgroundColor: c.paper, borderWidth: 1, borderColor: c.line, borderBottomWidth: 3, borderBottomColor: c.paperEdge, borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 8, ...shadow(c, 1) }}>
+        <Pressable onPress={() => router.push("/profile")} accessibilityRole="button" accessibilityLabel="내 프로필" style={{ flex: 1, justifyContent: "center", backgroundColor: c.paper, borderWidth: 1, borderColor: c.line, borderBottomWidth: 3, borderBottomColor: c.paperEdge, borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 8, ...shadow(c, 1) }}>
           <UserLevelBar xp={xp} compact />
-        </View>
+        </Pressable>
         <Pressable onPress={() => router.push("/shop")} accessibilityRole="button" accessibilityLabel="연속 일수, 보호권 보기" style={{ alignItems: "center", backgroundColor: c.paper, borderWidth: 1, borderColor: c.line, borderBottomWidth: 3, borderBottomColor: c.paperEdge, borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 4, ...shadow(c, 1) }}>
-          <T size={22} weight="bold" color={streak ? "flame" : "muted"}>🔥 {streak}</T>
-          <T size={11} color="muted">연속 일수{freezes ? ` · 🛡${freezes}` : ""}</T>
+          <Row gap={3} style={{ flexWrap: "nowrap", height: 32 }}>
+            <Icon name="flame" size={24} style={{ opacity: streak ? 1 : 0.4 }} />
+            <T size={20} weight="bold" color={streak ? "flame" : "muted"}>{streak}</T>
+            {freezes > 0 && <><Icon name="shield" size={16} style={{ marginLeft: 4 }} /><T size={13} weight="bold" color="ink2">{freezes}</T></>}
+          </Row>
+          <T size={11} color="muted">연속 일수</T>
         </Pressable>
         <Pressable onPress={() => router.push("/shop")} accessibilityRole="button" accessibilityLabel="톱니바퀴 상점" style={{ alignItems: "center", backgroundColor: c.paper, borderWidth: 1, borderColor: c.line, borderBottomWidth: 3, borderBottomColor: c.paperEdge, borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 4, ...shadow(c, 1) }}>
           <View style={{ height: 32, justifyContent: "center" }}><GearCount n={gears} size={18} /></View>
@@ -138,7 +143,8 @@ export default function Home() {
             onChange={(v) => { setLevel(String(v) as LevelFilter); updatePrefs({ level: v }).catch(() => {}); }}
           />
           <Chip
-            label={`${includeMastered ? "✓ " : ""}🛠️ 마스터한 주제 포함`}
+            label="마스터한 주제 포함"
+            icon={includeMastered ? <Icon name="check" size={16} color={c.navyInk} /> : <TierIcon index={5} size={20} />}
             selected={includeMastered}
             onPress={() => setIncludeMastered((v) => !v)}
             fill
@@ -160,7 +166,7 @@ export default function Home() {
           ) : shown ? (
             <Animated.View style={{ alignItems: "center", gap: 8, transform: [{ scale: pop }] }}>
               <Row gap={6} style={{ justifyContent: "center" }}>
-                <Badge label={`${categoryById(shown.category)?.emoji ?? ""} ${shown.categoryName}`} />
+                <Badge label={shown.categoryName} icon={<DomainIcon id={shown.domain} size={20} />} />
                 <Badge label={levelText(shown.lv)} tone={levelTone(shown.level)} />
               </Row>
               <T size={34} weight="bold" center color={spinning ? "ink2" : "ink"} style={{ letterSpacing: -0.8, lineHeight: 44 }}>
@@ -186,7 +192,8 @@ export default function Home() {
         <View style={{ gap: 10 }}>
           {drawn && !spinning && !active && <Btn title={`이걸로 시작 · ${prefs.studyMinutes}분 공부 + 퀴즈`} variant="accent" size="lg" onPress={start} />}
           <Btn
-            title={spinning ? "뽑는 중…" : drawn ? "다시 뽑기" : "주제 뽑기 🎲"}
+            title={spinning ? "뽑는 중…" : drawn ? "다시 뽑기" : "주제 뽑기"}
+            icon={drawn || spinning ? undefined : <Icon name="dice" size={24} />}
             variant={drawn ? "outline" : "primary"}
             size="lg"
             onPress={draw}

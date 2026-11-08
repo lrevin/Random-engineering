@@ -15,6 +15,7 @@ import type { WrongAnswer } from "@/lib/types";
 import { useKeepScreenOn } from "@/lib/useKeepScreenOn";
 import { radius, useColors } from "@/theme";
 import { answerText, isCorrect, QuestionView } from "./quiz";
+import { DomainIcon, Icon } from "@/components/Icon";
 
 type Phase = "loading" | "waiting" | "closed" | "countdown" | "study" | "quiz" | "submitted" | "result";
 const REVEAL_MS = 1600; // 시작하면 슬롯처럼 주제를 돌린 뒤 공개
@@ -22,7 +23,7 @@ const REVEAL_MS = 1600; // 시작하면 슬롯처럼 주제를 돌린 뒤 공개
 export default function BattleScreen() {
   useKeepScreenOn("battle");
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { uid, xp, records, keptDays, addRecord, applyBattleXp, claimOnce, refundBattleTicket } = useApp();
+  const { uid, xp, prefs, records, keptDays, addRecord, applyBattleXp, claimOnce, refundBattleTicket } = useApp();
   const c = useColors();
   const [battle, setBattle] = useState<Battle | null>(null);
   const [err, setErr] = useState("");
@@ -97,7 +98,7 @@ export default function BattleScreen() {
         const rp = calcRp({ topic, correct: score, total: qs.length, priorAttempts: records.filter((r) => r.topicId === topic.id).length, streak: st.today ? st.streak : st.streak + 1 });
         addRecord({
           topicId: topic.id, topicKo: topic.ko, domain: topic.domain, category: topic.category, level: topic.level,
-          memo: `⚔️ ${oppName}님과 배틀`, score, total: qs.length, rp: rp.total, wrong, studySec: battle.studySec,
+          memo: `${oppName}님과 배틀`, score, total: qs.length, rp: rp.total, wrong, studySec: battle.studySec,
           quizSource: qs.some((q) => q.src === "ai") ? "ai" : qs.some((q) => q.src === "bank") ? "bank" : "offline",
         }).catch(() => {});
       }
@@ -143,7 +144,7 @@ export default function BattleScreen() {
   const d = domainById(b.domain);
   const header = (
     <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
-      <Badge label={`⚔️ ${d ? `${d.emoji} ${d.name}` : "🎲 랜덤 분야"} 배틀`} tone="accent" />
+      <Badge label={`${d ? d.name : "랜덤 분야"} 배틀`} tone="accent" icon={d ? <DomainIcon id={d.id} size={20} /> : <Icon name="dice" size={20} />} />
       <T size={14} color="ink2">vs {opp?.nickname}</T>
     </Row>
   );
@@ -170,7 +171,7 @@ export default function BattleScreen() {
       <Screen contentStyle={{ flex: 1, justifyContent: "center" }}>
         {header}
         <Card style={{ alignItems: "center", gap: 8 }}>
-          <T size={36}>🙅</T>
+          <Icon name="nope" size={56} />
           <T size={18} weight="bold" center>{why}</T>
           {me === "from" && <T size={14} color="muted" center>배틀권은 돌려받았어요.</T>}
         </Card>
@@ -232,11 +233,11 @@ export default function BattleScreen() {
         index={idx}
         count={qs.length}
         topicName={topic?.ko ?? ""}
-        badges={<Row gap={6}><Badge label="⚔️ 배틀" tone="accent" /><Badge label={`⏱ ${fmtClock((quizEnd - now) / 1000)}`} /></Row>}
+        badges={<Row gap={6}><Badge label="배틀" tone="accent" icon={<Icon name="swords" size={20} />} /><Badge label={fmtClock((quizEnd - now) / 1000)} icon={<Icon name="clock" size={18} />} /></Row>}
         saving={sending}
         onQuit={() => {
           showDialog({
-            icon: "⚔️",
+            icon: "swords",
             title: "배틀을 끝낼까요?",
             message: "지금까지 푼 문제로 채점돼요. 안 푼 문제는 틀린 것으로 처리돼요.",
             buttons: [
@@ -280,20 +281,36 @@ export default function BattleScreen() {
     <Screen scroll>
       {header}
       <View style={{ alignItems: "center", gap: 6, paddingTop: 10 }}>
-        <T size={56}>{draw ? "🤝" : won ? "🏆" : "😵"}</T>
-        <T size={28} weight="bold" center color={draw ? "ink" : won ? "success" : "accent"}>{draw ? "무승부" : won ? "승리!" : "패배"}</T>
+        <Icon name={draw ? "handshake" : won ? "trophy" : "dizzy"} size={104} />
+        <T size={26} weight="bold" center>{draw ? "비겼어요" : won ? "배틀에서 이겼어요!" : "아쉽게 졌어요"}</T>
         <T size={15} color="ink2" center>{topic?.ko}</T>
       </View>
-      <Row gap={12} style={{ flexWrap: "nowrap" }}>
-        {[["나", mine], [opp?.nickname ?? "상대", theirs]].map(([name, r], i) => (
-          <View key={i} style={{ flex: 1, alignItems: "center", gap: 4, padding: 16, borderRadius: radius.lg, backgroundColor: c.paper, borderWidth: 1.5, borderColor: (i === 0) === won && !draw ? c.success : c.line }}>
-            <T size={14} color="muted" numberOfLines={1}>{name as string}</T>
-            <T size={40} weight="bold">{(r as typeof mine)?.score ?? 0}<T size={18} color="muted"> / {(r as typeof mine)?.total ?? b.questions?.length ?? 7}</T></T>
-            {!r && <T size={12} color="accent">제출 안 함</T>}
-          </View>
-        ))}
-      </Row>
+      <View style={{ borderRadius: radius.lg, borderWidth: 2, borderColor: c.line, backgroundColor: c.paper, overflow: "hidden" }}>
+        {[
+          { name: prefs.nickname || "나", r: mine, isMe: true },
+          { name: opp?.nickname ?? "상대", r: theirs, isMe: false },
+        ]
+          .sort((x, y) => (y.r?.score ?? -1) - (x.r?.score ?? -1) || (x.isMe ? -1 : 1))
+          .map((p, i) => (
+            <View key={p.name + i} style={{
+              flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 14, paddingHorizontal: 16,
+              backgroundColor: p.isMe ? c.successSoft : c.paper, borderTopWidth: i ? 1 : 0, borderTopColor: c.line,
+            }}>
+              <T size={18} weight="bold" color={p.isMe ? "success" : "ink2"} style={{ width: 18, textAlign: "center" }}>{draw ? "-" : i + 1}</T>
+              <View style={{ width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", backgroundColor: p.isMe ? c.navy : c.accent }}>
+                <T size={19} weight="bold" style={{ color: "#fffaf0" }}>{p.name.slice(0, 1)}</T>
+              </View>
+              <View style={{ flex: 1 }}>
+                <T size={17} weight="bold" color={p.isMe ? "success" : "ink"} numberOfLines={1}>{p.name}{p.isMe ? " (나)" : ""}</T>
+                {!p.r && <T size={12} color="accent">제출 안 함</T>}
+              </View>
+              {!draw && i === 0 && <Icon name="crown" size={26} />}
+              <T size={17} weight="bold" color={p.isMe ? "success" : "ink2"}>{p.r?.score ?? 0} / {p.r?.total ?? b.questions?.length ?? 7}</T>
+            </View>
+          ))}
+      </View>
       <Card style={{ alignItems: "center", gap: 4 }}>
+        {!draw && <Icon name="bolt" size={36} />}
         <T size={16} weight="bold" center>
           {draw ? "점수가 같아 경험치는 그대로예요." : won ? `${opp?.nickname}님의 경험치 ${amount} XP를 가져왔어요!` : `경험치 ${amount} XP를 ${opp?.nickname}님에게 뺏겼어요.`}
         </T>
