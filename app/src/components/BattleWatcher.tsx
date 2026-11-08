@@ -35,7 +35,7 @@ export function BattleWatcher() {
         if (AppState.currentState !== "active" && !notified.current.has(current.id)) {
           notified.current.add(current.id);
           const opp = current.from.uid === uid ? current.to : current.from;
-          notifyNow("⚔️ 배틀 상대를 찾았어요", `${opp.nickname}님과 배틀이 곧 시작돼요.`).catch(() => {});
+          notifyNow("배틀 상대를 찾았어요", `${opp.nickname}님과 배틀이 곧 시작돼요.`).catch(() => {});
         }
         if (!pathRef.current.startsWith("/battle") && pathRef.current !== "/arena") router.push({ pathname: "/battle", params: { id: current.id } });
       } catch {

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Modal, Pressable, View } from "react-native";
 import { radius, shadow, useColors } from "@/theme";
 import { Btn, T } from "./ui";
+import { Icon, type IconName } from "./Icon";
 
 export interface DialogButton {
   text: string;
@@ -13,8 +14,8 @@ export interface DialogButton {
 export interface DialogOptions {
   title: string;
   message?: string;
-  /** 위에 크게 보일 이모지 */
-  icon?: string;
+  /** 위에 크게 보일 그림 */
+  icon?: IconName;
   /** 없으면 "확인" 버튼 하나 */
   buttons?: DialogButton[];
 }
@@ -58,7 +59,7 @@ export function DialogHost() {
           borderTopWidth: 5, borderTopColor: destructive ? c.accent : c.gold, ...shadow(c, 3),
         }}>
           <View style={{ alignItems: "center", gap: 6 }}>
-            {dialog.icon ? <T size={38}>{dialog.icon}</T> : null}
+            {dialog.icon ? <Icon name={dialog.icon} size={56} style={{ marginBottom: 4 }} /> : null}
             <T size={20} weight="bold" center>{dialog.title}</T>
             {dialog.message ? <T size={15} color="ink2" center>{dialog.message}</T> : null}
           </View>

@@ -1,10 +1,10 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { Modal, View } from "react-native";
 import { RESTORE_COST_PER_DAY } from "@/lib/economy";
 import { useApp } from "@/lib/app-state";
 import { inset, radius, shadow, useColors } from "@/theme";
 import { GearCount } from "./TimeUpSheet";
 import { Btn, T } from "./ui";
+import { Icon } from "./Icon";
 
 const md = (k: string) => `${Number(k.slice(5, 7))}/${Number(k.slice(8, 10))}`;
 
@@ -28,7 +28,7 @@ export function StreakSheet() {
           borderTopWidth: 5, borderTopColor: saved ? c.gold : c.flame, ...shadow(c, 3),
         }}>
           <View style={{ alignItems: "center", gap: 4 }}>
-            <T size={40}>{saved ? "🛡️" : "🔥"}</T>
+            <Icon name={saved ? "shield" : "flame"} size={60} style={{ marginBottom: 4 }} />
             <T size={21} weight="bold" center>
               {saved ? `보호권으로 ${rescue.streak}일 연속 기록을 지켰어요` : `${rescue.streak}일 연속 기록이 끊기기 직전이에요`}
             </T>
@@ -59,7 +59,7 @@ export function StreakSheet() {
                   title={`${rescue.restore.length}일 복구하기 (톱니바퀴 ${cost}개)`}
                   variant="accent"
                   size="lg"
-                  icon={<Ionicons name="cog" size={20} color={c.accentInk} />}
+                  icon={<Icon name="gear" size={22} />}
                   onPress={restoreStreak}
                   disabled={!enough}
                 />

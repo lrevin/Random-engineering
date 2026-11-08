@@ -10,6 +10,8 @@ import { loadQuiz } from "@/lib/quiz";
 import { userLevel } from "@/lib/rank";
 import { getMatch, joinMatch, leaveMatch, serverNow, socialEnabled, socialMessage, type Battle, type MatchState } from "@/lib/social";
 import { radius, useColors } from "@/theme";
+import { DomainIcon, Icon } from "@/components/Icon";
+import { battleOpponentLabel, isBattleRecord } from "@/lib/stats";
 
 const MATCH_WAIT_SEC = 180;
 
@@ -119,8 +121,8 @@ export default function Arena() {
 
   const noTicket = !premium && battleTickets <= 0;
   const waitedSec = waiting ? Math.max(0, (now - Date.parse(match.joinedAt)) / 1000) : 0;
-  // 최근 배틀 기록 (배틀은 메모가 '⚔️ …님과 배틀'로 남음)
-  const recent = records.filter((r) => r.memo.startsWith("⚔️")).slice(-5).reverse();
+  // 최근 배틀 기록 (배틀은 메모가 '…님과 배틀'로 남음)
+  const recent = records.filter(isBattleRecord).slice(-5).reverse();
 
   return (
     <Screen edges={["top"]} scroll>
@@ -130,7 +132,7 @@ export default function Arena() {
       <Pressable onPress={() => router.push("/shop")} accessibilityRole="button" accessibilityLabel="배틀권과 멤버십 보기">
         <Card style={{ gap: 6 }}>
           <Row style={{ justifyContent: "space-between" }}>
-            <T size={16} weight="bold">⚔️ 남은 배틀권</T>
+            <Row gap={8}><Icon name="ticket" size={30} /><T size={16} weight="bold">남은 배틀권</T></Row>
             <T size={20} weight="bold" color="accent">{premium ? "무제한" : `${battleTickets} / ${FREE_BATTLE_TICKETS}`}</T>
           </Row>
           <T size={13} color="muted">
@@ -143,16 +145,16 @@ export default function Arena() {
         <Card><T size={15} color="ink2">배틀 서버가 아직 연결되지 않았어요. (개발용: app/.env.local 에 EXPO_PUBLIC_SOCIAL_URL)</T></Card>
       ) : (
         <Card style={{ gap: 12 }}>
-          <T size={18} weight="bold">🎲 랜덤 매칭 배틀</T>
+          <Row gap={10}><Icon name="swords" size={34} /><T size={18} weight="bold">랜덤 매칭 배틀</T></Row>
           <T size={14} color="ink2">
             같은 조건으로 매칭을 돌린 다른 학습자와 1:1로 붙어요. 매칭되면 두 사람에게 같은 주제가 동시에 뽑혀요.
           </T>
           <T size={14} weight="semibold" color="ink2">분야</T>
           {/* 분야는 옆으로 넘기는 한 줄 */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -18 }} contentContainerStyle={{ gap: 8, paddingHorizontal: 18, paddingBottom: 4 }}>
-            <Chip label="🎲 아무 분야" selected={domain === "any"} onPress={() => setDomain("any")} />
+            <Chip label="아무 분야" icon={<Icon name="dice" size={20} />} selected={domain === "any"} onPress={() => setDomain("any")} />
             {DOMAINS.filter((d) => d.available).map((d) => (
-              <Chip key={d.id} label={`${d.emoji} ${d.name}`} selected={domain === d.id} onPress={() => setDomain(d.id)} />
+              <Chip key={d.id} label={d.name} icon={<DomainIcon id={d.id} size={20} />} selected={domain === d.id} onPress={() => setDomain(d.id)} />
             ))}
           </ScrollView>
           <Row style={{ justifyContent: "space-between" }}>
@@ -177,7 +179,7 @@ export default function Arena() {
         visible={focused && (waiting || !!found)}
         me={prefs.nickname || "나"}
         myLevel={userLevel(xp).level}
-        setting={`${domain === "any" ? "🎲 아무 분야" : `${domainById(domain)?.emoji ?? ""} ${domainById(domain)?.name ?? ""}`} · 공부 ${minutes}분`}
+        setting={`${domain === "any" ? "아무 분야" : domainById(domain)?.name ?? ""} · 공부 ${minutes}분`}
         waitedSec={waitedSec}
         maxSec={MATCH_WAIT_SEC}
         opponent={found}
@@ -190,7 +192,7 @@ export default function Arena() {
           <T size={16} weight="bold">최근 배틀</T>
           {recent.map((r) => (
             <Row key={r.id} style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
-              <T size={14} numberOfLines={1} style={{ flex: 1 }}>{r.topicKo} · {r.memo.replace("⚔️ ", "")}</T>
+              <T size={14} numberOfLines={1} style={{ flex: 1 }}>{r.topicKo} · {battleOpponentLabel(r)}</T>
               <T size={14} weight="semibold">{r.score} / {r.total}</T>
             </Row>
           ))}

@@ -59,10 +59,10 @@ async function cancelKind(kind: "reminder" | "timer") {
 }
 
 const LATER_MESSAGES = [
-  ["오늘의 주제가 기다리고 있어요 🎲", "15분 공부하고 퀴즈 7문제면 오늘 공부 끝!"],
+  ["오늘의 주제가 기다리고 있어요", "15분 공부하고 퀴즈 7문제면 오늘 공부 끝!"],
   ["딱 17분이면 돼요 ⏱", "주제 하나 뽑아서 설명할 수 있게 만들어 볼까요?"],
-  ["어제보다 하나 더 아는 사람 📚", "오늘의 랜덤 주제를 뽑아 보세요."],
-  ["오늘의 퀴즈로 경험치 모으기 🏅", "오늘은 어떤 주제가 나올까요?"],
+  ["어제보다 하나 더 아는 사람", "오늘의 랜덤 주제를 뽑아 보세요."],
+  ["오늘의 퀴즈로 경험치 모으기", "오늘은 어떤 주제가 나올까요?"],
 ];
 
 /**
@@ -93,10 +93,10 @@ export async function rescheduleReminders(prefs: Prefs, records: StudyRecord[]) 
 
     let title: string, body: string;
     if (i === 0 && streak > 0) {
-      title = `🔥 ${streak}일 연속 기록이 오늘 끊겨요!`;
+      title = `${streak}일 연속 기록이 오늘 끊겨요!`;
       body = `${name}주제 하나만 공부하면 ${streak + 1}일째가 돼요.`;
     } else if (i === 1 && doneToday && streak > 0) {
-      title = `🔥 ${streak}일 연속 공부 중`;
+      title = `${streak}일 연속 공부 중`;
       body = `${name}내일도 이어 가 볼까요? 오늘의 주제를 뽑아 보세요.`;
     } else {
       const [t, b] = LATER_MESSAGES[(date.getDate() + i) % LATER_MESSAGES.length];

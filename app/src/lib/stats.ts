@@ -17,6 +17,10 @@ export const fmtClock = (sec: number) => {
 /** 공부 시간 짧게: 1분 미만이면 초로 (시험용 짧은 배틀) */
 export const fmtStudyTime = (sec: number) => (sec < 60 ? `${sec}초` : `${Math.round(sec / 60)}분`);
 
+/** 배틀로 남은 기록인지 (메모가 "…님과 배틀") */
+export const isBattleRecord = (r: StudyRecord) => r.memo.includes("님과 배틀");
+export const battleOpponentLabel = (r: StudyRecord) => r.memo.replace(/^\S+ (?=.+님과 배틀)/u, "");
+
 export const fmtDuration = (sec: number) => (sec ? `${Math.floor(sec / 60)}분 ${sec % 60}초` : "-");
 
 export function studiedToday(records: StudyRecord[], now = new Date()) {
