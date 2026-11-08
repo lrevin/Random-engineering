@@ -1,15 +1,14 @@
 import { router } from "expo-router";
-import { useMemo, useState } from "react";
-import { Animated, Pressable, View } from "react-native";
-import { TierBadge, UserLevelBar } from "@/components/Rank";
+import { useMemo, useState, type ReactNode } from "react";
+import { Animated, Pressable, View, type ViewStyle } from "react-native";
+import { TierBadge } from "@/components/Rank";
 import { Slot, SlotReel } from "@/components/Slot";
-import { GearCount } from "@/components/TimeUpSheet";
 import { LevelButton } from "@/components/LevelSheet";
 import { Badge, Btn, Card, Chip, levelTone, Row, Screen, T } from "@/components/ui";
 import { levelText, TOPICS, type Topic } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { prefetchQuiz } from "@/lib/quiz";
-import { maxRpFor, TIERS, topicMastery } from "@/lib/rank";
+import { MAX_LEVEL, maxRpFor, TIERS, topicMastery, userLevel } from "@/lib/rank";
 import { calcStreak } from "@/lib/stats";
 import { radius, shadow, useColors } from "@/theme";
 import { DomainIcon, Icon, TierIcon } from "@/components/Icon";
@@ -19,6 +18,7 @@ type LevelFilter = "0" | "1" | "2" | "3"; // 0 = 전체
 
 export default function Home() {
   const { prefs, records, active, setActive, gears, updatePrefs, xp, keptDays, freezes } = useApp();
+  const lv = userLevel(xp);
   const c = useColors();
   const [level, setLevel] = useState<LevelFilter>(String(prefs.level) as LevelFilter);
   // 설정에서 기본 난이도를 바꾸면 필터도 따라가게 함
@@ -107,25 +107,36 @@ export default function Home() {
 
   return (
     <Screen edges={["top"]} scroll contentStyle={{ flexGrow: 1 }}>
-      {/* 레벨 + 연속 일수 + 톱니바퀴 */}
-      <Row gap={8} style={{ justifyContent: "space-between", flexWrap: "nowrap", alignItems: "stretch" }}>
-        <Pressable onPress={() => router.push("/profile")} accessibilityRole="button" accessibilityLabel="내 프로필" style={{ flex: 1, justifyContent: "center", backgroundColor: c.paper, borderWidth: 1, borderColor: c.line, borderBottomWidth: 3, borderBottomColor: c.paperEdge, borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 8, ...shadow(c, 1) }}>
-          <UserLevelBar xp={xp} compact />
-        </Pressable>
-        <Pressable onPress={() => router.push("/shop")} accessibilityRole="button" accessibilityLabel="연속 일수, 보호권 보기" style={{ alignItems: "center", backgroundColor: c.paper, borderWidth: 1, borderColor: c.line, borderBottomWidth: 3, borderBottomColor: c.paperEdge, borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 4, ...shadow(c, 1) }}>
-          <Row gap={3} style={{ flexWrap: "nowrap", height: 32 }}>
-            <Icon name="flame" size={24} style={{ opacity: streak ? 1 : 0.4 }} />
-            <T size={20} weight="bold" color={streak ? "flame" : "muted"}>{streak}</T>
-            {freezes > 0 && <><Icon name="shield" size={16} style={{ marginLeft: 4 }} /><T size={13} weight="bold" color="ink2">{freezes}</T></>}
-          </Row>
-          <T size={11} color="muted">연속 일수</T>
-        </Pressable>
-        <Pressable onPress={() => router.push("/shop")} accessibilityRole="button" accessibilityLabel="톱니바퀴 상점" style={{ alignItems: "center", backgroundColor: c.paper, borderWidth: 1, borderColor: c.line, borderBottomWidth: 3, borderBottomColor: c.paperEdge, borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 4, ...shadow(c, 1) }}>
-          <View style={{ height: 32, justifyContent: "center" }}><GearCount n={gears} size={18} /></View>
-          <T size={11} color="muted">톱니바퀴 ›</T>
-        </Pressable>
+      {/* 레벨 + 연속 일수 + 톱니바퀴: 세 칸 모두 같은 높이, 위 줄(아이콘 22 · 숫자 18) / 아래 줄(설명 11) */}
+      <Row gap={8} style={{ flexWrap: "nowrap", alignItems: "stretch" }}>
+        <HeaderTile onPress={() => router.push("/profile")} label="내 프로필" style={{ flex: 1, alignItems: "stretch" }}>
+          <View style={{ height: TOP_H, flexDirection: "row", alignItems: "center", gap: 4 }}>
+            <Icon name="star" size={22} />
+            <T size={18} weight="bold">{lv.level >= MAX_LEVEL ? "MAX" : `${lv.level}레벨`}</T>
+          </View>
+          <View style={{ height: BOTTOM_H, flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <View style={{ flex: 1, height: 6, borderRadius: 3, backgroundColor: c.chip, overflow: "hidden" }}>
+              <View style={{ width: `${Math.round(lv.progress * 100)}%`, height: "100%", backgroundColor: c.gold }} />
+            </View>
+            <T size={11} color="muted">{lv.need ? `${lv.toNext.toLocaleString()} XP 남음` : "최고 레벨"}</T>
+          </View>
+        </HeaderTile>
+        <HeaderTile onPress={() => router.push("/shop")} label="연속 일수, 보호권 보기">
+          <View style={{ height: TOP_H, flexDirection: "row", alignItems: "center", gap: 4 }}>
+            <Icon name="flame" size={22} style={{ opacity: streak ? 1 : 0.4 }} />
+            <T size={18} weight="bold" color={streak ? "flame" : "muted"}>{streak}</T>
+            {freezes > 0 && <><Icon name="shield" size={22} style={{ marginLeft: 6 }} /><T size={18} weight="bold" color="ink2">{freezes}</T></>}
+          </View>
+          <T size={11} color="muted" style={{ height: BOTTOM_H, lineHeight: BOTTOM_H }}>연속 일수{freezes > 0 ? " · 보호권" : ""}</T>
+        </HeaderTile>
+        <HeaderTile onPress={() => router.push("/shop")} label="톱니바퀴 상점">
+          <View style={{ height: TOP_H, flexDirection: "row", alignItems: "center", gap: 4 }}>
+            <Icon name="gear" size={22} />
+            <T size={18} weight="bold">{gears.toLocaleString()}</T>
+          </View>
+          <T size={11} color="muted" style={{ height: BOTTOM_H, lineHeight: BOTTOM_H }}>톱니바퀴 ›</T>
+        </HeaderTile>
       </Row>
-
 
       <QuestSummary />
 
@@ -206,5 +217,19 @@ export default function Home() {
         </View>
       </View>
     </Screen>
+  );
+}
+
+const TOP_H = 28;
+const BOTTOM_H = 16;
+
+/** 홈 맨 위 상태 칸: 세 칸이 같은 테두리·여백·높이 */
+function HeaderTile({ onPress, label, style, children }: { onPress: () => void; label: string; style?: ViewStyle; children: ReactNode }) {
+  const c = useColors();
+  return (
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label}
+      style={{ alignItems: "center", justifyContent: "center", gap: 2, backgroundColor: c.paper, borderWidth: 1, borderColor: c.line, borderBottomWidth: 3, borderBottomColor: c.paperEdge, borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 8, ...shadow(c, 1), ...style }}>
+      {children}
+    </Pressable>
   );
 }
