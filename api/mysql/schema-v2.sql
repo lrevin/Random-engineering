@@ -20,6 +20,46 @@ CREATE TABLE users (
   CONSTRAINT users_version_ck CHECK (auth_version >= 1)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+-- Wallet runtime: signup creates a zero-balance wallet; benefit receipts are stored separately.
+-- Default balance 0 does not define a signup reward or payment policy.
+CREATE TABLE wallets (
+  user_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL PRIMARY KEY,
+  balance INT UNSIGNED NOT NULL DEFAULT 0,
+  updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  CONSTRAINT wallets_user_fk FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE wallet_transactions (
+  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  user_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  amount INT NOT NULL,
+  reason VARCHAR(30) NOT NULL,
+  request_id VARCHAR(100) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  UNIQUE KEY wallet_transactions_request (user_id, request_id),
+  KEY wallet_transactions_user_time (user_id, created_at, id),
+  CONSTRAINT wallet_transactions_wallet_fk FOREIGN KEY (user_id) REFERENCES wallets(user_id) ON DELETE CASCADE,
+  CONSTRAINT wallet_transactions_amount_ck CHECK (amount <> 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Apply after the two wallet tables. This is a NEW table, not a reset.
+-- Durable benefits and immutable operation receipts, including no-charge freeze use.
+CREATE TABLE wallet_operations (
+  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  user_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  request_id VARCHAR(100) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  request_hash BINARY(32) NOT NULL,
+  action VARCHAR(30) NOT NULL,
+  payload JSON NOT NULL,
+  result_json JSON NOT NULL,
+  created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  UNIQUE KEY wallet_operations_request (user_id, request_id),
+  KEY wallet_operations_user_id (user_id, id),
+  CONSTRAINT wallet_operations_wallet_fk FOREIGN KEY (user_id) REFERENCES wallets(user_id) ON DELETE CASCADE,
+  CONSTRAINT wallet_operations_payload_ck CHECK (JSON_TYPE(payload)='OBJECT'),
+  CONSTRAINT wallet_operations_result_ck CHECK (JSON_TYPE(result_json)='OBJECT')
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 CREATE TABLE auth_identities (
   id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL PRIMARY KEY,
   user_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
