@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { useState, type ReactNode } from "react";
 import { Pressable, View } from "react-native";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
+import { AdRewardButton } from "@/components/AdRewardButton";
 import { Icon } from "@/components/Icon";
 import { SectionTitle } from "@/components/StatTile";
 import { GearCount } from "@/components/TimeUpSheet";
@@ -88,6 +89,9 @@ export default function Shop() {
         <T size={15} color="ink2">내 톱니바퀴</T>
         <GearCount n={gears} size={18} />
       </View>
+
+      {/* 광고 보고 톱니바퀴 (배틀 탭과 같은 버튼, 하루 횟수도 같이 셈) */}
+      <AdRewardButton />
 
       <SectionTitle title="아이템" />
       <PlanCard
