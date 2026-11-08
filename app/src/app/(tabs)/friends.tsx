@@ -1,4 +1,4 @@
-import { router, useFocusEffect } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { Pressable, Share, View } from "react-native";
 import { LevelBadge } from "@/components/Rank";
@@ -108,10 +108,7 @@ export default function Friends() {
               </Row>
             ))}
             {state.friends.length > 0 && (
-              <>
-                <T size={12} color="muted">친구를 길게 누르면 친구에서 뺄 수 있어요.</T>
-                <Btn title="⚔️ 친구와 배틀하기" size="sm" variant="accent" onPress={() => router.push("/arena")} />
-              </>
+              <T size={12} color="muted">친구를 길게 누르면 친구에서 뺄 수 있어요.</T>
             )}
           </Card>
 

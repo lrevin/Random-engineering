@@ -103,7 +103,7 @@ export default function Settings() {
       <Card accent style={{ gap: 10 }}>
         <T size={17} weight="bold">⭐ {premium ? "유료 멤버십 사용 중" : "유료 멤버십"}</T>
         <T size={14} color="ink2">
-          {premium ? "1:1 친구 배틀을 무제한으로 할 수 있어요." : "1:1 친구 배틀을 무제한으로 즐길 수 있어요. 무료 버전은 매월 2회예요."}
+          {premium ? "랜덤 매칭 배틀을 무제한으로 할 수 있어요." : "랜덤 매칭 배틀을 무제한으로 즐길 수 있어요. 무료 버전은 매월 2회예요."}
         </T>
         <Btn
           title={premium ? "멤버십 관리" : "유료 멤버십으로 업그레이드"}

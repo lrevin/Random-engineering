@@ -35,7 +35,7 @@ export default function Home() {
 
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
 
-  const { streak, today } = calcStreak(records, new Date(), keptDays);
+  const { streak } = calcStreak(records, new Date(), keptDays);
   // 마스터 = 주제 랭크가 최고 단계(엔지니어). 같은 개념이 여러 분야에 있을 수 있어서(예: 레이놀즈 수) 이름으로도 확인
   const mastered = useMemo(() => {
     const set = new Set<string>();
@@ -113,11 +113,10 @@ export default function Home() {
 
   return (
     <Screen edges={["top"]} scroll contentStyle={{ flexGrow: 1 }}>
-      {/* 인사 + 스트릭 */}
-      <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
-        <View style={{ flex: 1 }}>
-          <T size={14} color="muted">{today ? "오늘 공부 완료 ✓" : "오늘은 아직이에요"}</T>
-          <T size={22} weight="bold" numberOfLines={1}>{prefs.nickname || "학습자"}님, 안녕하세요</T>
+      {/* 레벨 + 연속 일수 + 톱니바퀴 */}
+      <Row gap={8} style={{ justifyContent: "space-between", flexWrap: "nowrap", alignItems: "stretch" }}>
+        <View style={{ flex: 1, justifyContent: "center", backgroundColor: c.paper, borderWidth: 1, borderColor: c.line, borderBottomWidth: 3, borderBottomColor: c.paperEdge, borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 8, ...shadow(c, 1) }}>
+          <UserLevelBar xp={xp} compact />
         </View>
         <Pressable onPress={() => router.push("/shop")} accessibilityRole="button" accessibilityLabel="연속 일수, 보호권 보기" style={{ alignItems: "center", backgroundColor: c.paper, borderWidth: 1, borderColor: c.line, borderBottomWidth: 3, borderBottomColor: c.paperEdge, borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 4, ...shadow(c, 1) }}>
           <T size={22} weight="bold" color={streak ? "flame" : "muted"}>🔥 {streak}</T>
@@ -128,10 +127,6 @@ export default function Home() {
           <T size={11} color="muted">톱니바퀴 ›</T>
         </Pressable>
       </Row>
-
-      <Card style={{ paddingVertical: 12 }}>
-        <UserLevelBar xp={xp} compact />
-      </Card>
 
 
       {active && (

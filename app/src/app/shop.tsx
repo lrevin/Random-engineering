@@ -64,8 +64,8 @@ export default function Shop() {
         <View style={{ borderRadius: radius.md, overflow: "hidden", borderWidth: 1, borderColor: c.line }}>
           {[
             ["", "무료", "유료"],
-            ["1:1 친구 배틀", `매월 ${FREE_BATTLE_TICKETS}회`, "무제한"],
-            ["친구 추가 · 배틀 받기", "가능", "가능"],
+            ["랜덤 매칭 배틀", `매월 ${FREE_BATTLE_TICKETS}회`, "무제한"],
+            ["친구 추가", "가능", "가능"],
           ].map((row, i) => (
             <View key={i} style={{ flexDirection: "row", backgroundColor: i === 0 ? c.chip : c.paper, borderTopWidth: i ? 1 : 0, borderTopColor: c.line }}>
               {row.map((cell, k) => (
@@ -78,8 +78,8 @@ export default function Shop() {
           ))}
         </View>
         <T size={13} color="muted">
-          무료 버전 배틀권은 매월 1일 00시에 {FREE_BATTLE_TICKETS}회로 다시 채워져요. 배틀은 신청하는 사람만 배틀권을 쓰고,
-          배틀권이 없는 친구도 신청을 받아 함께할 수 있어요.
+          무료 버전 배틀권은 매월 1일 00시에 {FREE_BATTLE_TICKETS}회로 다시 채워져요. 랜덤 매칭은 매칭을 돌리는 두 사람 모두
+          배틀권을 1개씩 쓰고, 취소하거나 상대를 못 찾으면 돌려받아요.
         </T>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: c.chip, borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 10, ...inset(c) }}>
           <T size={14} color="ink2">남은 배틀권</T>
