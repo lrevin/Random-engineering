@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import { useMemo } from "react";
 import { Pressable, View } from "react-native";
 import { useApp } from "@/lib/app-state";
-import { PERIODS, questKey, questsFor, type Period, type Quest } from "@/lib/quests";
+import { ATTENDANCE, PERIODS, questKey, questsFor, type Period, type Quest } from "@/lib/quests";
 import { radius, raised, shadow, useColors } from "@/theme";
 import { Icon } from "./Icon";
 import { T, tap } from "./ui";
@@ -17,10 +17,12 @@ export function useQuests(period: Period) {
   const doneCount = quests.filter((q) => q.done).length;
   const allDone = doneCount === quests.length;
   const bonusClaimed = claimed("bonus");
-  const ready = quests.filter((q) => q.done && !claimed(q.id)).length + (allDone && !bonusClaimed ? 1 : 0);
+  // 출석은 일일 탭에만 (3개 모두 끝내기에는 안 셈)
+  const attendance = period === "day" ? ATTENDANCE : null;
+  const ready = quests.filter((q) => q.done && !claimed(q.id)).length + (allDone && !bonusClaimed ? 1 : 0) + (attendance && !claimed(attendance.id) ? 1 : 0);
   const bonus = PERIODS[period].bonus;
   return {
-    quests, claimed, doneCount, allDone, bonusClaimed, ready, bonus,
+    quests, claimed, doneCount, allDone, bonusClaimed, ready, bonus, attendance,
     claim: (q: Quest) => q.done && claimQuest(questKey(period, q.id), q.reward),
     claimBonus: () => allDone && claimQuest(questKey(period, "bonus"), bonus),
   };

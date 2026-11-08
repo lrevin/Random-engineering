@@ -9,7 +9,8 @@ import { domainById, levelText, topicById, TOPICS } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { battleXpTransfer } from "@/lib/economy";
 import { calcRp } from "@/lib/rank";
-import { cancelBattle, getBattle, serverNow, socialMessage, submitBattle, type Battle } from "@/lib/social";
+import { cancelBattle, getBattle, serverNow, socialMessage, submitBattle, submitOvertime, uploadQuestions, type Battle } from "@/lib/social";
+import { BATTLE_QUIZ_LENGTH, battleQuestions, OVERTIME_BATCH } from "@/lib/quiz";
 import { calcStreak, fmtClock, fmtStudyTime } from "@/lib/stats";
 import type { WrongAnswer } from "@/lib/types";
 import { useKeepScreenOn } from "@/lib/useKeepScreenOn";
@@ -17,7 +18,7 @@ import { radius, useColors } from "@/theme";
 import { answerText, isCorrect, QuestionView } from "./quiz";
 import { DomainIcon, Icon } from "@/components/Icon";
 
-type Phase = "loading" | "waiting" | "closed" | "countdown" | "study" | "quiz" | "submitted" | "result";
+type Phase = "loading" | "waiting" | "closed" | "countdown" | "study" | "preparing" | "quiz" | "submitted" | "otPreparing" | "overtime" | "otWaiting" | "result";
 const REVEAL_MS = 1600; // 시작하면 슬롯처럼 주제를 돌린 뒤 공개
 
 export default function BattleScreen() {
@@ -58,8 +59,13 @@ export default function BattleScreen() {
   const topic = battle?.topicId ? topicById(battle.topicId) : undefined;
   const start = battle?.startAt ? Date.parse(battle.startAt) : 0;
   const studyEnd = start + (battle?.studySec ?? 0) * 1000;
-  const quizEnd = studyEnd + (battle?.quizSec ?? 0) * 1000;
+  // 퀴즈는 공부가 끝나고 문제가 준비된 시각부터 (서버가 정함)
+  const quizStart = battle?.quizStartAt ? Date.parse(battle.quizStartAt) : studyEnd;
+  const quizEnd = quizStart + (battle?.quizSec ?? 0) * 1000;
   const mySubmitted = submitted || !!(battle && battle.results[uid]);
+  const ot = battle?.overtime ?? null;
+  const [otSent, setOtSent] = useState<number[]>([]);
+  const otAnswered = !!ot && (otSent.includes(ot.round) || ot.answers[uid]?.[ot.round] != null);
 
   const phase: Phase = !battle ? "loading"
     : battle.status === "pending" ? "waiting"
@@ -67,8 +73,59 @@ export default function BattleScreen() {
         : battle.status !== "accepted" ? "closed"
           : now < start ? "countdown"
             : now < studyEnd ? "study"
-              : mySubmitted ? "submitted"
-                : "quiz";
+              : ot ? (!ot.question ? "otPreparing" : otAnswered ? "otWaiting" : "overtime")
+                : mySubmitted ? "submitted"
+                  : !battle.questions || now < quizStart ? "preparing"
+                    : "quiz";
+
+  // ───────── 문제 만들기 (AI가 만들고 2번 검수) ─────────
+  // 매칭 배틀은 공부하는 동안 먼저 기다린 사람(from)의 앱이 5문제를 만들어 올림.
+  // 그쪽이 늦거나 나가 버리면 상대 앱이 대신 만듦 (서버는 먼저 올라온 것만 인정).
+  // 연장전은 문제를 2개씩 만들어 두고, 한 문제를 푸는 동안 다음 2개를 미리 만듦 (파이프라인).
+  const makingRef = useRef(new Set<number>());
+  const missingSince = useRef<Record<number, number>>({});
+  const isMaker = me === "from";
+  useEffect(() => {
+    if (!battle || battle.status !== "accepted" || !topic || battle.kind !== "random") return;
+    const make = (batch: number, count: number, avoid: typeof battle.questions) => {
+      if (makingRef.current.has(batch)) return;
+      makingRef.current.add(batch);
+      battleQuestions(topic, count, avoid ?? [])
+        .then((qs) => uploadQuestions(battle.id, batch, qs))
+        .then(setBattle)
+        .catch(() => makingRef.current.delete(batch)); // 실패하면 다음에 다시
+    };
+    const late = (batch: number, ms: number) => {
+      missingSince.current[batch] ??= serverNow();
+      return serverNow() - missingSince.current[batch] > ms;
+    };
+    if (!battle.questionsReady) {
+      // 상대 대신 만드는 건 공부가 거의 끝나도 문제가 없을 때
+      const backupAt = studyEnd - Math.min(120_000, (battle.studySec * 1000) / 3);
+      if (isMaker || now > backupAt) make(0, battle.quizCount ?? BATTLE_QUIZ_LENGTH, []);
+      return;
+    }
+    if (ot && ot.available < ot.round + 2) {
+      const batch = ot.batches + 1;
+      const avoid = [...(battle.questions ?? []), ...ot.past, ...(ot.question ? [ot.question] : [])];
+      if (isMaker || late(batch, 25_000)) make(batch, OVERTIME_BATCH, avoid);
+    }
+  }, [battle, topic, isMaker, now, studyEnd, ot]);
+
+  // 연장전 한 문제 제출 (시간이 지나면 틀린 것으로)
+  const sendOvertime = useCallback((round: number, correct: boolean) => {
+    if (!battle) return;
+    setOtSent((s) => (s.includes(round) ? s : [...s, round]));
+    submitOvertime(battle.id, round, correct).then(setBattle).catch((e) => setErr(socialMessage(e)));
+  }, [battle]);
+  const otEnd = ot?.roundStartAt ? Date.parse(ot.roundStartAt) + ot.roundSec * 1000 : 0;
+  const inOvertime = phase === "overtime";
+  const otRound = ot?.round ?? -1;
+  useEffect(() => {
+    if (!inOvertime) return;
+    const t = setTimeout(() => sendOvertime(otRound, false), Math.max(0, otEnd - serverNow()));
+    return () => clearTimeout(t);
+  }, [inOvertime, otEnd, otRound, sendOvertime]);
 
   // 주제 공개 연출: 시작 직후 잠깐 같은 분야 주제 이름을 돌림
   const revealing = phase === "study" && now - start < REVEAL_MS;
@@ -187,7 +244,7 @@ export default function BattleScreen() {
         <View style={{ alignItems: "center", gap: 8, paddingVertical: 30 }}>
           <T size={16} color="ink2">두 사람에게 같은 주제가 곧 뽑혀요</T>
           <T size={96} weight="bold" color="accent" style={{ lineHeight: 110 }}>{Math.max(1, Math.ceil((start - now) / 1000))}</T>
-          <T size={14} color="muted">공부 {fmtStudyTime(b.studySec)} · 퀴즈 7문제 · 시간 추가 없음</T>
+          <T size={14} color="muted">공부 {fmtStudyTime(b.studySec)} · AI 문제 {b.quizCount ?? b.questions?.length ?? BATTLE_QUIZ_LENGTH}개 · 시간 추가 없음</T>
         </View>
       </Screen>
     );
@@ -255,6 +312,58 @@ export default function BattleScreen() {
     );
   }
 
+  if (phase === "preparing") {
+    return (
+      <Screen contentStyle={{ flex: 1, justifyContent: "center" }}>
+        {header}
+        <Card style={{ alignItems: "center", gap: 10 }}>
+          <Icon name="robot" size={64} />
+          <T size={18} weight="bold" center>AI가 문제를 만들고 두 번 검수하고 있어요</T>
+          <T size={14} color="muted" center>문제가 준비되면 두 사람 모두 같은 순간에 퀴즈가 시작돼요. 기다리는 시간은 퀴즈 시간에서 빠지지 않아요.</T>
+          <ActivityIndicator color={c.accent} />
+        </Card>
+        {err ? <T size={13} color="accent" center>{err}</T> : null}
+      </Screen>
+    );
+  }
+
+  if (phase === "otPreparing" || phase === "otWaiting") {
+    const n = (ot?.round ?? 0) + 1;
+    return (
+      <Screen contentStyle={{ flex: 1, justifyContent: "center" }}>
+        {header}
+        <Card style={{ alignItems: "center", gap: 10, borderTopWidth: 4, borderTopColor: c.gold }}>
+          <Icon name="swords" size={64} />
+          <T size={22} weight="bold" center>연장전 {n}번째 문제</T>
+          <T size={14} color="ink2" center>
+            {phase === "otPreparing"
+              ? "두 사람 모두 만점이라 연장전이에요! AI가 새 문제를 만들고 두 번 검수하고 있어요."
+              : `${opp?.nickname}님이 답할 때까지 기다리고 있어요.`}
+          </T>
+          <T size={13} color="muted" center>한 문제씩 같이 풀어서 한 사람만 맞히면 그 사람이 이겨요.</T>
+          <ActivityIndicator color={c.accent} />
+        </Card>
+        {err ? <T size={13} color="accent" center>{err}</T> : null}
+      </Screen>
+    );
+  }
+
+  if (phase === "overtime" && ot?.question) {
+    return (
+      <QuestionView
+        key={"ot" + ot.round}
+        q={ot.question}
+        index={0}
+        count={1}
+        topicName={`연장전 ${ot.round + 1}번째 문제`}
+        badges={<Row gap={6}><Badge label="연장전" tone="accent" icon={<Icon name="swords" size={20} />} /><Badge label={fmtClock((otEnd - now) / 1000)} icon={<Icon name="clock" size={18} />} /></Row>}
+        saving={false}
+        onQuit={() => sendOvertime(ot.round, false)}
+        onNext={(a) => sendOvertime(ot.round, isCorrect(ot.question!, a))}
+      />
+    );
+  }
+
   if (phase === "submitted") {
     return (
       <Screen contentStyle={{ flex: 1, justifyContent: "center" }}>
@@ -284,6 +393,9 @@ export default function BattleScreen() {
         <Icon name={draw ? "handshake" : won ? "trophy" : "dizzy"} size={104} />
         <T size={26} weight="bold" center>{draw ? "비겼어요" : won ? "배틀에서 이겼어요!" : "아쉽게 졌어요"}</T>
         <T size={15} color="ink2" center>{topic?.ko}</T>
+        {b.overtime && b.overtime.past.length > 0 && (
+          <Badge label={`만점 동점 · 연장전 ${b.overtime.past.length}문제`} tone="navy" icon={<Icon name="swords" size={20} />} />
+        )}
       </View>
       <View style={{ borderRadius: radius.lg, borderWidth: 2, borderColor: c.line, backgroundColor: c.paper, overflow: "hidden" }}>
         {[

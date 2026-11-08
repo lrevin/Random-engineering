@@ -34,10 +34,6 @@ export const refillTickets = (t: Tickets | null, now = new Date()): Tickets =>
   !t || t.month !== monthKey(now) ? { n: FREE_BATTLE_TICKETS, month: monthKey(now), bought: t?.bought ?? 0 } : t;
 
 // ───────── 1:1 배틀 ─────────
-/** 배틀 공부 시간(분) 선택지. 배틀 중에는 시간 추가가 안 됨 */
-export const BATTLE_MINUTES = [5, 10, 15] as const;
-/** 공부가 끝난 뒤 퀴즈를 내야 하는 시간 (넘기면 그때까지 푼 문제로 채점) */
-export const BATTLE_QUIZ_SEC = 5 * 60;
 /** 진 사람 누적 경험치에서 이긴 사람에게 넘어가는 몫 */
 export const BATTLE_XP_RATE = 0.05;
 export const BATTLE_XP_MAX = 100;

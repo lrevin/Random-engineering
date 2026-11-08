@@ -1,28 +1,42 @@
 import { router, useFocusEffect, useIsFocused } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { BattleIntro, useBattleIntroFirstTime } from "@/components/BattleIntro";
 import { MatchOverlay } from "@/components/MatchOverlay";
-import { Btn, Card, Chip, Row, Screen, Segment, T } from "@/components/ui";
-import { domainById, DOMAINS, TOPICS } from "@/data";
+import { Btn, Card, Row, Screen, T } from "@/components/ui";
+import { TOPICS } from "@/data";
 import { useApp } from "@/lib/app-state";
-import { BATTLE_MINUTES, BATTLE_TICKET_COST, BATTLE_XP_MAX, FREE_BATTLE_TICKETS } from "@/lib/economy";
-import { loadQuiz } from "@/lib/quiz";
+import { BATTLE_TICKET_COST, FREE_BATTLE_TICKETS } from "@/lib/economy";
+import { BATTLE_QUIZ_LENGTH } from "@/lib/quiz";
 import { userLevel } from "@/lib/rank";
 import { getMatch, joinMatch, leaveMatch, serverNow, socialEnabled, socialMessage, type Battle, type MatchState } from "@/lib/social";
-import { radius, useColors } from "@/theme";
-import { DomainIcon, Icon } from "@/components/Icon";
-import { battleOpponentLabel, isBattleRecord } from "@/lib/stats";
+import { useColors } from "@/theme";
+import { Icon } from "@/components/Icon";
 
 const MATCH_WAIT_SEC = 180;
+/** 매칭 배틀 공부 시간: 모두 10분으로 통일 */
+const MATCH_STUDY_MIN = 10;
+
+/** 매칭 후보 주제: 관심 분야마다 몇 개씩 무작위로 (서버가 두 사람 관심 분야가 겹치는 주제를 고름) */
+function candidateTopics(interests: string[], perCategory = 3) {
+  const out: string[] = [];
+  for (const cat of interests) {
+    const ts = TOPICS.filter((t) => t.category === cat);
+    for (let i = 0; i < perCategory && ts.length; i++) out.push(ts.splice(Math.floor(Math.random() * ts.length), 1)[0].id);
+  }
+  return out;
+}
 
 /** 배틀 메뉴: 랜덤 상대와 1:1 매칭 배틀. 매칭을 돌리는 두 사람 모두 배틀권 1개씩 씀 */
 export default function Arena() {
-  const { premium, battleTickets, freeTickets, boughtTickets, buyBattleTicket, gears, records, spendBattleTicket, refundBattleTicket, claimOnce, uid, prefs, xp } = useApp();
+  const { premium, battleTickets, freeTickets, boughtTickets, buyBattleTicket, gears, spendBattleTicket, refundBattleTicket, claimOnce, uid, prefs, xp } = useApp();
   const focused = useIsFocused();
   const c = useColors();
-  const [domain, setDomain] = useState("any");
-  const [minutes, setMinutes] = useState<string>("10");
   const [match, setMatch] = useState<MatchState>({ status: "none" });
+  // 배틀 탭을 처음 열면 설명(온보딩)을 한 번 보여 줌. ? 버튼으로 다시 볼 수 있음
+  const firstTime = useBattleIntroFirstTime();
+  const [intro, setIntro] = useState(false);
+  const [introSeen, setIntroSeen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [now, setNow] = useState(serverNow());
@@ -80,15 +94,13 @@ export default function Arena() {
   const start = async () => {
     if (busy) return;
     setNotice("");
-    const pool = domain === "any" ? TOPICS : TOPICS.filter((t) => t.domain === domain);
-    if (!pool.length) return setNotice("이 분야에는 아직 주제가 없어요.");
+    const candidates = candidateTopics(prefs.interests);
+    if (!candidates.length) return setNotice("관심 분야를 먼저 골라 주세요. (설정 › 관심 분야)");
     if (!spendBattleTicket()) return setNotice("배틀권이 없어요. 톱니바퀴로 사거나 다음 달 1일을 기다려 주세요.");
     setBusy(true);
     try {
-      // 내가 먼저 기다리게 되면 이 주제·문제로 배틀이 열림 (상대가 분야를 정했으면 상대 것)
-      const topic = pool[Math.floor(Math.random() * pool.length)];
-      const quiz = await loadQuiz(topic);
-      const m = await joinMatch({ domain, studySec: Number(minutes) * 60, topicId: topic.id, questions: quiz.questions });
+      // 문제는 매칭된 뒤 공부하는 동안 AI가 만듦 (기다리는 동안 미리 만들지 않음)
+      const m = await joinMatch({ interests: prefs.interests, candidates });
       if (m.status === "matched") {
         goBattle(m.battle);
         setMatch({ status: "none" });
@@ -121,12 +133,17 @@ export default function Arena() {
 
   const noTicket = !premium && battleTickets <= 0;
   const waitedSec = waiting ? Math.max(0, (now - Date.parse(match.joinedAt)) / 1000) : 0;
-  // 최근 배틀 기록 (배틀은 메모가 '…님과 배틀'로 남음)
-  const recent = records.filter(isBattleRecord).slice(-5).reverse();
 
   return (
     <Screen edges={["top"]} scroll>
-      <T size={26} weight="bold">배틀</T>
+      <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
+        <T size={26} weight="bold">배틀</T>
+        <Pressable onPress={() => setIntro(true)} hitSlop={10} accessibilityRole="button" accessibilityLabel="배틀 설명 보기"
+          style={{ width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, borderColor: c.line2, alignItems: "center", justifyContent: "center", backgroundColor: c.paper }}>
+          <T size={17} weight="bold" color="ink2">?</T>
+        </Pressable>
+      </Row>
+      <BattleIntro open={intro || firstTime && !introSeen} onClose={() => { setIntro(false); setIntroSeen(true); }} />
 
       {/* 배틀권 · 멤버십 */}
       <Pressable onPress={() => router.push("/shop")} accessibilityRole="button" accessibilityLabel="배틀권과 멤버십 보기">
@@ -138,9 +155,7 @@ export default function Arena() {
           {!premium && (
             <T size={13} color="ink2">이번 달 무료 {freeTickets} / {FREE_BATTLE_TICKETS} · 톱니바퀴로 산 배틀권 {boughtTickets}개</T>
           )}
-          <T size={13} color="muted">
-            {premium ? "유료 멤버십 사용 중이에요." : `무료 배틀권은 매월 1일 00시에 ${FREE_BATTLE_TICKETS}개로 다시 채워지고, 산 배틀권은 사라지지 않아요. 유료 멤버십은 무제한 ›`}
-          </T>
+          {premium && <T size={13} color="muted">유료 멤버십 사용 중이에요.</T>}
         </Card>
       </Pressable>
 
@@ -149,26 +164,6 @@ export default function Arena() {
       ) : (
         <Card style={{ gap: 12 }}>
           <Row gap={10}><Icon name="swords" size={34} /><T size={18} weight="bold">랜덤 매칭 배틀</T></Row>
-          <T size={14} color="ink2">
-            같은 조건으로 매칭을 돌린 다른 학습자와 1:1로 붙어요. 매칭되면 두 사람에게 같은 주제가 동시에 뽑혀요.
-          </T>
-          <T size={14} weight="semibold" color="ink2">분야</T>
-          {/* 분야는 옆으로 넘기는 한 줄 */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -18 }} contentContainerStyle={{ gap: 8, paddingHorizontal: 18, paddingBottom: 4 }}>
-            <Chip label="아무 분야" icon={<Icon name="dice" size={20} />} selected={domain === "any"} onPress={() => setDomain("any")} />
-            {DOMAINS.filter((d) => d.available).map((d) => (
-              <Chip key={d.id} label={d.name} icon={<DomainIcon id={d.id} size={20} />} selected={domain === d.id} onPress={() => setDomain(d.id)} />
-            ))}
-          </ScrollView>
-          <Row style={{ justifyContent: "space-between" }}>
-            <T size={14} weight="semibold" color="ink2">공부 시간</T>
-            <Segment options={BATTLE_MINUTES.map((m) => ({ value: String(m), label: `${m}분` }))} value={minutes} onChange={setMinutes} />
-          </Row>
-          <View style={{ backgroundColor: c.chip, borderRadius: radius.md, padding: 12 }}>
-            <T size={13} color="ink2">
-              {premium ? "유료 멤버십이라 배틀권 걱정 없이 매칭할 수 있어요." : "매칭을 돌리는 두 사람 모두 배틀권을 1개씩 써요. 취소하거나 3분 안에 상대를 못 찾으면 돌려받아요."}
-            </T>
-          </View>
           {noTicket ? (
             <View style={{ gap: 10 }}>
               <Btn
@@ -181,10 +176,10 @@ export default function Arena() {
                 onPress={() => { if (buyBattleTicket()) start(); }}
               />
               {gears < BATTLE_TICKET_COST && <T size={13} color="accent" center>톱니바퀴가 {BATTLE_TICKET_COST - gears}개 부족해요. 퀘스트로 모아 보세요.</T>}
-              <Btn title="유료 멤버십 알아보기 (무제한)" size="md" onPress={() => router.push("/shop")} />
+              <Btn title="뽑공 프리미엄으로 무제한 매칭" variant="premium" size="md" icon={<Icon name="crown" size={24} />} onPress={() => router.push("/shop")} />
             </View>
           ) : (
-            <Btn title={busy ? "문제 준비하는 중…" : premium ? "랜덤 매칭 시작" : "랜덤 매칭 시작 (배틀권 1개)"} variant="accent" size="lg" loading={busy} onPress={start} />
+            <Btn title={busy ? "매칭 준비하는 중…" : premium ? "랜덤 매칭 시작" : "랜덤 매칭 시작 (배틀권 1개)"} variant="accent" size="lg" loading={busy} onPress={start} />
           )}
         </Card>
       )}
@@ -194,7 +189,7 @@ export default function Arena() {
         visible={focused && (waiting || !!found)}
         me={prefs.nickname || "나"}
         myLevel={userLevel(xp).level}
-        setting={`${domain === "any" ? "아무 분야" : domainById(domain)?.name ?? ""} · 공부 ${minutes}분`}
+        setting={`관심 분야 ${prefs.interests.length}개 · 공부 ${MATCH_STUDY_MIN}분 · AI 문제 ${BATTLE_QUIZ_LENGTH}개`}
         waitedSec={waitedSec}
         maxSec={MATCH_WAIT_SEC}
         opponent={found}
@@ -202,25 +197,6 @@ export default function Arena() {
         cancelling={busy}
       />
 
-      {recent.length > 0 && (
-        <Card style={{ gap: 8 }}>
-          <T size={16} weight="bold">최근 배틀</T>
-          {recent.map((r) => (
-            <Row key={r.id} style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
-              <T size={14} numberOfLines={1} style={{ flex: 1 }}>{r.topicKo} · {battleOpponentLabel(r)}</T>
-              <T size={14} weight="semibold">{r.score} / {r.total}</T>
-            </Row>
-          ))}
-        </Card>
-      )}
-
-      <View style={{ backgroundColor: c.chip, borderRadius: radius.md, padding: 14, gap: 4 }}>
-        <T size={14} weight="semibold">배틀 규칙</T>
-        <T size={13} color="ink2">
-          같은 주제를 같은 시간 동안 공부한 뒤 같은 7문제를 풀어요. 배틀 중에는 시간을 추가할 수 없어요.
-          점수가 높은 사람이 진 사람 경험치의 5%(최대 {BATTLE_XP_MAX} XP)를 가져가고, 같으면 그대로예요.
-        </T>
-      </View>
     </Screen>
   );
 }
