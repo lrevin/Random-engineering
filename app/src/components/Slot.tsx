@@ -1,9 +1,12 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { Animated, Easing, Pressable, Text, View } from "react-native";
+import { Animated, Easing, PanResponder, Text, View } from "react-native";
 import { radius, shadow, useColors } from "@/theme";
 import { FONT, tap } from "./ui";
 
 const ROD = 70;
+/** 레버를 끝까지 당겼을 때 막대 길이 / 이만큼 넘게 당기고 놓으면 뽑기 */
+const ROD_MIN = 12;
+const PULL_AT = 0.6;
 const LEVER_W = 36;
 
 /** 로고와 같은 슬롯머신 틀: 불빛 3개 + 릴 창 + 당첨선 + 레버(당기면 onPull) */
@@ -29,15 +32,23 @@ export function Slot({ children, spinning, onPull, disabled }: {
     return () => loop.stop();
   }, [spinning, blink]);
 
+  // 끝까지 내렸다가 튕기듯 올라오며 뽑기 (버튼처럼 톡 눌렀을 때 · 손을 놓았을 때)
+  const release = (from?: number) => {
+    const travel = ROD - ROD_MIN;
+    Animated.sequence([
+      Animated.timing(rod, { toValue: ROD_MIN, duration: from === undefined ? 150 : 70, easing: Easing.in(Easing.quad), useNativeDriver: false }),
+      Animated.spring(rod, { toValue: ROD, friction: 3.5, tension: 120, useNativeDriver: false }),
+    ]).start();
+    setTimeout(() => onPull?.(), from === undefined ? 150 : Math.max(0, 70 * (1 - from / travel)));
+  };
   const pull = () => {
     if (disabled) return;
     tap();
-    Animated.sequence([
-      Animated.timing(rod, { toValue: 30, duration: 140, easing: Easing.in(Easing.quad), useNativeDriver: false }),
-      Animated.spring(rod, { toValue: ROD, friction: 4, useNativeDriver: false }),
-    ]).start();
-    setTimeout(() => onPull?.(), 140);
+    release();
   };
+
+  // 손가락을 따라 레버가 내려옴
+  const pan = leverPan(rod, { disabled, pull, release });
 
   const lights = [c.gold, c.accent, c.gold];
   const triangle = (side: "left" | "right") => (
@@ -77,11 +88,15 @@ export function Slot({ children, spinning, onPull, disabled }: {
         <View style={{ alignSelf: "center", width: 64, height: 6, borderRadius: 3, backgroundColor: c.slotEdge }} />
       </View>
 
-      <Pressable
-        onPress={pull}
-        disabled={disabled}
+      <View
+        {...pan.panHandlers}
+        accessible
         accessibilityRole="button"
         accessibilityLabel="레버 당겨서 주제 뽑기"
+        accessibilityHint="아래로 끌어내리거나 눌러서 뽑아요"
+        accessibilityState={{ disabled }}
+        accessibilityActions={[{ name: "activate" }]}
+        onAccessibilityAction={pull}
         hitSlop={10}
         style={{ width: LEVER_W, height: 140, justifyContent: "flex-end", paddingBottom: 26, opacity: disabled ? 0.5 : 1 }}
       >
@@ -91,9 +106,36 @@ export function Slot({ children, spinning, onPull, disabled }: {
           <View style={{ width: 10, height: 28, borderRadius: 5, backgroundColor: c.lever, marginTop: -11 }} />
           <View style={{ width: 14, height: 7, backgroundColor: c.lever }} />
         </View>
-      </Pressable>
+      </View>
     </View>
   );
+}
+
+/** 레버 끌어내리기: 막대 길이 = ROD - 끌어내린 거리. 뽑히는 지점을 넘으면 딸깍, 넘긴 채 놓으면 뽑기 */
+function leverPan(rod: Animated.Value, h: { disabled?: boolean; pull: () => void; release: (from: number) => void }) {
+  const travel = ROD - ROD_MIN;
+  const springBack = () => Animated.spring(rod, { toValue: ROD, friction: 5, useNativeDriver: false }).start();
+  let passed = false;
+  return PanResponder.create({
+    onStartShouldSetPanResponder: () => !h.disabled,
+    onMoveShouldSetPanResponder: () => !h.disabled,
+    onPanResponderTerminationRequest: () => false,
+    onShouldBlockNativeResponder: () => true,
+    onPanResponderGrant: () => { rod.stopAnimation(); passed = false; },
+    onPanResponderMove: (_, g) => {
+      const d = Math.min(travel, Math.max(0, g.dy));
+      rod.setValue(ROD - d);
+      if (!passed && d >= travel * PULL_AT) { passed = true; tap(); }
+      else if (passed && d < travel * PULL_AT) passed = false;
+    },
+    onPanResponderRelease: (_, g) => {
+      const d = Math.min(travel, Math.max(0, g.dy));
+      if (Math.abs(g.dy) < 6 && Math.abs(g.dx) < 6) return h.pull(); // 그냥 톡 누름
+      if (d >= travel * PULL_AT) h.release(d);
+      else springBack();
+    },
+    onPanResponderTerminate: springBack,
+  });
 }
 
 const ITEM_H = 76;
