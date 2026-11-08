@@ -7,8 +7,8 @@ import { Platform } from "react-native";
  * - Expo Go에는 광고 SDK가 없어서 불러오지 않음 → 앱이 5초짜리 시험용 광고 화면을 대신 보여 줌.
  * - 실제 광고 단위 ID가 없으면 구글 공개 시험용 광고를 씀 (시험용 광고는 클릭해도 수익이 없음).
  */
-export const AD_REWARD = 20;
-export const AD_DAILY_LIMIT = 5;
+export const AD_REWARD = 10;
+export const AD_DAILY_LIMIT = 3;
 
 export const adsSimulated = Constants.executionEnvironment === ExecutionEnvironment.StoreClient || Platform.OS === "web";
 
