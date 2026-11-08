@@ -8,7 +8,7 @@ import { SectionTitle } from "@/components/StatTile";
 import { GearCount } from "@/components/TimeUpSheet";
 import { Btn, Row, Screen, T } from "@/components/ui";
 import { useApp } from "@/lib/app-state";
-import { BATTLE_TICKET_COST, FREE_BATTLE_TICKETS, FREEZE_COST, MAX_BOUGHT_TICKETS, MAX_FREEZES, MAX_RESTORE_DAYS, RESTORE_COST_PER_DAY } from "@/lib/economy";
+import { BATTLE_TICKET_COST, FREE_BATTLE_TICKETS, FREE_MAX_STUDY_MIN, PREMIUM_MAX_STUDY_MIN, FREEZE_COST, MAX_BOUGHT_TICKETS, MAX_FREEZES, MAX_RESTORE_DAYS, RESTORE_COST_PER_DAY } from "@/lib/economy";
 import { inset, radius, shadow, useColors } from "@/theme";
 
 /** 체크 표시 한 줄 */
@@ -176,6 +176,7 @@ export default function Shop() {
         }
       >
         <Perk>랜덤 매칭 배틀 무제한</Perk>
+        <Perk>한 번에 최대 {PREMIUM_MAX_STUDY_MIN}분까지 공부</Perk>
         <Perk>친구 추가 · 친구 목록</Perk>
         <Perk>공부 기록 · 업적 모두 이용</Perk>
       </PlanCard>
@@ -192,6 +193,7 @@ export default function Shop() {
         }
       >
         <Perk>랜덤 매칭 배틀 매월 {FREE_BATTLE_TICKETS}회 (톱니바퀴 {BATTLE_TICKET_COST}개로 더 하기)</Perk>
+        <Perk>한 번에 최대 {FREE_MAX_STUDY_MIN}분까지 공부</Perk>
         <Perk>친구 추가 · 친구 목록</Perk>
         <Perk>공부 기록 · 업적 모두 이용</Perk>
       </PlanCard>

@@ -7,6 +7,7 @@ import { LevelButton } from "@/components/LevelSheet";
 import { Badge, Btn, Card, Chip, levelTone, Row, Screen, T } from "@/components/ui";
 import { levelText, TOPICS, type Topic } from "@/data";
 import { useApp } from "@/lib/app-state";
+import { studyMinutesFor } from "@/lib/economy";
 import { prefetchQuiz } from "@/lib/quiz";
 import { MAX_LEVEL, maxRpFor, TIERS, topicMastery, userLevel } from "@/lib/rank";
 import { calcStreak } from "@/lib/stats";
@@ -17,8 +18,9 @@ import { QuestSummary } from "@/components/Quests";
 type LevelFilter = "0" | "1" | "2" | "3"; // 0 = 전체
 
 export default function Home() {
-  const { prefs, records, active, setActive, gears, updatePrefs, xp, keptDays, freezes } = useApp();
+  const { prefs, records, active, setActive, gears, updatePrefs, xp, keptDays, freezes, premium } = useApp();
   const lv = userLevel(xp);
+  const studyMin = studyMinutesFor(prefs.studyMinutes, premium);
   const c = useColors();
   const [level, setLevel] = useState<LevelFilter>(String(prefs.level) as LevelFilter);
   // 설정에서 기본 난이도를 바꾸면 필터도 따라가게 함
@@ -93,7 +95,7 @@ export default function Home() {
     prefetchQuiz(drawn); // 공부 시작을 누른 즉시 이 주제의 AI 문제 만들기 + 검수 시작
     setActive({
       topicId: drawn.id, stage: "study", memo: "",
-      studyTotal: prefs.studyMinutes * 60, studyLeft: prefs.studyMinutes * 60, studyUsed: 0,
+      studyTotal: studyMin * 60, studyLeft: studyMin * 60, studyUsed: 0,
       quizOnly: false, quiz: null, result: null, startedAt: new Date().toISOString(), endAt: null,
     });
     router.push("/study");
@@ -204,7 +206,7 @@ export default function Home() {
 
 
         <View style={{ gap: 10 }}>
-          {drawn && !spinning && !active && <Btn title={`이걸로 시작 · ${prefs.studyMinutes}분 공부 + 퀴즈`} variant="accent" size="lg" onPress={start} />}
+          {drawn && !spinning && !active && <Btn title={`이걸로 시작 · ${studyMin}분 공부 + 퀴즈`} variant="accent" size="lg" onPress={start} />}
           <Btn
             title={spinning ? "뽑는 중…" : drawn ? "다시 뽑기" : "주제 뽑기"}
             icon={drawn || spinning ? undefined : <Icon name="dice" size={24} />}

@@ -7,6 +7,7 @@ import { TimeStepper } from "@/components/TimeStepper";
 import { Btn, Card, Field, Row, Screen, Segment, T, tap } from "@/components/ui";
 import { categoryById } from "@/data";
 import { useApp } from "@/lib/app-state";
+import { FREE_MAX_STUDY_MIN, PREMIUM_MAX_STUDY_MIN, studyMinutesFor } from "@/lib/economy";
 import { notificationsSupported, requestNotificationPermission } from "@/lib/notify";
 import { authErrorMessage } from "@/lib/supabase";
 import { radius, raised, shadow, useColors } from "@/theme";
@@ -41,16 +42,21 @@ function Item({ label, sub, right, onPress, last }: { label: string; sub?: strin
 
 function Minutes({ value, min, max, onChange }: { value: number; min: number; max: number; onChange: (v: number) => void }) {
   const c = useColors();
-  const btn = (label: string, d: number) => (
+  const btn = (label: string, d: number) => {
+    const off = d > 0 ? value >= max : value <= min;
+    return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={d > 0 ? "늘리기" : "줄이기"}
+      accessibilityState={{ disabled: off }}
+      disabled={off}
       onPress={() => { tap(); onChange(Math.min(max, Math.max(min, value + d))); }}
-      style={({ pressed }) => ({ width: 36, height: 36, borderRadius: radius.sm, borderWidth: 1.5, borderColor: c.line2, backgroundColor: c.paper, alignItems: "center", justifyContent: "center", ...raised(c.paperEdge, pressed, 3), ...(!pressed ? shadow(c, 1) : null) })}
+      style={({ pressed }) => ({ opacity: off ? 0.3 : 1, width: 36, height: 36, borderRadius: radius.sm, borderWidth: 1.5, borderColor: c.line2, backgroundColor: c.paper, alignItems: "center", justifyContent: "center", ...raised(c.paperEdge, pressed, 3), ...(!pressed ? shadow(c, 1) : null) })}
     >
       <T size={18} weight="semibold">{label}</T>
     </Pressable>
-  );
+    );
+  };
   return (
     <Row gap={8} style={{ flexWrap: "nowrap" }}>
       {btn("−", -1)}
@@ -156,7 +162,7 @@ export default function Settings() {
             options={[{ value: "0", label: "전체" }, { value: "1", label: "Lv.1 기초" }, { value: "2", label: "Lv.2 중급" }, { value: "3", label: "Lv.3 심화" }]}
           />
         </View>
-        <Item label="공부 시간" sub="기본 15분 · 끝나면 퀴즈 7문제" right={<Minutes value={prefs.studyMinutes} min={1} max={120} onChange={(v) => updatePrefs({ studyMinutes: v })} />} last />
+        <Item label="공부 시간" sub={premium ? `최대 ${PREMIUM_MAX_STUDY_MIN}분 · 끝나면 퀴즈 7문제` : `무료는 최대 ${FREE_MAX_STUDY_MIN}분 · 끝나면 퀴즈 7문제`} right={<Minutes value={studyMinutesFor(prefs.studyMinutes, premium)} min={1} max={premium ? PREMIUM_MAX_STUDY_MIN : FREE_MAX_STUDY_MIN} onChange={(v) => updatePrefs({ studyMinutes: v })} />} last />
       </Section>
 
       <Section title="매일 알림">

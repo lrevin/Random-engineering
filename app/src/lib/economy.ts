@@ -85,3 +85,9 @@ export function planStreakRescue(records: StudyRecord[], kept: readonly string[]
   const tooLate = rest.length > MAX_RESTORE_DAYS;
   return { streak, auto: tooLate ? [] : auto, restore: tooLate ? [] : rest, tooLate };
 }
+
+/** 무료 사용자의 공부 시간 최대(분). 프리미엄은 120분까지 */
+export const FREE_MAX_STUDY_MIN = 15;
+export const PREMIUM_MAX_STUDY_MIN = 120;
+/** 실제로 쓰는 공부 시간: 무료는 15분을 넘지 않게 */
+export const studyMinutesFor = (minutes: number, premium: boolean) => Math.min(minutes, premium ? PREMIUM_MAX_STUDY_MIN : FREE_MAX_STUDY_MIN);
