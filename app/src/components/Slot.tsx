@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { Animated, Easing, Pressable, View } from "react-native";
+import { Animated, Easing, Pressable, Text, View } from "react-native";
 import { radius, shadow, useColors } from "@/theme";
-import { tap } from "./ui";
+import { FONT, tap } from "./ui";
 
 const ROD = 70;
 const LEVER_W = 36;
@@ -69,7 +69,7 @@ export function Slot({ children, spinning, onPull, disabled }: {
             />
           ))}
         </View>
-        <View style={{ backgroundColor: c.slotWindow, borderRadius: radius.lg - 4, minHeight: 210, justifyContent: "center", alignItems: "center", paddingVertical: 14, paddingHorizontal: 20, overflow: "hidden", boxShadow: "inset 0px 6px 10px rgba(0, 0, 0, 0.18)" }}>
+        <View style={{ backgroundColor: c.slotWindow, borderRadius: radius.lg - 4, minHeight: 330, justifyContent: "center", alignItems: "center", paddingVertical: 14, paddingHorizontal: 20, overflow: "hidden", boxShadow: "inset 0px 6px 10px rgba(0, 0, 0, 0.18)" }}>
           {children}
           {triangle("left")}
           {triangle("right")}
@@ -92,6 +92,54 @@ export function Slot({ children, spinning, onPull, disabled }: {
           <View style={{ width: 14, height: 7, backgroundColor: c.lever }} />
         </View>
       </Pressable>
+    </View>
+  );
+}
+
+const ITEM_H = 76;
+
+/**
+ * 진짜 슬롯머신처럼 주제 이름들이 위에서 아래로 굴러가다 마지막 하나(names[0])가 당첨선에 멈춤.
+ * 릴 창 안에 꽉 차게 겹쳐 그리며, 돌 때마다 key를 바꿔 새로 만듦.
+ */
+export function SlotReel({ names, duration = 2300, onDone }: { names: string[]; duration?: number; onDone: () => void }) {
+  const c = useColors();
+  const [h, setH] = useState(0);
+  const [y] = useState(() => new Animated.Value(0));
+
+  // 맨 아래(names 끝)에서 시작해 맨 위(names[0])가 가운데 오도록 아래로 내려옴
+  const center = (h - ITEM_H) / 2;
+  const startY = center - (names.length - 1) * ITEM_H;
+
+  useEffect(() => {
+    if (!h) return;
+    y.setValue(startY);
+    const anim = Animated.sequence([
+      Animated.timing(y, { toValue: center + 16, duration, easing: Easing.bezier(0.12, 0.7, 0.3, 1), useNativeDriver: true }),
+      Animated.spring(y, { toValue: center, friction: 5, tension: 160, useNativeDriver: true }),
+    ]);
+    anim.start(({ finished }) => { if (finished) onDone(); });
+    return () => anim.stop();
+    // 한 번만 돌림 (돌 때마다 부모가 key를 바꿔 새로 만듦)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [h]);
+
+  return (
+    <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, overflow: "hidden" }} onLayout={(e) => setH(e.nativeEvent.layout.height)}>
+      {h > 0 && (
+        <Animated.View style={{ position: "absolute", left: 0, right: 0, top: 0, transform: [{ translateY: y }] }}>
+          {names.map((n, i) => (
+            <View key={i} style={{ height: ITEM_H, alignItems: "center", justifyContent: "center", paddingHorizontal: 24 }}>
+              <Text numberOfLines={1} adjustsFontSizeToFit style={{ fontFamily: FONT.bold, fontSize: 30, color: c.ink, letterSpacing: -0.8 }}>{n}</Text>
+            </View>
+          ))}
+        </Animated.View>
+      )}
+      {/* 원통처럼 보이게 위아래를 어둡게 */}
+      <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, right: 0, height: "34%", backgroundColor: c.slot, opacity: 0.22 }} />
+      <View pointerEvents="none" style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "34%", backgroundColor: c.slot, opacity: 0.22 }} />
+      {/* 당첨선 */}
+      <View pointerEvents="none" style={{ position: "absolute", left: 14, right: 14, top: "50%", marginTop: -ITEM_H / 2, height: ITEM_H, borderTopWidth: 2, borderBottomWidth: 2, borderColor: c.gold, opacity: 0.7 }} />
     </View>
   );
 }
