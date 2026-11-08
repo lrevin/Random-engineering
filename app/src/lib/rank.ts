@@ -4,12 +4,12 @@ import type { StudyRecord } from "./types";
 
 /** 주제별 숙련 랭크 단계 (사용자는 랭크 대신 1~100 레벨을 씁니다) */
 export const TIERS = [
-  { id: "bronze", name: "브론즈", emoji: "🥉", color: "#a9714b" },
-  { id: "silver", name: "실버", emoji: "🥈", color: "#8e9aaf" },
-  { id: "gold", name: "골드", emoji: "🥇", color: "#d4a017" },
-  { id: "platinum", name: "플래티넘", emoji: "💠", color: "#3fa7a0" },
-  { id: "diamond", name: "다이아", emoji: "💎", color: "#4f7cff" },
-  { id: "engineer", name: "엔지니어", emoji: "🛠️", color: "#b2342c" },
+  { id: "bronze", name: "브론즈", color: "#a9714b" },
+  { id: "silver", name: "실버", color: "#8e9aaf" },
+  { id: "gold", name: "골드", color: "#d4a017" },
+  { id: "platinum", name: "플래티넘", color: "#3fa7a0" },
+  { id: "diamond", name: "다이아", color: "#4f7cff" },
+  { id: "engineer", name: "엔지니어", color: "#b2342c" },
 ] as const;
 export type Tier = (typeof TIERS)[number];
 

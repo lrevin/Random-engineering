@@ -31,7 +31,7 @@ export function StudyReader({ page, left, total, running, onClose }: {
           </Pressable>
           <T size={15} weight="semibold" numberOfLines={1} style={{ flex: 1 }}>{page?.title}</T>
           <View style={{ backgroundColor: urgent ? c.accent : c.navy, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 2 }}>
-            <T size={14} weight="bold" color={urgent ? "accentInk" : "navyInk"}>⏱ {mmss(left)}{running ? "" : " ⏸"}</T>
+            <T size={14} weight="bold" color={urgent ? "accentInk" : "navyInk"}>{mmss(left)}{running ? "" : " · 일시정지"}</T>
           </View>
         </View>
         <View style={{ height: 4, backgroundColor: c.chip }}>
