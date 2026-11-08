@@ -6,6 +6,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { BattleWatcher } from "@/components/BattleWatcher";
+import { DialogHost } from "@/components/Dialog";
 import { StreakSheet } from "@/components/StreakSheet";
 import { AppProvider, useApp } from "@/lib/app-state";
 import { useColors } from "@/theme";
@@ -62,6 +63,7 @@ function RootNav() {
       </Stack>
       {inApp && <StreakSheet />}
       {inApp && <BattleWatcher />}
+      <DialogHost />
     </>
   );
 }

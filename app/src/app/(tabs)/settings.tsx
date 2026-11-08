@@ -1,7 +1,8 @@
 import Constants from "expo-constants";
 import { router } from "expo-router";
 import { useState, type ReactNode } from "react";
-import { Alert, Linking, Platform, Pressable, Switch, View } from "react-native";
+import { Linking, Platform, Pressable, Switch, View } from "react-native";
+import { showDialog } from "@/components/Dialog";
 import { TimeStepper } from "@/components/TimeStepper";
 import { Btn, Card, Field, Row, Screen, Segment, T, tap } from "@/components/ui";
 import { categoryById } from "@/data";
@@ -57,13 +58,8 @@ function Minutes({ value, min, max, onChange }: { value: number; min: number; ma
   );
 }
 
-const confirm = (title: string, msg: string, ok: string, run: () => void) => {
-  if (Platform.OS === "web") {
-    if (globalThis.confirm?.(`${title}\n${msg}`)) run();
-    return;
-  }
-  Alert.alert(title, msg, [{ text: "취소", style: "cancel" }, { text: ok, style: "destructive", onPress: run }]);
-};
+const confirm = (title: string, msg: string, ok: string, run: () => void) =>
+  showDialog({ title, message: msg, buttons: [{ text: "취소", style: "cancel" }, { text: ok, style: "destructive", onPress: run }] });
 
 export default function Settings() {
   const { prefs, updatePrefs, mode, email, signOut, deleteAccount, premium } = useApp();
