@@ -1,8 +1,8 @@
 import { router } from "expo-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { Animated, Pressable, View } from "react-native";
 import { TierBadge, UserLevelBar } from "@/components/Rank";
-import { Slot } from "@/components/Slot";
+import { Slot, SlotReel } from "@/components/Slot";
 import { GearCount } from "@/components/TimeUpSheet";
 import { LevelButton } from "@/components/LevelSheet";
 import { TopicLinks } from "@/components/TopicLinks";
@@ -31,9 +31,7 @@ export default function Home() {
   const [drawn, setDrawn] = useState<Topic | null>(null);
   const [spinning, setSpinning] = useState(false);
   const [pop] = useState(() => new Animated.Value(1));
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+  const [reel, setReel] = useState<{ key: number; names: string[]; pick: Topic } | null>(null);
 
   const { streak } = calcStreak(records, new Date(), keptDays);
   // 마스터 = 주제 랭크가 최고 단계(엔지니어). 같은 개념이 여러 분야에 있을 수 있어서(예: 레이놀즈 수) 이름으로도 확인
@@ -72,26 +70,21 @@ export default function Home() {
     let candidates = pool;
     if (drawn && pool.length > 1) candidates = pool.filter((t) => t.id !== drawn.id);
     const pick = candidates[Math.floor(Math.random() * candidates.length)];
-    const reel = pool.length >= 8 ? pool : TOPICS;
+    // 릴에 올릴 이름들: 맨 앞이 당첨(마지막에 멈출 주제), 뒤는 굴러가며 지나갈 주제들
+    const reelPool = pool.length >= 8 ? pool : TOPICS;
+    const names = [pick.ko, ...Array.from({ length: 28 }, () => reelPool[Math.floor(Math.random() * reelPool.length)].ko)];
+    setReel({ key: Date.now(), names, pick });
     setSpinning(true);
     setDrawn(null);
-    const dur = 1200 + Math.random() * 600;
-    const t0 = Date.now();
-    const step = () => {
-      const el = Date.now() - t0;
-      if (el >= dur) {
-        setShown(pick);
-        setDrawn(pick);
-        setSpinning(false);
-        pop.setValue(0.9);
-        Animated.spring(pop, { toValue: 1, friction: 5, useNativeDriver: true }).start();
-        return;
-      }
-      setShown(reel[Math.floor(Math.random() * reel.length)]);
-      const p = el / dur;
-      timer.current = setTimeout(step, 45 + p * p * 230);
-    };
-    step();
+  };
+
+  const landed = (pick: Topic) => {
+    setShown(pick);
+    setDrawn(pick);
+    setSpinning(false);
+    setReel(null);
+    pop.setValue(0.9);
+    Animated.spring(pop, { toValue: 1, friction: 5, useNativeDriver: true }).start();
   };
 
   const start = () => {
@@ -163,7 +156,9 @@ export default function Home() {
       {/* 주제 카드 ~ 버튼: 남는 세로 공간의 가운데에 배치 */}
       <View style={{ flex: 1, justifyContent: "center", gap: 18, paddingVertical: 8 }}>
         <Slot spinning={spinning} onPull={draw} disabled={spinning || !pool.length || !!active}>
-          {shown ? (
+          {spinning && reel ? (
+            <SlotReel key={reel.key} names={reel.names} onDone={() => landed(reel.pick)} />
+          ) : shown ? (
             <Animated.View style={{ alignItems: "center", gap: 8, transform: [{ scale: pop }] }}>
               <Row gap={6} style={{ justifyContent: "center" }}>
                 <Badge label={`${categoryById(shown.category)?.emoji ?? ""} ${shown.categoryName}`} />
