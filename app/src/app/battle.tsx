@@ -337,7 +337,7 @@ export default function BattleScreen() {
           <T size={22} weight="bold" center>연장전 {n}번째 문제</T>
           <T size={14} color="ink2" center>
             {phase === "otPreparing"
-              ? "두 사람 모두 만점이라 연장전이에요! AI가 새 문제를 만들고 두 번 검수하고 있어요."
+              ? "점수가 같아서 연장전이에요! AI가 새 문제를 만들고 두 번 검수하고 있어요."
               : `${opp?.nickname}님이 답할 때까지 기다리고 있어요.`}
           </T>
           <T size={13} color="muted" center>한 문제씩 같이 풀어서 한 사람만 맞히면 그 사람이 이겨요.</T>
@@ -394,7 +394,7 @@ export default function BattleScreen() {
         <T size={26} weight="bold" center>{draw ? "비겼어요" : won ? "배틀에서 이겼어요!" : "아쉽게 졌어요"}</T>
         <T size={15} color="ink2" center>{topic?.ko}</T>
         {b.overtime && b.overtime.past.length > 0 && (
-          <Badge label={`만점 동점 · 연장전 ${b.overtime.past.length}문제`} tone="navy" icon={<Icon name="swords" size={20} />} />
+          <Badge label={`동점 · 연장전 ${b.overtime.past.length}문제`} tone="navy" icon={<Icon name="swords" size={20} />} />
         )}
       </View>
       <View style={{ borderRadius: radius.lg, borderWidth: 2, borderColor: c.line, backgroundColor: c.paper, overflow: "hidden" }}>
@@ -402,7 +402,8 @@ export default function BattleScreen() {
           { name: prefs.nickname || "나", r: mine, isMe: true },
           { name: opp?.nickname ?? "상대", r: theirs, isMe: false },
         ]
-          .sort((x, y) => (y.r?.score ?? -1) - (x.r?.score ?? -1) || (x.isMe ? -1 : 1))
+          // 이긴 사람이 위로 (연장전으로 이기면 점수가 같아도 위)
+          .sort((x, y) => Number((y.isMe ? uid : opp?.uid) === winner) - Number((x.isMe ? uid : opp?.uid) === winner) || (y.r?.score ?? -1) - (x.r?.score ?? -1) || (x.isMe ? -1 : 1))
           .map((p, i) => (
             <View key={p.name + i} style={{
               flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 14, paddingHorizontal: 16,
@@ -424,7 +425,7 @@ export default function BattleScreen() {
       <Card style={{ alignItems: "center", gap: 4 }}>
         {!draw && <Icon name="bolt" size={36} />}
         <T size={16} weight="bold" center>
-          {draw ? "점수가 같아 경험치는 그대로예요." : won ? `${opp?.nickname}님의 경험치 ${amount} XP를 가져왔어요!` : `경험치 ${amount} XP를 ${opp?.nickname}님에게 뺏겼어요.`}
+          {draw ? (b.overtime ? "연장전에서도 승부가 나지 않아 경험치는 그대로예요." : "경험치는 그대로예요.") : won ? `${opp?.nickname}님의 경험치 ${amount} XP를 가져왔어요!` : `경험치 ${amount} XP를 ${opp?.nickname}님에게 뺏겼어요.`}
         </T>
         <T size={13} color="muted" center>진 사람 누적 경험치의 5% (최대 {battleXpTransfer(1e9)} XP)</T>
       </Card>

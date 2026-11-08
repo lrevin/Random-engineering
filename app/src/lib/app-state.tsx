@@ -4,6 +4,8 @@ import * as Crypto from "expo-crypto";
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AppState as RNAppState } from "react-native";
 import { BATTLE_TICKET_COST, FREE_BATTLE_TICKETS, FREEZE_COST, MAX_BOUGHT_TICKETS, MAX_FREEZES, planStreakRescue, refillTickets, RESTORE_COST_PER_DAY, type StreakRescue, type Tickets } from "./economy";
+import { AD_DAILY_LIMIT, AD_REWARD } from "./ads";
+import { dateKey } from "./stats";
 import { cancelAllNotifications, rescheduleReminders } from "./notify";
 import { supabase } from "./supabase";
 import { DEFAULT_PREFS, type ActiveSession, type Prefs, type StudyRecord, type WrongAnswer } from "./types";
@@ -27,6 +29,7 @@ const K = {
   uid: "pg.uid",
   rescueAsked: "pg.rescueAsked",
   questClaims: "pg.questClaims",
+  adViews: "pg.adViews",
 };
 
 /** 친구 추가용 UID: 헷갈리는 글자(0/O, 1/I)를 뺀 8자리 */
@@ -79,6 +82,9 @@ interface AppStateValue {
   claimOnce(key: string): boolean;
   /** 친구 추가용 내 UID */
   uid: string;
+  /** 오늘 본 보상형 광고 수 · 광고를 끝까지 봤을 때 톱니바퀴 지급 (하루 제한 넘으면 false) */
+  adViewsToday: number;
+  grantAdReward(): boolean;
   /** 받은 퀘스트 보상 키 (quest:날짜:id) */
   questClaims: string[];
   /** 퀘스트 보상 받기 (같은 키는 한 번만). 톱니바퀴를 reward개 더함 */
@@ -176,6 +182,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [battleXp, setBattleXp] = useState(0);
   const [questClaims, setQuestClaims] = useState<string[]>([]);
   const questRef = useRef<string[]>([]);
+  // 오늘 본 보상형 광고 수 { day: "YYYY-MM-DD", n }
+  const [adViews, setAdViews] = useState<{ day: string; n: number }>({ day: "", n: 0 });
+  const adRef = useRef<{ day: string; n: number }>({ day: "", n: 0 });
   const [uid, setUid] = useState("");
   const [rescue, setRescue] = useState<StreakRescue | null>(null);
 
@@ -282,7 +291,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let alive = true;
     (async () => {
-      const [m, p, ob, rawRecords, rawActive, g, fz, kd, pm, tk, bx, ba, id, qc] = await Promise.all([
+      const [m, p, ob, rawRecords, rawActive, g, fz, kd, pm, tk, bx, ba, id, qc, av] = await Promise.all([
         readJSON<Mode>(K.mode, "none"),
         readJSON<Prefs>(K.prefs, DEFAULT_PREFS),
         readJSON<boolean>(K.onboarded, false),
@@ -297,6 +306,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         readJSON<string[]>(K.battlesApplied, []),
         readJSON<string>(K.uid, ""),
         readJSON<string[]>(K.questClaims, []),
+        readJSON<{ day: string; n: number }>(K.adViews, { day: "", n: 0 }),
       ]);
       const rs = Array.isArray(rawRecords) ? rawRecords.map(normalizeRecord) : [];
       // 이전 버전(설명 단계)에서 진행 중이던 주제는 이어갈 수 없으므로 비움
@@ -328,6 +338,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       appliedRef.current = Array.isArray(ba) ? ba : [];
       questRef.current = Array.isArray(qc) ? qc : [];
       setQuestClaims(questRef.current);
+      adRef.current = av && typeof av.n === "number" ? av : { day: "", n: 0 };
+      setAdViews(adRef.current);
       const myUid = id || newUid();
       setUid(myUid);
       if (!id) writeJSON(K.uid, myUid);
@@ -546,6 +558,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, [claimOnce]);
 
+  // ───────── 보상형 광고: 끝까지 보면 톱니바퀴 (하루 AD_DAILY_LIMIT번) ─────────
+  const grantAdReward = useCallback(() => {
+    const day = dateKey(new Date());
+    const cur = adRef.current.day === day ? adRef.current : { day, n: 0 };
+    if (cur.n >= AD_DAILY_LIMIT) return false;
+    adRef.current = { day, n: cur.n + 1 };
+    setAdViews(adRef.current);
+    writeJSON(K.adViews, adRef.current);
+    gearsRef.current += AD_REWARD;
+    setGears(gearsRef.current);
+    writeJSON(K.gears, gearsRef.current);
+    return true;
+  }, []);
+
   // ───────── 오늘의 퀘스트 보상 ─────────
   const claimQuest = useCallback((key: string, reward: number) => {
     if (questRef.current.includes(key)) return false;
@@ -581,11 +607,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     ready, mode, email: session?.user.email ?? null, serverEnabled: !!supabase,
     prefs, onboarded, records, active, gears, spendGears,
     xp, freezes, keptDays, buyFreeze, rescue, restoreStreak, dismissRescue,
-    premium, setPremium, battleTickets: premium ? Infinity : refillTickets(tickets).n + (refillTickets(tickets).bought ?? 0), freeTickets: refillTickets(tickets).n, boughtTickets: refillTickets(tickets).bought ?? 0, buyBattleTicket, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid, questClaims, claimQuest,
+    premium, setPremium, battleTickets: premium ? Infinity : refillTickets(tickets).n + (refillTickets(tickets).bought ?? 0), freeTickets: refillTickets(tickets).n, boughtTickets: refillTickets(tickets).bought ?? 0, buyBattleTicket, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid, questClaims, claimQuest, adViewsToday: adViews.day === dateKey(new Date()) ? adViews.n : 0, grantAdReward,
     startGuest, signUp, signIn, signOut, deleteAccount, updatePrefs, setActive, addRecord, removeRecord,
   }), [ready, mode, session, prefs, onboarded, records, active, gears, spendGears,
     xp, freezes, keptDays, buyFreeze, rescue, restoreStreak, dismissRescue,
-    premium, setPremium, tickets, buyBattleTicket, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid, questClaims, claimQuest,
+    premium, setPremium, tickets, buyBattleTicket, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid, questClaims, claimQuest, adViews, grantAdReward,
     startGuest, signUp, signIn, signOut, deleteAccount, updatePrefs, setActive, addRecord, removeRecord]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
