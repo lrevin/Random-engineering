@@ -1,5 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { Alert, Platform, View } from "react-native";
+import { View } from "react-native";
+import { showDialog } from "@/components/Dialog";
 import { TierBadge } from "@/components/Rank";
 import { TopicLinks } from "@/components/TopicLinks";
 import { Badge, Btn, Card, levelTone, Row, Screen, T } from "@/components/ui";
@@ -31,24 +32,22 @@ export default function RecordDetail() {
         await removeRecord(r.id);
         router.back();
       } catch {
-        Alert.alert("삭제하지 못했어요", "인터넷 연결을 확인하고 다시 시도해 주세요.");
+        showDialog({ icon: "📡", title: "삭제하지 못했어요", message: "인터넷 연결을 확인하고 다시 시도해 주세요." });
       }
     };
-    if (Platform.OS === "web") {
-      if (globalThis.confirm?.(`"${r.topicKo}" 기록을 삭제할까요?`)) run();
-      return;
-    }
-    Alert.alert("기록 삭제", `"${r.topicKo}" 기록을 삭제할까요?`, [
-      { text: "취소", style: "cancel" },
-      { text: "삭제", style: "destructive", onPress: run },
-    ]);
+    showDialog({
+      icon: "🗑️",
+      title: "기록을 삭제할까요?",
+      message: `"${r.topicKo}" 기록이 지워지고 되돌릴 수 없어요.`,
+      buttons: [{ text: "취소", style: "cancel" }, { text: "삭제", style: "destructive", onPress: run }],
+    });
   };
 
   /** 공부 없이 이 주제 퀴즈만 다시 풀기 (주제 숙련 랭크 올리기) */
   const retryQuiz = () => {
     if (!topic) return;
     if (active) {
-      Alert.alert("진행 중인 주제가 있어요", "먼저 끝내거나 그만둔 뒤 다시 풀 수 있어요.");
+      showDialog({ icon: "⏳", title: "진행 중인 주제가 있어요", message: "먼저 끝내거나 그만둔 뒤 다시 풀 수 있어요." });
       return;
     }
     setActive({

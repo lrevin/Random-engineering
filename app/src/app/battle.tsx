@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Platform, View } from "react-native";
+import { ActivityIndicator, View } from "react-native";
+import { showDialog } from "@/components/Dialog";
 import { StudyReader, type ReaderPage } from "@/components/StudyReader";
 import { TopicLinks } from "@/components/TopicLinks";
 import { Badge, Btn, Card, levelTone, Row, Screen, T } from "@/components/ui";
@@ -234,12 +235,15 @@ export default function BattleScreen() {
         badges={<Row gap={6}><Badge label="⚔️ 배틀" tone="accent" /><Badge label={`⏱ ${fmtClock((quizEnd - now) / 1000)}`} /></Row>}
         saving={sending}
         onQuit={() => {
-          const giveUp = () => submit(answers);
-          if (Platform.OS === "web") { if (globalThis.confirm?.("지금까지 푼 문제로 채점할까요?")) giveUp(); return; }
-          Alert.alert("배틀을 끝낼까요?", "지금까지 푼 문제로 채점돼요. 안 푼 문제는 틀린 것으로 처리돼요.", [
-            { text: "계속 풀기", style: "cancel" },
-            { text: "제출하기", style: "destructive", onPress: giveUp },
-          ]);
+          showDialog({
+            icon: "⚔️",
+            title: "배틀을 끝낼까요?",
+            message: "지금까지 푼 문제로 채점돼요. 안 푼 문제는 틀린 것으로 처리돼요.",
+            buttons: [
+              { text: "계속 풀기", style: "cancel" },
+              { text: "제출하기", style: "destructive", onPress: () => submit(answers) },
+            ],
+          });
         }}
         onNext={(a) => {
           const next = [...answers, a];
