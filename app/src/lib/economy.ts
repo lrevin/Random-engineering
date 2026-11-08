@@ -15,15 +15,23 @@ export const FREE_BATTLE_TICKETS = 2;
 
 export const monthKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 
+/** 톱니바퀴로 사는 배틀권 1개 가격 (무료 버전). 산 배틀권은 달이 바뀌어도 남음 */
+export const BATTLE_TICKET_COST = 40;
+/** 사 둘 수 있는 배틀권 최대 개수 */
+export const MAX_BOUGHT_TICKETS = 5;
+
 export interface Tickets {
+  /** 이번 달 무료 배틀권 */
   n: number;
+  /** 톱니바퀴로 산 배틀권 (매달 초기화되지 않음) */
+  bought?: number;
   /** 마지막으로 채운 달 "YYYY-MM" */
   month: string;
 }
 
 /** 달이 바뀌었으면 배틀권을 다시 채움 */
 export const refillTickets = (t: Tickets | null, now = new Date()): Tickets =>
-  !t || t.month !== monthKey(now) ? { n: FREE_BATTLE_TICKETS, month: monthKey(now) } : t;
+  !t || t.month !== monthKey(now) ? { n: FREE_BATTLE_TICKETS, month: monthKey(now), bought: t?.bought ?? 0 } : t;
 
 // ───────── 1:1 배틀 ─────────
 /** 배틀 공부 시간(분) 선택지. 배틀 중에는 시간 추가가 안 됨 */
