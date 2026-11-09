@@ -5,7 +5,7 @@ import { Linking, Platform, Pressable, Switch, View } from "react-native";
 import { showDialog } from "@/components/Dialog";
 import { TimeStepper } from "@/components/TimeStepper";
 import { Btn, Card, Field, Row, Screen, Segment, T, tap } from "@/components/ui";
-import { categoryById } from "@/data";
+import { interestName } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { FREE_MAX_STUDY_MIN, PREMIUM_MAX_STUDY_MIN, studyMinutesFor } from "@/lib/economy";
 import { notificationsSupported, requestNotificationPermission } from "@/lib/notify";
@@ -96,7 +96,7 @@ export default function Settings() {
     updatePrefs({ reminderEnabled: on }).catch(() => {});
   };
 
-  const interestNames = prefs.interests.map((id) => categoryById(id)?.name).filter(Boolean);
+  const interestNames = prefs.interests.map(interestName);
 
   return (
     <Screen edges={["top"]} scroll>

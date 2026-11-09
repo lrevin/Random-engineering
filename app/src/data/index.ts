@@ -1,6 +1,7 @@
 import { AERO_CATEGORIES, AERO_RAW } from "./aero";
 import { ARCH_CATEGORIES, ARCH_RAW } from "./arch";
 import { BIO_CATEGORIES, BIO_RAW } from "./bio";
+import { certById, CERTS, isCertId } from "./cert";
 import { CHE_CATEGORIES, CHE_RAW } from "./che";
 import { CHEM_CATEGORIES, CHEM_RAW } from "./chem";
 import { CIVIL_CATEGORIES, CIVIL_RAW } from "./civil";
@@ -20,6 +21,7 @@ import type { CategoryDef, Domain, Level, LevelNum, RawTopic, Topic } from "./ty
 
 export * from "./types";
 export { RELATED, relatedFor } from "./related";
+export { CERTS, certById, isCertId, type CertDef } from "./cert";
 
 export const LEVEL_NAMES: Record<LevelNum, Level> = { 1: "기초", 2: "중급", 3: "심화" };
 const LEVEL_BY_NAME: Record<string, LevelNum> = { 기초: 1, 중급: 2, 심화: 3 };
@@ -87,6 +89,23 @@ export const topicById = (id: string) => topicMap.get(id);
 export const categoryById = (id: string) => ALL_CATEGORIES.find((c) => c.id === id);
 export const domainById = (id: string) => DOMAINS.find((d) => d.id === id);
 export const topicCount = (pred: (t: Topic) => boolean) => TOPICS.filter(pred).length;
+
+// 자격증 → 주제 id 묶음 (과목에 적힌 주제 id나 세부 분야 id를 실제 주제로 풀어 둠)
+const CERT_TOPICS = new Map<string, Set<string>>(
+  CERTS.map((c) => [c.id, new Set(c.subjects.flatMap((s) => s.items.flatMap((it) =>
+    topicMap.has(it) ? [it] : TOPICS.filter((t) => t.category === it).map((t) => t.id))))]),
+);
+/** 자격증에 들어 있는 주제들 */
+export const certTopics = (certId: string) => TOPICS.filter((t) => CERT_TOPICS.get(certId)?.has(t.id));
+/** 이 주제가 내 관심 분야(세부 분야 또는 준비 중인 자격증)에 들어가는지 */
+export const inInterests = (t: Topic, interests: string[]) =>
+  interests.includes(t.category) || interests.some((id) => isCertId(id) && !!CERT_TOPICS.get(id)?.has(t.id));
+/** 관심 분야 id → 화면에 보여 줄 이름 (세부 분야 · 자격증) */
+export const interestName = (id: string) => categoryById(id)?.name ?? certById(id)?.name ?? id;
+/** 서버 매칭용: 자격증을 그 자격증 주제의 세부 분야들로 풀어서 돌려줌 */
+export const expandInterests = (interests: string[]) => [
+  ...new Set(interests.flatMap((id) => (isCertId(id) ? certTopics(id).map((t) => t.category) : [id]))),
+];
 
 /** 위키 검색어: 괄호 안 설명은 빼고 검색 */
 export const searchTerm = (ko: string) => ko.replace(/\s*\(.*?\)\s*/g, " ").trim();

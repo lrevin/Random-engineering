@@ -5,7 +5,7 @@ import { AdRewardButton } from "@/components/AdRewardButton";
 import { BattleIntro, useBattleIntroFirstTime } from "@/components/BattleIntro";
 import { MatchOverlay } from "@/components/MatchOverlay";
 import { Btn, Card, Row, Screen, T } from "@/components/ui";
-import { categoryById, TOPICS } from "@/data";
+import { certTopics, expandInterests, interestName, isCertId, TOPICS } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { BATTLE_TICKET_COST, FREE_BATTLE_TICKETS } from "@/lib/economy";
 import { BATTLE_QUIZ_LENGTH } from "@/lib/quiz";
@@ -22,7 +22,7 @@ const MATCH_STUDY_MIN = 10;
 function candidateTopics(interests: string[], perCategory = 3) {
   const out: string[] = [];
   for (const cat of interests) {
-    const ts = TOPICS.filter((t) => t.category === cat);
+    const ts = isCertId(cat) ? certTopics(cat) : TOPICS.filter((t) => t.category === cat);
     for (let i = 0; i < perCategory && ts.length; i++) out.push(ts.splice(Math.floor(Math.random() * ts.length), 1)[0].id);
   }
   return out;
@@ -101,7 +101,7 @@ export default function Arena() {
     setBusy(true);
     try {
       // 문제는 매칭된 뒤 공부하는 동안 AI가 만듦 (기다리는 동안 미리 만들지 않음)
-      const m = await joinMatch({ interests: prefs.interests, candidates });
+      const m = await joinMatch({ interests: expandInterests(prefs.interests), candidates });
       if (m.status === "matched") {
         goBattle(m.battle);
         setMatch({ status: "none" });
@@ -169,7 +169,7 @@ export default function Arena() {
         <Card style={{ gap: 12 }}>
           <Row gap={10}><Icon name="swords" size={34} /><T size={18} weight="bold">랜덤 매칭 배틀</T></Row>
           <T size={13} color="ink2">
-            내 관심 분야에서만 출제돼요{prefs.interests.length ? ` · ${prefs.interests.slice(0, 3).map((id) => categoryById(id)?.name ?? id).join(", ")}${prefs.interests.length > 3 ? ` 외 ${prefs.interests.length - 3}개` : ""}` : ""}
+            내 관심 분야에서만 출제돼요{prefs.interests.length ? ` · ${prefs.interests.slice(0, 3).map(interestName).join(", ")}${prefs.interests.length > 3 ? ` 외 ${prefs.interests.length - 3}개` : ""}` : ""}
           </T>
           {noTicket ? (
             <View style={{ gap: 10 }}>

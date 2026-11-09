@@ -5,7 +5,7 @@ import { TierBadge } from "@/components/Rank";
 import { Slot, SlotReel } from "@/components/Slot";
 import { LevelButton } from "@/components/LevelSheet";
 import { Badge, Btn, Card, Chip, levelTone, Row, Screen, T } from "@/components/ui";
-import { levelText, TOPICS, type Topic } from "@/data";
+import { inInterests, levelText, TOPICS, type Topic } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { studyMinutesFor } from "@/lib/economy";
 import { prefetchQuiz } from "@/lib/quiz";
@@ -52,7 +52,7 @@ export default function Home() {
   const inScope = useMemo(() => {
     const seen = new Set<string>();
     return TOPICS.filter((t) => {
-      if (!prefs.interests.includes(t.category) || (level !== "0" && t.lv !== Number(level))) return false;
+      if (!inInterests(t, prefs.interests) || (level !== "0" && t.lv !== Number(level))) return false;
       if (seen.has(t.ko)) return false; // 여러 분야에 겹치는 개념은 한 번만
       seen.add(t.ko);
       return true;
