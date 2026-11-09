@@ -13,20 +13,25 @@ const STEPS = [
 
 export default function Welcome() {
   const { width } = useWindowDimensions();
-  const logoW = Math.min(width - 40, 360);
+  const markH = Math.min(width * 0.28, 120);
   const { startGuest, serverEnabled } = useApp();
   const c = useColors();
   const dark = useColorScheme() === "dark";
   return (
     <Screen contentStyle={{ justifyContent: "space-between" }}>
       <View style={{ gap: 10, marginTop: 40 }}>
+        {/* 슬롯머신 아이콘만 두고, 그 왼쪽 끝에 이름 줄을 맞춤 */}
         <Image
-          source={dark ? require("../../assets/logo-dark.png") : require("../../assets/logo.png")}
+          source={dark ? require("../../assets/logo-mark-dark.png") : require("../../assets/logo-mark.png")}
           accessibilityLabel={`${APP_NAME} 로고`}
-          style={{ width: logoW, height: (logoW * 504) / 1298 }}
+          style={{ width: markH * (404 / 360), height: markH }}
           resizeMode="contain"
         />
-        <T size={22} weight="bold" style={{ marginTop: 8 }}>{APP_SUBTITLE}</T>
+        <T size={30} weight="bold" style={{ marginTop: 14, letterSpacing: -0.6 }}>
+          <T size={30} weight="bold" color="accent">{APP_NAME}</T>
+          <T size={30} weight="bold" color="muted">{"  -  "}</T>
+          {APP_SUBTITLE}
+        </T>
         <T size={16} color="ink2">{APP_TAGLINE}</T>
       </View>
 
