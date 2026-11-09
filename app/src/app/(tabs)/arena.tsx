@@ -20,12 +20,13 @@ const MATCH_STUDY_MIN = 10;
 
 /** 매칭 후보 주제: 관심 분야마다 몇 개씩 무작위로 (서버가 두 사람 관심 분야가 겹치는 주제를 고름) */
 function candidateTopics(interests: string[], perCategory = 3) {
-  const out: string[] = [];
+  // 자격증 주제는 기존 주제를 그대로 쓰므로 세부 분야와 겹칠 수 있음: 이미 고른 주제는 건너뜀
+  const out = new Set<string>();
   for (const cat of interests) {
-    const ts = isCertId(cat) ? certTopics(cat) : TOPICS.filter((t) => t.category === cat);
-    for (let i = 0; i < perCategory && ts.length; i++) out.push(ts.splice(Math.floor(Math.random() * ts.length), 1)[0].id);
+    const ts = (isCertId(cat) ? certTopics(cat) : TOPICS.filter((t) => t.category === cat)).filter((t) => !out.has(t.id));
+    for (let i = 0; i < perCategory && ts.length; i++) out.add(ts.splice(Math.floor(Math.random() * ts.length), 1)[0].id);
   }
-  return out;
+  return [...out];
 }
 
 /** 배틀 메뉴: 랜덤 상대와 1:1 매칭 배틀. 매칭을 돌리는 두 사람 모두 배틀권 1개씩 씀 */
