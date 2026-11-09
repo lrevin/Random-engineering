@@ -45,7 +45,11 @@ export default function Onboarding() {
       setNickname(n);
     }
     if (step === 1) {
-      if (!domains.length) return setErr("공부할 분야를 하나 이상 골라 주세요.");
+      // 분야 없이 자격증만으로 공부할 수도 있음: 세부 분야 단계를 건너뛰고 자격증 단계로
+      if (!domains.length) {
+        setInterests([]);
+        return setStep(3);
+      }
       // 고른 분야의 세부 분야만 남기고, 새로 고른 분야는 세부 분야를 모두 선택해 둠
       const kept = interests.filter((id) => domains.includes(categoryById(id)?.domain ?? ""));
       const added = domains
@@ -57,6 +61,7 @@ export default function Onboarding() {
       if (interests.length === 0) return setErr("세부 분야를 하나 이상 골라 주세요.");
     }
     if (step === 3) {
+      if (!interests.length && !certs.length) return setErr("공부할 분야가 없어요. 자격증을 하나 이상 고르거나, 이전으로 가서 분야를 골라 주세요.");
       // 처음에는 추천 연관 분야를 모두 켜 둠
       const items = relatedFor(domains, domainOf).map((x) => x.category);
       setRelated(items);
@@ -83,8 +88,8 @@ export default function Onboarding() {
   };
 
   const nextLabel =
-    step === 1 ? `다음 (${domains.length}개 분야)` : step === 2 ? `다음 (${interests.length}개 선택)`
-      : step === 3 ? (certs.length ? `다음 (자격증 ${certs.length}개)` : "준비 중인 자격증 없음")
+    step === 1 ? (domains.length ? `다음 (${domains.length}개 분야)` : "자격증만 할게요") : step === 2 ? `다음 (${interests.length}개 선택)`
+      : step === 3 ? (certs.length ? `다음 (자격증 ${certs.length}개)` : domains.length ? "준비 중인 자격증 없음" : "자격증을 골라 주세요")
       : step === 4 ? `다음 (연관 ${related.length}개 추가)` : "다음";
 
   return (
@@ -112,7 +117,7 @@ export default function Onboarding() {
             <>
               <View style={{ gap: 4 }}>
                 <T size={26} weight="bold">어떤 분야를 공부할까요?</T>
-                <T color="ink2">여러 개 골라도 좋아요. 고른 분야에서 매일 랜덤 주제가 나와요.</T>
+                <T color="ink2">여러 개 골라도 좋아요. 고른 분야에서 매일 랜덤 주제가 나와요. 자격증 시험만 준비한다면 고르지 않고 넘어가도 돼요.</T>
               </View>
               <DomainPicker value={domains} onChange={setDomains} />
             </>
@@ -130,7 +135,7 @@ export default function Onboarding() {
             <>
               <View style={{ gap: 4 }}>
                 <T size={26} weight="bold">준비 중인 자격증이 있나요?</T>
-                <T color="ink2">고르면 그 자격증 시험 과목의 주제도 랜덤 주제에 나와요. 없으면 그냥 넘어가도 돼요.</T>
+                <T color="ink2">{domains.length ? "고르면 그 자격증 시험 과목의 주제도 랜덤 주제에 나와요. 없으면 그냥 넘어가도 돼요." : "분야를 고르지 않았으니, 고른 자격증의 시험 과목 주제만 나와요."}</T>
               </View>
               <CertPicker value={certs} onChange={setCerts} />
             </>
@@ -168,7 +173,7 @@ export default function Onboarding() {
         {err ? <T color="accent">{err}</T> : null}
         {step < LAST ? (
           <Row style={{ flexWrap: "nowrap" }}>
-            {step > 0 && <Btn title="이전" onPress={() => { setErr(""); setStep(step === 5 && !relatedItems.length ? 3 : step - 1); }} style={{ flex: 1 }} size="lg" />}
+            {step > 0 && <Btn title="이전" onPress={() => { setErr(""); setStep(step === 5 && !relatedItems.length ? 3 : step === 3 && !domains.length ? 1 : step - 1); }} style={{ flex: 1 }} size="lg" />}
             <Btn title={nextLabel} variant="primary" size="lg" onPress={next} style={{ flex: 2 }} />
           </Row>
         ) : (
