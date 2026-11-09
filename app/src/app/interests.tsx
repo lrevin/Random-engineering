@@ -13,7 +13,7 @@ export default function Interests() {
   const [err, setErr] = useState("");
 
   const save = async () => {
-    if (!value.some((id) => !isCertId(id))) return setErr("관심 분야를 하나 이상 골라 주세요.");
+    if (!value.length) return setErr("관심 분야나 자격증을 하나 이상 골라 주세요.");
     try {
       await updatePrefs({ interests: value });
       router.back();
