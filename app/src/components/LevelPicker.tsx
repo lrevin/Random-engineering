@@ -1,5 +1,5 @@
 import { Pressable, View } from "react-native";
-import { topicCount } from "@/data";
+import { inInterests, topicCount } from "@/data";
 import type { Prefs } from "@/lib/types";
 import { radius, raised, shadow, useColors } from "@/theme";
 import { T, tap } from "./ui";
@@ -21,7 +21,7 @@ export function LevelPicker({ value, onChange, interests }: {
     <View style={{ gap: 10 }}>
       {OPTIONS.map((o) => {
         const on = o.value === value;
-        const n = topicCount((t) => interests.includes(t.category) && (o.value === 0 || t.lv === o.value));
+        const n = topicCount((t) => inInterests(t, interests) && (o.value === 0 || t.lv === o.value));
         return (
           <Pressable
             key={o.value}
