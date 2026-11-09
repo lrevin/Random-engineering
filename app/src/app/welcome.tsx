@@ -14,7 +14,7 @@ const STEPS = [
 export default function Welcome() {
   const { width } = useWindowDimensions();
   const markH = Math.min(width * 0.28, 120);
-  const { startGuest, serverEnabled } = useApp();
+  const { startGuest } = useApp();
   const c = useColors();
   const dark = useColorScheme() === "dark";
   return (
@@ -53,9 +53,6 @@ export default function Welcome() {
         <Btn title="이메일로 시작하기" variant="accent" size="lg" onPress={() => router.push("/signup")} />
         <Btn title="이미 계정이 있어요" size="lg" onPress={() => router.push("/login")} />
         <Btn title="로그인 없이 둘러보기" variant="ghost" onPress={startGuest} />
-        {!serverEnabled && (
-          <T size={12} color="muted" center>개발용 안내: 서버(Supabase)가 아직 연결되지 않아 가입·로그인은 아직 안 돼요.</T>
-        )}
       </View>
     </Screen>
   );
