@@ -57,14 +57,16 @@ export const subjectFailed = (s: ExamSubjectScore) => s.total > 0 && s.score / s
 
 // ───────── 저장: 오늘 본 횟수 + 지난 결과 ─────────
 const KEY = "pg.exam";
-interface ExamStore { day: string; n: number; results: ExamResult[] }
-const EMPTY: ExamStore = { day: "", n: 0, results: [] };
+/** 모의고사에서 틀린 문제 (오답 다시 풀기에서 씀) */
+export interface ExamWrong { topicId: string; q: string; answer: string; explain: string; at: string }
+interface ExamStore { day: string; n: number; results: ExamResult[]; wrongs: ExamWrong[] }
+const EMPTY: ExamStore = { day: "", n: 0, results: [], wrongs: [] };
 
 export async function readExamStore(): Promise<ExamStore> {
   try {
     const raw = await AsyncStorage.getItem(KEY);
     const s = raw ? (JSON.parse(raw) as Partial<ExamStore>) : null;
-    return { day: s?.day ?? "", n: s?.n ?? 0, results: Array.isArray(s?.results) ? s.results.filter((r) => certById(r.certId)) : [] };
+    return { day: s?.day ?? "", n: s?.n ?? 0, results: Array.isArray(s?.results) ? s.results.filter((r) => certById(r.certId)) : [], wrongs: Array.isArray(s?.wrongs) ? s.wrongs : [] };
   } catch {
     return EMPTY;
   }
@@ -84,10 +86,10 @@ export async function countExamStart(): Promise<ExamStore> {
   return next;
 }
 
-/** 결과 저장 (최근 30회) */
-export async function saveExamResult(r: ExamResult): Promise<ExamStore> {
+/** 결과 저장 (최근 30회) + 틀린 문제 모아 두기 (최근 300개) */
+export async function saveExamResult(r: ExamResult, wrongs: ExamWrong[] = []): Promise<ExamStore> {
   const s = await readExamStore();
-  const next = { ...s, results: [r, ...s.results].slice(0, 30) };
+  const next = { ...s, results: [r, ...s.results].slice(0, 30), wrongs: [...wrongs, ...s.wrongs].slice(0, 300) };
   await save(next);
   return next;
 }

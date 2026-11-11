@@ -362,3 +362,26 @@ export async function examQuestions(topics: Topic[], n: number): Promise<ExamIte
   }
   return shuffle(out);
 }
+
+// ───────── 오답 다시 풀기 (프리미엄): 틀린 문제의 변형 ─────────
+/**
+ * 틀렸던 문제와 같은 주제·같은 유형(4지선다/OX)이면서 가장 비슷한 다른 문제를 골라 줍니다.
+ * 같은 걸 묻지만 정답이 달라서, 답을 외워서는 못 맞힙니다. 비슷한 문제가 없으면 원래 문제의 보기 순서를 섞어서 냅니다.
+ * changed: 원래 문제와 다른 문제로 바뀌었는지
+ */
+export async function variantQuestion(topic: Topic, wrong: { q: string; answer: string }): Promise<{ q: QuizQuestion; changed: boolean }> {
+  const bank = distinct((await bankQuestions(topic.id)).map((q) => ({ ...q, src: "bank" as const })));
+  const orig = bank.find((b) => b.q === wrong.q);
+  const type: QuizQuestion["type"] = orig?.type ?? (/^[OX] \(/.test(wrong.answer) ? "ox" : "mc");
+  const ranked = bank
+    .filter((b) => b.type === type && b.q !== wrong.q && answerLabel(b) !== wrong.answer)
+    .map((b) => ({ b, s: similarity(b.q, wrong.q) }))
+    .sort((x, y) => y.s - x.s);
+  // 가장 비슷한 3개 중 하나 (풀 때마다 조금씩 달라지게)
+  const near = ranked.slice(0, 3);
+  if (near.length) return { q: shuffleChoices(near[Math.floor(Math.random() * near.length)].b), changed: true };
+  if (orig) return { q: shuffleChoices(orig), changed: false };
+  const any = shuffle(bank.length ? bank : offlineQuestions(topic))[0];
+  return { q: shuffleChoices(any), changed: true };
+}
+const answerLabel = (q: QuizQuestion) => (q.type === "mc" ? q.choices[q.answer] : q.answer ? "O (맞다)" : "X (틀리다)");

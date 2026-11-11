@@ -64,6 +64,18 @@ export default function History() {
         <StatTile icon={<Icon name="bolt" size={30} />} value={`${xp.toLocaleString()}`} label="누적 XP" />
       </StatGrid>
 
+      <Pressable onPress={() => router.push("/review")} accessibilityRole="button">
+        <Card style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <Icon name="target" size={34} />
+          <View style={{ flex: 1 }}>
+            <T size={16} weight="bold">오답 다시 풀기</T>
+            <T size={13} color="muted">틀린 문제를 변형 문제로 다시 풀어요</T>
+          </View>
+          <Icon name="crown" size={22} />
+          <T size={18} color="muted">›</T>
+        </Card>
+      </Pressable>
+
       <Card style={{ gap: 6 }}>
         <T size={14} weight="semibold" color="ink2">내 레벨</T>
         <UserLevelBar xp={xp} />

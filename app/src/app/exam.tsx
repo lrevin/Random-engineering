@@ -96,7 +96,10 @@ export default function Exam() {
           if (next.length >= paper.items.length) {
             const r = gradeExam(paper, next);
             setResult(r);
-            saveExamResult(r).then(setStore);
+            const at = new Date().toISOString();
+            const wrongs = paper.items.filter((x, i) => !isCorrect(x.q, next[i]))
+              .map((x) => ({ topicId: x.topic.id, q: x.q.q, answer: answerText(x.q), explain: x.q.explain, at }));
+            saveExamResult(r, wrongs).then(setStore);
           }
         }}
       />
@@ -155,6 +158,7 @@ export default function Exam() {
           </>
         )}
 
+        {wrong.length > 0 && <Btn title={premium ? "틀린 문제 변형해서 다시 풀기" : "틀린 문제 다시 풀기 (프리미엄)"} variant="premium" icon={<Icon name="crown" size={24} />} onPress={() => router.push("/review")} />}
         <Btn title="모의고사 목록으로" variant="primary" size="lg" onPress={() => { setPaper(null); setResult(null); }} />
         <Btn title="닫기" variant="ghost" onPress={() => router.back()} />
       </Screen>
