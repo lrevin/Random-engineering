@@ -1,4 +1,5 @@
 import Constants, { ExecutionEnvironment } from "expo-constants";
+import { dueTopics, readRecallLog } from "./recall";
 import type * as NotificationsModule from "expo-notifications";
 import { Platform } from "react-native";
 import { calcStreak, studiedToday } from "./stats";
@@ -83,6 +84,7 @@ export async function rescheduleReminders(prefs: Prefs, records: StudyRecord[]) 
   const doneToday = studiedToday(records, now);
   const { streak } = calcStreak(records, now);
   const name = prefs.nickname ? `${prefs.nickname}님, ` : "";
+  const recallLog = await readRecallLog();
 
   for (let i = 0; i < 7; i++) {
     const date = new Date(now);
@@ -98,6 +100,11 @@ export async function rescheduleReminders(prefs: Prefs, records: StudyRecord[]) 
     } else if (i === 1 && doneToday && streak > 0) {
       title = `${streak}일 연속 공부 중`;
       body = `${name}내일도 이어 가 볼까요? 오늘의 주제를 뽑아 보세요.`;
+    } else if (dueTopics(records, recallLog, date).length > 0) {
+      // 2일마다: 공부한 지 2일 지난 주제가 있으면 복습 알림
+      const n = dueTopics(records, recallLog, date).length;
+      title = `복습할 주제가 ${n}개 있어요`;
+      body = `${name}잊기 전에 3문제씩 다시 풀어 볼까요?`;
     } else {
       const [t, b] = LATER_MESSAGES[(date.getDate() + i) % LATER_MESSAGES.length];
       title = t;

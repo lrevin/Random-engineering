@@ -24,7 +24,7 @@ export interface ExamResult {
 }
 
 /** 과목에 적힌 주제 id / 세부 분야 id를 실제 주제로 */
-const subjectTopics = (items: string[]): Topic[] => [
+export const subjectTopics = (items: string[]): Topic[] => [
   ...new Map(items.flatMap((it) => {
     const t = topicById(it);
     return t ? [t] : TOPICS.filter((x) => x.category === it);

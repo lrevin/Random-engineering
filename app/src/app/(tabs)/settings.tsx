@@ -153,6 +153,8 @@ export default function Settings() {
 
       <Section title="공부">
         <Item label="공부 기록" sub="학습 현황 · 지난 기록 · 오답 노트" onPress={() => router.push("/history")} />
+        <Item label="자격증 대시보드" sub="시험일 디데이 · 과목별 진도 · 점수 추이" onPress={() => router.push("/certs")} />
+        <Item label="오늘의 복습" sub="공부한 지 2일 지난 주제를 3문제씩 다시 풀기" onPress={() => router.push("/recall")} />
         <Item label="자격증 모의고사" sub={premium ? "과목별 점수 · 합격 판정 · 무제한" : "과목별 점수 · 합격 판정 · 무료 하루 1회"} onPress={() => router.push("/exam")} />
         <Item label="오답 다시 풀기" sub={premium ? "틀린 문제를 변형 문제로 다시 풀기" : "프리미엄 · 틀린 문제를 변형 문제로 다시 풀기"} onPress={() => router.push("/review")} />
         <Item label="관심 분야" sub={interestNames.length > 4 ? `${interestNames.slice(0, 4).join(", ")} 외 ${interestNames.length - 4}개` : interestNames.join(", ")} onPress={() => router.push("/interests")} />
