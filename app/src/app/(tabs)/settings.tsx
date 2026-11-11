@@ -12,6 +12,7 @@ import { notificationsSupported, requestNotificationPermission } from "@/lib/not
 import { authErrorMessage } from "@/lib/supabase";
 import { radius, raised, shadow, useColors } from "@/theme";
 import { Icon } from "@/components/Icon";
+import { RankUp, type RankUpScene } from "@/components/RankUp";
 import { userLevel } from "@/lib/rank";
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -74,6 +75,7 @@ export default function Settings() {
   const c = useColors();
   const [nick, setNick] = useState(prefs.nickname);
   const [notice, setNotice] = useState("");
+  const [rankUpPreview, setRankUpPreview] = useState<RankUpScene[]>([]);
 
   const saveNick = () => {
     const n = nick.trim();
@@ -182,9 +184,14 @@ export default function Settings() {
         )}
       </Section>
 
+      {rankUpPreview.length > 0 && <RankUp scenes={rankUpPreview} onDone={() => setRankUpPreview([])} />}
       {__DEV__ && (
         <Section title="개발용 (출시 빌드에서는 안 보임)">
-          <Item label="연속 기록 복구 창 미리 보기" sub="어제·그제를 빠진 날로 보고 창을 띄워요" onPress={devPreviewRescue} last />
+          <Item label="연속 기록 복구 창 미리 보기" sub="어제·그제를 빠진 날로 보고 창을 띄워요" onPress={devPreviewRescue} />
+          <Item label="승급 연출 미리 보기" sub="레벨 업 → 주제 랭크 승급 연출을 차례로 보여 줘요" last onPress={() => setRankUpPreview([
+            { kind: "level", from: userLevel(xp).level, to: userLevel(xp).level + 1 },
+            { kind: "tier", from: 1, to: 2, topic: "트랜잭션 ACID" },
+          ])} />
         </Section>
       )}
 

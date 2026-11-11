@@ -3,6 +3,7 @@ import { useCallback, useMemo, useState } from "react";
 import { Pressable, View } from "react-native";
 import { useApp } from "@/lib/app-state";
 import { readExamStore } from "@/lib/exam";
+import { useMilestones } from "./Milestones";
 import { ATTENDANCE, NO_EXTRA, PERIODS, questKey, questsFor, type Period, type Quest, type QuestExtra } from "@/lib/quests";
 import { readDone } from "@/lib/review";
 import { radius, raised, shadow, useColors } from "@/theme";
@@ -103,7 +104,8 @@ export function QuestSummary() {
   const w = useQuests("week");
   const m = useQuests("month");
   const p = useQuests("premium");
-  const ready = d.ready + w.ready + m.ready + p.ready;
+  const ms = useMilestones();
+  const ready = d.ready + w.ready + m.ready + p.ready + ms.ready;
   return (
     <Pressable
       onPress={() => { tap(); router.push("/quests"); }}
