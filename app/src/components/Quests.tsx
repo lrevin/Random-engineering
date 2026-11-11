@@ -1,30 +1,42 @@
-import { router } from "expo-router";
-import { useMemo } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useMemo, useState } from "react";
 import { Pressable, View } from "react-native";
 import { useApp } from "@/lib/app-state";
-import { ATTENDANCE, PERIODS, questKey, questsFor, type Period, type Quest } from "@/lib/quests";
+import { readExamStore } from "@/lib/exam";
+import { ATTENDANCE, NO_EXTRA, PERIODS, questKey, questsFor, type Period, type Quest, type QuestExtra } from "@/lib/quests";
+import { readDone } from "@/lib/review";
 import { radius, raised, shadow, useColors } from "@/theme";
 import { Icon } from "./Icon";
 import { T, tap } from "./ui";
 
 /** 한 기간(일일·주간·이달)의 퀘스트 + 받은 상태 */
 export function useQuests(period: Period) {
-  const { records, questClaims, claimQuest } = useApp();
+  const { records, questClaims, claimQuest, premium } = useApp();
+  // 프리미엄 퀘스트는 모의고사 결과·해결한 오답도 봄 (화면에 돌아올 때마다 다시 읽음)
+  const [extra, setExtra] = useState<QuestExtra>(NO_EXTRA);
+  useFocusEffect(useCallback(() => {
+    if (period !== "premium") return;
+    let alive = true;
+    Promise.all([readExamStore(), readDone()]).then(([s, d]) => { if (alive) setExtra({ exams: s.results, solvedAt: Object.values(d) }); });
+    return () => { alive = false; };
+  }, [period]));
+  /** 프리미엄 탭인데 무료 회원이면 잠김 (진행은 보이지만 보상은 못 받음) */
+  const locked = period === "premium" && !premium;
   // 날짜가 바뀌면 다음 렌더 때 새 기간으로 계산됨
   const day = new Date().toDateString();
-  const quests = useMemo(() => questsFor(period, records), [period, records, day]); // eslint-disable-line react-hooks/exhaustive-deps
+  const quests = useMemo(() => questsFor(period, records, new Date(), extra), [period, records, day, extra]); // eslint-disable-line react-hooks/exhaustive-deps
   const claimed = (id: string) => questClaims.includes(questKey(period, id));
   const doneCount = quests.filter((q) => q.done).length;
   const allDone = doneCount === quests.length;
   const bonusClaimed = claimed("bonus");
   // 출석은 일일 탭에만 (3개 모두 끝내기에는 안 셈)
   const attendance = period === "day" ? ATTENDANCE : null;
-  const ready = quests.filter((q) => q.done && !claimed(q.id)).length + (allDone && !bonusClaimed ? 1 : 0) + (attendance && !claimed(attendance.id) ? 1 : 0);
+  const ready = locked ? 0 : quests.filter((q) => q.done && !claimed(q.id)).length + (allDone && !bonusClaimed ? 1 : 0) + (attendance && !claimed(attendance.id) ? 1 : 0);
   const bonus = PERIODS[period].bonus;
   return {
-    quests, claimed, doneCount, allDone, bonusClaimed, ready, bonus, attendance,
-    claim: (q: Quest) => q.done && claimQuest(questKey(period, q.id), q.reward),
-    claimBonus: () => allDone && claimQuest(questKey(period, "bonus"), bonus),
+    quests, claimed, doneCount, allDone, bonusClaimed, ready, bonus, attendance, locked,
+    claim: (q: Quest) => !locked && q.done && claimQuest(questKey(period, q.id), q.reward),
+    claimBonus: () => !locked && allDone && claimQuest(questKey(period, "bonus"), bonus),
   };
 }
 
@@ -43,7 +55,7 @@ export function ProgressBar({ value, goal, color, height = 14, unit = "" }: { va
 }
 
 /** 퀘스트 한 줄: 그림 + 이름 + 진행 막대 + 보상(받기 버튼) */
-export function QuestRow({ q, claimed, onClaim, last }: { q: Quest; claimed: boolean; onClaim: () => void; last?: boolean }) {
+export function QuestRow({ q, claimed, onClaim, last, locked }: { q: Quest; claimed: boolean; onClaim: () => void; last?: boolean; locked?: boolean }) {
   const c = useColors();
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 16, borderBottomWidth: last ? 0 : 1, borderBottomColor: c.line }}>
@@ -61,7 +73,7 @@ export function QuestRow({ q, claimed, onClaim, last }: { q: Quest; claimed: boo
           </View>
           <T size={11} color="muted">받음</T>
         </View>
-      ) : q.done ? (
+      ) : q.done && !locked ? (
         <Pressable
           onPress={() => { tap(); onClaim(); }}
           accessibilityRole="button"
@@ -76,7 +88,7 @@ export function QuestRow({ q, claimed, onClaim, last }: { q: Quest; claimed: boo
         </Pressable>
       ) : (
         <View style={{ width: 64, alignItems: "center", gap: 2 }}>
-          <Icon name="gear" size={24} />
+          <Icon name={locked ? "lock" : "gear"} size={24} color={locked ? c.muted : undefined} />
           <T size={13} weight="bold" color="ink2">+{q.reward}</T>
         </View>
       )}
@@ -90,7 +102,8 @@ export function QuestSummary() {
   const d = useQuests("day");
   const w = useQuests("week");
   const m = useQuests("month");
-  const ready = d.ready + w.ready + m.ready;
+  const p = useQuests("premium");
+  const ready = d.ready + w.ready + m.ready + p.ready;
   return (
     <Pressable
       onPress={() => { tap(); router.push("/quests"); }}

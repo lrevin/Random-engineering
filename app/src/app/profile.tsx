@@ -1,5 +1,5 @@
 import { router, useFocusEffect } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, Share, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AchievementBadge, AchievementRow } from "@/components/Achievements";
@@ -7,8 +7,10 @@ import { Icon, TierIcon } from "@/components/Icon";
 import { LevelBadge } from "@/components/Rank";
 import { SectionTitle, StatGrid, StatTile } from "@/components/StatTile";
 import { Btn, Card, T, tap } from "@/components/ui";
-import { achievements } from "@/lib/achievements";
+import { ACHIEVEMENT_GROUPS, achievements, type AchievementExtra } from "@/lib/achievements";
 import { useApp } from "@/lib/app-state";
+import { readExamStore } from "@/lib/exam";
+import { readDone } from "@/lib/review";
 import { topicMastery, userLevel } from "@/lib/rank";
 import { getFriends, socialEnabled } from "@/lib/social";
 import { calcStreak, isBattleRecord } from "@/lib/stats";
@@ -29,7 +31,7 @@ function ReelPattern() {
 }
 
 export default function Profile() {
-  const { prefs, uid, xp, records, keptDays, freezes, gears } = useApp();
+  const { prefs, uid, xp, records, keptDays, freezes, gears, questClaims } = useApp();
   const c = useColors();
   const [friends, setFriends] = useState<number | null>(null);
 
@@ -53,7 +55,14 @@ export default function Profile() {
       since: first ? new Date(first) : null,
     };
   }, [records]);
-  const list = useMemo(() => achievements(records, xp, keptDays), [records, xp, keptDays]);
+  const [extra, setExtra] = useState<AchievementExtra>({});
+  useEffect(() => {
+    Promise.all([readExamStore(), readDone()]).then(([s, d]) => setExtra({ exams: s.results, solved: Object.keys(d).length }));
+  }, []);
+  const list = useMemo(
+    () => achievements(records, xp, keptDays, { ...extra, questClaims: questClaims.length }),
+    [records, xp, keptDays, extra, questClaims],
+  );
   const earned = list.filter((a) => a.stage > 0).length;
 
   const shareUid = () => {
@@ -137,11 +146,22 @@ export default function Profile() {
           {/* 업적 */}
           <SectionTitle title="업적" right={<T size={13} color="muted">{earned} / {list.length}개 획득</T>} />
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 2 }}>
-            {list.map((a) => <AchievementBadge key={a.id} a={a} size={72} />)}
+            {[...list].sort((a, b) => Number(b.stage > 0) - Number(a.stage > 0)).map((a) => <AchievementBadge key={a.id} a={a} size={72} />)}
           </ScrollView>
-          <Card style={{ paddingVertical: 2 }}>
-            {list.map((a, i) => <AchievementRow key={a.id} a={a} last={i === list.length - 1} />)}
-          </Card>
+          {ACHIEVEMENT_GROUPS.map((g) => {
+            const items = list.filter((a) => a.group === g.id);
+            return (
+              <View key={g.id} style={{ gap: 8 }}>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                  <T size={15} weight="bold" color="ink2">{g.title}</T>
+                  <T size={12} color="muted">{items.filter((a) => a.stage > 0).length} / {items.length}</T>
+                </View>
+                <Card style={{ paddingVertical: 2 }}>
+                  {items.map((a, i) => <AchievementRow key={a.id} a={a} last={i === items.length - 1} />)}
+                </Card>
+              </View>
+            );
+          })}
         </View>
       </ScrollView>
     </SafeAreaView>

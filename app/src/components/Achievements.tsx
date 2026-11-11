@@ -1,26 +1,16 @@
 import { View } from "react-native";
 import Svg, { Circle, G, Path, Polygon, Rect } from "react-native-svg";
-import type { Achievement, AchievementId } from "@/lib/achievements";
+import type { Achievement } from "@/lib/achievements";
 import { useColors } from "@/theme";
-import { Icon, type IconName } from "./Icon";
+import { Icon } from "./Icon";
 import { ProgressBar } from "./Quests";
 import { T } from "./ui";
 
-const LOOK: Record<AchievementId, { icon: IconName; color: string; deep: string }> = {
-  streak: { icon: "flame", color: "#ff8a1f", deep: "#c4600c" },
-  topics: { icon: "book", color: "#3d8bdf", deep: "#2a67ad" },
-  perfect: { icon: "target", color: "#e0453a", deep: "#b02d26" },
-  engineer: { icon: "gear", color: "#6b7a90", deep: "#4c586b" },
-  battle: { icon: "swords", color: "#a05bd1", deep: "#7a3fa6" },
-  level: { icon: "star", color: "#f2a900", deep: "#c07f00" },
-};
-
 /** 업적 배지: 방패 모양 바탕 + 그림 + 아래 리본에 단계 숫자. 잠긴 건 회색 */
 export function AchievementBadge({ a, size = 76 }: { a: Achievement; size?: number }) {
-  const look = LOOK[a.id];
   const locked = a.stage === 0;
-  const color = locked ? "#c9ccd6" : look.color;
-  const deep = locked ? "#9aa0b0" : look.deep;
+  const color = locked ? "#c9ccd6" : a.color;
+  const deep = locked ? "#9aa0b0" : a.deep;
   const shown = locked ? a.goals[0] : a.goals[a.stage - 1];
   return (
     <View style={{ width: size, height: size * 1.1, alignItems: "center" }}>
@@ -38,7 +28,7 @@ export function AchievementBadge({ a, size = 76 }: { a: Achievement; size?: numb
         )}
       </Svg>
       <View style={{ position: "absolute", top: size * 0.25, opacity: locked ? 0.55 : 1 }}>
-        <Icon name={locked ? "lock" : look.icon} size={size * 0.34} />
+        <Icon name={locked ? "lock" : a.icon} size={size * 0.34} />
       </View>
       {!locked && (
         <View style={{ position: "absolute", top: size * 0.83, width: size, alignItems: "center" }}>
