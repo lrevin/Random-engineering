@@ -1,4 +1,5 @@
 import { router } from "expo-router";
+import { dailyTopic } from "@/lib/daily";
 import { TodayRow } from "@/components/TodayRow";
 import { useMemo, useState, type ReactNode } from "react";
 import { Animated, Pressable, View, type ViewStyle } from "react-native";
@@ -19,7 +20,7 @@ import { QuestSummary } from "@/components/Quests";
 type LevelFilter = "0" | "1" | "2" | "3"; // 0 = 전체
 
 export default function Home() {
-  const { prefs, records, active, setActive, gears, updatePrefs, xp, keptDays, freezes, premium } = useApp();
+  const { prefs, records, active, setActive, gears, updatePrefs, xp, keptDays, freezes, premium, uid } = useApp();
   const lv = userLevel(xp);
   const studyMin = studyMinutesFor(prefs.studyMinutes, premium);
   const c = useColors();
@@ -50,15 +51,19 @@ export default function Home() {
     return set;
   }, [records]);
 
+  // 오늘의 주제는 홈 위 칸에서 따로 보여 주므로 슬롯머신 후보에서 뺌
+  const today = new Date().toDateString();
+  const daily = useMemo(() => dailyTopic(uid, prefs.interests), [uid, prefs.interests, today]); // eslint-disable-line react-hooks/exhaustive-deps
   const inScope = useMemo(() => {
     const seen = new Set<string>();
     return TOPICS.filter((t) => {
+      if (daily && (t.id === daily.id || t.ko === daily.ko)) return false;
       if (!inInterests(t, prefs.interests) || (level !== "0" && t.lv !== Number(level))) return false;
       if (seen.has(t.ko)) return false; // 여러 분야에 겹치는 개념은 한 번만
       seen.add(t.ko);
       return true;
     });
-  }, [prefs.interests, level]);
+  }, [prefs.interests, level, daily]);
   const pool = useMemo(
     () => (includeMastered ? inScope : inScope.filter((t) => !mastered.has(t.id) && !mastered.has(t.ko))),
     [inScope, includeMastered, mastered],
