@@ -166,12 +166,18 @@ export default function Home() {
             fill
           />
         </Row>
-        <Pressable onPress={() => router.push("/interests")} hitSlop={6}>
-          <T size={14} color="muted">
-            관심 분야 {prefs.interests.length}개 · 후보 {pool.length}개{" "}
-            <T size={14} color="accent" weight="semibold">바꾸기 ›</T>
-          </T>
-        </Pressable>
+        <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
+          <Pressable onPress={() => router.push("/interests")} hitSlop={6} style={{ flexShrink: 1 }}>
+            <T size={14} color="muted" numberOfLines={1}>
+              관심 분야 {prefs.interests.length}개 · 후보 {pool.length}개{" "}
+              <T size={14} color="accent" weight="semibold">바꾸기 ›</T>
+            </T>
+          </Pressable>
+          <Pressable onPress={() => router.push("/exam")} hitSlop={6} accessibilityRole="button" style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+            <Icon name="medal" size={18} />
+            <T size={14} color="accent" weight="semibold">모의고사 ›</T>
+          </Pressable>
+        </Row>
       </View>
 
       {/* 주제 카드 ~ 버튼: 남는 세로 공간의 가운데에 배치 */}

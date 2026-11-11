@@ -337,3 +337,28 @@ export async function battleQuestions(topic: Topic, count: number, avoid: QuizQu
   if (out.length < count) out = [...out, ...pickQuestions(distinct(offlineQuestions(topic), [...avoid, ...out]), count - out.length)];
   return shuffle(out).slice(0, count).map(shuffleChoices);
 }
+
+// ───────── 자격증 모의고사 ─────────
+export interface ExamItem { q: QuizQuestion; topic: Topic }
+
+/**
+ * 모의고사 한 과목 문제: 과목에 든 주제들에서 골고루 n문제.
+ * 미리 만든 문제 은행에서 뽑고, 은행에 없는 주제는 연습 문제로 채웁니다. (AI는 쓰지 않아 바로 시작됨)
+ */
+export async function examQuestions(topics: Topic[], n: number): Promise<ExamItem[]> {
+  const chosen = shuffle(topics).slice(0, n);
+  const pools = await Promise.all(chosen.map(async (topic) => {
+    const bank = distinct((await bankQuestions(topic.id)).map((q) => ({ ...q, src: "bank" as const })));
+    return { topic, qs: shuffle(bank.length ? bank : offlineQuestions(topic)) };
+  }));
+  // 주제마다 한 문제씩 돌아가며 뽑음 (주제 수가 n보다 적으면 두 번째 바퀴에서 더 뽑음)
+  const out: ExamItem[] = [];
+  for (let round = 0; out.length < n && pools.some((p) => p.qs.length > round); round++) {
+    for (const p of pools) {
+      if (out.length >= n) break;
+      const q = p.qs[round];
+      if (q && !tooSimilar(q, out.map((x) => x.q))) out.push({ q: shuffleChoices(q), topic: p.topic });
+    }
+  }
+  return shuffle(out);
+}

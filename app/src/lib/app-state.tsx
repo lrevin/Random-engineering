@@ -3,7 +3,7 @@ import type { Session } from "@supabase/supabase-js";
 import * as Crypto from "expo-crypto";
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AppState as RNAppState } from "react-native";
-import { BATTLE_TICKET_COST, FREE_BATTLE_TICKETS, FREEZE_COST, MAX_BOUGHT_TICKETS, MAX_FREEZES, planStreakRescue, refillTickets, RESTORE_COST_PER_DAY, type StreakRescue, type Tickets } from "./economy";
+import { BATTLE_TICKET_COST, FREE_BATTLE_TICKETS, FREEZE_COST, MAX_BOUGHT_TICKETS, MAX_FREEZES, monthKey, planStreakRescue, PREMIUM_BONUS_GEARS, refillTickets, RESTORE_COST_PER_DAY, type StreakRescue, type Tickets } from "./economy";
 import { AD_DAILY_LIMIT, AD_REWARD } from "./ads";
 import { dateKey } from "./stats";
 import { cancelAllNotifications, rescheduleReminders } from "./notify";
@@ -69,6 +69,8 @@ interface AppStateValue {
   /** 유료 버전 여부 (결제 연동 전이라 시험용으로 켜고 끔) */
   premium: boolean;
   setPremium(v: boolean): void;
+  /** 프리미엄 결제: 프리미엄을 켜고 그 순간 톱니바퀴를 넣어 줌. 돌려주는 값은 받은 톱니바퀴 수 (이번 달에 이미 받았으면 0) */
+  purchasePremium(): number;
   /** 무료 버전 배틀권 (유료 버전이면 무제한) */
   battleTickets: number;
   /** 이번 달 무료 배틀권 / 톱니바퀴로 산 배틀권 */
@@ -555,6 +557,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return true;
   }, []);
 
+  /** 결제하는 순간 톱니바퀴를 계정에 추가. 같은 달에 껐다 켜도 한 번만 (결제 한 번 = 보너스 한 번) */
+  const purchasePremium = useCallback(() => {
+    setPremium(true);
+    if (!claimOnce("premium-bonus:" + monthKey())) return 0;
+    gearsRef.current += PREMIUM_BONUS_GEARS;
+    setGears(gearsRef.current);
+    writeJSON(K.gears, gearsRef.current);
+    return PREMIUM_BONUS_GEARS;
+  }, [setPremium, claimOnce]);
+
   const applyBattleXp = useCallback((battleId: string, delta: number) => {
     if (!claimOnce("xp:" + battleId)) return;
     setBattleXp((x) => {
@@ -613,11 +625,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     ready, mode, email: session?.user.email ?? null, serverEnabled: !!supabase,
     prefs, onboarded, records, active, gears, spendGears,
     xp, freezes, keptDays, buyFreeze, rescue, restoreStreak, dismissRescue, devPreviewRescue,
-    premium, setPremium, battleTickets: premium ? Infinity : refillTickets(tickets).n + (refillTickets(tickets).bought ?? 0), freeTickets: refillTickets(tickets).n, boughtTickets: refillTickets(tickets).bought ?? 0, buyBattleTicket, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid, questClaims, claimQuest, adViewsToday: adViews.day === dateKey(new Date()) ? adViews.n : 0, grantAdReward,
+    premium, setPremium, purchasePremium, battleTickets: premium ? Infinity : refillTickets(tickets).n + (refillTickets(tickets).bought ?? 0), freeTickets: refillTickets(tickets).n, boughtTickets: refillTickets(tickets).bought ?? 0, buyBattleTicket, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid, questClaims, claimQuest, adViewsToday: adViews.day === dateKey(new Date()) ? adViews.n : 0, grantAdReward,
     startGuest, signUp, signIn, signOut, deleteAccount, updatePrefs, setActive, addRecord, removeRecord,
   }), [ready, mode, session, prefs, onboarded, records, active, gears, spendGears,
     xp, freezes, keptDays, buyFreeze, rescue, restoreStreak, dismissRescue, devPreviewRescue,
-    premium, setPremium, tickets, buyBattleTicket, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid, questClaims, claimQuest, adViews, grantAdReward,
+    premium, setPremium, purchasePremium, tickets, buyBattleTicket, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid, questClaims, claimQuest, adViews, grantAdReward,
     startGuest, signUp, signIn, signOut, deleteAccount, updatePrefs, setActive, addRecord, removeRecord]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

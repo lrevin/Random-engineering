@@ -56,6 +56,7 @@ function RootNav() {
           <Stack.Screen name="shop" options={{ presentation: "modal" }} />
           <Stack.Screen name="profile" options={{ presentation: "modal" }} />
           <Stack.Screen name="quests" options={{ presentation: "modal" }} />
+          <Stack.Screen name="exam" options={flow} />
           <Stack.Screen name="battle" options={flow} />
         </Stack.Protected>
         <Stack.Protected guard={mode !== "user"}>
