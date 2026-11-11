@@ -130,15 +130,15 @@ export const PERIODS = {
 } as Record<Period, PeriodDef>;
 
 PERIODS.premium = {
-  title: "프리미엄 퀘스트", tab: "프리미엄", color: "#b07d00", soft: "#fff1c9", bonus: 40,
-  fixed: { id: "exam1", kind: "exam", title: "자격증 모의고사 1번 끝내기", icon: "doc", goal: 1, reward: 25, measure: examsDone },
+  title: "프리미엄 퀘스트", tab: "프리미엄", color: "#b07d00", soft: "#fff1c9", bonus: 20,
+  fixed: { id: "exam1", kind: "exam", title: "자격증 모의고사 1번 끝내기", icon: "doc", goal: 1, reward: 12, measure: examsDone },
   pool: [
-    { id: "exam3", kind: "exam", title: "자격증 모의고사 3번 끝내기", icon: "books", goal: 3, reward: 35, measure: examsDone },
-    { id: "pass1", kind: "pass", title: "모의고사에서 합격권 받기", icon: "medal", goal: 1, reward: 40, measure: examsPassed },
-    { id: "solve10", kind: "solve", title: "오답 다시 풀기로 오답 10개 해결하기", icon: "target", goal: 10, reward: 25, measure: solved },
-    { id: "solve25", kind: "solve", title: "오답 다시 풀기로 오답 25개 해결하기", icon: "target", goal: 25, reward: 35, measure: solved },
-    { id: "long2", kind: "long", title: "30분 넘게 공부 2번 하기", icon: "hourglass", goal: 2, reward: 30, measure: longStudy(30) },
-    { id: "battle5", kind: "battle", title: "랜덤 매칭 배틀 5번 하기", icon: "swords", goal: 5, reward: 30, measure: battles },
+    { id: "exam3", kind: "exam", title: "자격증 모의고사 3번 끝내기", icon: "books", goal: 3, reward: 18, measure: examsDone },
+    { id: "pass1", kind: "pass", title: "모의고사에서 합격권 받기", icon: "medal", goal: 1, reward: 20, measure: examsPassed },
+    { id: "solve10", kind: "solve", title: "오답 다시 풀기로 오답 10개 해결하기", icon: "target", goal: 10, reward: 12, measure: solved },
+    { id: "solve25", kind: "solve", title: "오답 다시 풀기로 오답 25개 해결하기", icon: "target", goal: 25, reward: 18, measure: solved },
+    { id: "long2", kind: "long", title: "30분 넘게 공부 2번 하기", icon: "hourglass", goal: 2, reward: 15, measure: longStudy(30) },
+    { id: "battle5", kind: "battle", title: "랜덤 매칭 배틀 5번 하기", icon: "swords", goal: 5, reward: 15, measure: battles },
   ],
 };
 

@@ -18,7 +18,8 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.ppobgong.app"
+      "package": "com.ppobgong.app",
+      "allowBackup": false
     },
     "web": {
       "favicon": "./assets/favicon.png"

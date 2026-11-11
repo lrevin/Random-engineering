@@ -10,6 +10,7 @@ import { Btn, Row, Screen, T } from "@/components/ui";
 import { useApp } from "@/lib/app-state";
 import { BATTLE_TICKET_COST, EXAM_TICKET_COST, MAX_EXAM_TICKETS, FREE_BATTLE_TICKETS, FREE_EXAMS_PER_DAY, PREMIUM_BONUS_GEARS, FREE_MAX_STUDY_MIN, PREMIUM_MAX_STUDY_MIN, FREEZE_COST, MAX_BOUGHT_TICKETS, MAX_FREEZES, MAX_RESTORE_DAYS, RESTORE_COST_PER_DAY } from "@/lib/economy";
 import { addExamTicket, readExamStore } from "@/lib/exam";
+import { addBoost, BOOST_COST, BOOST_MAX_MIN, BOOST_MIN, canStackBoost, fmtLeft, useBoost } from "@/lib/booster";
 import { useSkins } from "@/lib/skins";
 import { inset, radius, raised, shadow, useColors } from "@/theme";
 
@@ -84,6 +85,14 @@ export default function Shop() {
     setExamNotice("모의고사 1회권을 1개 샀어요");
   };
   const skins = useSkins();
+  const boost = useBoost();
+  const [boostNotice, setBoostNotice] = useState("");
+  const boostFull = !canStackBoost();
+  const buyBoost = () => {
+    if (boostFull || !spendGears(BOOST_COST)) return;
+    addBoost();
+    setBoostNotice(`부스터를 켰어요. ${BOOST_MIN}분 동안 퀴즈 경험치가 2배예요`);
+  };
   const ticketsFull = boughtTickets >= MAX_BOUGHT_TICKETS;
 
   const buy = () => {
@@ -192,6 +201,32 @@ export default function Shop() {
         <T size={13} color="muted">정보처리기사 · 정보보안기사 · SQLD 등 자격증 10종 어디에나 쓸 수 있고, 날짜가 지나도 남아요.</T>
       </PlanCard>
 
+      <PlanCard
+        title="경험치 2배 부스터"
+        art={
+          <View style={{ alignItems: "center", gap: 4 }}>
+            <Icon name="bolt" size={64} />
+            <T size={13} weight="bold" color={boost.active ? "success" : "ink2"}>{boost.active ? fmtLeft(boost.left) : "꺼짐"}</T>
+          </View>
+        }
+        footer={
+          <View style={{ gap: 8 }}>
+            <Btn
+              title={boostFull ? `부스터는 ${BOOST_MAX_MIN}분까지 쌓을 수 있어요` : `${boost.active ? "시간 더하기" : "부스터 켜기"} · 톱니바퀴 ${BOOST_COST}개`}
+              variant="accent"
+              icon={boostFull ? undefined : <Icon name="gear" size={22} />}
+              onPress={buyBoost}
+              disabled={boostFull || gears < BOOST_COST}
+            />
+            {!boostFull && gears < BOOST_COST && <T size={13} color="accent" center>톱니바퀴가 {BOOST_COST - gears}개 부족해요</T>}
+            {boostNotice ? <T size={13} color="success" center>{boostNotice}</T> : null}
+          </View>
+        }
+      >
+        <T size={14} color="ink2">켜 둔 {BOOST_MIN}분 동안 주제 퀴즈로 얻는 경험치가 2배가 돼요. 켜져 있을 때 또 사면 시간이 이어 붙어요.</T>
+        <T size={13} color="muted">배틀 경험치에는 적용되지 않아요. 프리미엄 회원도 쓸 수 있어요.</T>
+      </PlanCard>
+
       <SectionTitle title="꾸미기" />
       <Pressable
         onPress={() => router.push("/skins")}
@@ -226,8 +261,8 @@ export default function Shop() {
                 <T size={13} color="ink2">지금은 시험용으로 결제 없이 프리미엄 기능을 켜 볼 수 있어요. 결제가 연결되면 이 단계가 실제 결제로 바뀌어요. 결제하는 순간 톱니바퀴 {PREMIUM_BONUS_GEARS}개가 계정에 들어와요 (한 달에 한 번).</T>
                 <Row gap={8} style={{ flexWrap: "nowrap" }}>
                   <Btn title="취소" size="sm" onPress={() => setAskUpgrade(false)} style={{ flex: 1 }} />
-                  <Btn title="시험용으로 켜기" variant="accent" size="sm" onPress={() => {
-                    const got = purchasePremium();
+                  <Btn title="시험용으로 켜기" variant="accent" size="sm" onPress={async () => {
+                    const got = await purchasePremium();
                     setBonusNotice(got ? `결제 보너스로 톱니바퀴 ${got}개를 받았어요!` : "이번 달 결제 보너스는 이미 받았어요.");
                     setAskUpgrade(false);
                   }} style={{ flex: 1 }} />

@@ -8,6 +8,7 @@ import { levelText, topicById } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { confirmQuit } from "@/lib/confirm";
 import { loadQuiz, type QuizQuestion } from "@/lib/quiz";
+import { boostActive } from "@/lib/booster";
 import { calcRp, topicMastery, userLevel } from "@/lib/rank";
 import { calcStreak } from "@/lib/stats";
 import type { WrongAnswer } from "@/lib/types";
@@ -81,6 +82,11 @@ function QuizInner() {
     const streak = before.today ? before.streak : before.streak + 1;
     const priorAttempts = records.filter((r) => r.topicId === topic.id).length;
     const rp = calcRp({ topic, correct: score, total, priorAttempts, streak });
+    // 경험치 2배 부스터가 켜져 있으면 받은 경험치만큼 한 번 더
+    if (boostActive() && rp.total > 0) {
+      rp.parts.push({ label: "경험치 2배 부스터", value: rp.total });
+      rp.total *= 2;
+    }
     const rpBefore = xp;
     const topicBefore = topicMastery(topic.id, records);
     const rec = await addRecord({
