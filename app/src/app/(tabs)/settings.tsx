@@ -151,6 +151,7 @@ export default function Settings() {
 
       <Section title="공부">
         <Item label="자격증 모의고사" sub={premium ? "과목별 점수 · 합격 판정 · 무제한" : "과목별 점수 · 합격 판정 · 무료 하루 1회"} onPress={() => router.push("/exam")} />
+        <Item label="오답 다시 풀기" sub={premium ? "틀린 문제를 변형 문제로 다시 풀기" : "프리미엄 · 틀린 문제를 변형 문제로 다시 풀기"} onPress={() => router.push("/review")} />
         <Item label="관심 분야" sub={interestNames.length > 4 ? `${interestNames.slice(0, 4).join(", ")} 외 ${interestNames.length - 4}개` : interestNames.join(", ")} onPress={() => router.push("/interests")} />
         <View style={{ paddingVertical: 13, gap: 10, borderBottomWidth: 1, borderBottomColor: c.line }}>
           <View>
