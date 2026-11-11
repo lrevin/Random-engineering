@@ -1,5 +1,6 @@
-import { useState, type ReactNode } from "react";
-import { View } from "react-native";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useState, type ReactNode } from "react";
+import { Pressable, View } from "react-native";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { AdRewardButton } from "@/components/AdRewardButton";
 import { Icon } from "@/components/Icon";
@@ -7,8 +8,10 @@ import { SectionTitle } from "@/components/StatTile";
 import { GearCount } from "@/components/TimeUpSheet";
 import { Btn, Row, Screen, T } from "@/components/ui";
 import { useApp } from "@/lib/app-state";
-import { BATTLE_TICKET_COST, FREE_BATTLE_TICKETS, FREE_EXAMS_PER_DAY, PREMIUM_BONUS_GEARS, FREE_MAX_STUDY_MIN, PREMIUM_MAX_STUDY_MIN, FREEZE_COST, MAX_BOUGHT_TICKETS, MAX_FREEZES, MAX_RESTORE_DAYS, RESTORE_COST_PER_DAY } from "@/lib/economy";
-import { inset, radius, shadow, useColors } from "@/theme";
+import { BATTLE_TICKET_COST, EXAM_TICKET_COST, MAX_EXAM_TICKETS, FREE_BATTLE_TICKETS, FREE_EXAMS_PER_DAY, PREMIUM_BONUS_GEARS, FREE_MAX_STUDY_MIN, PREMIUM_MAX_STUDY_MIN, FREEZE_COST, MAX_BOUGHT_TICKETS, MAX_FREEZES, MAX_RESTORE_DAYS, RESTORE_COST_PER_DAY } from "@/lib/economy";
+import { addExamTicket, readExamStore } from "@/lib/exam";
+import { useSkins } from "@/lib/skins";
+import { inset, radius, raised, shadow, useColors } from "@/theme";
 
 /** 체크 표시 한 줄 */
 function Perk({ children }: { children: ReactNode }) {
@@ -63,13 +66,24 @@ function PlanCard({ ribbon, title, art, children, footer, highlight }: {
 
 /** 톱니바퀴 쓰는 곳 + 무료/유료 버전 */
 export default function Shop() {
-  const { gears, freezes, buyFreeze, premium, setPremium, purchasePremium, battleTickets, freeTickets, boughtTickets, buyBattleTicket } = useApp();
+  const { gears, freezes, buyFreeze, premium, setPremium, purchasePremium, spendGears, battleTickets, freeTickets, boughtTickets, buyBattleTicket } = useApp();
   const c = useColors();
   const [askUpgrade, setAskUpgrade] = useState(false);
   const [notice, setNotice] = useState("");
   const full = freezes >= MAX_FREEZES;
   const [ticketNotice, setTicketNotice] = useState("");
   const [bonusNotice, setBonusNotice] = useState("");
+  // 모의고사 1회권 (모의고사 화면에서 쓰고 오면 다시 읽음)
+  const [examTickets, setExamTickets] = useState(0);
+  const [examNotice, setExamNotice] = useState("");
+  useFocusEffect(useCallback(() => { readExamStore().then((s) => setExamTickets(s.tickets)); }, []));
+  const examFull = examTickets >= MAX_EXAM_TICKETS;
+  const buyExamTicket = async () => {
+    if (examFull || !spendGears(EXAM_TICKET_COST)) return;
+    setExamTickets((await addExamTicket()).tickets);
+    setExamNotice("모의고사 1회권을 1개 샀어요");
+  };
+  const skins = useSkins();
   const ticketsFull = boughtTickets >= MAX_BOUGHT_TICKETS;
 
   const buy = () => {
@@ -147,6 +161,56 @@ export default function Shop() {
         {!premium && <T size={13} color="muted">이번 달 무료 {freeTickets} / {FREE_BATTLE_TICKETS} · 산 배틀권 {boughtTickets}개 (산 배틀권은 달이 바뀌어도 남아요)</T>}
       </PlanCard>
 
+      <PlanCard
+        title="모의고사 1회권"
+        art={
+          <View style={{ alignItems: "center", gap: 4 }}>
+            <Icon name="medal" size={64} />
+            <T size={13} weight="bold" color="ink2">{premium ? "무제한" : `${examTickets} / ${MAX_EXAM_TICKETS}개`}</T>
+          </View>
+        }
+        footer={
+          premium ? (
+            <T size={13} color="success" weight="semibold">프리미엄이라 1회권 없이 무제한으로 볼 수 있어요.</T>
+          ) : (
+            <View style={{ gap: 8 }}>
+              <Btn
+                title={examFull ? `1회권은 ${MAX_EXAM_TICKETS}개까지 가질 수 있어요` : `1회권 사기 · 톱니바퀴 ${EXAM_TICKET_COST}개`}
+                variant="accent"
+                icon={examFull ? undefined : <Icon name="gear" size={22} />}
+                onPress={buyExamTicket}
+                disabled={examFull || gears < EXAM_TICKET_COST}
+              />
+              {!examFull && gears < EXAM_TICKET_COST && <T size={13} color="accent" center>톱니바퀴가 {EXAM_TICKET_COST - gears}개 부족해요</T>}
+              {examNotice ? <T size={13} color="success" center>{examNotice}</T> : null}
+              {examTickets > 0 && <Btn title="모의고사 보러 가기" size="sm" variant="ghost" onPress={() => router.push("/exam")} />}
+            </View>
+          )
+        }
+      >
+        <T size={14} color="ink2">오늘 무료 횟수를 다 쓴 뒤에도, 원하는 자격증의 모의고사를 한 번 더 볼 수 있어요.</T>
+        <T size={13} color="muted">정보처리기사 · 정보보안기사 · SQLD 등 자격증 10종 어디에나 쓸 수 있고, 날짜가 지나도 남아요.</T>
+      </PlanCard>
+
+      <SectionTitle title="꾸미기" />
+      <Pressable
+        onPress={() => router.push("/skins")}
+        accessibilityRole="button"
+        accessibilityLabel="슬롯머신 스킨 보러 가기"
+        style={({ pressed }) => ({
+          flexDirection: "row", alignItems: "center", gap: 14, padding: 16, borderRadius: radius.lg, borderWidth: 2,
+          borderColor: c.line, backgroundColor: c.paper, ...raised(c.paperEdge, pressed, 5), ...(!pressed ? shadow(c, 2) : null),
+        })}
+      >
+        <Icon name="slot" size={52} />
+        <View style={{ flex: 1, gap: 2 }}>
+          <T size={19} weight="bold">슬롯머신 스킨</T>
+          <T size={13} color="ink2">홈의 슬롯머신 색을 바꿔요 · 지금 {skins.active.name}</T>
+          <T size={12} color="muted">가진 스킨 {skins.owned.length}개</T>
+        </View>
+        <T size={22} color="muted">›</T>
+      </Pressable>
+
       <SectionTitle title="요금제 비교" />
       <PlanCard
         highlight
@@ -196,7 +260,7 @@ export default function Shop() {
         }
       >
         <Perk>랜덤 매칭 배틀 매월 {FREE_BATTLE_TICKETS}회 (톱니바퀴 {BATTLE_TICKET_COST}개로 더 하기)</Perk>
-        <Perk>자격증 모의고사 하루 {FREE_EXAMS_PER_DAY}회</Perk>
+        <Perk>자격증 모의고사 하루 {FREE_EXAMS_PER_DAY}회 (톱니바퀴 {EXAM_TICKET_COST}개로 더 보기)</Perk>
         <Perk>한 번에 최대 {FREE_MAX_STUDY_MIN}분까지 공부</Perk>
         <Perk>친구 추가 · 친구 목록</Perk>
         <Perk>공부 기록 · 업적 모두 이용</Perk>

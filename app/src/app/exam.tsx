@@ -8,9 +8,9 @@ import { SectionTitle } from "@/components/StatTile";
 import { Badge, Btn, Card, Row, Screen, T } from "@/components/ui";
 import { certById, CERTS, isCertId, type CertDef } from "@/data";
 import { useApp } from "@/lib/app-state";
-import { FREE_EXAMS_PER_DAY } from "@/lib/economy";
+import { EXAM_TICKET_COST, FREE_EXAMS_PER_DAY, MAX_EXAM_TICKETS } from "@/lib/economy";
 import {
-  buildExam, countExamStart, EXAM_PER_SUBJECT, EXAM_SUBJECT_MIN, EXAM_TOTAL_MIN, freeExamsLeft, gradeExam,
+  addExamTicket, buildExam, countExamStart, EXAM_PER_SUBJECT, EXAM_SUBJECT_MIN, EXAM_TOTAL_MIN, freeExamsLeft, gradeExam,
   readExamStore, saveExamResult, subjectFailed, type ExamPaper, type ExamResult,
 } from "@/lib/exam";
 import { fmtDate } from "@/lib/stats";
@@ -22,7 +22,7 @@ const pct = (score: number, total: number) => (total ? Math.round((score / total
 
 /** 자격증 모의고사: 자격증 고르기 → 과목별 문제 풀기 → 과목별 점수와 합격 판정 */
 export default function Exam() {
-  const { prefs, premium } = useApp();
+  const { prefs, premium, gears, spendGears } = useApp();
   const c = useColors();
   const [store, setStore] = useState<Store | null>(null);
   const [paper, setPaper] = useState<ExamPaper | null>(null);
@@ -34,7 +34,16 @@ export default function Exam() {
   useEffect(() => { readExamStore().then(setStore); }, []);
 
   const left = store ? freeExamsLeft(store) : 0;
-  const canStart = premium || left > 0;
+  const tickets = store?.tickets ?? 0;
+  /** 무료 횟수를 다 쓴 무료 회원은 1회권으로 봄 */
+  const useTicket = !premium && left <= 0;
+  const canStart = premium || left > 0 || tickets > 0;
+
+  const buyTicket = async () => {
+    if (tickets >= MAX_EXAM_TICKETS || !spendGears(EXAM_TICKET_COST)) return;
+    setStore(await addExamTicket());
+    setNotice("");
+  };
 
   const start = async (cert: CertDef) => {
     if (loading || !canStart) return;
@@ -43,7 +52,7 @@ export default function Exam() {
     try {
       const p = await buildExam(cert);
       if (!p.items.length) throw new Error("empty");
-      setStore(await countExamStart());
+      setStore(await countExamStart(useTicket));
       setAnswers([]);
       setResult(null);
       setPaper(p);
@@ -58,7 +67,7 @@ export default function Exam() {
     showDialog({
       icon: "door",
       title: "모의고사를 그만둘까요?",
-      message: premium ? "지금까지 푼 문제는 채점되지 않아요." : "지금까지 푼 문제는 채점되지 않고, 오늘 무료 횟수는 돌아오지 않아요.",
+      message: premium ? "지금까지 푼 문제는 채점되지 않아요." : "지금까지 푼 문제는 채점되지 않고, 쓴 무료 횟수나 1회권은 돌아오지 않아요.",
       buttons: [
         { text: "계속 풀기", style: "cancel" },
         { text: "그만두기", style: "destructive", onPress: () => setPaper(null) },
@@ -208,10 +217,22 @@ export default function Exam() {
       <Card style={{ flexDirection: "row", alignItems: "center", gap: 12, borderColor: premium ? c.gold : c.line }}>
         <Icon name={premium ? "crown" : "ticket"} size={32} />
         <View style={{ flex: 1 }}>
-          <T size={15} weight="bold">{premium ? "프리미엄 · 무제한" : `오늘 무료 ${left} / ${FREE_EXAMS_PER_DAY}회 남음`}</T>
-          <T size={13} color="muted">{premium ? "횟수 제한 없이 볼 수 있어요." : "무료는 하루 1회, 프리미엄은 무제한이에요."}</T>
+          <T size={15} weight="bold">{premium ? "프리미엄 · 무제한" : `오늘 무료 ${left} / ${FREE_EXAMS_PER_DAY}회 남음${tickets ? ` · 1회권 ${tickets}개` : ""}`}</T>
+          <T size={13} color="muted">{premium ? "횟수 제한 없이 볼 수 있어요." : useTicket && tickets ? "무료 횟수를 다 써서 1회권으로 봐요." : "무료는 하루 1회, 더 보려면 1회권이나 프리미엄이 필요해요."}</T>
         </View>
       </Card>
+      {!premium && store && left <= 0 && tickets < MAX_EXAM_TICKETS && (
+        <Btn
+          title={`모의고사 1회권 사기 · 톱니바퀴 ${EXAM_TICKET_COST}개`}
+          variant="accent"
+          icon={<Icon name="gear" size={22} />}
+          onPress={buyTicket}
+          disabled={gears < EXAM_TICKET_COST}
+        />
+      )}
+      {!premium && store && left <= 0 && gears < EXAM_TICKET_COST && tickets === 0 && (
+        <T size={13} color="accent" center>톱니바퀴가 {EXAM_TICKET_COST - gears}개 부족해요</T>
+      )}
       {!premium && store && left <= 0 && (
         <Btn title="프리미엄으로 무제한 모의고사" variant="premium" icon={<Icon name="crown" size={24} />} onPress={() => router.push("/shop")} />
       )}

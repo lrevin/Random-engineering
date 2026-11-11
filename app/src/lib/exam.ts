@@ -59,14 +59,14 @@ export const subjectFailed = (s: ExamSubjectScore) => s.total > 0 && s.score / s
 const KEY = "pg.exam";
 /** 모의고사에서 틀린 문제 (오답 다시 풀기에서 씀) */
 export interface ExamWrong { topicId: string; q: string; answer: string; explain: string; at: string }
-interface ExamStore { day: string; n: number; results: ExamResult[]; wrongs: ExamWrong[] }
-const EMPTY: ExamStore = { day: "", n: 0, results: [], wrongs: [] };
+interface ExamStore { day: string; n: number; results: ExamResult[]; wrongs: ExamWrong[]; /** 톱니바퀴로 산 모의고사 1회권 */ tickets: number }
+const EMPTY: ExamStore = { day: "", n: 0, results: [], wrongs: [], tickets: 0 };
 
 export async function readExamStore(): Promise<ExamStore> {
   try {
     const raw = await AsyncStorage.getItem(KEY);
     const s = raw ? (JSON.parse(raw) as Partial<ExamStore>) : null;
-    return { day: s?.day ?? "", n: s?.n ?? 0, results: Array.isArray(s?.results) ? s.results.filter((r) => certById(r.certId)) : [], wrongs: Array.isArray(s?.wrongs) ? s.wrongs : [] };
+    return { day: s?.day ?? "", n: s?.n ?? 0, results: Array.isArray(s?.results) ? s.results.filter((r) => certById(r.certId)) : [], wrongs: Array.isArray(s?.wrongs) ? s.wrongs : [], tickets: Math.max(0, Number(s?.tickets) || 0) };
   } catch {
     return EMPTY;
   }
@@ -78,10 +78,20 @@ export const examsToday = (s: ExamStore, now = new Date()) => (s.day === dateKey
 /** 무료 사용자가 오늘 더 볼 수 있는 횟수 */
 export const freeExamsLeft = (s: ExamStore) => Math.max(0, FREE_EXAMS_PER_DAY - examsToday(s));
 
-/** 시험을 시작할 때 오늘 횟수를 1 올림 */
-export async function countExamStart(): Promise<ExamStore> {
+/** 시험을 시작할 때: 무료 횟수를 쓰면 오늘 횟수를 1 올리고, 1회권을 쓰면 1회권을 1개 줄임 */
+export async function countExamStart(useTicket = false): Promise<ExamStore> {
   const s = await readExamStore();
-  const next = { ...s, day: dateKey(new Date()), n: examsToday(s) + 1 };
+  const next = useTicket
+    ? { ...s, tickets: Math.max(0, s.tickets - 1) }
+    : { ...s, day: dateKey(new Date()), n: examsToday(s) + 1 };
+  await save(next);
+  return next;
+}
+
+/** 산 모의고사 1회권을 1개 더함 (톱니바퀴는 부르는 쪽에서 먼저 냄) */
+export async function addExamTicket(): Promise<ExamStore> {
+  const s = await readExamStore();
+  const next = { ...s, tickets: s.tickets + 1 };
   await save(next);
   return next;
 }

@@ -5,6 +5,7 @@ import { createContext, useCallback, useContext, useEffect, useLayoutEffect, use
 import { AppState as RNAppState } from "react-native";
 import { BATTLE_TICKET_COST, FREE_BATTLE_TICKETS, FREEZE_COST, MAX_BOUGHT_TICKETS, MAX_FREEZES, monthKey, planStreakRescue, PREMIUM_BONUS_GEARS, refillTickets, RESTORE_COST_PER_DAY, type StreakRescue, type Tickets } from "./economy";
 import { AD_DAILY_LIMIT, AD_REWARD } from "./ads";
+import { resetSkins } from "./skins";
 import { dateKey } from "./stats";
 import { cancelAllNotifications, rescheduleReminders } from "./notify";
 import { supabase } from "./supabase";
@@ -268,7 +269,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [saveRecordsLocal, setModePersist, syncPending]);
 
   const clearLocal = useCallback(async () => {
-    await AsyncStorage.multiRemove(Object.values(K)).catch(() => {});
+    await AsyncStorage.multiRemove([...Object.values(K), "pg.exam", "pg.review.done2"]).catch(() => {});
+    resetSkins();
     await cancelAllNotifications().catch(() => {});
     setSession(null);
     setPrefs(DEFAULT_PREFS);

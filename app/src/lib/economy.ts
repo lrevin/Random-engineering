@@ -17,6 +17,9 @@ export const MAX_RESTORE_DAYS = 2;
 export const PREMIUM_BONUS_GEARS = 300;
 /** 자격증 모의고사: 무료는 하루 이 횟수까지, 프리미엄은 무제한 */
 export const FREE_EXAMS_PER_DAY = 1;
+/** 모의고사 1회권: 톱니바퀴로 사서, 무료 횟수를 다 쓴 뒤 원하는 자격증 모의고사를 한 번 더 봄 · 최대 보유 수 */
+export const EXAM_TICKET_COST = 40;
+export const MAX_EXAM_TICKETS = 5;
 /** 무료 버전 배틀권: 매월 1일 00시에 이 개수로 다시 채움 (쌓이지 않음). 유료 버전은 무제한 */
 export const FREE_BATTLE_TICKETS = 2;
 
