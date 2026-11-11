@@ -89,7 +89,7 @@ export function Slot({ children, spinning, onPull, disabled }: {
             />
           ))}
         </View>
-        <View style={{ backgroundColor: c.slotWindow, borderRadius: radius.lg - 4, minHeight: 330, justifyContent: "center", alignItems: "center", paddingVertical: 14, paddingHorizontal: 20, overflow: "hidden", boxShadow: "inset 0px 6px 10px rgba(0, 0, 0, 0.18)" }}>
+        <View style={{ backgroundColor: c.slotWindow, borderRadius: radius.lg - 4, minHeight: 270, justifyContent: "center", alignItems: "center", paddingVertical: 14, paddingHorizontal: 20, overflow: "hidden", boxShadow: "inset 0px 6px 10px rgba(0, 0, 0, 0.18)" }}>
           {children}
           {triangle("left")}
           {triangle("right")}

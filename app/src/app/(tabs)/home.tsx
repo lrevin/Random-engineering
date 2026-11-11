@@ -1,4 +1,5 @@
 import { router } from "expo-router";
+import { TodayRow } from "@/components/TodayRow";
 import { useMemo, useState, type ReactNode } from "react";
 import { Animated, Pressable, View, type ViewStyle } from "react-native";
 import { TierBadge } from "@/components/Rank";
@@ -141,6 +142,7 @@ export default function Home() {
       </Row>
 
       <QuestSummary />
+      <TodayRow />
 
       {active && (
         <Pressable onPress={() => router.push(`/${active.stage}`)}>
@@ -173,9 +175,9 @@ export default function Home() {
               <T size={14} color="accent" weight="semibold">바꾸기 ›</T>
             </T>
           </Pressable>
-          <Pressable onPress={() => router.push("/exam")} hitSlop={6} accessibilityRole="button" style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+          <Pressable onPress={() => router.push("/certs")} hitSlop={6} accessibilityRole="button" style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
             <Icon name="medal" size={18} />
-            <T size={14} color="accent" weight="semibold">모의고사 ›</T>
+            <T size={14} color="accent" weight="semibold">자격증 ›</T>
           </Pressable>
         </Row>
       </View>
