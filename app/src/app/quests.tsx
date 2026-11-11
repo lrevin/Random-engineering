@@ -11,8 +11,8 @@ import { BATTLE_TICKET_COST, FREEZE_COST, RESTORE_COST_PER_DAY } from "@/lib/eco
 import { PERIODS, untilEnd, type Period } from "@/lib/quests";
 import { radius, useColors } from "@/theme";
 
-const ORDER: Period[] = ["day", "week", "month"];
-const RESET: Record<Period, string> = { day: "자정에 새 퀘스트", week: "월요일에 새 퀘스트", month: "1일에 새 퀘스트" };
+const ORDER: Period[] = ["day", "week", "month", "premium"];
+const RESET: Record<Period, string> = { day: "자정에 새 퀘스트", week: "월요일에 새 퀘스트", month: "1일에 새 퀘스트", premium: "월요일에 새 퀘스트" };
 
 /** 퀘스트: 일일 · 주간 · 이달 탭. 탭마다 띠 색과 보상 크기가 다름 */
 export default function Quests() {
@@ -20,7 +20,7 @@ export default function Quests() {
   const { gears } = useApp();
   const params = useLocalSearchParams<{ tab?: string }>();
   const [tab, setTab] = useState<Period>(ORDER.includes(params.tab as Period) ? (params.tab as Period) : "day");
-  const all = { day: useQuests("day"), week: useQuests("week"), month: useQuests("month") };
+  const all = { day: useQuests("day"), week: useQuests("week"), month: useQuests("month"), premium: useQuests("premium") };
   const q = all[tab];
   const def = PERIODS[tab];
   const [now, setNow] = useState(() => new Date());
@@ -66,7 +66,7 @@ export default function Quests() {
                 >
                   <T size={15} weight="bold" style={{ color: on ? PERIODS[p].color : "#ffffff" }}>{PERIODS[p].tab}</T>
                   {ready > 0 && (
-                    <View style={{ position: "absolute", top: 2, right: 10, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: "#f7b500", alignItems: "center", justifyContent: "center", paddingHorizontal: 4 }}>
+                    <View style={{ position: "absolute", top: -7, right: 0, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: "#f7b500", alignItems: "center", justifyContent: "center", paddingHorizontal: 4 }}>
                       <T size={11} weight="bold" style={{ color: "#1d2742", lineHeight: 14 }}>{ready}</T>
                     </View>
                   )}
@@ -83,7 +83,7 @@ export default function Quests() {
                 <T size={14} weight="semibold" style={{ color: def.soft }}>{untilEnd(tab, now)} 남음 · {RESET[tab]}</T>
               </View>
             </View>
-            <Icon name={q.allDone && q.bonusClaimed ? "chest-open" : "chest"} size={tab === "day" ? 72 : tab === "week" ? 80 : 88} />
+            <Icon name={q.allDone && q.bonusClaimed ? "chest-open" : "chest"} size={tab === "day" ? 72 : tab === "month" ? 88 : 80} />
           </View>
         </View>
 
@@ -95,8 +95,20 @@ export default function Quests() {
             </Card>
           )}
 
+          {/* 프리미엄 탭: 무료 회원에게는 잠금 안내 */}
+          {q.locked && (
+            <Card style={{ gap: 10, borderTopWidth: 4, borderTopColor: def.color }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <Icon name="lock" size={22} color={c.ink} />
+                <T size={17} weight="bold">프리미엄 회원 전용 퀘스트예요</T>
+              </View>
+              <T size={14} color="ink2">모의고사, 오답 다시 풀기처럼 프리미엄 기능으로 깨는 주간 퀘스트예요. 일반 퀘스트보다 톱니바퀴를 훨씬 많이 줘요.</T>
+              <Btn title="프리미엄 알아보기" variant="premium" icon={<Icon name="crown" size={24} />} onPress={() => router.navigate("/shop")} />
+            </Card>
+          )}
+
           {/* 모두 완료 보너스 */}
-          <Card style={{ gap: 10, ...(q.attendance ? null : { borderTopWidth: 4, borderTopColor: def.color }) }}>
+          <Card style={{ gap: 10, ...(q.attendance || q.locked ? null : { borderTopWidth: 4, borderTopColor: def.color }) }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
               <T size={17} weight="bold">퀘스트 {q.quests.length}개 모두 끝내기</T>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
@@ -107,7 +119,7 @@ export default function Quests() {
             <ProgressBar value={q.doneCount} goal={q.quests.length} color={q.allDone ? c.success : c.gold} height={20} />
             {q.bonusClaimed ? (
               <T size={13} color="success" weight="semibold">보너스 톱니바퀴 {q.bonus}개를 받았어요.</T>
-            ) : q.allDone ? (
+            ) : q.allDone && !q.locked ? (
               <Btn title={`보너스 상자 열기 · 톱니바퀴 ${q.bonus}개`} variant="accent" icon={<Icon name="chest-open" size={24} />} onPress={() => { if (q.claimBonus()) setGot(q.bonus); }} />
             ) : (
               <T size={13} color="muted">다 끝내면 보너스 상자에서 톱니바퀴 {q.bonus}개를 더 받아요.</T>
@@ -117,7 +129,7 @@ export default function Quests() {
           {/* 퀘스트 목록 */}
           <Card style={{ paddingVertical: 2 }}>
             {q.quests.map((x, i) => (
-              <QuestRow key={x.id} q={x} claimed={q.claimed(x.id)} onClaim={() => { if (q.claim(x)) setGot(x.reward); }} last={i === q.quests.length - 1} />
+              <QuestRow key={x.id} q={x} claimed={q.claimed(x.id)} onClaim={() => { if (q.claim(x)) setGot(x.reward); }} last={i === q.quests.length - 1} locked={q.locked} />
             ))}
           </Card>
 

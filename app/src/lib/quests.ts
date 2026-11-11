@@ -1,5 +1,6 @@
 import type { IconName } from "@/components/Icon";
 import { monthKey } from "./economy";
+import type { ExamResult } from "./exam";
 import { dateKey } from "./stats";
 import type { StudyRecord } from "./types";
 
@@ -14,7 +15,16 @@ import type { StudyRecord } from "./types";
  *  - 광고: 1번 10개, 하루 3번 (lib/ads.ts)
  * 쓰는 곳: 보호권 30 · 연속 기록 복구 하루 30 · 공부 시간 추가 10 · 배틀권 50. (물가 기준은 lib/economy.ts)
  */
-export type Period = "day" | "week" | "month";
+/** premium: 프리미엄 회원 전용 주간 퀘스트 (모의고사 · 오답 다시 풀기 등 유료 기능으로 깨는 퀘스트) */
+export type Period = "day" | "week" | "month" | "premium";
+
+/** 공부 기록 말고 다른 곳에 저장된 값 (프리미엄 퀘스트에서 씀) */
+export interface QuestExtra {
+  exams: ExamResult[];
+  /** 오답을 해결한 시각들 */
+  solvedAt: string[];
+}
+export const NO_EXTRA: QuestExtra = { exams: [], solvedAt: [] };
 
 /** 출석 보상: 그날 앱을 열면 바로 받을 수 있음 (일일 퀘스트 3개와는 따로) */
 export const ATTENDANCE: Quest = { id: "attend", title: "오늘 출석하기", icon: "calendar", goal: 1, value: 1, reward: 2, done: true, unit: "" };
@@ -37,6 +47,8 @@ interface Ctx {
   /** 전체 기록 (처음 푸는 주제 판별용) */
   all: StudyRecord[];
   start: Date;
+  end: Date;
+  extra: QuestExtra;
 }
 type Def = Omit<Quest, "value" | "done" | "unit"> & { kind: string; measure: (x: Ctx) => number };
 
@@ -48,6 +60,14 @@ const minutes = (x: Ctx) => Math.floor(x.inPeriod.reduce((a, r) => a + (r.studyS
 const days = (x: Ctx) => new Set(x.inPeriod.map((r) => dateKey(new Date(r.studiedAt)))).size;
 const xpSum = (x: Ctx) => x.inPeriod.reduce((a, r) => a + Math.max(0, r.rp || 0), 0);
 const hard = (lv: string[]) => (x: Ctx) => x.inPeriod.filter((r) => lv.includes(r.level)).length;
+// 프리미엄 퀘스트용
+const within = (x: Ctx, iso: string) => iso >= x.start.toISOString() && iso < x.end.toISOString();
+const examsDone = (x: Ctx) => x.extra.exams.filter((e) => within(x, e.at)).length;
+const examsPassed = (x: Ctx) => x.extra.exams.filter((e) => e.pass && within(x, e.at)).length;
+const solved = (x: Ctx) => x.extra.solvedAt.filter((t) => within(x, t)).length;
+/** 한 번에 n분 넘게 공부한 횟수 (무료는 15분까지라 프리미엄만 가능) */
+const longStudy = (min: number) => (x: Ctx) => x.inPeriod.filter((r) => (r.studySec || 0) >= min * 60).length;
+const battles = (x: Ctx) => x.inPeriod.filter((r) => r.memo.includes("님과 배틀")).length;
 /** 이 기간에 처음 푼 주제 수 */
 const newTopics = (x: Ctx) => {
   const first = new Map<string, string>();
@@ -70,7 +90,7 @@ export interface PeriodDef {
   pool: Def[];
 }
 
-export const PERIODS: Record<Period, PeriodDef> = {
+export const PERIODS = {
   day: {
     title: "오늘의 퀘스트", tab: "일일", color: "#e0453a", soft: "#ffe9e4", bonus: 2,
     fixed: { id: "finish1", kind: "finish", title: "주제 1개 공부 끝내기", icon: "book", goal: 1, reward: 2, measure: finished },
@@ -107,13 +127,26 @@ export const PERIODS: Record<Period, PeriodDef> = {
       { id: "new20", kind: "new", title: "처음 보는 주제 20개 공부하기", icon: "globe", goal: 20, reward: 40, measure: newTopics },
     ],
   },
+} as Record<Period, PeriodDef>;
+
+PERIODS.premium = {
+  title: "프리미엄 퀘스트", tab: "프리미엄", color: "#b07d00", soft: "#fff1c9", bonus: 40,
+  fixed: { id: "exam1", kind: "exam", title: "자격증 모의고사 1번 끝내기", icon: "doc", goal: 1, reward: 25, measure: examsDone },
+  pool: [
+    { id: "exam3", kind: "exam", title: "자격증 모의고사 3번 끝내기", icon: "books", goal: 3, reward: 35, measure: examsDone },
+    { id: "pass1", kind: "pass", title: "모의고사에서 합격권 받기", icon: "medal", goal: 1, reward: 40, measure: examsPassed },
+    { id: "solve10", kind: "solve", title: "오답 다시 풀기로 오답 10개 해결하기", icon: "target", goal: 10, reward: 25, measure: solved },
+    { id: "solve25", kind: "solve", title: "오답 다시 풀기로 오답 25개 해결하기", icon: "target", goal: 25, reward: 35, measure: solved },
+    { id: "long2", kind: "long", title: "30분 넘게 공부 2번 하기", icon: "hourglass", goal: 2, reward: 30, measure: longStudy(30) },
+    { id: "battle5", kind: "battle", title: "랜덤 매칭 배틀 5번 하기", icon: "swords", goal: 5, reward: 30, measure: battles },
+  ],
 };
 
 /** 기간 시작 (일: 0시 · 주: 월요일 0시 · 달: 1일 0시) */
 export function periodStart(p: Period, now = new Date()) {
   const d = new Date(now);
   d.setHours(0, 0, 0, 0);
-  if (p === "week") d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  if (p === "week" || p === "premium") d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
   if (p === "month") d.setDate(1);
   return d;
 }
@@ -121,7 +154,7 @@ export function periodStart(p: Period, now = new Date()) {
 export function periodEnd(p: Period, now = new Date()) {
   const d = periodStart(p, now);
   if (p === "day") d.setDate(d.getDate() + 1);
-  if (p === "week") d.setDate(d.getDate() + 7);
+  if (p === "week" || p === "premium") d.setDate(d.getDate() + 7);
   if (p === "month") d.setMonth(d.getMonth() + 1);
   return d;
 }
@@ -130,6 +163,7 @@ export function periodEnd(p: Period, now = new Date()) {
 export function periodKey(p: Period, now = new Date()) {
   if (p === "day") return dateKey(now);
   if (p === "week") return "w" + dateKey(periodStart("week", now));
+  if (p === "premium") return "p" + dateKey(periodStart("week", now));
   return "m" + monthKey(now);
 }
 
@@ -146,7 +180,7 @@ function seeded(key: string) {
   };
 }
 
-export function questsFor(p: Period, records: StudyRecord[], now = new Date()): Quest[] {
+export function questsFor(p: Period, records: StudyRecord[], now = new Date(), extra: QuestExtra = NO_EXTRA): Quest[] {
   const def = PERIODS[p];
   const start = periodStart(p, now);
   const end = periodEnd(p, now);
@@ -163,7 +197,7 @@ export function questsFor(p: Period, records: StudyRecord[], now = new Date()): 
     if (picked.some((x) => x.kind === d.kind)) continue;
     picked.push(d);
   }
-  const ctx: Ctx = { inPeriod, all: records, start };
+  const ctx: Ctx = { inPeriod, all: records, start, end, extra };
   return picked.map(({ measure, kind: _kind, ...q }) => {
     const value = measure(ctx);
     return { ...q, value, done: value >= q.goal, unit: measure === minutes ? "분" : measure === days ? "일" : "" };
