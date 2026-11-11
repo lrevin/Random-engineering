@@ -13,11 +13,11 @@ import { T, tap } from "./ui";
 
 /** 홈의 두 칸: 오늘의 주제 · 오늘의 복습 */
 export function TodayRow() {
-  const { records, active, setActive, prefs, premium, questClaims, claimQuest } = useApp();
+  const { records, active, setActive, prefs, premium, questClaims, claimQuest, uid } = useApp();
   const c = useColors();
   const day = new Date().toDateString();
-  const topic = useMemo(() => dailyTopic(), [day]); // eslint-disable-line react-hooks/exhaustive-deps
-  const done = dailyDone(records);
+  const topic = useMemo(() => dailyTopic(uid, prefs.interests), [uid, prefs.interests, day]); // eslint-disable-line react-hooks/exhaustive-deps
+  const done = dailyDone(topic, records);
   const claimed = questClaims.includes(dailyKey());
   const [log, setLog] = useState<RecallLog>({});
   useFocusEffect(useCallback(() => { readRecallLog().then(setLog); }, []));
@@ -25,6 +25,7 @@ export function TodayRow() {
 
   const onDaily = () => {
     tap();
+    if (!topic) return router.push("/interests");
     if (done && !claimed) {
       claimQuest(dailyKey(), DAILY_TOPIC_GEARS);
       return;
@@ -61,6 +62,16 @@ export function TodayRow() {
 
   return (
     <View style={{ flexDirection: "row", gap: 8 }}>
+      {!topic ? (
+      <Pressable onPress={onDaily} accessibilityRole="button" accessibilityLabel="관심 분야 고르기" style={({ pressed }) => tile(pressed, false)}>
+        <Icon name="star" size={30} />
+        <View style={{ flex: 1 }}>
+          <T size={11} color="muted">오늘의 주제</T>
+          <T size={14} weight="bold" numberOfLines={1}>관심 분야 필요</T>
+          <T size={11} weight="semibold" color="accent">고르러 가기 ›</T>
+        </View>
+      </Pressable>
+      ) : (
       <Pressable onPress={onDaily} accessibilityRole="button" accessibilityLabel={`오늘의 주제 ${topic.ko}`} style={({ pressed }) => tile(pressed, done && !claimed)}>
         <DomainIcon id={topic.domain} size={30} />
         <View style={{ flex: 1 }}>
@@ -71,6 +82,7 @@ export function TodayRow() {
           </T>
         </View>
       </Pressable>
+      )}
       <Pressable onPress={() => { tap(); router.push("/recall"); }} accessibilityRole="button" accessibilityLabel={`오늘 복습할 주제 ${due}개`} style={({ pressed }) => tile(pressed, due > 0)}>
         <Icon name={due ? "book" : "check"} size={30} color={due ? undefined : c.success} />
         <View style={{ flex: 1 }}>
