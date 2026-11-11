@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Animated, Easing, PanResponder, Text, View } from "react-native";
+import { useSkins } from "@/lib/skins";
 import { radius, shadow, useColors } from "@/theme";
 import { FONT, tap } from "./ui";
 
@@ -14,6 +15,14 @@ export function Slot({ children, spinning, onPull, disabled }: {
   children: ReactNode; spinning?: boolean; onPull?: () => void; disabled?: boolean;
 }) {
   const c = useColors();
+  // 스킨: 정한 색이 없으면 앱 테마 기본색
+  const skin = useSkins().active;
+  const body = skin.body ?? c.slot;
+  const edge = skin.edge ?? c.slotEdge;
+  const leverColor = skin.lever ?? c.lever;
+  const knob = skin.knob ?? c.accent;
+  const knobDeep = skin.knobDeep ?? c.accentDeep;
+  const pointer = skin.pointer ?? c.gold;
   const [blink] = useState(() => new Animated.Value(0));
   const [rod] = useState(() => new Animated.Value(ROD));
 
@@ -50,13 +59,13 @@ export function Slot({ children, spinning, onPull, disabled }: {
   // 손가락을 따라 레버가 내려옴
   const pan = leverPan(rod, { disabled, pull, release });
 
-  const lights = [c.gold, c.accent, c.gold];
+  const lights = skin.lights ? [skin.lights[0], skin.lights[1], skin.lights[0]] : [c.gold, c.accent, c.gold];
   const triangle = (side: "left" | "right") => (
     <View style={{
       position: "absolute", top: "50%", marginTop: -8, [side]: 0, width: 0, height: 0,
       borderTopWidth: 8, borderBottomWidth: 8, borderTopColor: "transparent", borderBottomColor: "transparent",
       [side === "left" ? "borderLeftWidth" : "borderRightWidth"]: 11,
-      [side === "left" ? "borderLeftColor" : "borderRightColor"]: c.gold,
+      [side === "left" ? "borderLeftColor" : "borderRightColor"]: pointer,
     }} />
   );
 
@@ -65,8 +74,8 @@ export function Slot({ children, spinning, onPull, disabled }: {
       {/* 레버와 같은 폭의 빈칸: 몸체(글자)가 화면 가운데에 오게 */}
       <View style={{ width: LEVER_W }} />
       <View style={{
-        flex: 1, backgroundColor: c.slot, borderRadius: radius.lg + 4, padding: 10, paddingTop: 9, gap: 8,
-        borderBottomWidth: 6, borderBottomColor: c.slotEdge, ...shadow(c, 3),
+        flex: 1, backgroundColor: body, borderRadius: radius.lg + 4, padding: 10, paddingTop: 9, gap: 8,
+        borderBottomWidth: 6, borderBottomColor: edge, ...shadow(c, 3),
       }}>
         <View style={{ flexDirection: "row", justifyContent: "center", gap: 10 }}>
           {lights.map((col, i) => (
@@ -85,7 +94,7 @@ export function Slot({ children, spinning, onPull, disabled }: {
           {triangle("left")}
           {triangle("right")}
         </View>
-        <View style={{ alignSelf: "center", width: 64, height: 6, borderRadius: 3, backgroundColor: c.slotEdge }} />
+        <View style={{ alignSelf: "center", width: 64, height: 6, borderRadius: 3, backgroundColor: edge }} />
       </View>
 
       <View
@@ -100,11 +109,11 @@ export function Slot({ children, spinning, onPull, disabled }: {
         hitSlop={10}
         style={{ width: LEVER_W, height: 140, justifyContent: "flex-end", paddingBottom: 26, opacity: disabled ? 0.5 : 1 }}
       >
-        <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: c.accent, marginLeft: 6, borderBottomWidth: 3, borderBottomColor: c.accentDeep, ...shadow(c, 1) }} />
-        <Animated.View style={{ width: 7, height: rod, backgroundColor: c.lever, marginLeft: 17 }} />
+        <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: knob, marginLeft: 6, borderBottomWidth: 3, borderBottomColor: knobDeep, ...shadow(c, 1) }} />
+        <Animated.View style={{ width: 7, height: rod, backgroundColor: leverColor, marginLeft: 17 }} />
         <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
-          <View style={{ width: 10, height: 28, borderRadius: 5, backgroundColor: c.lever, marginTop: -11 }} />
-          <View style={{ width: 14, height: 7, backgroundColor: c.lever }} />
+          <View style={{ width: 10, height: 28, borderRadius: 5, backgroundColor: leverColor, marginTop: -11 }} />
+          <View style={{ width: 14, height: 7, backgroundColor: leverColor }} />
         </View>
       </View>
     </View>
