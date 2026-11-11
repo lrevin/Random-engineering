@@ -231,7 +231,7 @@ export default function Shop() {
       <Pressable
         onPress={() => router.push("/skins")}
         accessibilityRole="button"
-        accessibilityLabel="슬롯머신 스킨 보러 가기"
+        accessibilityLabel="스킨과 칭호 보러 가기"
         style={({ pressed }) => ({
           flexDirection: "row", alignItems: "center", gap: 14, padding: 16, borderRadius: radius.lg, borderWidth: 2,
           borderColor: c.line, backgroundColor: c.paper, ...raised(c.paperEdge, pressed, 5), ...(!pressed ? shadow(c, 2) : null),
@@ -239,9 +239,9 @@ export default function Shop() {
       >
         <Icon name="slot" size={52} />
         <View style={{ flex: 1, gap: 2 }}>
-          <T size={19} weight="bold">슬롯머신 스킨</T>
-          <T size={13} color="ink2">홈의 슬롯머신 색을 바꿔요 · 지금 {skins.active.name}</T>
-          <T size={12} color="muted">가진 스킨 {skins.owned.length}개</T>
+          <T size={19} weight="bold">스킨 · 칭호</T>
+          <T size={13} color="ink2">슬롯머신 색과 프로필 칭호 · 지금 {skins.active.name}</T>
+          <T size={12} color="muted">가진 스킨 {skins.owned.length}개 · 시즌 한정 판매 중</T>
         </View>
         <T size={22} color="muted">›</T>
       </Pressable>

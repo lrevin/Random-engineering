@@ -8,6 +8,10 @@ import { useApp } from "@/lib/app-state";
 import { TIERS, TOPIC_TIER_MIN, topicMastery } from "@/lib/rank";
 import { useColors } from "@/theme";
 import { Icon } from "@/components/Icon";
+import { RankUp, type RankUpScene } from "@/components/RankUp";
+
+/** 승급 연출을 이미 보여 준 결과 (결과 화면에 다시 들어와도 한 번만) */
+const shownRankUp = new Set<string>();
 
 const scoreMessage = (score: number, total: number) => {
   const p = total ? score / total : 0;
@@ -35,6 +39,16 @@ function ResultInner({ snapshot }: { snapshot: NonNullable<ReturnType<typeof use
   const levelUp = (r.userLevelAfter ?? 0) > (r.userLevelBefore ?? 0);
   const topicUp = r.topicTierAfter > r.topicTierBefore;
   const pct = r.total ? r.score / r.total : 0;
+  // 승급 연출: 레벨 업 → 주제 랭크 승급 순서로
+  const [scenes, setScenes] = useState<RankUpScene[]>(() => {
+    const key = r.recordId ?? snapshot.startedAt;
+    if (shownRankUp.has(key)) return [];
+    shownRankUp.add(key);
+    const out: RankUpScene[] = [];
+    if (levelUp) out.push({ kind: "level", from: r.userLevelBefore, to: r.userLevelAfter });
+    if (topicUp) out.push({ kind: "tier", from: r.topicTierBefore, to: r.topicTierAfter, topic: topic?.ko ?? "" });
+    return out;
+  });
 
   const done = (to: "/home" | "/history") => {
     setActive(null);
@@ -47,6 +61,7 @@ function ResultInner({ snapshot }: { snapshot: NonNullable<ReturnType<typeof use
 
   return (
     <Screen scroll>
+      {scenes.length > 0 && <RankUp scenes={scenes} onDone={() => setScenes([])} />}
       {levelUp && (
         <Card style={{ backgroundColor: c.goldSoft, borderColor: c.gold, alignItems: "center", gap: 8 }}>
           <LevelBadge level={r.userLevelAfter} size="lg" />

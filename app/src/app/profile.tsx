@@ -11,6 +11,8 @@ import { ACHIEVEMENT_GROUPS, achievements, type AchievementExtra } from "@/lib/a
 import { useApp } from "@/lib/app-state";
 import { readExamStore } from "@/lib/exam";
 import { readDone } from "@/lib/review";
+import { titleById, useCosmetics } from "@/lib/skins";
+import { TitleBadge } from "./skins";
 import { topicMastery, userLevel } from "@/lib/rank";
 import { getFriends, socialEnabled } from "@/lib/social";
 import { calcStreak, isBattleRecord } from "@/lib/stats";
@@ -55,6 +57,7 @@ export default function Profile() {
       since: first ? new Date(first) : null,
     };
   }, [records]);
+  const activeTitle = titleById(useCosmetics().title);
   const [extra, setExtra] = useState<AchievementExtra>({});
   useEffect(() => {
     Promise.all([readExamStore(), readDone()]).then(([s, d]) => setExtra({ exams: s.results, solved: Object.keys(d).length }));
@@ -98,6 +101,7 @@ export default function Profile() {
           {/* 이름 · UID */}
           <View style={{ alignItems: "center", gap: 6, marginTop: 10 }}>
             <T size={26} weight="bold">{name}</T>
+            {activeTitle && <TitleBadge t={activeTitle} />}
             <T size={14} color="muted">
               @{uid || "--------"}{stats.since ? ` · ${stats.since.getFullYear()}년 ${stats.since.getMonth() + 1}월부터 공부 중` : ""}
             </T>

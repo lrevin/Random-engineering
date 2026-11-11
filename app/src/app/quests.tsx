@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Icon } from "@/components/Icon";
+import { MilestoneCard } from "@/components/Milestones";
 import { ProgressBar, QuestRow, useQuests } from "@/components/Quests";
 import { EXTEND_COST, GearCount } from "@/components/TimeUpSheet";
 import { Btn, Card, T, tap } from "@/components/ui";
@@ -132,6 +133,8 @@ export default function Quests() {
               <QuestRow key={x.id} q={x} claimed={q.claimed(x.id)} onClaim={() => { if (q.claim(x)) setGot(x.reward); }} last={i === q.quests.length - 1} locked={q.locked} />
             ))}
           </Card>
+
+          {tab === "day" && <MilestoneCard onGot={setGot} />}
 
           <View style={{ backgroundColor: c.chip, borderRadius: radius.md, padding: 14, gap: 4 }}>
             <T size={14} weight="semibold">톱니바퀴는 어디에 쓰나요?</T>
