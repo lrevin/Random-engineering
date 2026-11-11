@@ -1,6 +1,5 @@
-import { router } from "expo-router";
 import { useState, type ReactNode } from "react";
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { AdRewardButton } from "@/components/AdRewardButton";
 import { Icon } from "@/components/Icon";
@@ -78,13 +77,8 @@ export default function Shop() {
   };
 
   return (
-    <Screen scroll>
-      <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
-        <T size={26} weight="bold">상점</T>
-        <Pressable onPress={() => router.back()} hitSlop={10} accessibilityRole="button" accessibilityLabel="닫기">
-          <Icon name="close" size={24} color={c.muted} />
-        </Pressable>
-      </Row>
+    <Screen scroll edges={["top"]}>
+      <T size={26} weight="bold">상점</T>
 
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: c.chip, borderRadius: radius.md, paddingHorizontal: 16, paddingVertical: 12, ...inset(c) }}>
         <T size={15} color="ink2">내 톱니바퀴</T>

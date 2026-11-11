@@ -53,7 +53,7 @@ function RootNav() {
           <Stack.Screen name="record/[id]" options={{ presentation: "modal" }} />
           <Stack.Screen name="wrong/[id]" options={{ presentation: "modal" }} />
           <Stack.Screen name="interests" options={{ presentation: "modal" }} />
-          <Stack.Screen name="shop" options={{ presentation: "modal" }} />
+          <Stack.Screen name="history" />
           <Stack.Screen name="profile" options={{ presentation: "modal" }} />
           <Stack.Screen name="quests" options={{ presentation: "modal" }} />
           <Stack.Screen name="exam" options={flow} />
