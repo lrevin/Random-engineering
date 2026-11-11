@@ -96,6 +96,22 @@ export async function addExamTicket(): Promise<ExamStore> {
   return next;
 }
 
+// ───────── 풀고 있는 모의고사 (앱이 꺼져도 이어서 풀기) ─────────
+const ACTIVE_KEY = "pg.exam.active";
+export interface ActiveExam { paper: ExamPaper; answers: (number | boolean)[] }
+export async function readActiveExam(): Promise<ActiveExam | null> {
+  try {
+    const raw = await AsyncStorage.getItem(ACTIVE_KEY);
+    const a = raw ? (JSON.parse(raw) as ActiveExam) : null;
+    if (!a?.paper?.items?.length || !Array.isArray(a.answers) || a.answers.length >= a.paper.items.length) return null;
+    return certById(a.paper.certId) ? a : null;
+  } catch {
+    return null;
+  }
+}
+export const saveActiveExam = (a: ActiveExam) => AsyncStorage.setItem(ACTIVE_KEY, JSON.stringify(a)).catch(() => {});
+export const clearActiveExam = () => AsyncStorage.removeItem(ACTIVE_KEY).catch(() => {});
+
 /** 결과 저장 (최근 30회) + 틀린 문제 모아 두기 (최근 300개) */
 export async function saveExamResult(r: ExamResult, wrongs: ExamWrong[] = []): Promise<ExamStore> {
   const s = await readExamStore();

@@ -10,7 +10,7 @@ import { certById, CERTS, isCertId, type CertDef } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { EXAM_TICKET_COST, FREE_EXAMS_PER_DAY, MAX_EXAM_TICKETS } from "@/lib/economy";
 import {
-  addExamTicket, buildExam, countExamStart, EXAM_PER_SUBJECT, EXAM_SUBJECT_MIN, EXAM_TOTAL_MIN, freeExamsLeft, gradeExam,
+  addExamTicket, buildExam, clearActiveExam, countExamStart, readActiveExam, saveActiveExam, EXAM_PER_SUBJECT, EXAM_SUBJECT_MIN, EXAM_TOTAL_MIN, freeExamsLeft, gradeExam,
   readExamStore, saveExamResult, subjectFailed, type ExamPaper, type ExamResult,
 } from "@/lib/exam";
 import { fmtDate } from "@/lib/stats";
@@ -31,7 +31,17 @@ export default function Exam() {
   const [loading, setLoading] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
 
-  useEffect(() => { readExamStore().then(setStore); }, []);
+  const [resumed, setResumed] = useState(false);
+  useEffect(() => {
+    readExamStore().then(setStore);
+    // 풀다가 나간 모의고사가 있으면 이어서 (횟수·1회권은 처음 시작할 때 이미 씀)
+    readActiveExam().then((a) => {
+      if (!a) return;
+      setPaper(a.paper);
+      setAnswers(a.answers);
+      setResumed(true);
+    });
+  }, []);
 
   const left = store ? freeExamsLeft(store) : 0;
   const tickets = store?.tickets ?? 0;
@@ -55,7 +65,9 @@ export default function Exam() {
       setStore(await countExamStart(useTicket));
       setAnswers([]);
       setResult(null);
+      setResumed(false);
       setPaper(p);
+      saveActiveExam({ paper: p, answers: [] });
     } catch {
       setNotice("문제를 불러오지 못했어요. 잠시 뒤 다시 해 주세요.");
     } finally {
@@ -67,10 +79,10 @@ export default function Exam() {
     showDialog({
       icon: "door",
       title: "모의고사를 그만둘까요?",
-      message: premium ? "지금까지 푼 문제는 채점되지 않아요." : "지금까지 푼 문제는 채점되지 않고, 쓴 무료 횟수나 1회권은 돌아오지 않아요.",
+      message: "그만두면 지금까지 푼 문제는 채점되지 않아요. 앱을 닫기만 하면 다음에 이어서 풀 수 있어요.",
       buttons: [
         { text: "계속 풀기", style: "cancel" },
-        { text: "그만두기", style: "destructive", onPress: () => setPaper(null) },
+        { text: "그만두기", style: "destructive", onPress: () => { clearActiveExam(); setPaper(null); } },
       ],
     });
 
@@ -96,12 +108,14 @@ export default function Exam() {
         index={idx}
         count={paper.items.length}
         topicName={item.topic.ko}
-        badges={<Row gap={6}><Badge label={`${item.subject + 1}과목`} tone="navy" /><Badge label={paper.subjects[item.subject]} /></Row>}
+        badges={<Row gap={6}><Badge label={`${item.subject + 1}과목`} tone="navy" /><Badge label={paper.subjects[item.subject]} />{resumed && idx === answers.length && <Badge label="이어서 푸는 중" tone="accent" />}</Row>}
         saving={false}
         onQuit={quit}
         onNext={(a) => {
           const next = [...answers, a];
           setAnswers(next);
+          if (next.length < paper.items.length) saveActiveExam({ paper, answers: next });
+          else clearActiveExam();
           if (next.length >= paper.items.length) {
             const r = gradeExam(paper, next);
             setResult(r);

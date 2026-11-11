@@ -5,6 +5,7 @@ import { createContext, useCallback, useContext, useEffect, useLayoutEffect, use
 import { AppState as RNAppState } from "react-native";
 import { BATTLE_TICKET_COST, FREE_BATTLE_TICKETS, FREEZE_COST, MAX_BOUGHT_TICKETS, MAX_FREEZES, monthKey, planStreakRescue, PREMIUM_BONUS_GEARS, refillTickets, RESTORE_COST_PER_DAY, type StreakRescue, type Tickets } from "./economy";
 import { AD_DAILY_LIMIT, AD_REWARD } from "./ads";
+import { resetBoost } from "./booster";
 import { resetSkins } from "./skins";
 import { dateKey } from "./stats";
 import { cancelAllNotifications, rescheduleReminders } from "./notify";
@@ -24,6 +25,8 @@ const K = {
   freezes: "pg.freezes",
   kept: "pg.keptDays",
   premium: "pg.premium",
+  /** 결제 보너스를 받은 달 ("YYYY-MM" 목록) */
+  premiumBonus: "pg.premiumBonus",
   tickets: "pg.battleTickets",
   battleXp: "pg.battleXp",
   battlesApplied: "pg.battlesApplied",
@@ -71,7 +74,7 @@ interface AppStateValue {
   premium: boolean;
   setPremium(v: boolean): void;
   /** 프리미엄 결제: 프리미엄을 켜고 그 순간 톱니바퀴를 넣어 줌. 돌려주는 값은 받은 톱니바퀴 수 (이번 달에 이미 받았으면 0) */
-  purchasePremium(): number;
+  purchasePremium(): Promise<number>;
   /** 무료 버전 배틀권 (유료 버전이면 무제한) */
   battleTickets: number;
   /** 이번 달 무료 배틀권 / 톱니바퀴로 산 배틀권 */
@@ -269,8 +272,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [saveRecordsLocal, setModePersist, syncPending]);
 
   const clearLocal = useCallback(async () => {
-    await AsyncStorage.multiRemove([...Object.values(K), "pg.exam", "pg.review.done2"]).catch(() => {});
+    await AsyncStorage.multiRemove([...Object.values(K), "pg.exam", "pg.exam.active", "pg.review.done2"]).catch(() => {});
     resetSkins();
+    resetBoost();
     await cancelAllNotifications().catch(() => {});
     setSession(null);
     setPrefs(DEFAULT_PREFS);
@@ -560,14 +564,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   /** 결제하는 순간 톱니바퀴를 계정에 추가. 같은 달에 껐다 켜도 한 번만 (결제 한 번 = 보너스 한 번) */
-  const purchasePremium = useCallback(() => {
+  const purchasePremium = useCallback(async () => {
     setPremium(true);
-    if (!claimOnce("premium-bonus:" + monthKey())) return 0;
+    const month = monthKey();
+    const got = await readJSON<string[]>(K.premiumBonus, []);
+    // 예전 방식(배틀 기록 목록)으로 받은 달도 받은 것으로 침
+    if (got.includes(month) || appliedRef.current.includes("premium-bonus:" + month)) return 0;
+    writeJSON(K.premiumBonus, [...got, month].slice(-36));
     gearsRef.current += PREMIUM_BONUS_GEARS;
     setGears(gearsRef.current);
     writeJSON(K.gears, gearsRef.current);
     return PREMIUM_BONUS_GEARS;
-  }, [setPremium, claimOnce]);
+  }, [setPremium]);
 
   const applyBattleXp = useCallback((battleId: string, delta: number) => {
     if (!claimOnce("xp:" + battleId)) return;
