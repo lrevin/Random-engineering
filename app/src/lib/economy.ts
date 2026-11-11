@@ -13,6 +13,10 @@ export const RESTORE_COST_PER_DAY = 30;
 export const MAX_RESTORE_DAYS = 2;
 
 // ───────── 무료 / 유료 버전 ─────────
+/** 프리미엄을 결제하는 순간 계정에 넣어 주는 톱니바퀴 (결제 주기인 한 달에 한 번) */
+export const PREMIUM_BONUS_GEARS = 300;
+/** 자격증 모의고사: 무료는 하루 이 횟수까지, 프리미엄은 무제한 */
+export const FREE_EXAMS_PER_DAY = 1;
 /** 무료 버전 배틀권: 매월 1일 00시에 이 개수로 다시 채움 (쌓이지 않음). 유료 버전은 무제한 */
 export const FREE_BATTLE_TICKETS = 2;
 

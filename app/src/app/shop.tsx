@@ -8,7 +8,7 @@ import { SectionTitle } from "@/components/StatTile";
 import { GearCount } from "@/components/TimeUpSheet";
 import { Btn, Row, Screen, T } from "@/components/ui";
 import { useApp } from "@/lib/app-state";
-import { BATTLE_TICKET_COST, FREE_BATTLE_TICKETS, FREE_MAX_STUDY_MIN, PREMIUM_MAX_STUDY_MIN, FREEZE_COST, MAX_BOUGHT_TICKETS, MAX_FREEZES, MAX_RESTORE_DAYS, RESTORE_COST_PER_DAY } from "@/lib/economy";
+import { BATTLE_TICKET_COST, FREE_BATTLE_TICKETS, FREE_EXAMS_PER_DAY, PREMIUM_BONUS_GEARS, FREE_MAX_STUDY_MIN, PREMIUM_MAX_STUDY_MIN, FREEZE_COST, MAX_BOUGHT_TICKETS, MAX_FREEZES, MAX_RESTORE_DAYS, RESTORE_COST_PER_DAY } from "@/lib/economy";
 import { inset, radius, shadow, useColors } from "@/theme";
 
 /** 체크 표시 한 줄 */
@@ -64,12 +64,13 @@ function PlanCard({ ribbon, title, art, children, footer, highlight }: {
 
 /** 톱니바퀴 쓰는 곳 + 무료/유료 버전 */
 export default function Shop() {
-  const { gears, freezes, buyFreeze, premium, setPremium, battleTickets, freeTickets, boughtTickets, buyBattleTicket } = useApp();
+  const { gears, freezes, buyFreeze, premium, setPremium, purchasePremium, battleTickets, freeTickets, boughtTickets, buyBattleTicket } = useApp();
   const c = useColors();
   const [askUpgrade, setAskUpgrade] = useState(false);
   const [notice, setNotice] = useState("");
   const full = freezes >= MAX_FREEZES;
   const [ticketNotice, setTicketNotice] = useState("");
+  const [bonusNotice, setBonusNotice] = useState("");
   const ticketsFull = boughtTickets >= MAX_BOUGHT_TICKETS;
 
   const buy = () => {
@@ -164,17 +165,24 @@ export default function Shop() {
             {!premium && askUpgrade && (
               <View style={{ gap: 10, borderWidth: 1.5, borderColor: c.gold, borderRadius: radius.md, padding: 14, backgroundColor: c.goldSoft }}>
                 <T size={14} weight="semibold">앱스토어 · 구글 플레이 결제는 아직 연결 전이에요.</T>
-                <T size={13} color="ink2">지금은 시험용으로 결제 없이 프리미엄 기능을 켜 볼 수 있어요. 결제가 연결되면 이 단계가 실제 결제로 바뀌어요.</T>
+                <T size={13} color="ink2">지금은 시험용으로 결제 없이 프리미엄 기능을 켜 볼 수 있어요. 결제가 연결되면 이 단계가 실제 결제로 바뀌어요. 결제하는 순간 톱니바퀴 {PREMIUM_BONUS_GEARS}개가 계정에 들어와요 (한 달에 한 번).</T>
                 <Row gap={8} style={{ flexWrap: "nowrap" }}>
                   <Btn title="취소" size="sm" onPress={() => setAskUpgrade(false)} style={{ flex: 1 }} />
-                  <Btn title="시험용으로 켜기" variant="accent" size="sm" onPress={() => { setPremium(true); setAskUpgrade(false); }} style={{ flex: 1 }} />
+                  <Btn title="시험용으로 켜기" variant="accent" size="sm" onPress={() => {
+                    const got = purchasePremium();
+                    setBonusNotice(got ? `결제 보너스로 톱니바퀴 ${got}개를 받았어요!` : "이번 달 결제 보너스는 이미 받았어요.");
+                    setAskUpgrade(false);
+                  }} style={{ flex: 1 }} />
                 </Row>
               </View>
             )}
+            {bonusNotice ? <T size={13} color="success" weight="semibold" center>{bonusNotice}</T> : null}
             {premium && <Btn title="무료 버전으로 돌아가기 (시험용)" size="sm" variant="ghost" onPress={() => setPremium(false)} />}
           </>
         }
       >
+        <Perk>결제하는 순간 톱니바퀴 {PREMIUM_BONUS_GEARS}개 지급</Perk>
+        <Perk>자격증 모의고사 무제한</Perk>
         <Perk>랜덤 매칭 배틀 무제한</Perk>
         <Perk>한 번에 최대 {PREMIUM_MAX_STUDY_MIN}분까지 공부</Perk>
         <Perk>친구 추가 · 친구 목록</Perk>
@@ -193,6 +201,7 @@ export default function Shop() {
         }
       >
         <Perk>랜덤 매칭 배틀 매월 {FREE_BATTLE_TICKETS}회 (톱니바퀴 {BATTLE_TICKET_COST}개로 더 하기)</Perk>
+        <Perk>자격증 모의고사 하루 {FREE_EXAMS_PER_DAY}회</Perk>
         <Perk>한 번에 최대 {FREE_MAX_STUDY_MIN}분까지 공부</Perk>
         <Perk>친구 추가 · 친구 목록</Perk>
         <Perk>공부 기록 · 업적 모두 이용</Perk>
