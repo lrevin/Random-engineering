@@ -19,7 +19,7 @@ export default function TabLayout() {
       <Tabs.Screen name="home" options={{ title: "공부", tabBarIcon: ({ color, size }) => <Ionicons name="dice-outline" color={color} size={size} /> }} />
       <Tabs.Screen name="friends" options={{ title: "친구", tabBarIcon: ({ color, size }) => <Ionicons name="people-outline" color={color} size={size} /> }} />
       <Tabs.Screen name="arena" options={{ title: "배틀", tabBarIcon: ({ color, size }) => <Ionicons name="flash-outline" color={color} size={size} /> }} />
-      <Tabs.Screen name="history" options={{ title: "기록", tabBarIcon: ({ color, size }) => <Ionicons name="stats-chart-outline" color={color} size={size} /> }} />
+      <Tabs.Screen name="shop" options={{ title: "상점", tabBarIcon: ({ color, size }) => <Ionicons name="storefront-outline" color={color} size={size} /> }} />
       <Tabs.Screen name="settings" options={{ title: "설정", tabBarIcon: ({ color, size }) => <Ionicons name="settings-outline" color={color} size={size} /> }} />
     </Tabs>
   );

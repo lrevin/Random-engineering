@@ -47,7 +47,12 @@ export default function History() {
 
   const header = (
     <View style={{ gap: 14, paddingBottom: 10 }}>
-      <T size={26} weight="bold">공부 기록</T>
+      <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
+        <T size={26} weight="bold">공부 기록</T>
+        <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace("/settings"))} hitSlop={10} accessibilityRole="button" accessibilityLabel="닫기">
+          <Icon name="close" size={24} color={c.muted} />
+        </Pressable>
+      </Row>
 
       {mode === "guest" && (
         <Card style={{ backgroundColor: c.accentSoft, borderColor: c.accent, gap: 8 }}>
@@ -131,7 +136,7 @@ export default function History() {
   );
 
   return (
-    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: c.bg }}>
+    <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: c.bg }}>
       <FlatList
         data={list}
         keyExtractor={(r) => r.id}
