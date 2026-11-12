@@ -58,6 +58,7 @@ function RootNav() {
           <Stack.Screen name="quests" options={{ presentation: "modal" }} />
           <Stack.Screen name="exam" options={flow} />
           <Stack.Screen name="recall" options={flow} />
+          <Stack.Screen name="speed" options={flow} />
           <Stack.Screen name="certs" options={{ presentation: "modal" }} />
           <Stack.Screen name="skins" options={{ presentation: "modal" }} />
           <Stack.Screen name="review" options={flow} />

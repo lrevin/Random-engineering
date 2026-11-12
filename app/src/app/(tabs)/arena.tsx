@@ -139,7 +139,7 @@ export default function Arena() {
   return (
     <Screen edges={["top"]} scroll>
       <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
-        <T size={26} weight="bold">배틀</T>
+        <T size={26} weight="bold">콘텐츠</T>
         <Pressable onPress={() => setIntro(true)} hitSlop={10} accessibilityRole="button" accessibilityLabel="배틀 설명 보기"
           style={{ width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, borderColor: c.line2, alignItems: "center", justifyContent: "center", backgroundColor: c.paper }}>
           <T size={17} weight="bold" color="ink2">?</T>
@@ -192,6 +192,19 @@ export default function Arena() {
         </Card>
       )}
       {notice ? <T size={13} color="accent" center>{notice}</T> : null}
+
+      {/* 스피드 OX 미니게임 */}
+      <Pressable onPress={() => router.push("/speed")} accessibilityRole="button" accessibilityLabel="스피드 OX 하러 가기">
+        <Card style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <Icon name="bolt" size={40} />
+          <View style={{ flex: 1, gap: 2 }}>
+            <T size={18} weight="bold">스피드 OX</T>
+            <T size={13} color="ink2">1분 동안 공부한 주제의 OX 문제 풀기</T>
+            <T size={12} color="muted">맞힌 만큼 경험치 · 배틀권 필요 없음</T>
+          </View>
+          <T size={22} color="muted">›</T>
+        </Card>
+      </Pressable>
 
       <MatchOverlay
         visible={focused && (waiting || !!found)}
