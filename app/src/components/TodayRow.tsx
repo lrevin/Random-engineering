@@ -69,12 +69,15 @@ export function TodayRow() {
     ...raised(hot ? c.accentDeep : c.paperEdge, pressed, 3), ...(!pressed ? shadow(c, 1) : null),
   });
   /** 세 칸 모양을 똑같이: 그림 · 이름 · 값 · 아래 한 줄 */
-  const body = (icon: ReactNode, label: string, value: string, sub: string, subColor: "accent" | "success" | "muted" | "ink2") => (
+  const body = (icon: ReactNode, label: string, value: string, sub: string, subColor: "accent" | "success" | "muted" | "ink2", gear?: boolean) => (
     <>
       <View style={{ height: 32, justifyContent: "center" }}>{icon}</View>
       <T size={11} color="muted" numberOfLines={1}>{label}</T>
       <T size={14} weight="bold" numberOfLines={1} center>{value}</T>
-      <T size={11} weight="semibold" color={subColor} numberOfLines={1}>{sub}</T>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+        {gear && <Icon name="gear" size={14} />}
+        <T size={11} weight="semibold" color={subColor} numberOfLines={1}>{sub}</T>
+      </View>
     </>
   );
 
@@ -95,8 +98,9 @@ export function TodayRow() {
             <DomainIcon id={topic.domain} size={30} />,
             "오늘의 주제",
             topic.ko,
-            claimed ? "완료" : done ? `보상 받기 +${DAILY_TOPIC_GEARS}` : `톱니바퀴 +${DAILY_TOPIC_GEARS}`,
+            claimed ? "완료" : done ? `받기 +${DAILY_TOPIC_GEARS}` : `+${DAILY_TOPIC_GEARS}`,
             claimed ? "success" : done ? "accent" : "ink2",
+            !claimed,
           )
           : body(<Icon name="star" size={30} />, "오늘의 주제", "관심 분야 필요", "고르러 가기 ›", "accent")}
       </Pressable>
