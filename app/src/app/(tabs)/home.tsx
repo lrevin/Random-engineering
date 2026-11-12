@@ -40,7 +40,7 @@ export default function Home() {
   const [reel, setReel] = useState<{ key: number; names: string[]; pick: Topic } | null>(null);
 
   const { streak } = calcStreak(records, new Date(), keptDays);
-  // 마스터 = 주제 랭크가 최고 단계(엔지니어). 같은 개념이 여러 분야에 있을 수 있어서(예: 레이놀즈 수) 이름으로도 확인
+  // 많이 푼 주제 = 그 주제에서 누적 정답 50개 + 만점 1번 이상. 같은 개념이 여러 분야에 있을 수 있어서(예: 레이놀즈 수) 이름으로도 확인
   const mastered = useMemo(() => {
     const set = new Set<string>();
     for (const id of new Set(records.map((r) => r.topicId))) {
@@ -111,7 +111,7 @@ export default function Home() {
   const emptyText = !prefs.interests.length
     ? "관심 분야를 먼저 골라 주세요."
     : !pool.length
-      ? includeMastered ? "조건에 맞는 주제가 없어요." : "이 조건의 주제를 모두 마스터했어요!\n'마스터한 주제 포함'을 눌러 보세요."
+      ? includeMastered ? "조건에 맞는 주제가 없어요." : "이 조건의 주제를 모두 충분히 풀었어요!\n'많이 푼 주제 포함'을 눌러 보세요."
       : "레버를 당기거나 버튼을 눌러\n오늘의 주제를 뽑아 보세요";
 
   return (
@@ -167,7 +167,7 @@ export default function Home() {
             onChange={(v) => { setLevel(String(v) as LevelFilter); updatePrefs({ level: v }).catch(() => {}); }}
           />
           <Chip
-            label="마스터한 주제 포함"
+            label="많이 푼 주제 포함"
             icon={includeMastered ? <Icon name="check" size={16} color={c.navyInk} /> : <TierIcon index={5} size={20} />}
             selected={includeMastered}
             onPress={() => setIncludeMastered((v) => !v)}
