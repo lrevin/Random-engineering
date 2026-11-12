@@ -1,4 +1,5 @@
 import { router } from "expo-router";
+import { domainById } from "@/data";
 import { dailyTopic } from "@/lib/daily";
 import { TodayRow } from "@/components/TodayRow";
 import { useMemo, useState, type ReactNode } from "react";
@@ -11,7 +12,7 @@ import { inInterests, levelText, TOPICS, type Topic } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { studyMinutesFor } from "@/lib/economy";
 import { prefetchQuiz } from "@/lib/quiz";
-import { MAX_LEVEL, maxRpFor, TIERS, topicMastery, userLevel } from "@/lib/rank";
+import { domainMastery, MAX_LEVEL, maxRpFor, TIERS, topicMastery, userLevel } from "@/lib/rank";
 import { calcStreak } from "@/lib/stats";
 import { radius, shadow, useColors } from "@/theme";
 import { DomainIcon, Icon, TierIcon } from "@/components/Icon";
@@ -206,7 +207,7 @@ export default function Home() {
                   <T size={14} color="muted" center>{shown.en}</T>
                   <T size={16} color="ink2" center style={{ marginTop: 4 }}>{shown.hint}</T>
                   <Row gap={8} style={{ justifyContent: "center", marginTop: 4 }}>
-                    <TierBadge index={topicMastery(shown.id, records).index} size="sm" />
+                    <TierBadge index={domainMastery(shown.domain, records).index} prefix={domainById(shown.domain)?.name} size="sm" />
                     <T size={12} color="muted">퀴즈 최대 +{maxRpFor(shown)} XP</T>
                   </Row>
                 </>

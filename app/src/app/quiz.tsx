@@ -9,7 +9,7 @@ import { useApp } from "@/lib/app-state";
 import { confirmQuit } from "@/lib/confirm";
 import { loadQuiz, type QuizQuestion } from "@/lib/quiz";
 import { boostActive } from "@/lib/booster";
-import { calcRp, topicMastery, userLevel } from "@/lib/rank";
+import { calcRp, domainMastery, userLevel } from "@/lib/rank";
 import { calcStreak } from "@/lib/stats";
 import type { WrongAnswer } from "@/lib/types";
 import { radius, raised, shadow, useColors } from "@/theme";
@@ -88,12 +88,12 @@ function QuizInner() {
       rp.total *= 2;
     }
     const rpBefore = xp;
-    const topicBefore = topicMastery(topic.id, records);
+    const topicBefore = domainMastery(topic.domain, records);
     const rec = await addRecord({
       topicId: topic.id, topicKo: topic.ko, domain: topic.domain, category: topic.category, level: topic.level,
       memo: a.memo, score, total, rp: rp.total, wrong, studySec: a.quizOnly ? 0 : a.studyUsed, quizSource: quiz.source,
     });
-    const topicAfter = topicMastery(topic.id, [...records, rec]);
+    const topicAfter = domainMastery(topic.domain, [...records, rec]);
     setActive((x) => x ? {
       ...x, stage: "result", quiz: { ...quiz, answers },
       result: {

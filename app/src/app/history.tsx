@@ -3,10 +3,10 @@ import { useMemo, useState } from "react";
 import { FlatList, Pressable, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Btn, Card, Row, Segment, T } from "@/components/ui";
-import { ALL_CATEGORIES } from "@/data";
+import { ALL_CATEGORIES, domainById } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { UserLevelBar, TierBadge } from "@/components/Rank";
-import { topicMastery } from "@/lib/rank";
+import { domainMastery } from "@/lib/rank";
 import { averageScore, calcStreak, fmtDate } from "@/lib/stats";
 import type { StudyRecord } from "@/lib/types";
 import { radius, raised, shadow, useColors } from "@/theme";
@@ -129,7 +129,7 @@ export default function History() {
           {!r.synced && mode === "user" ? " · 동기화 대기" : ""}
         </T>
         <Row gap={6}>
-          <TierBadge index={topicMastery(r.topicId, records).index} size="sm" />
+          <TierBadge index={domainMastery(r.domain, records).index} prefix={domainById(r.domain)?.name} size="sm" />
         </Row>
       </View>
     </Pressable>

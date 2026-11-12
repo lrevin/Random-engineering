@@ -71,6 +71,7 @@ export interface QuizResult {
   parts: RpPart[];
   userLevelBefore: number;
   userLevelAfter: number;
+  /** 분야 랭크 (이름은 예전 그대로 topicTier) */
   topicTierBefore: number;
   topicTierAfter: number;
   streak: number;
