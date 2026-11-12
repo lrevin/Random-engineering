@@ -275,7 +275,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [saveRecordsLocal, setModePersist, syncPending]);
 
   const clearLocal = useCallback(async () => {
-    await AsyncStorage.multiRemove([...Object.values(K), "pg.exam", "pg.exam.active", "pg.review.done2", "pg.recall", "pg.certDates"]).catch(() => {});
+    await AsyncStorage.multiRemove([...Object.values(K), "pg.exam", "pg.exam.active", "pg.review.done2", "pg.recall", "pg.certDates", "pg.speed"]).catch(() => {});
     resetSkins();
     resetBoost();
     await cancelAllNotifications().catch(() => {});
