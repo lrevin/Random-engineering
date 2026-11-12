@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { Session } from "@supabase/supabase-js";
 import * as Crypto from "expo-crypto";
+import { topicById } from "@/data";
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AppState as RNAppState } from "react-native";
 import { BATTLE_TICKET_COST, FREE_BATTLE_TICKETS, FREEZE_COST, MAX_BOUGHT_TICKETS, MAX_FREEZES, monthKey, planStreakRescue, PREMIUM_BONUS_GEARS, refillTickets, RESTORE_COST_PER_DAY, type StreakRescue, type Tickets } from "./economy";
@@ -70,6 +71,8 @@ interface AppStateValue {
   dismissRescue(): void;
   /** 개발용: 연속 기록 복구 창 미리 보기 (어제·그제를 빠진 날로) */
   devPreviewRescue(): void;
+  /** 개발용: 어제까지 7일 연속으로 공부한 기록을 넣음 (복습 · 연속 기록 보상 · 업적 점검용) */
+  devSeedRecords(topicIds: string[]): void;
   /** 유료 버전 여부 (결제 연동 전이라 시험용으로 켜고 끔) */
   premium: boolean;
   setPremium(v: boolean): void;
@@ -506,6 +509,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setRescue({ streak: 5, auto: freezesRef.current > 0 ? [d(2)] : [], restore: freezesRef.current > 0 ? [d(1)] : [d(2), d(1)], tooLate: false });
   }, []);
 
+  const devSeedRecords = useCallback((topicIds: string[]) => {
+    const seeded: StudyRecord[] = topicIds.slice(0, 7).flatMap((id, i) => {
+      const t = topicById(id);
+      if (!t) return [];
+      const at = new Date();
+      at.setDate(at.getDate() - (7 - i));
+      at.setHours(20, 0, 0, 0);
+      return [{
+        id: Crypto.randomUUID(), topicId: t.id, topicKo: t.ko, domain: t.domain, category: t.category, level: t.level,
+        memo: "", score: 5, total: 7, rp: 30, wrong: [], studySec: 600, quizSource: "bank" as const, studiedAt: at.toISOString(), synced: false,
+      }];
+    });
+    saveRecordsLocal(sortRecords([...recordsRef.current, ...seeded]));
+  }, [saveRecordsLocal]);
+
   // 연속 기록 확인: 앱을 열 때와 앱으로 돌아올 때
   useEffect(() => {
     if (!ready || !onboarded) return;
@@ -634,11 +652,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AppStateValue>(() => ({
     ready, mode, email: session?.user.email ?? null, serverEnabled: !!supabase,
     prefs, onboarded, records, active, gears, spendGears,
-    xp, freezes, keptDays, buyFreeze, rescue, restoreStreak, dismissRescue, devPreviewRescue,
+    xp, freezes, keptDays, buyFreeze, rescue, restoreStreak, dismissRescue, devPreviewRescue, devSeedRecords,
     premium, setPremium, purchasePremium, battleTickets: premium ? Infinity : refillTickets(tickets).n + (refillTickets(tickets).bought ?? 0), freeTickets: refillTickets(tickets).n, boughtTickets: refillTickets(tickets).bought ?? 0, buyBattleTicket, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid, questClaims, claimQuest, adViewsToday: adViews.day === dateKey(new Date()) ? adViews.n : 0, grantAdReward,
     startGuest, signUp, signIn, signOut, deleteAccount, updatePrefs, setActive, addRecord, removeRecord,
   }), [ready, mode, session, prefs, onboarded, records, active, gears, spendGears,
-    xp, freezes, keptDays, buyFreeze, rescue, restoreStreak, dismissRescue, devPreviewRescue,
+    xp, freezes, keptDays, buyFreeze, rescue, restoreStreak, dismissRescue, devPreviewRescue, devSeedRecords,
     premium, setPremium, purchasePremium, tickets, buyBattleTicket, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid, questClaims, claimQuest, adViews, grantAdReward,
     startGuest, signUp, signIn, signOut, deleteAccount, updatePrefs, setActive, addRecord, removeRecord]);
 
