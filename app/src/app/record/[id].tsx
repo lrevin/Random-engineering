@@ -4,9 +4,9 @@ import { showDialog } from "@/components/Dialog";
 import { TierBadge } from "@/components/Rank";
 import { TopicLinks } from "@/components/TopicLinks";
 import { Badge, Btn, Card, levelTone, Row, Screen, T } from "@/components/ui";
-import { levelText, topicById } from "@/data";
+import { domainById, levelText, topicById } from "@/data";
 import { useApp } from "@/lib/app-state";
-import { topicMastery } from "@/lib/rank";
+import { domainMastery } from "@/lib/rank";
 import { fmtDate, fmtDuration } from "@/lib/stats";
 import { useColors } from "@/theme";
 
@@ -24,7 +24,7 @@ export default function RecordDetail() {
     );
   }
   const topic = topicById(r.topicId);
-  const mastery = topicMastery(r.topicId, records);
+  const mastery = domainMastery(r.domain, records);
 
   const del = () => {
     const run = async () => {
@@ -65,7 +65,7 @@ export default function RecordDetail() {
         <Row gap={6}>
           <Badge label={topic?.categoryName ?? r.category} />
           <Badge label={levelText(r.level)} tone={levelTone(r.level)} />
-          <TierBadge index={mastery.index} size="sm" />
+          <TierBadge index={mastery.index} prefix={domainById(r.domain)?.name} size="sm" />
         </Row>
         <T size={26} weight="bold">{r.topicKo}</T>
         <T size={14} color="muted">

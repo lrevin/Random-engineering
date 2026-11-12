@@ -5,12 +5,12 @@ import { T } from "./ui";
 import { Icon, TierIcon } from "./Icon";
 
 /** 랭크 배지: 메달 + 골드 */
-export function TierBadge({ index, size = "md", suffix }: { index: number; size?: "sm" | "md"; suffix?: string }) {
+export function TierBadge({ index, size = "md", suffix, prefix }: { index: number; size?: "sm" | "md"; suffix?: string; prefix?: string }) {
   const c = useColors();
   if (index < 0) {
     return (
       <View style={{ borderWidth: 1, borderColor: c.line2, borderRadius: radius.pill, paddingHorizontal: 8, paddingVertical: 1 }}>
-        <T size={12} color="muted">랭크 없음</T>
+        <T size={12} color="muted">{prefix ? `${prefix} 랭크 없음` : "랭크 없음"}</T>
       </View>
     );
   }
@@ -23,7 +23,7 @@ export function TierBadge({ index, size = "md", suffix }: { index: number; size?
       backgroundColor: t.color + "22", borderWidth: 1, borderColor: t.color,
     }}>
       <TierIcon index={index} size={fs + 4} />
-      <T size={fs} weight="semibold" style={{ color: t.color }}>{t.name}{suffix ? ` ${suffix}` : ""}</T>
+      <T size={fs} weight="semibold" style={{ color: t.color }}>{prefix ? `${prefix} ` : ""}{t.name}{suffix ? ` ${suffix}` : ""}</T>
     </View>
   );
 }

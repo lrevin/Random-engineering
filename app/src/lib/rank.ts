@@ -42,7 +42,7 @@ export function userLevel(totalXp: number) {
 
 export const totalRp = (records: StudyRecord[]) => records.reduce((a, r) => a + (r.rp || 0), 0);
 
-// ───────── 주제별 숙련 랭크: 그 주제에서 맞힌 문제 수 누적 ─────────
+// ───────── 주제 숙련도: 화면에는 안 보이고, 홈의 '마스터한 주제 포함' 필터에만 씀 ─────────
 /** 브론즈는 한 번 풀면 획득. 엔지니어는 누적 50문제 + 만점 1회 이상 (한 번에 7문제라 약 7~8번 풀면 엔지니어) */
 export const TOPIC_TIER_MIN = [0, 10, 20, 30, 40, 50];
 
@@ -66,6 +66,36 @@ export function topicMastery(topicId: string, records: StudyRecord[]) {
     perfect,
     next,
   };
+}
+
+// ───────── 분야별 랭크: 그 분야(컴퓨터공학 · 전기공학 …)에서 맞힌 문제 수 누적 ─────────
+/**
+ * 분야 하나에 주제가 수십~수백 개라 기준을 크게 잡음. 퀴즈 한 번에 보통 5~7개를 맞히므로
+ * 실버 약 6번 · 골드 약 20번 · 플래티넘 약 50번 · 다이아 약 100번 · 엔지니어 약 200번.
+ * 엔지니어는 그 분야에서 서로 다른 주제 DOMAIN_ENGINEER_TOPICS개 이상도 공부해야 함.
+ */
+export const DOMAIN_TIER_MIN = [0, 30, 100, 250, 500, 1000];
+export const DOMAIN_ENGINEER_TOPICS = 30;
+
+export function domainMastery(domain: string, records: StudyRecord[]) {
+  const rs = records.filter((r) => r.domain === domain);
+  const points = rs.reduce((a, r) => a + Math.min(r.score, r.total), 0);
+  const topics = new Set(rs.map((r) => r.topicId)).size;
+  let i = -1; // -1 = 아직 안 풂
+  if (rs.length) {
+    i = 0;
+    while (i + 1 < DOMAIN_TIER_MIN.length && points >= DOMAIN_TIER_MIN[i + 1]) i++;
+    if (i === TIERS.length - 1 && topics < DOMAIN_ENGINEER_TOPICS) i--; // 엔지니어는 여러 주제를 고루 공부해야
+  }
+  const next = i >= 0 && i + 1 < DOMAIN_TIER_MIN.length ? DOMAIN_TIER_MIN[i + 1] : null;
+  return { index: i, tier: i >= 0 ? TIERS[i] : null, attempts: rs.length, points, topics, next };
+}
+
+/** 공부한 분야마다 랭크 (높은 순) */
+export function domainRanks(records: StudyRecord[]) {
+  return [...new Set(records.map((r) => r.domain))]
+    .map((d) => ({ domain: d, ...domainMastery(d, records) }))
+    .sort((a, b) => b.index - a.index || b.points - a.points);
 }
 
 // ───────── 이번 퀴즈로 얻는 XP ─────────
