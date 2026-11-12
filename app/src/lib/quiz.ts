@@ -386,13 +386,13 @@ export async function variantQuestion(topic: Topic, wrong: { q: string; answer: 
 }
 const answerLabel = (q: QuizQuestion) => (q.type === "mc" ? q.choices[q.answer] : q.answer ? "O (맞다)" : "X (틀리다)");
 
-// ───────── 스피드 OX: 공부한 주제의 OX 문제 ─────────
-/** 주제들의 OX 문제 모으기 (문제 은행 → 모자라면 연습 문제의 OX) */
-export async function oxQuestions(topics: Topic[]): Promise<ExamItem[]> {
+// ───────── 스피드 퀴즈: 공부한 주제의 4지선다 ─────────
+/** 주제들의 4지선다 모으기 (문제 은행 → 모자라면 연습 문제의 4지선다). 보기 순서는 섞음 */
+export async function speedQuestions(topics: Topic[]): Promise<ExamItem[]> {
   const parts = await Promise.all(topics.map(async (topic) => {
-    const bank = (await bankQuestions(topic.id)).filter((q) => q.type === "ox").map((q) => ({ ...q, src: "bank" as const }));
-    const qs = bank.length >= 2 ? bank : [...bank, ...offlineQuestions(topic).filter((q) => q.type === "ox")];
-    return distinct(qs).map((q) => ({ q, topic }));
+    const bank = (await bankQuestions(topic.id)).filter((q) => q.type === "mc").map((q) => ({ ...q, src: "bank" as const }));
+    const qs = bank.length >= 2 ? bank : [...bank, ...offlineQuestions(topic).filter((q) => q.type === "mc")];
+    return distinct(qs).map((q) => ({ q: shuffleChoices(q), topic }));
   }));
   return shuffle(parts.flat());
 }

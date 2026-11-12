@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { dateKey } from "./stats";
 
 /**
- * 스피드 OX: 1분 동안 공부한 적 있는 주제의 OX 문제를 연달아 풂.
+ * 스피드 퀴즈: 1분 동안 공부한 적 있는 주제의 4지선다 문제를 연달아 풂.
  * 맞힌 만큼 사용자 경험치(레벨)만 오르고, 공부 기록을 남기지 않아 분야 랭크는 오르지 않음.
  */
 export const SPEED_SEC = 60;

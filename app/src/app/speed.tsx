@@ -8,14 +8,15 @@ import { SectionTitle } from "@/components/StatTile";
 import { Badge, Btn, Card, Row, Screen, T } from "@/components/ui";
 import { topicById, type Topic } from "@/data";
 import { useApp } from "@/lib/app-state";
-import { oxQuestions, type ExamItem } from "@/lib/quiz";
+import { speedQuestions, type ExamItem } from "@/lib/quiz";
 import { finishSpeed, readSpeed, SPEED_DAILY_XP_CAP, SPEED_SEC, SPEED_XP_PER_CORRECT, type SpeedStore } from "@/lib/speed";
 import { radius, raised, shadow, useColors } from "@/theme";
+import { answerText } from "./quiz";
 
 type Phase = "ready" | "loading" | "play" | "done";
 interface Answered { item: ExamItem; ok: boolean }
 
-/** 스피드 OX: 1분 동안 공부한 주제의 OX 문제를 최대한 많이 맞히기 */
+/** 스피드 퀴즈: 1분 동안 공부한 주제의 4지선다 문제를 최대한 많이 맞히기 */
 export default function Speed() {
   const { records, applyBattleXp } = useApp();
   const c = useColors();
@@ -27,6 +28,7 @@ export default function Speed() {
   const [combo, setCombo] = useState(0);
   const [left, setLeft] = useState(SPEED_SEC);
   const [flash, setFlash] = useState<boolean | null>(null);
+  const [picked, setPicked] = useState<number | null>(null);
   const [result, setResult] = useState<{ xp: number; newBest: boolean } | null>(null);
   const [shake] = useState(() => new Animated.Value(0));
   const endAt = useRef(0);
@@ -68,7 +70,7 @@ export default function Speed() {
   const start = async () => {
     if (!studied.length) return;
     setPhase("loading");
-    const qs = await oxQuestions(studied);
+    const qs = await speedQuestions(studied);
     if (!qs.length) { setPhase("ready"); return; }
     setPool(qs);
     setIdx(0);
@@ -76,15 +78,17 @@ export default function Speed() {
     setCombo(0);
     setResult(null);
     setFlash(null);
+    setPicked(null);
     endAt.current = Date.now() + SPEED_SEC * 1000;
     setLeft(SPEED_SEC);
     setPhase("play");
   };
 
-  const answer = (v: boolean) => {
+  const answer = (v: number) => {
     if (phase !== "play" || flash !== null) return;
     const item = pool[idx % pool.length];
     const ok = item.q.answer === v;
+    setPicked(v);
     if (Platform.OS !== "web") Haptics.notificationAsync(ok ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Error).catch(() => {});
     if (!ok) {
       Animated.sequence([
@@ -96,7 +100,7 @@ export default function Speed() {
     setFlash(ok);
     setLog((l) => [...l, { item, ok }]);
     setCombo((k) => (ok ? k + 1 : 0));
-    setTimeout(() => { setFlash(null); setIdx((i) => i + 1); }, ok ? 180 : 450);
+    setTimeout(() => { setFlash(null); setPicked(null); setIdx((i) => i + 1); }, ok ? 250 : 700);
   };
 
   // ───────── 준비 · 불러오는 중 ─────────
@@ -129,26 +133,35 @@ export default function Speed() {
 
           <Animated.View style={{ flex: 1, justifyContent: "center", gap: 12, transform: [{ translateX: shake.interpolate({ inputRange: [-1, 1], outputRange: [-10, 10] }) }] }}>
             <View style={{ alignSelf: "center" }}><Badge label={`${item.topic.categoryName} · ${item.topic.ko}`} /></View>
-            <T size={24} weight="bold" center style={{ lineHeight: 34 }}>{item.q.q}</T>
-            {flash === false && <T size={15} color="accent" weight="semibold" center>정답: {item.q.answer ? "O" : "X"}</T>}
+            <T size={21} weight="bold" center style={{ lineHeight: 30 }}>{item.q.q}</T>
           </Animated.View>
 
-          <Row gap={12} style={{ flexWrap: "nowrap" }}>
-            {[true, false].map((v) => (
-              <Pressable
-                key={String(v)}
-                onPress={() => answer(v)}
-                accessibilityRole="button"
-                accessibilityLabel={v ? "O 맞다" : "X 틀리다"}
-                style={({ pressed }) => ({
-                  flex: 1, aspectRatio: 1.15, borderRadius: radius.lg, borderWidth: 2, borderColor: c.line2, backgroundColor: c.paper,
-                  alignItems: "center", justifyContent: "center", ...raised(c.paperEdge, pressed, 6), ...(!pressed ? shadow(c, 1) : null),
-                })}
-              >
-                <T size={72} weight="bold" style={{ lineHeight: 84, color: v ? c.success : c.accent }}>{v ? "O" : "X"}</T>
-              </Pressable>
-            ))}
-          </Row>
+          <View style={{ gap: 10 }}>
+            {item.q.type === "mc" && item.q.choices.map((ch, i) => {
+              const isAnswer = flash !== null && i === item.q.answer;
+              const isWrongPick = flash === false && i === picked;
+              return (
+                <Pressable
+                  key={i}
+                  onPress={() => answer(i)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${i + 1}번 ${ch}`}
+                  style={({ pressed }) => ({
+                    flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 14, paddingHorizontal: 14, borderRadius: radius.lg, borderWidth: 2,
+                    borderColor: isAnswer ? c.success : isWrongPick ? c.accent : c.line2,
+                    backgroundColor: isAnswer ? c.successSoft : isWrongPick ? c.accentSoft : c.paper,
+                    ...raised(isAnswer ? c.successDeep : isWrongPick ? c.accentDeep : c.paperEdge, pressed && flash === null, 5),
+                    ...(!pressed ? shadow(c, 1) : null),
+                  })}
+                >
+                  <View style={{ width: 28, height: 28, borderRadius: 8, borderWidth: 1.5, borderBottomWidth: 3, borderColor: c.line2, backgroundColor: c.bg, alignItems: "center", justifyContent: "center" }}>
+                    <T size={13} weight="bold" color="ink2">{i + 1}</T>
+                  </View>
+                  <T size={15} style={{ flex: 1 }} numberOfLines={3}>{ch}</T>
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
       </SafeAreaView>
     );
@@ -183,7 +196,7 @@ export default function Speed() {
               <Card key={i} style={{ gap: 6 }}>
                 <T size={12} color="muted">{item.topic.categoryName} · {item.topic.ko}</T>
                 <T size={15} weight="semibold">{item.q.q}</T>
-                <T size={14} color="success" weight="semibold">정답: {item.q.answer ? "O (맞다)" : "X (틀리다)"}</T>
+                <T size={14} color="success" weight="semibold">정답: {answerText(item.q)}</T>
                 <T size={14} color="ink2">{item.q.explain}</T>
               </Card>
             ))}
@@ -201,12 +214,12 @@ export default function Speed() {
   return (
     <Screen scroll>
       <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
-        <T size={26} weight="bold">스피드 OX</T>
+        <T size={26} weight="bold">스피드 퀴즈</T>
         <Pressable onPress={() => router.back()} hitSlop={10} accessibilityRole="button" accessibilityLabel="닫기">
           <Icon name="close" size={24} color={c.muted} />
         </Pressable>
       </Row>
-      <T color="ink2">1분 동안 내가 공부한 주제의 OX 문제를 최대한 많이 맞혀 보세요.</T>
+      <T color="ink2">1분 동안 내가 공부한 주제의 4지선다 문제를 최대한 많이 맞혀 보세요.</T>
 
       <Card style={{ alignItems: "center", gap: 6, paddingVertical: 22 }}>
         <Icon name="bolt" size={56} />
