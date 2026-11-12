@@ -193,13 +193,13 @@ export default function Arena() {
       )}
       {notice ? <T size={13} color="accent" center>{notice}</T> : null}
 
-      {/* 스피드 OX 미니게임 */}
-      <Pressable onPress={() => router.push("/speed")} accessibilityRole="button" accessibilityLabel="스피드 OX 하러 가기">
+      {/* 스피드 퀴즈 미니게임 */}
+      <Pressable onPress={() => router.push("/speed")} accessibilityRole="button" accessibilityLabel="스피드 퀴즈 하러 가기">
         <Card style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
           <Icon name="bolt" size={40} />
           <View style={{ flex: 1, gap: 2 }}>
-            <T size={18} weight="bold">스피드 OX</T>
-            <T size={13} color="ink2">1분 동안 공부한 주제의 OX 문제 풀기</T>
+            <T size={18} weight="bold">스피드 퀴즈</T>
+            <T size={13} color="ink2">1분 동안 공부한 주제의 4지선다 풀기</T>
             <T size={12} color="muted">맞힌 만큼 경험치 · 배틀권 필요 없음</T>
           </View>
           <T size={22} color="muted">›</T>
