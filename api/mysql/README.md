@@ -1,6 +1,6 @@
 # MySQL 백엔드 전환 안내
 
-기존 Supabase 서버와 앱은 유지하고, MySQL 전환 코드를 별도로 준비한 상태다. 두 인증 시스템의 계정·토큰·데이터는 자동으로 공유되지 않는다.
+2026-11-12 로컬 작업에서 실제 app/에 인증·프로필·기록·기본 문제의 MySQL 연결을 병합했다. 최신 화면과 로컬 부가 기능은 유지하며 Supabase 모드도 선택할 수 있다. 두 인증 시스템의 계정·토큰·데이터는 자동으로 공유되지 않는다.
 
 ## 파일 위치
 
@@ -9,14 +9,14 @@
 | `api/supabase/` | 기존 Supabase 구현. 이번 작업에서 변경하지 않음 |
 | `api/server/`, `api/shared/` | 서버 실행·기본 문제 DB 적재·공통 처리 |
 | `api/mysql/*-service.mjs`, `*-http.mjs` | MySQL 계정·학습 기록·기본 문제 업무 로직 |
-| `api/mysql/schema-v2.sql` | 전체 22개 테이블 초기 생성 SQL(지갑·거래·처리 영수증 포함). 빈 DB에 적용 |
-| `api/mysql/app-integration/app/` | 앱 인증·프로필·학습 기록·기본 문제 전환 후보 파일. 실제 `app/`에는 아직 적용하지 않음 |
+| `api/mysql/schema-v2.sql` | 전체 25개 테이블 초기 생성 SQL(지갑 3개·자격증 3개 포함). 빈 DB에 적용 |
+| `api/mysql/app-integration/app/` | 이전 앱 전환 후보 파일. 현재 로컬 app/에 필요한 변경을 선별 병합했으며 최신 앱에 통째로 덮어쓰지 않음 |
 
-기존 `app/` 파일과 Supabase 구현은 그대로다. 앱 전환 후보를 통째로 덮어쓰기보다 최신 앱과 비교해 전환 부분을 반영한다. 앱 의존성·설정 변경은 `npx expo install expo-secure-store`와 config plugin 설정으로 적용하고, 다른 팀원의 package/lock 파일을 그대로 덮어쓰지 않는다.
+Supabase 서버 구현은 그대로이며 실제 `app/`에는 연결 변경을 병합했다. 앱 전환 후보를 통째로 덮어쓰기보다 최신 앱과 비교해 전환 부분을 반영한다. 앱 의존성·설정 변경은 `npx expo install expo-secure-store`와 config plugin 설정으로 적용하고, 다른 팀원의 package/lock 파일을 그대로 덮어쓰지 않는다.
 
 ## 서버 선택 방법
 
-현재 실제 앱은 기존 Supabase 경로다. **아래 설정은 앱 전환 후보를 실제 앱에 반영한 뒤에만 유효하다.**
+현재 로컬 실제 앱에서 아래 선택 설정이 유효하다. 로컬 .env.local은 mysql로 설정했으며, 설정이 없을 때 기본값은 supabase다. [병합 범위·실행 안내](../../docs/MYSQL_APP_MERGE.md)를 참고한다.
 
 앱의 `.env.local`에서 선택한다.
 
@@ -45,7 +45,7 @@ EXPO_PUBLIC_API_URL=http://127.0.0.1:8788
 | 전체 테이블·기본 문제 직접 적재·문제 조회 API | 구현됨 |
 | 이메일 가입·로그인·로그아웃·세션 확인 | 구현됨 |
 | JWT·Refresh Token 회전·세션 만료·재사용 차단 | 구현됨 |
-| 앱의 로그인 복원·갱신·계정별 기기 보관 | 구현 파일 준비됨. 이 저장소의 실제 앱에는 미적용 |
+| 앱의 로그인 복원·갱신·계정별 기기 보관 | 실제 로컬 app/에 병합. 실기기 검증은 별도 |
 | 이메일 인증 메일·재설정·소셜 로그인 | 미구현 |
 | 프로필 조회·저장 | MySQL API 구현·검증 완료 |
 | 회원 탈퇴 신청·7일 이내 취소·만료 계정 정리 | 구현·검증 완료. 정리는 명령/스케줄러 실행 필요 |
@@ -94,10 +94,53 @@ GitHub develop 1046c98에서 확인한 톱니바퀴는 Supabase API가 아닌 �
 
 wallets(잔액), wallet_transactions(증감 원장)에 wallet_operations(중복 처리 영수증·보호권과 보호 날짜 상태)를 추가했다. 마지막 처리의 상태를 서버에서 읽으므로 조회 인덱스는 (user_id, id)다. 무료 보호권 사용도 영수증에 기록하며, 계정 물리 삭제 시 세 테이블 모두 CASCADE로 삭제한다.
 
-기존 DB에는 자동 적용하지 않았다. 지갑 두 테이블을 이미 생성했다면 추가 파일 `wallet-operations.sql`(로컬 파일)만 선택한 테스트 DB에 실행해야 새 서버를 사용할 수 있다. 아직 두 테이블이 없다면 add-wallet-tables.sql → wallet-operations.sql 순서다. schema-v2.sql은 22개 테이블의 빈 DB 초기 생성용이며 기존 DB에 통째로 재실행하지 않는다. 최초 보상 0 정책이므로 정상적인 신규 지갑에는 사용할 재화가 없다. 내부 지급 함수는 준비했지만 임의 지급 HTTP API는 제공하지 않는다.
+기존 DB에는 자동 적용하지 않았다. 지갑 두 테이블을 이미 생성했다면 추가 파일 `wallet-operations.sql`(로컬 파일)만 선택한 테스트 DB에 실행해야 새 서버를 사용할 수 있다. 아직 두 테이블이 없다면 add-wallet-tables.sql → wallet-operations.sql 순서다. schema-v2.sql은 현재 자격증을 포함한 25개 테이블의 빈 DB 초기 생성용이며 기존 DB에 통째로 재실행하지 않는다. 최초 보상 0 정책이므로 정상적인 신규 지갑에는 사용할 재화가 없다. 내부 지급 함수는 준비했지만 임의 지급 HTTP API는 제공하지 않는다.
 
 ### API · 검증
 
 GET /me/wallet, GET /me/wallet/transactions, POST /me/wallet/freezes, POST /me/wallet/streak/check, POST /me/wallet/streak/restore, POST /me/wallet/study/extend를 제공한다. 상세 계약과 검증 범위는 `WALLET_MYSQL_VALIDATION.md`(로컬 파일)를 참고한다.
 
 기존 DB 적용 후에는 api/server에서 npm run wallet:test를 실행한다. 별도 빈 임시 DB에서 전체 검증하려면 접속 정보가 있는 환경에서 node --env-file=.env ../mysql/wallet-validate.mjs를 실행한다. 임시 DB 생성·삭제 권한이 필요하며 해당 실행이 생성한 DB만 정리한다. 실기기 검증·실제 앱 병합·결제/멤버십·배틀권은 별도 작업이다. 이번에는 문서·초기 SQL 세 파일만 공유하며, 위 실행 코드·검증 도구와 실제 DB 적용은 별도로 관리한다.
+
+## 자격증 DB 및 Flyway 전환 (2026-11-12)
+
+자격증 목록·시험 과목·과목별 세부분야/주제 연결은 certificates, certificate_subjects, certificate_subject_items에 저장한다.
+
+**현재 설정 DB는 21개 테이블이며 wallet_operations가 없다.** 서비스 DB에는 이번 변경을 적용하지 않았다. V1의 22개 테이블 정의와 차이를 확인·정리하기 전에는 baseline을 실행하지 않는다. 새 프로필 API를 해당 DB에서 사용하기 전 자격증 테이블·초기 데이터도 준비해야 한다. profiles.interests는 기존 JSON 형식을 유지하며 categories와 certificates의 활성 ID를 검증한다.
+
+### 적용 순서
+
+- 이번부터 Flyway로 변경 이력을 관리한다. V1은 변경 전 22개 테이블, V2는 자격증 3개 테이블 추가다. 이후 변경은 V3__설명.sql부터 추가한다. 공유·적용한 마이그레이션은 덮어쓰지 않는다.
+- schema-v2.sql은 자격증 포함 25개 테이블의 최신 빈 DB용 스냅샷이다. 기존 DB에 재실행하지 않는다. Flyway 설치와 스냅샷 설치를 같은 DB에 중복 실행하지 않는다.
+- 기존 22개 테이블 DB는 구조가 V1과 일치하는지 확인한 후 baselineVersion=1로 명시적으로 baseline하고 migrate한다. baseline은 구조 차이를 고쳐주지 않는다. 일부 지갑 테이블 등이 없는 DB는 먼저 차이를 조정해야 한다.
+- 신규 빈 DB는 Flyway migrate로 V1→V2를 적용한다. baselineOnMigrate=false를 유지한다.
+- api/mysql에서 Flyway CLI를 실행한다. FLYWAY_URL(jdbc:mysql://호스트:3306/DB), FLYWAY_USER, FLYWAY_PASSWORD는 환경별로 지정한다. Node 서버의 MYSQL_* 환경변수를 Flyway가 자동으로 읽지는 않는다. RDS TLS 설정도 별도로 맞춘다.
+- 기존 DB: flyway baseline → flyway info → flyway migrate → flyway validate. 신규 빈 DB: flyway migrate → flyway validate. 서버 시작만으로 자동 실행되지 않는다.
+- 테이블 준비 후 api/server에서 npm run db:import로 분류·기본 문제를 적재한 다음, node --env-file-if-exists=.env import-certificates.mjs를 실행한다. 자격증 적재는 npm run db:import-certificates로도 실행할 수 있다. 자격증 초기 데이터는 seeds/certificates.json에 고정하며 TS를 런타임 검증 기준으로 사용하지 않는다.
+- 자격증 적재는 전체 참조 검증 후 트랜잭션으로 저장하고 DB별 적재 잠금으로 동시 실행을 직렬화한다. 같은 내용은 재사용하고 DB 내용이 달라졌다면 실패한다. 향후 운영 데이터 변경은 새 마이그레이션으로 명시하며 초기 seed를 덮어쓰는 동기화로 처리하지 않는다.
+- MySQL DDL은 전체 트랜잭션 롤백을 기대할 수 없으므로 적용 전 백업·테스트 DB 검증이 필요하다. 실제 Flyway OSS 13.12.1의 migrate·baseline·validate는 임시 DB에서 검증했다. 서비스 DB에는 적용하지 않았다.
+
+
+### 파일 정리 기준
+
+- 유지: README.md(실행 안내), PPOBGONG_DB_STRUCTURE_V2.md(설계 기준), migrations/(실제 변경 이력), schema-v2.sql(빈 DB 스냅샷), flyway.conf, seeds/, 모든 실행 코드.
+- 보관 이동 후보: AUTH_MYSQL_VALIDATION.md, ACCOUNT_MYSQL_VALIDATION.md, RECORD_MYSQL_VALIDATION.md는 docs/mysql-validation/ 등으로 이동 가능하지만 테스트 증빙이므로 삭제를 권하지 않는다. 이동 시 문서 링크도 수정한다.
+- schema.sql은 Supabase 전환 초창기 MySQL 초안이다. 현재 설치에 함께 실행하지 않는다. 참조 코드·문서가 남아 있을 수 있으므로 archive/로 이동하려면 저장소 전체 참조를 먼저 수정한다.
+- app-integration/은 예전 전환 후보다. 실제 app/과 병합 상태를 대조하기 전에는 삭제하지 않는다.
+- 이번 수정본에서는 원본 파일을 삭제하거나 이동하지 않았다.
+
+### 재검증 결과
+
+실제 Flyway 신규 설치·V1 baseline 업그레이드·최신 SQL 직접 생성의 25개 테이블 정의가 일치했다. 자격증 10개·과목 42개·연결 538건을 확인했으며 통합 테스트 63개와 앱 타입·lint 검사가 통과했다. [상세 검증 기록](../../docs/mysql-validation/CERTIFICATE_DB_VALIDATION.md)을 참고한다. api/server에서 npm run certificates:test로 별도 임시 DB 검증을 재실행하며, FLYWAY_EXECUTABLE을 지정하면 실제 CLI도 사용한다. 기본 실행은 SQL 경로만 검증한다.
+
+### 온보딩 관심 분야 상한
+
+프로필 API는 세부분야와 자격증 ID를 합쳐 최대 90개까지 허용한다(현재 세부분야 80개 + 자격증 10개). 91개 이상·중복·미등록·비활성 ID는 거절한다. API 입력 검증 변경이므로 DB 마이그레이션은 필요 없으며 실행 중인 백엔드는 재시작해야 한다. 자격증만 선택한 경우와 전체 90개 선택을 실제 앱 클라이언트로 검증한다.
+
+## MySQL 통합 작업 브랜치 공유 안내
+
+이 브랜치는 기존 develop의 Supabase 연결 코드와 MySQL 전환 작업을 구분하고, 로컬 개발 내용을 팀원 및 EC2에 공유하기 위해 만들었다. main·develop에 병합하거나 PR을 생성하지 않는다.
+
+현재 앱은 여전히 인증 제공자를 선택하는 구조다. 클론만으로 공통 서버에 자동 연결되는 MySQL 전용 배포본은 아니며, 환경별 설정은 예제 파일을 참고해 별도로 준비한다. 비밀번호·개인 키·로컬 환경 파일은 저장소에 포함하지 않는다.
+
+공유 시점의 알려진 제한: schema-v2.sql과 기존 검증 문서 3개가 로컬에서 삭제됐다. setup-db.mjs 및 certificate-validate.mjs에는 삭제된 SQL 참조가 남아 있으므로 db:setup·certificates:test는 정리 전 사용하지 않는다. 빈 DB의 테이블 생성은 api/mysql에서 Flyway migrate·validate로 진행하고 초기 데이터는 별도 적재한다. 기존 문서의 삭제 파일 링크도 추가 정리가 필요하다.

@@ -9,7 +9,7 @@ import { interestName } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { FREE_MAX_STUDY_MIN, PREMIUM_MAX_STUDY_MIN, studyMinutesFor } from "@/lib/economy";
 import { notificationsSupported, requestNotificationPermission } from "@/lib/notify";
-import { authErrorMessage } from "@/lib/supabase";
+import { AUTH_PROVIDER, authErrorMessage } from "@/lib/auth";
 import { radius, raised, shadow, useColors } from "@/theme";
 import { Icon } from "@/components/Icon";
 import { RankUp, type RankUpScene } from "@/components/RankUp";
@@ -213,7 +213,7 @@ export default function Settings() {
           onPress={() =>
             confirm(
               mode === "user" ? "회원 탈퇴" : "데이터 지우기",
-              mode === "user" ? "계정과 모든 공부 기록이 영구 삭제되고 되돌릴 수 없어요." : "이 휴대폰의 기록과 설정이 모두 지워져요.",
+              mode === "user" ? (AUTH_PROVIDER === "mysql" ? "즉시 이용이 중지되고 7일 후 서버 데이터가 삭제돼요. 7일 이내 로그인 화면에서 취소할 수 있어요. 이 기기의 데이터는 신청 후 지워져요." : "계정과 모든 공부 기록이 영구 삭제되고 되돌릴 수 없어요.") : "이 휴대폰의 기록과 설정이 모두 지워져요.",
               mode === "user" ? "탈퇴하기" : "지우기",
               () => deleteAccount().catch((e) => setNotice(authErrorMessage(e))),
             )

@@ -2,6 +2,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { TOPICS, type Topic } from "@/data";
 import { BANK_BUNDLED_FULL, QUIZ_BANK } from "@/data/quizbank";
 import { supabase } from "./supabase";
+import { AUTH_PROVIDER } from "./auth";
+import { fetchBankQuestions } from "./api";
 
 /** 문제마다 어디서 왔는지: bank = 우리가 미리 만든 문제 · ai = 퀴즈 AI가 새로 만든 문제 · offline = 앱 데이터로 만든 연습 문제 */
 export type QuestionSource = "bank" | "ai" | "offline";
@@ -207,7 +209,7 @@ async function fetchAiQuestions(topic: Topic, avoid: QuizQuestion[], fresh: bool
       // 서버가 꺼져 있으면 다음 방법으로
     }
   }
-  if (supabase) {
+  if (supabase && AUTH_PROVIDER !== "mysql") {
     try {
       const { data, error } = await supabase.functions.invoke("generate-quiz", { body });
       const qs = validQuestions((data as { questions?: unknown } | null)?.questions);
@@ -235,26 +237,33 @@ async function saveAiCache(topicId: string, qs: QuizQuestion[]) {
 }
 
 // ───────── 미리 만든 문제 은행: 앱에 든 것 + 서버 quiz_bank 표 ─────────
-const bankCacheKey = (id: string) => `pg.bank.${id}`;
+const bankCacheKey = (id: string) => `pg.${AUTH_PROVIDER === "mysql" ? "mysql.bank" : "bank"}.${id}`;
 const BANK_CACHE_MS = 7 * 24 * 60 * 60 * 1000; // 문제 은행이 늘어나면 1주일 뒤 다시 받음
 
 /**
  * 이 주제의 미리 만든 문제. 앱에 일부만 들어 있으면(BANK_BUNDLED_FULL=false) 서버에서 그 주제 한 줄만 받아
  * 휴대폰에 저장해 두고, 서버에 못 닿으면 저장해 둔 것이나 앱에 든 문제만 씀.
  */
-async function bankQuestions(topicId: string): Promise<QuizQuestion[]> {
+export async function bankQuestions(topicId: string): Promise<QuizQuestion[]> {
   const bundled = validQuestions(QUIZ_BANK[topicId]);
-  if (BANK_BUNDLED_FULL) return bundled;
+  if (AUTH_PROVIDER !== "mysql" && BANK_BUNDLED_FULL) return bundled;
   let cached: QuizQuestion[] = [];
   try {
     const raw = await AsyncStorage.getItem(bankCacheKey(topicId));
     const c = raw ? (JSON.parse(raw) as { at?: number; qs?: unknown }) : null;
     cached = validQuestions(c?.qs);
-    if (cached.length && Date.now() - (c?.at ?? 0) < BANK_CACHE_MS) return [...cached, ...bundled];
+    if (cached.length && Date.now() - (c?.at ?? 0) < BANK_CACHE_MS) return AUTH_PROVIDER === "mysql" ? cached : [...cached, ...bundled];
   } catch {
     // 저장된 게 깨졌으면 새로 받음
   }
-  if (supabase) {
+  if (AUTH_PROVIDER === "mysql") {
+    try {
+      const qs = validQuestions(await fetchBankQuestions(topicId));
+      await AsyncStorage.setItem(bankCacheKey(topicId), JSON.stringify({at: Date.now(), qs}));
+      return qs;
+    } catch { return cached.length ? cached : bundled; }
+  }
+  if (supabase && AUTH_PROVIDER !== "mysql") {
     try {
       const { data, error } = await supabase.from("quiz_bank").select("questions").eq("topic_id", topicId).maybeSingle();
       const qs = validQuestions((data as { questions?: unknown } | null)?.questions);

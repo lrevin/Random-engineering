@@ -1,3 +1,5 @@
+import { AUTH_PROVIDER } from "@/lib/auth";
+import { showDialog } from "@/components/Dialog";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import { FlatList, Pressable, View } from "react-native";
@@ -29,8 +31,9 @@ function Score({ r }: { r: StudyRecord }) {
 }
 
 export default function History() {
-  const { records, mode, xp, keptDays } = useApp();
+  const { records, mode, xp, keptDays, refreshRecords } = useApp();
   const c = useColors();
+  const [syncing,setSyncing]=useState(false);
   const [filter, setFilter] = useState<Filter>("all");
 
   const { streak, today } = calcStreak(records, new Date(), keptDays);
@@ -54,6 +57,12 @@ export default function History() {
         </Pressable>
       </Row>
 
+      {AUTH_PROVIDER === "mysql" && mode === "user" && <>
+        <Btn title={syncing ? "동기화 중…" : "기록 동기화"} disabled={syncing} onPress={async()=>{
+          setSyncing(true);try{await refreshRecords();}catch{showDialog({icon:"offline",title:"연결하지 못했어요",message:"기기의 기록은 유지돼요. 연결 후 다시 시도해 주세요."});}finally{setSyncing(false);}
+        }}/>
+        {records.some(r=>!r.synced)&&<T size={13} color="muted">서버 미반영 기록이 있어요. 이전 기록·배틀 기록 등은 기기에만 보관될 수 있어요.</T>}
+      </>}
       {mode === "guest" && (
         <Card style={{ backgroundColor: c.accentSoft, borderColor: c.accent, gap: 8 }}>
           <T size={14} color="ink2">둘러보기 중이에요. 기록이 이 휴대폰에만 있어서 앱을 지우면 사라져요.</T>

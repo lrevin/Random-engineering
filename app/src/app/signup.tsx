@@ -3,7 +3,7 @@ import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, View } from "react-native";
 import { Btn, Card, Field, Row, Screen, T, tap } from "@/components/ui";
 import { useApp } from "@/lib/app-state";
-import { authErrorMessage } from "@/lib/supabase";
+import { authErrorMessage } from "@/lib/auth";
 import { radius, shadow, useColors } from "@/theme";
 import { Icon } from "@/components/Icon";
 

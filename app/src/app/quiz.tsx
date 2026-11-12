@@ -91,14 +91,15 @@ function QuizInner() {
     const topicBefore = topicMastery(topic.id, records);
     const rec = await addRecord({
       topicId: topic.id, topicKo: topic.ko, domain: topic.domain, category: topic.category, level: topic.level,
+      items: quiz.questions.map((question,i)=>({question,answer:answers[i]??null})),
       memo: a.memo, score, total, rp: rp.total, wrong, studySec: a.quizOnly ? 0 : a.studyUsed, quizSource: quiz.source,
     });
     const topicAfter = topicMastery(topic.id, [...records, rec]);
     setActive((x) => x ? {
       ...x, stage: "result", quiz: { ...quiz, answers },
       result: {
-        recordId: rec.id, score, total, rp: rp.total, parts: rp.parts, streak,
-        userLevelBefore: userLevel(rpBefore).level, userLevelAfter: userLevel(rpBefore + rp.total).level,
+        recordId: rec.id, score, total, rp: rec.rp, parts: rec.xpParts ?? rp.parts, streak: rec.streak ?? streak,
+        userLevelBefore: userLevel(rpBefore).level, userLevelAfter: userLevel(rpBefore + rec.rp).level,
         topicTierBefore: topicBefore.index, topicTierAfter: topicAfter.index,
       },
     } : x);

@@ -7,7 +7,7 @@ const key = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
 /** .env.local 에 Supabase 정보가 없으면 null — 이때 앱은 "둘러보기(게스트)" 모드로만 동작합니다. */
 export const supabase: SupabaseClient | null =
-  url && key
+  process.env.EXPO_PUBLIC_AUTH_PROVIDER !== "mysql" && url && key
     ? createClient(url, key, {
         auth: { storage: localStorage, autoRefreshToken: true, persistSession: true, detectSessionInUrl: false },
       })

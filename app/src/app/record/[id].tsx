@@ -1,9 +1,11 @@
+import { useState } from "react";
+import { AUTH_PROVIDER } from "@/lib/auth";
 import { router, useLocalSearchParams } from "expo-router";
 import { View } from "react-native";
 import { showDialog } from "@/components/Dialog";
 import { TierBadge } from "@/components/Rank";
 import { TopicLinks } from "@/components/TopicLinks";
-import { Badge, Btn, Card, levelTone, Row, Screen, T } from "@/components/ui";
+import { Badge, Btn, Card, Field, levelTone, Row, Screen, T } from "@/components/ui";
 import { levelText, topicById } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { topicMastery } from "@/lib/rank";
@@ -12,8 +14,10 @@ import { useColors } from "@/theme";
 
 export default function RecordDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { records, removeRecord, active, setActive } = useApp();
+  const { records, removeRecord, active, setActive, updateRecordMemo } = useApp();
   const c = useColors();
+  const [draft,setDraft]=useState<string|null>(null);
+  const [saving,setSaving]=useState(false);
   const r = records.find((x) => x.id === id);
   if (!r) {
     return (
@@ -79,7 +83,18 @@ export default function RecordDetail() {
 
       <Card style={{ gap: 6 }}>
         <T size={13} weight="semibold" color="muted">공부 메모</T>
-        <T size={16} color={r.memo ? "ink" : "muted"}>{r.memo || "-"}</T>
+        {AUTH_PROVIDER === "mysql" ? <>
+          <Field label="메모 내용" multiline maxLength={5000} value={draft??r.memo} onChangeText={setDraft}/>
+          <Btn title="메모 저장" loading={saving} onPress={async()=>{setSaving(true);try{await updateRecordMemo(r.id,draft??r.memo);setDraft(null);}catch{showDialog({title:"저장하지 못했어요",message:"다시 시도해 주세요."});}finally{setSaving(false);}}}/>
+          {r.memoPending&&<T size={13} color="muted">기기에 저장됨 · 연결되면 서버에 반영해요.</T>}
+          {r.memoConflict&&<>
+            <T color="accent">다른 기기에서 메모가 변경됐어요. 사용할 내용을 선택해 주세요.</T>
+            <T>{r.memoConflict.memo}</T>
+            <Btn title="서버 메모 사용" onPress={()=>{setDraft(null);updateRecordMemo(r.id,r.memo,"server");}}/>
+            <Btn title="내 메모로 다시 저장" onPress={()=>{setDraft(null);updateRecordMemo(r.id,draft??r.memo,"local");}}/>
+          </>}
+        </> : <T size={16} color={r.memo ? "ink" : "muted"}>{r.memo || "-"}</T>}
+        {!r.synced&&AUTH_PROVIDER === "mysql"&&<T size={13} color="muted">{r.syncError==="incomplete_record"?"전체 답안이 없는 이전 기록은 기기에만 보관해요.":"아직 서버에 반영되지 않은 기록이에요. XP는 임시 값이에요."}</T>}
       </Card>
 
       {r.wrong.length > 0 && (

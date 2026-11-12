@@ -20,9 +20,9 @@ test('MySQL schema, direct import, HTTP reads, constraints and transactions', as
   const catalog = loadCatalog(), files = sourceFiles(), source = loadBank();
   const expectedRows = rowsFor(source);
 
-  await t.test('all 19 V2 tables exist; removed study columns are absent', async () => {
+  await t.test('all 25 current business tables exist; removed study columns are absent', async () => {
     const [tables] = await db.query('SHOW TABLES');
-    assert.equal(tables.length, 19);
+    assert.equal(tables.filter(row=>Object.values(row)[0]!=='flyway_schema_history').length, 25);
     const [columns] = await db.query('SHOW COLUMNS FROM study_records');
     for (const name of ['verification_status','quiz_source','xp_rule_version','wrong']) {
       assert.ok(!columns.some(c => c.Field === name), name);

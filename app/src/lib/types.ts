@@ -9,6 +9,16 @@ export interface WrongAnswer {
 }
 
 export interface StudyRecord {
+  attemptId?: string;
+  items?: {question: QuizQuestion; answer: number | boolean | null}[];
+  changeSeq?: string;
+  verificationStatus?: "client_reported" | "server_verified";
+  xpParts?: RpPart[];
+  streak?: number;
+  syncError?: string;
+  memoPending?: {version: string; baseChangeSeq?: string};
+  memoConflict?: {memo: string; changeSeq: string};
+
   id: string;
   topicId: string;
   topicKo: string;

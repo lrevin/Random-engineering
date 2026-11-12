@@ -8,7 +8,7 @@ function validate(value) {
   const p={nickname:value.nickname,interests:value.interests,level:value.level,studyMinutes:value.studyMinutes,
     reminderEnabled:value.reminderEnabled,reminderTime:value.reminderTime};
   if(typeof p.nickname!=='string' || !p.nickname.trim() || [...p.nickname.trim()].length>20 ||
-    !Array.isArray(p.interests) || p.interests.length>80 || p.interests.some(x=>typeof x!=='string'||!/^[a-z0-9_-]{1,32}$/.test(x)) ||
+    !Array.isArray(p.interests) || p.interests.length>90 || p.interests.some(x=>typeof x!=='string'||!/^[a-z0-9_-]{1,32}$/.test(x)) ||
     new Set(p.interests).size!==p.interests.length || !Number.isInteger(p.level)||p.level<0||p.level>3 ||
     !Number.isInteger(p.studyMinutes)||p.studyMinutes<1||p.studyMinutes>120 || typeof p.reminderEnabled!=='boolean' ||
     typeof p.reminderTime!=='string'||!/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(p.reminderTime)) throw new AuthError('invalid_profile');
@@ -36,7 +36,8 @@ export function createAccountService({auth,connectionFactory=connect}) {
       const p=validate(body);
       return withUser(header,async(db,user)=>{
         if(p.interests.length) {
-          const [rows]=await db.execute(`SELECT id FROM categories WHERE id IN (${p.interests.map(()=>'?').join(',')})`,p.interests);
+          const marks=p.interests.map(()=>'?').join(',');
+          const [rows]=await db.execute(`SELECT id FROM categories WHERE is_active=1 AND id IN (${marks}) UNION SELECT id FROM certificates WHERE is_active=1 AND id IN (${marks})`,[...p.interests,...p.interests]);
           if(rows.length!==p.interests.length) throw new AuthError('invalid_interests');
         }
         await db.execute(`INSERT INTO profiles(user_id,nickname,interests,level,study_minutes,reminder_enabled,reminder_time)

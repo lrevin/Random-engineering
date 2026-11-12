@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createRequire} from 'node:module';
-const require=createRequire(import.meta.url),root=fileURLToPath(new URL('./app-integration/app/src/lib/',import.meta.url));
+const require=createRequire(import.meta.url),root=fs.existsSync(new URL('../../app/src/lib/auth-client.ts',import.meta.url))?fileURLToPath(new URL('../../app/src/lib/',import.meta.url)):fileURLToPath(new URL('./app-integration/app/src/lib/',import.meta.url));
 const ts=createRequire(fileURLToPath(new URL('../../app/package.json',import.meta.url)))('typescript');
 function module(name,dependencies={}){const exports={};const code=ts.transpileModule(fs.readFileSync(path.join(root,name+'.ts'),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;new Function('exports','require',code)(exports,key=>dependencies[key]??require(key));return exports;}
 const clientModule=module('auth-client'),{syncMySqlRecords,enqueueRecordOperation}=module('record-sync',{'./auth-client':clientModule});
