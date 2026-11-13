@@ -272,6 +272,7 @@ export default function Shop() {
         <Perk>결제하는 순간 톱니바퀴 {PREMIUM_BONUS_GEARS}개 지급</Perk>
         <Perk>자격증 모의고사 무제한</Perk>
         <Perk>오답 다시 풀기 (틀린 문제를 변형해서 출제)</Perk>
+        <Perk>로드맵에서 원하는 주제 골라 바로 공부</Perk>
         <Perk>랜덤 매칭 배틀 무제한</Perk>
         <Perk>한 번에 최대 {PREMIUM_MAX_STUDY_MIN}분까지 공부</Perk>
         <Perk>친구 추가 · 친구 목록</Perk>

@@ -8,7 +8,9 @@ import { TierBadge } from "@/components/Rank";
 import { Chip, Row, Screen, T, tap } from "@/components/ui";
 import { categoryById, CERTS, DOMAINS, LEVEL_NAMES, TOPICS, type LevelNum, type Topic } from "@/data";
 import { useApp } from "@/lib/app-state";
+import { studyMinutesFor } from "@/lib/economy";
 import { subjectTopics } from "@/lib/exam";
+import { prefetchQuiz } from "@/lib/quiz";
 import { domainMastery } from "@/lib/rank";
 import { fmtDate } from "@/lib/stats";
 import { radius, useColors } from "@/theme";
@@ -23,7 +25,7 @@ const LEVELS: LevelNum[] = [1, 2, 3];
  * 공부한 주제를 칠해 나감. 주제를 누르면 설명과 내 기록을 보여 줌.
  */
 export default function Roadmap() {
-  const { records, prefs } = useApp();
+  const { records, prefs, premium, active, setActive } = useApp();
   const c = useColors();
 
   // 고를 수 있는 것: 내 관심 분야 → 준비 중인 자격증 → 나머지 분야
@@ -68,14 +70,33 @@ export default function Roadmap() {
   const done = uniq.filter((t) => stats.has(t.id)).length;
   const rank = current?.kind === "domain" ? domainMastery(current.id, records) : null;
 
+  /** 프리미엄: 로드맵에서 고른 주제로 바로 공부 시작 */
+  const startTopic = (t: Topic) => {
+    if (active) {
+      showDialog({ icon: "hourglass", title: "진행 중인 주제가 있어요", message: "먼저 끝내거나 그만둔 뒤 시작할 수 있어요." });
+      return;
+    }
+    const min = studyMinutesFor(prefs.studyMinutes, premium);
+    prefetchQuiz(t);
+    setActive({
+      topicId: t.id, stage: "study", memo: "",
+      studyTotal: min * 60, studyLeft: min * 60, studyUsed: 0,
+      quizOnly: false, quiz: null, result: null, startedAt: new Date().toISOString(), endAt: null,
+    });
+    router.replace("/study");
+  };
+
   const open = (t: Topic) => {
     tap();
     const s = stats.get(t.id);
+    const record = s ? `${s.n}번 공부 · 최고 ${s.best}/${s.total} · 마지막 ${fmtDate(s.last)}` : "아직 공부하지 않았어요.";
     showDialog({
       icon: s ? "check" : "book",
       title: t.ko,
-      message: `${t.categoryName} · Lv.${t.lv} ${t.level}\n${t.hint}\n\n${s ? `${s.n}번 공부 · 최고 ${s.best}/${s.total} · 마지막 ${fmtDate(s.last)}` : "아직 공부하지 않았어요. 슬롯머신에서 뽑히면 공부할 수 있어요."}`,
-      buttons: [{ text: "닫기", style: "cancel" }],
+      message: `${t.categoryName} · Lv.${t.lv} ${t.level}\n${t.hint}\n\n${record}${premium ? "" : "\n\n고른 주제로 바로 공부하기는 프리미엄 기능이에요."}`,
+      buttons: premium
+        ? [{ text: "닫기", style: "cancel" }, { text: "이 주제 공부하기", onPress: () => startTopic(t) }]
+        : [{ text: "닫기", style: "cancel" }, { text: "프리미엄 보기", onPress: () => router.push("/shop") }],
     });
   };
 
@@ -87,7 +108,7 @@ export default function Roadmap() {
           <Icon name="close" size={24} color={c.muted} />
         </Pressable>
       </Row>
-      <T color="ink2">분야마다 기초부터 심화까지 어떤 주제가 있는지 보고, 공부한 주제를 칠해 나가요.</T>
+      <T color="ink2">분야마다 기초부터 심화까지 어떤 주제가 있는지 보고, 공부한 주제를 칠해 나가요.{premium ? " 주제를 누르면 바로 공부할 수 있어요." : ""}</T>
 
       {/* 분야 · 자격증 고르기 */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 2 }}>
