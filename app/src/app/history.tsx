@@ -69,6 +69,17 @@ export default function History() {
         <StatTile icon={<Icon name="bolt" size={30} />} value={`${xp.toLocaleString()}`} label="누적 XP" />
       </StatGrid>
 
+      <Pressable onPress={() => router.push("/report")} accessibilityRole="button">
+        <Card style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <Icon name="calendar" size={34} />
+          <View style={{ flex: 1 }}>
+            <T size={16} weight="bold">학습 리포트</T>
+            <T size={13} color="muted">이번 주 요약 · 학습 캘린더</T>
+          </View>
+          <T size={18} color="muted">›</T>
+        </Card>
+      </Pressable>
+
       <Pressable onPress={() => router.push("/review")} accessibilityRole="button">
         <Card style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
           <Icon name="target" size={34} />
