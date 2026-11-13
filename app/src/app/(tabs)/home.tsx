@@ -1,4 +1,5 @@
 import { router } from "expo-router";
+import { HomeIntro, useHomeIntroFirstTime } from "@/components/HomeIntro";
 import { domainById } from "@/data";
 import { dailyTopic } from "@/lib/daily";
 import { TodayRow } from "@/components/TodayRow";
@@ -22,6 +23,8 @@ type LevelFilter = "0" | "1" | "2" | "3"; // 0 = 전체
 export default function Home() {
   const { prefs, records, active, setActive, gears, updatePrefs, xp, keptDays, freezes, premium, uid } = useApp();
   const lv = userLevel(xp);
+  // 처음 설정을 마치고 홈에 처음 오면 사용법 안내
+  const [introFirst, doneIntro] = useHomeIntroFirstTime();
   const studyMin = studyMinutesFor(prefs.studyMinutes, premium);
   const c = useColors();
   const [level, setLevel] = useState<LevelFilter>(String(prefs.level) as LevelFilter);
@@ -115,6 +118,7 @@ export default function Home() {
 
   return (
     <Screen edges={["top"]} scroll contentStyle={{ flexGrow: 1 }}>
+      <HomeIntro open={introFirst && !active} onClose={doneIntro} />
       {/* 레벨 + 연속 일수 + 톱니바퀴: 세 칸 모두 같은 높이, 위 줄(아이콘 22 · 숫자 18) / 아래 줄(설명 11) */}
       <Row gap={8} style={{ flexWrap: "nowrap", alignItems: "stretch" }}>
         <HeaderTile onPress={() => router.push("/profile")} label="내 프로필" style={{ flex: 1, alignItems: "stretch" }}>
