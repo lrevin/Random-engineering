@@ -6,6 +6,7 @@ import { createContext, useCallback, useContext, useEffect, useLayoutEffect, use
 import { AppState as RNAppState } from "react-native";
 import { BATTLE_TICKET_COST, FREE_BATTLE_TICKETS, FREEZE_COST, MAX_BOUGHT_TICKETS, MAX_FREEZES, monthKey, planStreakRescue, PREMIUM_BONUS_GEARS, refillTickets, RESTORE_COST_PER_DAY, type StreakRescue, type Tickets } from "./economy";
 import { AD_DAILY_LIMIT, AD_REWARD } from "./ads";
+import { clearAllLocalData, LOCAL_KEYS } from "./local-data";
 import { resetBoost } from "./booster";
 import { resetSkins } from "./skins";
 import { dateKey } from "./stats";
@@ -16,25 +17,26 @@ import { DEFAULT_PREFS, type ActiveSession, type Prefs, type StudyRecord, type W
 /** none: 아직 시작 전(첫 화면) · guest: 로그인 없이 둘러보기 · user: 회원 */
 export type Mode = "none" | "guest" | "user";
 
+const L = LOCAL_KEYS;
 const K = {
-  mode: "pg.mode",
-  prefs: "pg.prefs",
-  onboarded: "pg.onboarded",
-  records: "pg.records",
-  active: "pg.active",
-  gears: "pg.gears",
-  freezes: "pg.freezes",
-  kept: "pg.keptDays",
-  premium: "pg.premium",
+  mode: L.mode.key,
+  prefs: L.prefs.key,
+  onboarded: L.onboarded.key,
+  records: L.records.key,
+  active: L.active.key,
+  gears: L.gears.key,
+  freezes: L.freezes.key,
+  kept: L.kept.key,
+  premium: L.premium.key,
   /** 결제 보너스를 받은 달 ("YYYY-MM" 목록) */
-  premiumBonus: "pg.premiumBonus",
-  tickets: "pg.battleTickets",
-  battleXp: "pg.battleXp",
-  battlesApplied: "pg.battlesApplied",
-  uid: "pg.uid",
-  rescueAsked: "pg.rescueAsked",
-  questClaims: "pg.questClaims",
-  adViews: "pg.adViews",
+  premiumBonus: L.premiumBonus.key,
+  tickets: L.tickets.key,
+  battleXp: L.battleXp.key,
+  battlesApplied: L.battlesApplied.key,
+  uid: L.uid.key,
+  rescueAsked: L.rescueAsked.key,
+  questClaims: L.questClaims.key,
+  adViews: L.adViews.key,
 };
 
 /** 친구 추가용 UID: 헷갈리는 글자(0/O, 1/I)를 뺀 8자리 */
@@ -275,7 +277,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [saveRecordsLocal, setModePersist, syncPending]);
 
   const clearLocal = useCallback(async () => {
-    await AsyncStorage.multiRemove([...Object.values(K), "pg.exam", "pg.exam.active", "pg.review.done2", "pg.recall", "pg.certDates", "pg.speed"]).catch(() => {});
+    await clearAllLocalData();
     resetSkins();
     resetBoost();
     await cancelAllNotifications().catch(() => {});

@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { LOCAL_KEYS } from "./local-data";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
 /**
@@ -10,7 +11,7 @@ export const BOOST_COST = 40;
 export const BOOST_MIN = 30;
 export const BOOST_MAX_MIN = 120;
 
-const KEY = "pg.boost";
+const KEY = LOCAL_KEYS.boost.key;
 let until = 0;
 let loaded = false;
 const listeners = new Set<() => void>();

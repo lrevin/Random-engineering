@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { LOCAL_KEYS } from "./local-data";
 import { topicById, type Topic } from "@/data";
 import type { ExamWrong } from "./exam";
 import { variantQuestion, type QuizQuestion } from "./quiz";
@@ -39,7 +40,7 @@ export async function buildReview(wrongs: WrongItem[], n = REVIEW_LENGTH): Promi
 // ───────── 해결한 오답 (변형 문제를 맞히면 오답 목록에서 빠짐) ─────────
 /** 문제 key → 해결한 시각 */
 export type DoneMap = Record<string, string>;
-const DONE_KEY = "pg.review.done2";
+const DONE_KEY = LOCAL_KEYS.reviewDone.key;
 export async function readDone(): Promise<DoneMap> {
   try {
     const raw = await AsyncStorage.getItem(DONE_KEY);
