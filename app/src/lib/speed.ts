@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { LOCAL_KEYS } from "./local-data";
 import { dateKey } from "./stats";
 
 /**
@@ -10,7 +11,7 @@ export const SPEED_SEC = 60;
 export const SPEED_XP_PER_CORRECT = 3;
 export const SPEED_DAILY_XP_CAP = 150;
 
-const KEY = "pg.speed";
+const KEY = LOCAL_KEYS.speed.key;
 export interface SpeedStore { best: number; day: string; xpToday: number; plays: number }
 const EMPTY: SpeedStore = { best: 0, day: "", xpToday: 0, plays: 0 };
 

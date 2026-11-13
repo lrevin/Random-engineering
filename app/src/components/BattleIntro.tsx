@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { LOCAL_KEYS } from "@/lib/local-data";
 import { useEffect, useState } from "react";
 import { Modal, Pressable, View } from "react-native";
 import { BATTLE_TICKET_COST, BATTLE_XP_MAX, FREE_BATTLE_TICKETS } from "@/lib/economy";
@@ -7,7 +8,7 @@ import { radius, shadow, useColors } from "@/theme";
 import { Icon, type IconName } from "./Icon";
 import { Btn, T, tap } from "./ui";
 
-const SEEN_KEY = "pg.battleIntroSeen";
+const SEEN_KEY = LOCAL_KEYS.battleIntroSeen.key;
 
 const PAGES: { icon: IconName; title: string; body: string }[] = [
   { icon: "swords", title: "랜덤 매칭 배틀", body: "다른 학습자와 1:1로 붙어요. 매칭되면 두 사람에게 같은 주제가 같은 순간에 뽑혀요." },

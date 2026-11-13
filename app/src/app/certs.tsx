@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { LOCAL_KEYS } from "@/lib/local-data";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Pressable, View } from "react-native";
@@ -12,7 +13,7 @@ import { readExamStore, subjectTopics, type ExamResult } from "@/lib/exam";
 import { dateKey } from "@/lib/stats";
 import { radius, useColors } from "@/theme";
 
-const DATES_KEY = "pg.certDates";
+const DATES_KEY = LOCAL_KEYS.certDates.key;
 const pct = (a: number, b: number) => (b ? Math.round((a / b) * 100) : 0);
 const DOW = ["일", "월", "화", "수", "목", "금", "토"];
 

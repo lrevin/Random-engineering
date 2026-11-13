@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { LOCAL_KEYS } from "./local-data";
 import { certById, topicById, TOPICS, type CertDef, type Topic } from "@/data";
 import { FREE_EXAMS_PER_DAY } from "./economy";
 import { examQuestions, type ExamItem } from "./quiz";
@@ -56,7 +57,7 @@ export function gradeExam(paper: ExamPaper, answers: (number | boolean)[]): Exam
 export const subjectFailed = (s: ExamSubjectScore) => s.total > 0 && s.score / s.total < EXAM_SUBJECT_MIN;
 
 // ───────── 저장: 오늘 본 횟수 + 지난 결과 ─────────
-const KEY = "pg.exam";
+const KEY = LOCAL_KEYS.exam.key;
 /** 모의고사에서 틀린 문제 (오답 다시 풀기에서 씀) */
 export interface ExamWrong { topicId: string; q: string; answer: string; explain: string; at: string }
 interface ExamStore { day: string; n: number; results: ExamResult[]; wrongs: ExamWrong[]; /** 톱니바퀴로 산 모의고사 1회권 */ tickets: number }
@@ -97,7 +98,7 @@ export async function addExamTicket(): Promise<ExamStore> {
 }
 
 // ───────── 풀고 있는 모의고사 (앱이 꺼져도 이어서 풀기) ─────────
-const ACTIVE_KEY = "pg.exam.active";
+const ACTIVE_KEY = LOCAL_KEYS.examActive.key;
 export interface ActiveExam { paper: ExamPaper; answers: (number | boolean)[] }
 export async function readActiveExam(): Promise<ActiveExam | null> {
   try {

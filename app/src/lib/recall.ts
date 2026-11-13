@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { LOCAL_KEYS } from "./local-data";
 import { topicById, type Topic } from "@/data";
 import { examQuestions, type ExamItem } from "./quiz";
 import { dateKey } from "./stats";
@@ -14,7 +15,7 @@ export const RECALL_DAYS = 2;
 export const RECALL_TOPICS = 5;
 export const RECALL_PER_TOPIC = 3;
 
-const KEY = "pg.recall";
+const KEY = LOCAL_KEYS.recall.key;
 /** 주제 id → 마지막으로 복습한 시각 */
 export type RecallLog = Record<string, string>;
 

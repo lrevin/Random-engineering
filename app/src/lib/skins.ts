@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { LOCAL_KEYS } from "./local-data";
 import { useSyncExternalStore } from "react";
 
 /**
@@ -120,7 +121,7 @@ interface CosmeticState {
   /** 받은 연속 기록 보상 (일수) */
   milestones: number[];
 }
-const KEY = "pg.skins";
+const KEY = LOCAL_KEYS.skins.key;
 const INITIAL: CosmeticState = { owned: ["classic"], active: "classic", titles: [], title: null, milestones: [] };
 let state: CosmeticState = INITIAL;
 let loaded = false;
