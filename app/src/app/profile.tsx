@@ -153,7 +153,7 @@ export default function Profile() {
           {/* 분야별 랭크 */}
           {ranks.length > 0 && (
             <>
-              <SectionTitle title="분야 랭크" right={<T size={13} color="muted">{ranks.length}개 분야</T>} />
+              <SectionTitle title="분야 랭크" right={<Pressable onPress={() => router.push("/roadmap")} hitSlop={8}><T size={13} weight="semibold" color="accent">로드맵 ›</T></Pressable>} />
               <Card style={{ gap: 14 }}>
                 {ranks.map((d) => (
                   <View key={d.domain} style={{ gap: 6 }}>
