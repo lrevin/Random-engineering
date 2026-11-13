@@ -13,6 +13,7 @@ import { authErrorMessage } from "@/lib/supabase";
 import { radius, raised, shadow, useColors } from "@/theme";
 import { Icon } from "@/components/Icon";
 import { RankUp, type RankUpScene } from "@/components/RankUp";
+import { HomeIntro } from "@/components/HomeIntro";
 import { userLevel } from "@/lib/rank";
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -76,6 +77,7 @@ export default function Settings() {
   const [nick, setNick] = useState(prefs.nickname);
   const [notice, setNotice] = useState("");
   const [rankUpPreview, setRankUpPreview] = useState<RankUpScene[]>([]);
+  const [intro, setIntro] = useState(false);
 
   const saveNick = () => {
     const n = nick.trim();
@@ -186,6 +188,7 @@ export default function Settings() {
         )}
       </Section>
 
+      <HomeIntro open={intro} onClose={() => setIntro(false)} />
       {rankUpPreview.length > 0 && <RankUp scenes={rankUpPreview} onDone={() => setRankUpPreview([])} />}
       {__DEV__ && (
         <Section title="개발용 (출시 빌드에서는 안 보임)">
@@ -203,6 +206,7 @@ export default function Settings() {
       )}
 
       <Section title="정보">
+        <Item label="사용법 다시 보기" sub="뽑기 · 공부 · 퀴즈 · 퀘스트 · 상점 안내" onPress={() => setIntro(true)} />
         <Item label="개인정보처리방침" onPress={() => router.push("/privacy")} />
         <Item label="이용약관" onPress={() => router.push("/privacy?doc=terms")} />
         <Item label="버전" right={<T color="muted">{Constants.expoConfig?.version ?? "-"}</T>} last />

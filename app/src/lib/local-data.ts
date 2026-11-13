@@ -52,6 +52,7 @@ export const LOCAL_KEYS = {
   examActive: { key: "pg.exam.active", group: "device", desc: "풀고 있는 모의고사 (이어 풀기)", server: false },
   rescueAsked: { key: "pg.rescueAsked", group: "device", desc: "연속 기록 복구 창을 오늘 띄웠는지", server: false },
   battleIntroSeen: { key: "pg.battleIntroSeen", group: "device", desc: "배틀 설명을 봤는지", server: false },
+  homeIntroSeen: { key: "pg.homeIntroSeen", group: "device", desc: "홈 사용법 안내를 봤는지", server: false },
 } satisfies Record<string, LocalKey>;
 
 export type LocalKeyName = keyof typeof LOCAL_KEYS;
