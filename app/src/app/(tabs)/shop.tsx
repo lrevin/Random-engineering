@@ -232,7 +232,7 @@ export default function Shop() {
           borderColor: c.line, backgroundColor: c.paper, ...raised(c.paperEdge, pressed, 5), ...(!pressed ? shadow(c, 2) : null),
         })}
       >
-        <Icon name="slot" size={52} />
+        <View style={{ backgroundColor: c.chip, borderRadius: radius.md, padding: 6 }}><Icon name="slot" size={46} /></View>
         <View style={{ flex: 1, gap: 2 }}>
           <T size={19} weight="bold">스킨 · 칭호</T>
           <T size={13} color="ink2">지금 {skins.active.name}</T>

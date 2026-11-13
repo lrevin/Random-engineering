@@ -49,7 +49,7 @@ function SkinPreview({ skin, size = 92 }: { skin: SlotSkin; size?: number }) {
 /** 칭호 배지 (프로필 등에서도 씀) */
 export function TitleBadge({ t, size = 13 }: { t: TitleDef; size?: number }) {
   return (
-    <View style={{ alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 4, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 3, backgroundColor: t.color }}>
+    <View style={{ alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 4, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 3, backgroundColor: t.color, borderWidth: 1, borderColor: "rgba(255,255,255,0.28)" }}>
       <Icon name="medal" size={size + 3} />
       <T size={size} weight="bold" style={{ color: "#ffffff" }}>{t.name}</T>
     </View>
@@ -100,7 +100,7 @@ export default function Skins() {
         borderColor: on ? c.accent : c.line, borderBottomWidth: 5, borderBottomColor: on ? c.accentDeep : c.paperEdge,
         backgroundColor: c.paper, ...shadow(c, 1),
       }}>
-        <View style={{ opacity: has || src.kind !== "streak" ? 1 : 0.45 }}><SkinPreview skin={s} /></View>
+        <View style={{ opacity: has || src.kind !== "streak" ? 1 : 0.45, backgroundColor: c.chip, borderRadius: radius.md, padding: 4 }}><SkinPreview skin={s} /></View>
         <View style={{ flex: 1, gap: 6 }}>
           <Row gap={6}>
             <T size={18} weight="bold">{s.name}</T>
