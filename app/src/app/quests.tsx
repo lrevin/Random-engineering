@@ -8,7 +8,7 @@ import { ProgressBar, QuestRow, useQuests } from "@/components/Quests";
 import { EXTEND_COST, GearCount } from "@/components/TimeUpSheet";
 import { Btn, Card, T, tap } from "@/components/ui";
 import { useApp } from "@/lib/app-state";
-import { BATTLE_TICKET_COST, FREEZE_COST, RESTORE_COST_PER_DAY } from "@/lib/economy";
+import { RESTORE_COST_PER_DAY } from "@/lib/economy";
 import { PERIODS, untilEnd, type Period } from "@/lib/quests";
 import { radius, useColors } from "@/theme";
 
@@ -139,7 +139,7 @@ export default function Quests() {
           <View style={{ backgroundColor: c.chip, borderRadius: radius.md, padding: 14, gap: 4 }}>
             <T size={14} weight="semibold">톱니바퀴는 어디에 쓰나요?</T>
             <T size={13} color="ink2">
-              배틀권({BATTLE_TICKET_COST}개), 연속 기록 보호권({FREEZE_COST}개), 끊긴 연속 기록 복구(하루 {RESTORE_COST_PER_DAY}개), 공부 시간 2분 추가({EXTEND_COST}개)에 쓸 수 있어요.
+              상점에서 보호권 · 배틀권 · 모의고사 1회권 · 경험치 부스터 · 스킨 · 칭호를 사고, 끊긴 연속 기록 복구(하루 {RESTORE_COST_PER_DAY}개)와 공부 시간 추가({EXTEND_COST}개)에도 써요.
             </T>
           </View>
         </View>
