@@ -1,45 +1,24 @@
 import { router } from "expo-router";
-import { useMemo, useState } from "react";
-import { FlatList, Pressable, View } from "react-native";
+import { useMemo } from "react";
+import { Pressable, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Btn, Card, Row, Segment, T } from "@/components/ui";
-import { ALL_CATEGORIES, domainById } from "@/data";
+import { Btn, Card, Row, T } from "@/components/ui";
+import { ALL_CATEGORIES } from "@/data";
 import { useApp } from "@/lib/app-state";
-import { UserLevelBar, TierBadge } from "@/components/Rank";
-import { domainMastery } from "@/lib/rank";
-import { averageScore, calcStreak, fmtDate } from "@/lib/stats";
-import type { StudyRecord } from "@/lib/types";
-import { radius, raised, shadow, useColors } from "@/theme";
+import { UserLevelBar } from "@/components/Rank";
+import { averageScore, calcStreak } from "@/lib/stats";
+import { useColors } from "@/theme";
 import { DomainIcon, Icon } from "@/components/Icon";
 import { SectionTitle, StatGrid, StatTile } from "@/components/StatTile";
 import { WeeklyReport } from "@/components/WeeklyReport";
 
-type Filter = "all" | "review";
-
-/** 다시 볼 주제 기준: 정답률 60% 이하 */
-const needsReview = (r: StudyRecord) => r.total > 0 && r.score / r.total <= 0.6;
-
-function Score({ r }: { r: StudyRecord }) {
-  const c = useColors();
-  const ok = r.total > 0 && r.score / r.total > 0.6;
-  return (
-    <T size={15} weight="bold" style={{ color: ok ? c.success : c.accent }}>
-      {r.score}<T size={12} color="muted">/{r.total}</T>
-    </T>
-  );
-}
-
 export default function History() {
   const { records, mode, xp, keptDays } = useApp();
   const c = useColors();
-  const [filter, setFilter] = useState<Filter>("all");
 
   const { streak, today } = calcStreak(records, new Date(), keptDays);
   const avg = averageScore(records);
-  const list = useMemo(
-    () => [...records].filter((r) => filter === "all" || needsReview(r)).reverse(),
-    [records, filter],
-  );
+
   const bars = useMemo(() => {
     const counts = ALL_CATEGORIES.map((cat) => ({ ...cat, n: records.filter((r) => r.category === cat.id).length }));
     const max = Math.max(1, ...counts.map((x) => x.n));
@@ -71,6 +50,17 @@ export default function History() {
       </StatGrid>
 
       <WeeklyReport />
+
+      <Pressable onPress={() => router.push("/recent")} accessibilityRole="button">
+        <Card style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <Icon name="books" size={34} />
+          <View style={{ flex: 1 }}>
+            <T size={16} weight="bold">최근 공부한 주제</T>
+            <T size={13} color="muted">{records.length ? `${records.length}개 · 점수와 오답 보기` : "아직 기록이 없어요"}</T>
+          </View>
+          <T size={18} color="muted">›</T>
+        </Card>
+      </Pressable>
 
       <Pressable onPress={() => router.push("/review")} accessibilityRole="button">
         <Card style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
@@ -107,51 +97,14 @@ export default function History() {
         </Card>
       )}
 
-      <Row style={{ justifyContent: "space-between" }}>
-        <Segment<Filter> value={filter} onChange={setFilter} options={[{ value: "all", label: "전체" }, { value: "review", label: "다시 볼 주제 (6점↓)" }]} />
-        <T size={13} color="muted">{list.length}개</T>
-      </Row>
     </View>
-  );
-
-  const item = ({ item: r }: { item: StudyRecord }) => (
-    <Pressable
-      onPress={() => router.push(`/record/${r.id}`)}
-      style={({ pressed }) => ({
-        backgroundColor: c.paper, borderWidth: 1, borderColor: c.line, borderRadius: radius.md, padding: 14, marginBottom: 10,
-        ...raised(c.paperEdge, pressed, 4), ...(!pressed ? shadow(c, 1) : null),
-      })}
-    >
-      <View style={{ gap: 2 }}>
-        <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
-          <T size={16} weight="semibold" numberOfLines={1} style={{ flex: 1 }}>{r.topicKo}</T>
-          <Score r={r} />
-        </Row>
-        <T size={13} color="muted">
-          {fmtDate(r.studiedAt)} · {ALL_CATEGORIES.find((x) => x.id === r.category)?.name ?? r.category} · +{r.rp} XP
-          {!r.synced && mode === "user" ? " · 동기화 대기" : ""}
-        </T>
-        <Row gap={6}>
-          <TierBadge index={domainMastery(r.domain, records).index} prefix={domainById(r.domain)?.name} size="sm" />
-        </Row>
-      </View>
-    </Pressable>
   );
 
   return (
     <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: c.bg }}>
-      <FlatList
-        data={list}
-        keyExtractor={(r) => r.id}
-        renderItem={item}
-        ListHeaderComponent={header}
-        contentContainerStyle={{ padding: 20, maxWidth: 640, width: "100%", alignSelf: "center" }}
-        ListEmptyComponent={
-          <T color="muted" center style={{ paddingVertical: 30 }}>
-            {filter === "review" ? "퀴즈 6점 이하인 주제가 없어요. 잘하고 있어요!" : "아직 기록이 없어요.\n공부 탭에서 첫 주제를 뽑아 보세요."}
-          </T>
-        }
-      />
+      <ScrollView contentContainerStyle={{ padding: 20, maxWidth: 640, width: "100%", alignSelf: "center" }}>
+        {header}
+      </ScrollView>
     </SafeAreaView>
   );
 }
