@@ -11,7 +11,7 @@ import { FREE_MAX_STUDY_MIN, PREMIUM_MAX_STUDY_MIN, studyMinutesFor } from "@/li
 import { notificationsSupported, requestNotificationPermission } from "@/lib/notify";
 import { authErrorMessage } from "@/lib/supabase";
 import { radius, raised, shadow, useColors } from "@/theme";
-import { Icon } from "@/components/Icon";
+import { Icon, type IconName } from "@/components/Icon";
 import { RankUp, type RankUpScene } from "@/components/RankUp";
 import { HomeIntro } from "@/components/HomeIntro";
 import { userLevel } from "@/lib/rank";
@@ -25,19 +25,54 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function Item({ label, sub, right, onPress, last }: { label: string; sub?: string; right?: ReactNode; onPress?: () => void; last?: boolean }) {
+function Item({ label, sub, right, onPress, last, icon }: { label: string; sub?: string; right?: ReactNode; onPress?: () => void; last?: boolean; icon?: IconName }) {
   const c = useColors();
   return (
     <Pressable
       disabled={!onPress}
       onPress={() => { tap(); onPress?.(); }}
-      style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", paddingVertical: 13, gap: 12, borderBottomWidth: last ? 0 : 1, borderBottomColor: c.line, opacity: pressed ? 0.6 : 1 })}
+      accessibilityRole={onPress ? "button" : undefined}
+      style={({ pressed }) => ({
+        flexDirection: "row", alignItems: "center", paddingVertical: 12, gap: 12,
+        borderBottomWidth: last ? 0 : 1, borderBottomColor: c.line,
+        backgroundColor: pressed ? c.chip : "transparent", marginHorizontal: -16, paddingHorizontal: 16,
+      })}
     >
-      <View style={{ flex: 1 }}>
-        <T size={16}>{label}</T>
-        {sub ? <T size={13} color="muted">{sub}</T> : null}
+      {icon && (
+        <View style={{ width: 38, height: 38, borderRadius: 11, backgroundColor: c.chip, alignItems: "center", justifyContent: "center" }}>
+          <Icon name={icon} size={22} color={c.ink2} />
+        </View>
+      )}
+      <View style={{ flex: 1, gap: 1 }}>
+        <T size={16} weight="semibold">{label}</T>
+        {sub ? <T size={12} color="muted" numberOfLines={2}>{sub}</T> : null}
       </View>
-      {right ?? (onPress ? <T color="muted">›</T> : null)}
+      {right ?? (onPress ? (
+        <View style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: c.chip, alignItems: "center", justifyContent: "center" }}>
+          <T size={15} weight="bold" color="ink2" style={{ lineHeight: 18 }}>›</T>
+        </View>
+      ) : null)}
+    </Pressable>
+  );
+}
+
+/** 공부 묶음의 큰 버튼 (세 개 나란히) */
+function BigButton({ icon, label, sub, onPress }: { icon: IconName; label: string; sub: string; onPress: () => void }) {
+  const c = useColors();
+  return (
+    <Pressable
+      onPress={() => { tap(); onPress(); }}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      style={({ pressed }) => ({
+        flex: 1, alignItems: "center", gap: 4, paddingVertical: 14, paddingHorizontal: 6,
+        borderRadius: radius.lg, borderWidth: 1.5, borderColor: c.line, backgroundColor: c.paper,
+        ...raised(c.paperEdge, pressed, 4), ...(!pressed ? shadow(c, 1) : null),
+      })}
+    >
+      <Icon name={icon} size={34} />
+      <T size={15} weight="bold" center>{label}</T>
+      <T size={11} color="muted" center numberOfLines={2}>{sub}</T>
     </Pressable>
   );
 }
@@ -147,25 +182,27 @@ export default function Settings() {
           {nick.trim() !== prefs.nickname && <Btn title="닉네임 저장" size="sm" variant="primary" onPress={saveNick} />}
         </View>
         {mode === "user" ? (
-          <Item label="로그인 계정" sub={email ?? ""} last />
+          <Item icon="lock" label="로그인 계정" sub={email ?? ""} last />
         ) : (
-          <Item label="둘러보기 중" sub="회원가입하면 기록이 안전하게 보관돼요" onPress={() => router.push("/signup")} last />
+          <Item icon="user-plus" label="둘러보기 중" sub="회원가입하면 기록이 안전하게 보관돼요" onPress={() => router.push("/signup")} last />
         )}
       </Section>
 
-      <Section title="공부">
-        <Item label="공부 기록" sub="학습 현황 · 지난 기록 · 오답 노트" onPress={() => router.push("/history")} />
-        <Item label="학습 리포트" sub="이번 주 요약 · 학습 캘린더" onPress={() => router.push("/report")} />
-        <Item label="로드맵" sub="분야 · 자격증별 주제 지도 (기초 → 심화)" onPress={() => router.push("/roadmap")} />
-        <Item label="자격증 대시보드" sub="시험일 디데이 · 과목별 진도 · 점수 추이" onPress={() => router.push("/certs")} />
-        <Item label="오늘의 복습" sub="공부한 지 2일 지난 주제를 3문제씩 다시 풀기" onPress={() => router.push("/recall")} />
-        <Item label="자격증 모의고사" sub={premium ? "과목별 점수 · 합격 판정 · 무제한" : "과목별 점수 · 합격 판정 · 무료 하루 1회"} onPress={() => router.push("/exam")} />
-        <Item label="오답 다시 풀기" sub={premium ? "틀린 문제를 변형 문제로 다시 풀기" : "프리미엄 · 틀린 문제를 변형 문제로 다시 풀기"} onPress={() => router.push("/review")} />
-        <Item label="관심 분야" sub={interestNames.length > 4 ? `${interestNames.slice(0, 4).join(", ")} 외 ${interestNames.length - 4}개` : interestNames.join(", ")} onPress={() => router.push("/interests")} />
+      <View style={{ gap: 8 }}>
+        <T size={13} weight="semibold" color="muted" style={{ marginLeft: 4 }}>공부</T>
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          <BigButton icon="calendar" label="공부 기록" sub="리포트 · 캘린더 · 지난 기록" onPress={() => router.push("/history")} />
+          <BigButton icon="tree" label="로드맵" sub="분야별 주제 지도" onPress={() => router.push("/roadmap")} />
+          <BigButton icon="medal" label="자격증" sub="디데이 · 과목별 진도" onPress={() => router.push("/certs")} />
+        </View>
+      </View>
+
+      <Section title="공부 설정">
+        <Item icon="target" label="관심 분야" sub={interestNames.length > 4 ? `${interestNames.slice(0, 4).join(", ")} 외 ${interestNames.length - 4}개` : interestNames.join(", ")} onPress={() => router.push("/interests")} />
         <View style={{ paddingVertical: 13, gap: 10, borderBottomWidth: 1, borderBottomColor: c.line }}>
           <View>
-            <T size={16}>기본 난이도</T>
-            <T size={13} color="muted">주제 뽑기 화면의 처음 필터</T>
+            <T size={16} weight="semibold">기본 난이도</T>
+            <T size={12} color="muted">주제 뽑기 화면의 처음 필터</T>
           </View>
           <Segment<"0" | "1" | "2" | "3">
             value={String(prefs.level) as "0" | "1" | "2" | "3"}
@@ -173,11 +210,12 @@ export default function Settings() {
             options={[{ value: "0", label: "전체" }, { value: "1", label: "Lv.1 기초" }, { value: "2", label: "Lv.2 중급" }, { value: "3", label: "Lv.3 심화" }]}
           />
         </View>
-        <Item label="공부 시간" sub={premium ? `최대 ${PREMIUM_MAX_STUDY_MIN}분 · 끝나면 퀴즈 7문제` : `무료는 최대 ${FREE_MAX_STUDY_MIN}분 · 끝나면 퀴즈 7문제`} right={<Minutes value={studyMinutesFor(prefs.studyMinutes, premium)} min={1} max={premium ? PREMIUM_MAX_STUDY_MIN : FREE_MAX_STUDY_MIN} onChange={(v) => updatePrefs({ studyMinutes: v })} />} last />
+        <Item icon="hourglass" label="공부 시간" sub={premium ? `최대 ${PREMIUM_MAX_STUDY_MIN}분` : `무료는 최대 ${FREE_MAX_STUDY_MIN}분`} right={<Minutes value={studyMinutesFor(prefs.studyMinutes, premium)} min={1} max={premium ? PREMIUM_MAX_STUDY_MIN : FREE_MAX_STUDY_MIN} onChange={(v) => updatePrefs({ studyMinutes: v })} />} last />
       </Section>
 
       <Section title="매일 알림">
         <Item
+          icon="bell"
           label="공부 알림 받기"
           sub="그날 이미 공부했으면 알림이 오지 않아요"
           right={<Switch value={prefs.reminderEnabled} onValueChange={toggleReminder} trackColor={{ true: c.accent, false: c.line2 }} thumbColor={c.paper} />}
@@ -208,10 +246,10 @@ export default function Settings() {
       )}
 
       <Section title="정보">
-        <Item label="사용법 다시 보기" sub="뽑기 · 공부 · 퀴즈 · 퀘스트 · 상점 안내" onPress={() => setIntro(true)} />
-        <Item label="개인정보처리방침" onPress={() => router.push("/privacy")} />
-        <Item label="이용약관" onPress={() => router.push("/privacy?doc=terms")} />
-        <Item label="버전" right={<T color="muted">{Constants.expoConfig?.version ?? "-"}</T>} last />
+        <Item icon="book" label="사용법 다시 보기" sub="뽑기 · 공부 · 퀴즈 · 퀘스트 · 상점 안내" onPress={() => setIntro(true)} />
+        <Item icon="shield" label="개인정보처리방침" onPress={() => router.push("/privacy")} />
+        <Item icon="doc" label="이용약관" onPress={() => router.push("/privacy?doc=terms")} />
+        <Item icon="gear" label="버전" right={<T color="muted">{Constants.expoConfig?.version ?? "-"}</T>} last />
       </Section>
 
       <View style={{ gap: 6, marginTop: 4 }}>
