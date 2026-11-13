@@ -1,18 +1,21 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { View } from "react-native";
 import { showDialog } from "@/components/Dialog";
+import { Icon } from "@/components/Icon";
 import { TierBadge } from "@/components/Rank";
 import { TopicLinks } from "@/components/TopicLinks";
 import { Badge, Btn, Card, levelTone, Row, Screen, T } from "@/components/ui";
 import { domainById, levelText, topicById } from "@/data";
 import { useApp } from "@/lib/app-state";
+import { studyMinutesFor } from "@/lib/economy";
+import { prefetchQuiz } from "@/lib/quiz";
 import { domainMastery } from "@/lib/rank";
 import { fmtDate, fmtDuration } from "@/lib/stats";
 import { useColors } from "@/theme";
 
 export default function RecordDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { records, removeRecord, active, setActive } = useApp();
+  const { records, removeRecord, active, setActive, prefs, premium } = useApp();
   const c = useColors();
   const r = records.find((x) => x.id === id);
   if (!r) {
@@ -41,6 +44,25 @@ export default function RecordDetail() {
       message: `"${r.topicKo}" 기록이 지워지고 되돌릴 수 없어요.`,
       buttons: [{ text: "취소", style: "cancel" }, { text: "삭제", style: "destructive", onPress: run }],
     });
+  };
+
+  /** 이 주제를 처음부터 다시 공부 → 퀴즈 (전에 틀린 문제는 빼고 새 문제 위주로) */
+  const restudy = () => {
+    if (!topic) return;
+    if (active) {
+      showDialog({ icon: "hourglass", title: "진행 중인 주제가 있어요", message: "먼저 끝내거나 그만둔 뒤 다시 공부할 수 있어요." });
+      return;
+    }
+    const seen = records.filter((x) => x.topicId === topic.id).flatMap((x) => x.wrong.map((w) => w.q));
+    const min = studyMinutesFor(prefs.studyMinutes, premium);
+    prefetchQuiz(topic, seen);
+    setActive({
+      topicId: topic.id, stage: "study", memo: "",
+      studyTotal: min * 60, studyLeft: min * 60, studyUsed: 0,
+      quizOnly: false, quiz: null, result: null, startedAt: new Date().toISOString(), endAt: null,
+    });
+    router.dismissAll();
+    router.push("/study");
   };
 
   /** 공부 없이 이 주제 퀴즈만 다시 풀기 (주제 숙련 랭크 올리기) */
@@ -94,7 +116,9 @@ export default function RecordDetail() {
       )}
 
       <View style={{ gap: 8, marginTop: 8 }}>
-        {topic && <Btn title="이 주제 퀴즈 다시 풀기" variant="accent" onPress={retryQuiz} />}
+        {topic && <Btn title="이 주제 공부 다시 하기" variant="accent" icon={<Icon name="book" size={22} />} onPress={restudy} />}
+        {topic && !ok && <T size={12} color="muted" center>다시 공부하고 나면 전에 틀린 문제는 빼고 새 문제로 퀴즈를 풀어요.</T>}
+        {topic && <Btn title="공부 없이 퀴즈만 다시 풀기" onPress={retryQuiz} />}
         <Btn title="닫기" variant="primary" onPress={() => router.back()} />
         <Btn title="이 기록 삭제" variant="ghost" onPress={del} />
       </View>

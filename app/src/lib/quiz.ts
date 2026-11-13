@@ -270,11 +270,15 @@ async function bankQuestions(topicId: string): Promise<QuizQuestion[]> {
 }
 
 // ───────── 한 번 풀 퀴즈 만들기 ─────────
-async function buildQuiz(topic: Topic, fresh: boolean): Promise<QuizSet> {
-  const bank = distinct((await bankQuestions(topic.id)).map((q) => ({ ...q, src: "bank" as const })));
+async function buildQuiz(topic: Topic, fresh: boolean, seen: string[] = []): Promise<QuizSet> {
+  const all = distinct((await bankQuestions(topic.id)).map((q) => ({ ...q, src: "bank" as const })));
+  // 다시 공부: 전에 풀었던 문제(seen)와 비슷한 건 빼고 새 문제 위주로 (남는 게 모자라면 전체에서)
+  const seenQs: QuizQuestion[] = seen.map((q) => ({ type: "ox", q, answer: true, explain: "" }));
+  const unseen = distinct(all, seenQs);
+  const bank = unseen.length >= QUIZ_LENGTH - AI_COUNT ? unseen : all;
 
   // AI 문제: 미리 만든 문제와 비슷하면 버림
-  let ai: QuizQuestion[] = distinct(await fetchAiQuestions(topic, bank, fresh), bank).map((q) => ({ ...q, src: "ai" as const }));
+  let ai: QuizQuestion[] = distinct(await fetchAiQuestions(topic, [...bank, ...seenQs], fresh), [...bank, ...seenQs]).map((q) => ({ ...q, src: "ai" as const }));
   if (ai.length) saveAiCache(topic.id, ai).catch(() => {});
   else ai = distinct(shuffle(await readAiCache(topic.id)), bank).map((q) => ({ ...q, src: "ai" as const }));
   ai = pickQuestions(ai, AI_COUNT);
@@ -308,10 +312,10 @@ export function loadQuiz(topic: Topic): Promise<QuizSet> {
  * 주제를 뽑기만 하고 다시 뽑는 경우에는 AI를 부르지 않아 비용이 들지 않음.
  * 같은 주제로 이미 시작했으면 다시 만들지 않음 (공부 화면에서도 불러도 됨).
  */
-export const prefetchQuiz = (topic: Topic) => {
+export const prefetchQuiz = (topic: Topic, seen: string[] = []) => {
   const ready = prepared.get(topic.id);
-  if (ready && Date.now() - ready.at < PREPARED_TTL) return;
-  const p = buildQuiz(topic, true);
+  if (ready && Date.now() - ready.at < PREPARED_TTL && !seen.length) return;
+  const p = buildQuiz(topic, true, seen);
   p.catch(() => {});
   prepared.set(topic.id, { at: Date.now(), p });
 };
