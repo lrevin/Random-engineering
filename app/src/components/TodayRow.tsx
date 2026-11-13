@@ -123,25 +123,23 @@ export function TodayRow() {
   );
 }
 
-/** 오늘의 주제 카드: 슬롯머신 안에 나오는 모양 그대로 + 보상 조건 */
+/** 오늘의 주제 카드: 슬롯머신에 나오는 내용 + 보상 조건 */
 function DailySheet({ open, topic, onClose, onStart }: { open: boolean; topic: Topic; onClose: () => void; onStart: () => void }) {
   const c = useColors();
   const { records } = useApp();
   return (
     <Modal visible={open} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
-      <Pressable onPress={onClose} style={{ flex: 1, backgroundColor: "rgba(10,14,26,0.6)", justifyContent: "center", padding: 24 }}>
-        <Pressable onPress={() => {}} style={{ backgroundColor: c.slot, borderRadius: radius.lg + 4, padding: 10, gap: 8, borderBottomWidth: 6, borderBottomColor: c.slotEdge, maxWidth: 420, width: "100%", alignSelf: "center", ...shadow(c, 3) }}>
-          <View style={{ flexDirection: "row", justifyContent: "center", gap: 10 }}>
-            {[c.gold, c.accent, c.gold].map((col, i) => <View key={i} style={{ width: 11, height: 11, borderRadius: 6, backgroundColor: col }} />)}
-          </View>
-          <View style={{ backgroundColor: c.slotWindow, borderRadius: radius.lg - 4, paddingVertical: 22, paddingHorizontal: 20, alignItems: "center", gap: 8 }}>
-            <T size={13} weight="bold" color="accent">오늘의 주제</T>
+      <Pressable onPress={onClose} style={{ flex: 1, backgroundColor: "rgba(10,14,26,0.55)", justifyContent: "center", padding: 24 }}>
+        {/* 기존 확인 창(Dialog)과 같은 모양: 금색 윗줄 · 별 · 제목 · 내용 · 버튼 두 개 */}
+        <Pressable onPress={() => {}} style={{ backgroundColor: c.paper, borderRadius: radius.lg, padding: 22, gap: 16, borderTopWidth: 5, borderTopColor: c.gold, maxWidth: 400, width: "100%", alignSelf: "center", ...shadow(c, 3) }}>
+          <View style={{ alignItems: "center", gap: 8 }}>
+            <Icon name="star" size={56} style={{ marginBottom: 4 }} />
+            <T size={20} weight="bold" center>오늘의 주제: {topic.ko}</T>
             <View style={{ flexDirection: "row", gap: 6, justifyContent: "center", flexWrap: "wrap" }}>
               <Badge label={topic.categoryName} icon={<DomainIcon id={topic.domain} size={20} />} />
               <Badge label={levelText(topic.lv)} tone={levelTone(topic.level)} />
             </View>
-            <T size={30} weight="bold" center style={{ letterSpacing: -0.6, lineHeight: 38 }}>{topic.ko}</T>
-            <T size={14} color="muted" center>{topic.en}</T>
+            <T size={13} color="muted" center>{topic.en}</T>
             {/* 한글이 글자 단위로 끊기지 않게 단어 단위로 */}
             <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", columnGap: 4 }}>
               {topic.hint.split(" ").map((w, i) => <T key={i} size={15} color="ink2">{w}</T>)}
@@ -150,14 +148,14 @@ function DailySheet({ open, topic, onClose, onStart }: { open: boolean; topic: T
               <TierBadge index={domainMastery(topic.domain, records).index} prefix={domainById(topic.domain)?.name} size="sm" />
               <T size={12} color="muted">퀴즈 최대 +{maxRpFor(topic)} XP</T>
             </View>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.md, backgroundColor: c.goldSoft }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4, paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.md, backgroundColor: c.goldSoft }}>
               <Icon name="gear" size={20} />
               <T size={13} weight="semibold">퀴즈를 {DAILY_MIN_CORRECT}개 이상 맞히면 톱니바퀴 {DAILY_TOPIC_GEARS}개</T>
             </View>
           </View>
-          <View style={{ flexDirection: "row", gap: 8 }}>
+          <View style={{ flexDirection: "row", gap: 10 }}>
             <Btn title="나중에" onPress={onClose} style={{ flex: 1 }} />
-            <Btn title="공부 시작" variant="accent" onPress={onStart} style={{ flex: 1 }} />
+            <Btn title="공부 시작" variant="primary" onPress={onStart} style={{ flex: 1 }} />
           </View>
         </Pressable>
       </Pressable>
