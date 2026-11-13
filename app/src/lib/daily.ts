@@ -8,6 +8,8 @@ import type { StudyRecord } from "./types";
  * 오늘 그 주제를 공부해서 퀴즈까지 끝내면 톱니바퀴 보너스.
  */
 export const DAILY_TOPIC_GEARS = 10;
+/** 오늘의 주제 보상을 받으려면 퀴즈에서 이만큼 맞혀야 함 */
+export const DAILY_MIN_CORRECT = 4;
 
 function hash(s: string) {
   let h = 2166136261;
@@ -24,9 +26,9 @@ export function dailyTopic(uid: string, interests: string[], now = new Date()): 
 
 export const dailyKey = (now = new Date()) => `daily-topic:${dateKey(now)}`;
 
-/** 오늘 오늘의 주제를 공부했는지 */
+/** 오늘 오늘의 주제를 공부해서 퀴즈를 DAILY_MIN_CORRECT개 이상 맞혔는지 */
 export const dailyDone = (topic: Topic | null, records: StudyRecord[], now = new Date()) => {
   if (!topic) return false;
   const k = dateKey(now);
-  return records.some((r) => r.topicId === topic.id && dateKey(new Date(r.studiedAt)) === k);
+  return records.some((r) => r.topicId === topic.id && dateKey(new Date(r.studiedAt)) === k && r.score >= DAILY_MIN_CORRECT);
 };
