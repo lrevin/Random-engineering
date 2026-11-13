@@ -1,7 +1,8 @@
+import {catalogRevision,subscribeCatalog} from "./catalog-sync";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import type { Session } from "@supabase/supabase-js";
 import * as Crypto from "expo-crypto";
-import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {topicById} from "@/data";
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { AppState as RNAppState } from "react-native";
 import { BATTLE_TICKET_COST, FREE_BATTLE_TICKETS, FREEZE_COST, MAX_BOUGHT_TICKETS, MAX_FREEZES, monthKey, planStreakRescue, PREMIUM_BONUS_GEARS, refillTickets, RESTORE_COST_PER_DAY, type StreakRescue, type Tickets } from "./economy";
 import { AD_DAILY_LIMIT, AD_REWARD } from "./ads";
@@ -9,17 +10,16 @@ import { resetBoost } from "./booster";
 import { resetSkins } from "./skins";
 import { dateKey } from "./stats";
 import { cancelAllNotifications, rescheduleReminders } from "./notify";
-import { supabase } from "./supabase";
 import { mysqlAuth } from "./auth";
-import { AuthApiError, type AuthSession } from "./auth-client";
+import { AuthApiError, type AuthSession, type WalletState } from "./auth-client";
 import { enqueueRecordOperation, syncMySqlRecords } from "./record-sync";
-import { DEFAULT_PREFS, type ActiveSession, type Prefs, type StudyRecord, type WrongAnswer } from "./types";
+import { DEFAULT_PREFS, type ActiveSession, type Prefs, type StudyRecord } from "./types";
 
 /** none: 아직 시작 전(첫 화면) · guest: 로그인 없이 둘러보기 · user: 회원 */
 export type Mode = "none" | "guest" | "user";
 
 const K = {
-  account: mysqlAuth ? "pg.mysql.owner" : "pg.supabase.owner",
+  account: "pg.mysql.owner",
   mode: "pg.mode",
   prefs: "pg.prefs",
   onboarded: "pg.onboarded",
@@ -40,8 +40,8 @@ const K = {
   adViews: "pg.adViews",
 };
 
-// Separate provider caches: a Supabase account is never uploaded into a MySQL account.
-if (mysqlAuth) for (const key of Object.keys(K) as (keyof typeof K)[]) {
+// Preserve existing MySQL cache keys and account isolation.
+for (const key of Object.keys(K) as (keyof typeof K)[]) {
   if (key !== "account") K[key] = K[key].replace(/^pg\./, "pg.mysql.");
 }
 
@@ -56,6 +56,7 @@ type NewRecord = Omit<StudyRecord, "id" | "synced" | "studiedAt">;
 
 interface AppStateValue {
   ready: boolean;
+  catalogVersion: number;
   mode: Mode;
   email: string | null;
   serverEnabled: boolean;
@@ -66,19 +67,22 @@ interface AppStateValue {
   /** 톱니바퀴 잔액 */
   gears: number;
   /** 톱니바퀴를 n개 씁니다. 모자라면 false */
-  spendGears(n: number): boolean;
+  spendGears(n: number, product?: string): Promise<boolean>;
+  walletNotice: string;
   /** 경험치 합계 = 공부 기록에서 얻은 경험치 + 배틀로 얻고 잃은 경험치 */
   xp: number;
   /** 연속 기록 보호권 개수 · 보호권/톱니바퀴로 지킨 날짜 */
   freezes: number;
   keptDays: string[];
-  buyFreeze(): boolean;
+  buyFreeze(): Promise<boolean>;
   /** 앱을 열었을 때 끊긴 연속 기록 안내 (보호권 자동 사용 결과 + 톱니바퀴 복구 제안) */
   rescue: StreakRescue | null;
-  restoreStreak(): boolean;
+  restoreStreak(): Promise<boolean>;
   dismissRescue(): void;
   /** 개발용: 연속 기록 복구 창 미리 보기 (어제·그제를 빠진 날로) */
   devPreviewRescue(): void;
+  /** 개발용: 어제까지 7일 연속으로 공부한 기록을 넣음 (복습 · 연속 기록 보상 · 업적 점검용) */
+  devSeedRecords(topicIds: string[]): void;
   /** 유료 버전 여부 (결제 연동 전이라 시험용으로 켜고 끔) */
   premium: boolean;
   setPremium(v: boolean): void;
@@ -90,8 +94,8 @@ interface AppStateValue {
   freeTickets: number;
   boughtTickets: number;
   /** 톱니바퀴 BATTLE_TICKET_COST개로 배틀권 1개 사기 (최대 MAX_BOUGHT_TICKETS개까지 보유) */
-  buyBattleTicket(): boolean;
-  spendBattleTicket(): boolean;
+  buyBattleTicket(): Promise<boolean>;
+  spendBattleTicket(): Promise<boolean>;
   refundBattleTicket(): void;
   /** 배틀 결과 경험치 반영 (같은 배틀은 한 번만) */
   applyBattleXp(battleId: string, delta: number): void;
@@ -101,17 +105,19 @@ interface AppStateValue {
   uid: string;
   /** 오늘 본 보상형 광고 수 · 광고를 끝까지 봤을 때 톱니바퀴 지급 (하루 제한 넘으면 false) */
   adViewsToday: number;
-  grantAdReward(): boolean;
+  grantAdReward(): Promise<boolean>;
   /** 받은 퀘스트 보상 키 (quest:날짜:id) */
   questClaims: string[];
   /** 퀘스트 보상 받기 (같은 키는 한 번만). 톱니바퀴를 reward개 더함 */
-  claimQuest(key: string, reward: number): boolean;
+  claimQuest(key: string, reward: number): Promise<boolean>;
   startGuest(): Promise<void>;
   signUp(email: string, password: string): Promise<{ needsConfirm: boolean }>;
   signIn(email: string, password: string): Promise<void>;
   signOut(): Promise<void>;
   cancelDeletion(email: string, password: string): Promise<void>;
   refreshRecords(): Promise<void>;
+  refreshWallet(): Promise<void>;
+  refreshSpeedXp(): Promise<void>;
   updateRecordMemo(id: string, memo: string, choice?: "local" | "server"): Promise<void>;
   deleteAccount(): Promise<void>;
   updatePrefs(p: Partial<Prefs>, opts?: { finishOnboarding?: boolean }): Promise<void>;
@@ -139,23 +145,6 @@ async function readJSON<T>(key: string, fallback: T): Promise<T> {
 }
 const writeJSON = (key: string, v: unknown) => AsyncStorage.setItem(key, JSON.stringify(v)).catch(() => {});
 
-// ───────── 서버 행 ↔ 앱 객체 변환 ─────────
-type RecordRow = {
-  id: string; topic_id: string; topic_ko: string; domain: string; category: string; level: string;
-  memo: string; score: number; quiz_total: number; rp: number; wrong: WrongAnswer[] | null;
-  study_sec: number; quiz_source: string; studied_at: string;
-};
-const toRow = (r: StudyRecord, userId: string) => ({
-  id: r.id, user_id: userId, topic_id: r.topicId, topic_ko: r.topicKo, domain: r.domain, category: r.category, level: r.level,
-  memo: r.memo.slice(0, 5000), score: r.score, quiz_total: r.total, rp: r.rp, wrong: r.wrong.slice(0, 10),
-  study_sec: r.studySec, quiz_source: r.quizSource, studied_at: r.studiedAt,
-});
-const fromRow = (x: RecordRow): StudyRecord => ({
-  id: x.id, topicId: x.topic_id, topicKo: x.topic_ko, domain: x.domain, category: x.category, level: x.level,
-  memo: x.memo, score: x.score, total: x.quiz_total, rp: x.rp, wrong: x.wrong ?? [], studySec: x.study_sec,
-  quizSource: (["bank", "ai", "offline"].includes(x.quiz_source) ? x.quiz_source : "ai") as StudyRecord["quizSource"], studiedAt: x.studied_at, synced: true,
-});
-
 /** 이전 버전(별점 방식) 기록을 새 형식으로 바꿉니다. */
 const normalizeRecord = (r: Partial<StudyRecord> & { rating?: number }): StudyRecord => ({
   ...r, id: r.id ?? "", topicId: r.topicId ?? "", topicKo: r.topicKo ?? "", domain: r.domain ?? "it",
@@ -170,25 +159,12 @@ const normalizeRecord = (r: Partial<StudyRecord> & { rating?: number }): StudyRe
   synced: !!r.synced,
 });
 
-type ProfileRow = {
-  nickname: string; interests: string[]; level: number; study_minutes: number;
-  reminder_enabled: boolean; reminder_time: string;
-};
-const prefsToProfile = (p: Prefs, id: string) => ({
-  id, nickname: p.nickname, interests: p.interests, level: p.level, study_minutes: p.studyMinutes,
-  reminder_enabled: p.reminderEnabled, reminder_time: p.reminderTime, updated_at: new Date().toISOString(),
-});
-const profileToPrefs = (x: ProfileRow): Prefs => ({
-  nickname: x.nickname, interests: x.interests ?? [], level: ([0, 1, 2, 3].includes(x.level) ? x.level : 0) as Prefs["level"],
-  studyMinutes: x.study_minutes, reminderEnabled: x.reminder_enabled, reminderTime: x.reminder_time,
-});
-
 const sortRecords = (rs: StudyRecord[]) => [...rs].sort((a, b) => a.studiedAt.localeCompare(b.studiedAt));
 
 export function AppProvider({ children }: { children: ReactNode }) {
+  const catalogVersion=useSyncExternalStore(subscribeCatalog,catalogRevision,catalogRevision);
   const [ready, setReady] = useState(false);
   const [mode, setMode] = useState<Mode>("none");
-  const [session, setSession] = useState<Session | null>(null);
   const [apiSession, setApiSession] = useState<AuthSession | null>(null);
   const ownerRef = useRef<string | null>(null);
   const syncQueue = useRef<Promise<void>>(Promise.resolve());
@@ -203,6 +179,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [tickets, setTickets] = useState<Tickets>(() => refillTickets(null));
   const ticketsRef = useRef<Tickets>(refillTickets(null));
   const [battleXp, setBattleXp] = useState(0);
+  const [speedXp,setSpeedXp]=useState(0);
   const [questClaims, setQuestClaims] = useState<string[]>([]);
   const questRef = useRef<string[]>([]);
   // 오늘 본 보상형 광고 수 { day: "YYYY-MM-DD", n }
@@ -219,6 +196,45 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const keptRef = useRef(keptDays);
   const freezesRef = useRef(freezes);
   const appliedRef = useRef<string[]>([]);
+  const [walletNotice, setWalletNotice] = useState("");
+  const walletQueue = useRef<Promise<unknown>>(Promise.resolve());
+  const walletRevision = useRef("0");
+  const applyWallet = useCallback((value: WalletState) => {
+    const revision=value.revision??"0";
+    if(BigInt(revision)<BigInt(walletRevision.current))return;
+    walletRevision.current=revision;
+    gearsRef.current=value.balance; setGears(value.balance); writeJSON(K.gears,value.balance);
+    freezesRef.current=value.state.freezes; setFreezes(value.state.freezes); writeJSON(K.freezes,value.state.freezes);
+    const t={n:value.state.freeTickets,bought:value.state.boughtTickets,month:value.state.month};
+    ticketsRef.current=t;setTickets(t);writeJSON(K.tickets,t);
+    setPremiumState(value.state.premium);writeJSON(K.premium,value.state.premium);
+    keptRef.current=value.state.keptDays;setKeptDays(value.state.keptDays);writeJSON(K.kept,value.state.keptDays);
+    questRef.current=value.claims;setQuestClaims(value.claims);writeJSON(K.questClaims,value.claims);
+  }, []);
+  const refreshWallet = useCallback(async () => {
+    const owner=ownerRef.current;
+    if(!owner)return;
+    const value=await mysqlAuth.getWallet();
+    if(ownerRef.current===owner){applyWallet(value);setWalletNotice("");}
+  },[applyWallet]);
+  const remoteWallet = useCallback((action: string, payload: Record<string,unknown> = {}) => {
+    const owner=ownerRef.current;
+    const run=walletQueue.current.catch(()=>{}).then(async()=>{
+      if(!owner || ownerRef.current!==owner)return false;
+      const key='pg.mysql.wallet.pending.'+owner;
+      const pending=await readJSON<{id:string;action:string;payload:Record<string,unknown>}|null>(key,null);
+      if(pending){
+        try {const value=await mysqlAuth.walletOperation(pending.id,pending.action,pending.payload);if(ownerRef.current!==owner)return false;applyWallet(value);await AsyncStorage.removeItem(key);
+          if(pending.action===action&&JSON.stringify(pending.payload)===JSON.stringify(payload)){setWalletNotice("");return true;}
+        }catch(e){if(e instanceof AuthApiError&&e.status>=400&&e.status<500)await AsyncStorage.removeItem(key);throw e;}
+      }
+      const request={id:Crypto.randomUUID(),action,payload};await AsyncStorage.setItem(key,JSON.stringify(request));
+      try {const value=await mysqlAuth.walletOperation(request.id,action,payload);if(ownerRef.current!==owner)return false;applyWallet(value);await AsyncStorage.removeItem(key);setWalletNotice("");return true;}
+      catch(e){if(e instanceof AuthApiError&&e.status>=400&&e.status<500)await AsyncStorage.removeItem(key);throw e;}
+    }).catch((e:unknown)=>{
+      if(ownerRef.current===owner){const code=e instanceof AuthApiError?e.code:'';setWalletNotice(({insufficient_balance:'톱니바퀴가 부족해요.',verification_required:'서버의 광고·결제 확인을 준비하고 있어요.',product_not_available:'이 상품의 계정 저장을 준비하고 있어요.',operation_not_available:'이 기능의 서버 연결을 준비하고 있어요.',quest_not_complete:'서버에 저장된 학습 기록으로 보상 조건을 확인하지 못했어요.',already_claimed:'이미 받은 보상이에요.'} as Record<string,string>)[code]??'서버에 연결하지 못했어요. 다시 시도해 주세요.');}return false;
+    });walletQueue.current=run;return run;
+  }, [applyWallet]);
   useLayoutEffect(() => {
     recordsRef.current = records;
     prefsRef.current = prefs;
@@ -241,69 +257,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   /** 서버에 아직 안 올라간 기록을 올립니다. */
   const syncPending = useCallback(async (userId: string) => {
-    if (mysqlAuth) {
-      const client = mysqlAuth;
-      const task = enqueueRecordOperation(syncQueue, async () => {
-        if (ownerRef.current !== userId) return;
-        await syncMySqlRecords(client, () => recordsRef.current, saveRecordsLocal,
-          () => ownerRef.current === userId,
-          r => AsyncStorage.setItem("pg.mysql.memo-draft." + userId + "." + r.id, JSON.stringify(r)));
-      });
-      return task;
-    }
-    if (!supabase) return;
-    const pending = recordsRef.current.filter((r) => !r.synced);
-    if (!pending.length) return;
-    const { error } = await supabase.from("study_records").upsert(pending.map((r) => toRow(r, userId)));
-    if (error) return;
-    const ids = new Set(pending.map((r) => r.id));
-    saveRecordsLocal(recordsRef.current.map((r) => (ids.has(r.id) ? { ...r, synced: true } : r)));
+    return enqueueRecordOperation(syncQueue, async () => {
+      if (ownerRef.current !== userId) return;
+      await syncMySqlRecords(mysqlAuth, () => recordsRef.current, saveRecordsLocal,
+        () => ownerRef.current === userId,
+        r => AsyncStorage.setItem("pg.mysql.memo-draft." + userId + "." + r.id, JSON.stringify(r)));
+    });
   }, [saveRecordsLocal]);
-
-  /** 로그인 직후: 프로필과 기록을 서버에서 가져오고, 게스트 때 쌓은 기록은 계정으로 옮깁니다. */
-  const loadAccount = useCallback(async (s: Session) => {
-    if (!supabase) return;
-    const uid = s.user.id;
-    setSession(s);
-
-    const { data: profile, error: pErr } = await supabase.from("profiles").select("*").eq("id", uid).maybeSingle();
-    if (profile) {
-      const p = profileToPrefs(profile as ProfileRow);
-      setPrefs(p); writeJSON(K.prefs, p);
-      setOnboarded(true); writeJSON(K.onboarded, true);
-    } else if (!pErr) {
-      const local = prefsRef.current;
-      const localOnboarded = await readJSON(K.onboarded, false);
-      if (localOnboarded && local.nickname && local.interests.length) {
-        // 게스트로 설정해 둔 관심 분야를 그대로 계정에 저장
-        const { error } = await supabase.from("profiles").upsert(prefsToProfile(local, uid));
-        setOnboarded(!error);
-      } else {
-        setOnboarded(false); writeJSON(K.onboarded, false);
-      }
-    }
-    // 오프라인 등으로 프로필을 못 읽으면 로컬 상태를 그대로 사용
-
-    await syncPending(uid);
-    const { data: rows, error: rErr } = await supabase
-      .from("study_records").select("*").order("studied_at", { ascending: true }).limit(5000);
-    if (!rErr && rows) {
-      const server = (rows as RecordRow[]).map(fromRow);
-      const ids = new Set(server.map((r) => r.id));
-      const unsynced = recordsRef.current.filter((r) => !r.synced && !ids.has(r.id));
-      saveRecordsLocal(sortRecords([...server, ...unsynced]));
-    }
-    setModePersist("user");
-  }, [saveRecordsLocal, setModePersist, syncPending]);
 
   const clearLocal = useCallback(async () => {
     ownerRef.current = null;
+    walletRevision.current="0";
     setApiSession(null);
-    await AsyncStorage.multiRemove([...Object.values(K), "pg.exam", "pg.exam.active", "pg.review.done2", "pg.recall", "pg.certDates"]).catch(() => {});
+    await AsyncStorage.multiRemove([...Object.values(K), "pg.exam", "pg.exam.active", "pg.review.done2", "pg.recall", "pg.certDates", "pg.speed"]).catch(() => {});
     resetSkins();
     resetBoost();
     await cancelAllNotifications().catch(() => {});
-    setSession(null);
     setPrefs(DEFAULT_PREFS);
     setOnboarded(false);
     saveRecordsLocal([]);
@@ -315,7 +284,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setPremiumState(false);
     ticketsRef.current = refillTickets(null);
     setTickets(refillTickets(null));
-    setBattleXp(0);
+    setBattleXp(0);setSpeedXp(0);
     questRef.current = [];
     setQuestClaims([]);
     appliedRef.current = [];
@@ -362,8 +331,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const refreshSpeedXp=useCallback(async()=>{
+    const id=ownerRef.current;if(!id)return;
+    const stats=await mysqlAuth.getSpeedStats();if(ownerRef.current!==id)return;
+    setSpeedXp(stats.totalXp);await writeJSON("pg.mysql.speed.xp."+id,stats.totalXp);
+  },[]);
+
   const refreshApiProfile = useCallback(async () => {
-    if (!mysqlAuth) return;
     try {
       let remote = await mysqlAuth.getProfile();
       const localOnboarded = await readJSON(K.onboarded, false);
@@ -399,22 +373,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     }
     ownerRef.current = s.user.id;
+    saveRecordsLocal(recordsRef.current.filter(r=>!r.devOnly));
+    setSpeedXp(await readJSON<number>("pg.mysql.speed.xp."+s.user.id,0));
     await writeJSON(K.account, s.user.id);
     setApiSession(s);
     setModePersist("user");
     await refreshApiProfile();
+    await refreshSpeedXp().catch(()=>{});
+    try { const value=await mysqlAuth.getWallet();if(ownerRef.current===s.user.id)applyWallet(value); }catch {setWalletNotice('재화 정보를 갱신하지 못했어요. 인터넷 연결 후 다시 열어 주세요.');}
+    try { const social=await mysqlAuth.apiRequest('/social/me',{},'POST');if(ownerRef.current===s.user.id){setUid(social.uid);await writeJSON(K.uid,social.uid);} }catch { /* Friends retry on the next account load. */ }
     await syncPending(s.user.id).catch(() => {});
-  }, [archiveApiAccount, clearLocal, refreshApiProfile, restoreAccountExtras, saveRecordsLocal, setModePersist, syncPending]);
+  }, [applyWallet, archiveApiAccount, clearLocal, refreshSpeedXp, refreshApiProfile, restoreAccountExtras, saveRecordsLocal, setModePersist, syncPending]);
 
   const cancelDeletion = useCallback(async (email: string, password: string) => {
-    if (!mysqlAuth) throw new AuthApiError("feature_not_migrated");
     await loadApiAccount(await mysqlAuth.cancelDeletion(email, password));
   }, [loadApiAccount]);
 
   const refreshRecords = useCallback(async () => {
-    const id = apiSession?.user.id ?? session?.user.id;
+    const id = apiSession?.user.id;
     if (mode === "user" && id) await syncPending(id);
-  }, [apiSession, session, mode, syncPending]);
+  }, [apiSession, mode, syncPending]);
 
   const updateRecordMemo = useCallback(async (id: string, memo: string, choice?: "local" | "server") => {
     if ([...memo].length > 5000) throw new Error("메모는 5,000자까지 저장할 수 있어요.");
@@ -426,9 +404,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return;
     }
     const changed = {...r, memo, memoConflict: undefined,
-      memoPending: mysqlAuth && mode === "user" ? {version: Crypto.randomUUID(), baseChangeSeq: choice === "local" ? conflict?.changeSeq : r.memoPending?.baseChangeSeq ?? r.changeSeq} : undefined};
+      memoPending: mode === "user" ? {version: Crypto.randomUUID(), baseChangeSeq: choice === "local" ? conflict?.changeSeq : r.memoPending?.baseChangeSeq ?? r.changeSeq} : undefined};
     saveRecordsLocal(recordsRef.current.map(x => x.id === id ? changed : x));
-    if (mysqlAuth && mode === "user" && apiSession) await syncPending(apiSession.user.id).catch(() => {});
+    if (mode === "user" && apiSession) await syncPending(apiSession.user.id).catch(() => {});
   }, [mode, apiSession, saveRecordsLocal, syncPending]);
 
   // ───────── 앱 시작 ─────────
@@ -488,62 +466,41 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setUid(myUid);
       if (!id) writeJSON(K.uid, myUid);
 
-      if (mysqlAuth) {
-        try {
-          const restored = await mysqlAuth.restore();
-          if (!alive) return;
-          if (restored) await loadApiAccount(restored);
-          else setMode(m === "user" ? "none" : m);
-        } catch { if (alive) setMode(m === "user" ? "none" : m); }
-        finally { if (alive) setReady(true); }
-        return;
-      }
-      if (supabase) {
-        const { data } = await supabase.auth.getSession();
-        if (data.session) {
-          setMode("user");
-          setSession(data.session);
-          setReady(true);
-          loadAccount(data.session).catch(() => {}); // 화면은 로컬 데이터로 먼저 띄우고 서버는 뒤에서 갱신
-          return;
-        }
-      }
-      setMode(m === "user" ? "none" : m); // 세션이 만료됐으면 첫 화면으로
-      setReady(true);
+      try {
+        const restored = await mysqlAuth.restore();
+        if (!alive) return;
+        if (restored) await loadApiAccount(restored);
+        else setMode(m === "user" ? "none" : m);
+      } catch { if (alive) setMode(m === "user" ? "none" : m); }
+      finally { if (alive) setReady(true); }
     })();
     return () => { alive = false; };
-  }, [loadAccount, loadApiAccount]);
+  }, [loadApiAccount]);
 
   // 로그아웃 감지 (토큰 만료, 다른 기기에서 탈퇴 등)
-  useEffect(() => {
-    if (mysqlAuth) return mysqlAuth.subscribe(s => { setApiSession(s); if (!s) setModePersist("none"); });
-    if (!supabase) return;
-    const { data } = supabase.auth.onAuthStateChange((event, s) => {
-      if (event === "SIGNED_OUT") setSession(null);
-      else if (s) setSession(s);
-    });
-    return () => data.subscription.unsubscribe();
-  }, [setModePersist]);
+  useEffect(() => mysqlAuth.subscribe(s => {
+    setApiSession(s);
+    if (!s) setModePersist("none");
+  }), [setModePersist]);
 
   useEffect(() => {
-    if (!mysqlAuth || mode !== "user") return;
+    if (mode !== "user") return;
     const client = mysqlAuth;
-    const refresh = () => { client.ensure().then(setApiSession).catch(() => {}); };
+    const refresh = () => { const owner=ownerRef.current;refreshSpeedXp().catch(()=>{});client.ensure().then(setApiSession).catch(() => {});client.getWallet().then(value=>{if(owner&&ownerRef.current===owner)applyWallet(value);}).catch(()=>{});client.apiRequest("/social/me",{},"POST").then(data=>{if(owner&&ownerRef.current===owner){setUid(data.uid);writeJSON(K.uid,data.uid);}}).catch(()=>{}); };
     const timer = setInterval(() => { if (RNAppState.currentState === "active") refresh(); }, 60000);
     const sub = RNAppState.addEventListener("change", st => { if (st === "active") refresh(); });
     return () => { clearInterval(timer); sub.remove(); };
-  }, [mode]);
+  }, [mode, applyWallet, refreshSpeedXp]);
 
   // 앱으로 돌아올 때마다 밀린 기록 동기화 + 알림 다시 예약
   useEffect(() => {
     const sub = RNAppState.addEventListener("change", (st) => {
       if (st !== "active") return;
       if (mode === "user" && apiSession) syncPending(apiSession.user.id).catch(() => {});
-      else if (mode === "user" && session) syncPending(session.user.id).catch(() => {});
       if (onboarded) rescheduleReminders(prefsRef.current, recordsRef.current).catch(() => {});
     });
     return () => sub.remove();
-  }, [mode, session, apiSession, onboarded, syncPending]);
+  }, [mode, apiSession, onboarded, syncPending]);
 
   useEffect(() => {
     if (ready && onboarded) rescheduleReminders(prefs, records).catch(() => {});
@@ -554,62 +511,36 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const startGuest = useCallback(async () => setModePersist("guest"), [setModePersist]);
 
   const signUp = useCallback(async (email: string, password: string) => {
-    if (mysqlAuth) {
-      const s = await mysqlAuth.signUp(email, password);
-      await loadApiAccount(s);
-      return { needsConfirm: false };
-    }
-    if (!supabase) throw new Error("서버가 아직 연결되지 않았어요.");
-    const { data, error } = await supabase.auth.signUp({ email: email.trim(), password });
-    if (error) throw error;
-    if (!data.session) return { needsConfirm: true }; // 이메일 인증이 켜져 있으면 메일 확인 후 로그인
-    await loadAccount(data.session);
+    await loadApiAccount(await mysqlAuth.signUp(email, password));
     return { needsConfirm: false };
-  }, [loadAccount, loadApiAccount]);
+  }, [loadApiAccount]);
 
   const signIn = useCallback(async (email: string, password: string) => {
-    if (mysqlAuth) {
-      const s = await mysqlAuth.signIn(email, password);
-      await loadApiAccount(s);
-      return;
-    }
-    if (!supabase) throw new Error("서버가 아직 연결되지 않았어요.");
-    const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-    if (error) throw error;
-    await loadAccount(data.session);
-  }, [loadAccount, loadApiAccount]);
+    await loadApiAccount(await mysqlAuth.signIn(email, password));
+  }, [loadApiAccount]);
 
   const signOut = useCallback(async () => {
-    if (mysqlAuth) {
-      await archiveApiAccount();
-      try { await mysqlAuth.signOut(); } catch { /* Clear local login even when offline. */ }
-      await clearLocal(); return;
-    }
-    if (supabase) await supabase.auth.signOut().catch(() => {});
+    await archiveApiAccount();
+    try { await mysqlAuth.signOut(); } catch { /* Clear local login even when offline. */ }
     await clearLocal();
   }, [archiveApiAccount, clearLocal]);
 
   const deleteAccount = useCallback(async () => {
-    if (mysqlAuth && mode === "user") {
+    if (mode === "user") {
       const id = apiSession?.user.id;
       await mysqlAuth.deleteAccount();
       if (id) {
-        const keys = (await AsyncStorage.getAllKeys()).filter(key => key.startsWith("pg.mysql.memo-draft." + id + ".") || key === "pg.mysql.local." + id);
+        const keys = (await AsyncStorage.getAllKeys()).filter(key => key.startsWith("pg.mysql.memo-draft." + id + ".") || key === "pg.mysql.local." + id || key.startsWith("pg.mysql.speed.")&&key.endsWith("."+id));
         await AsyncStorage.multiRemove(keys);
       }
       await clearLocal(); return;
-    }
-    if (mode === "user" && supabase) {
-      const { error } = await supabase.rpc("delete_my_account");
-      if (error) throw error;
-      await supabase.auth.signOut({ scope: "local" }).catch(() => {});
     }
     await clearLocal();
   }, [mode, apiSession, clearLocal]);
 
   const updatePrefs = useCallback(async (patch: Partial<Prefs>, opts?: { finishOnboarding?: boolean }) => {
     let next = { ...prefsRef.current, ...patch };
-    if (mysqlAuth && mode === "user") next = await mysqlAuth.saveProfile(next);
+    if (mode === "user") next = await mysqlAuth.saveProfile(next);
     prefsRef.current = next;
     setPrefs(next);
     writeJSON(K.prefs, next);
@@ -617,11 +548,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setOnboarded(true);
       writeJSON(K.onboarded, true);
     }
-    if (!mysqlAuth && mode === "user" && session && supabase) {
-      const { error } = await supabase.from("profiles").upsert(prefsToProfile(next, session.user.id));
-      if (error && opts?.finishOnboarding) throw error;
-    }
-  }, [mode, session]);
+  }, [mode]);
 
   const setActive = useCallback((a: ActiveSession | null | ((prev: ActiveSession | null) => ActiveSession | null)) => {
     const next = typeof a === "function" ? a(activeRef.current) : a;
@@ -630,14 +557,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     writeJSON(K.active, next);
   }, []);
 
-  const spendGears = useCallback((n: number) => {
+  const spendGears = useCallback(async (n: number, product?: string) => {
+    if(mode==='user')return remoteWallet('spend',{product:product??'unsupported'});
+    if(!Number.isInteger(n)||n<=0)return false;
     if (gearsRef.current < n) return false;
     const next = gearsRef.current - n;
     gearsRef.current = next;
     setGears(next);
     writeJSON(K.gears, next);
     return true;
-  }, []);
+  }, [mode, remoteWallet]);
 
   // ───────── 연속 기록 지키기 ─────────
   const saveKept = useCallback((days: string[]) => {
@@ -649,6 +578,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   /** 앱을 열 때: 빠진 날에 보호권을 자동으로 쓰고, 모자라면 톱니바퀴 복구를 제안 (복구 제안은 하루 한 번) */
   const checkStreak = useCallback(async () => {
+    if(mode==="user"){
+      const ok=await remoteWallet('check_streak');
+      if(ok){const plan=planStreakRescue(recordsRef.current,keptRef.current,freezesRef.current);if(plan&&!plan.tooLate)setRescue(plan);}
+      return;
+    }
     const plan = planStreakRescue(recordsRef.current, keptRef.current, freezesRef.current);
     if (!plan || plan.tooLate) return;
     const today = new Date().toDateString();
@@ -662,29 +596,47 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     writeJSON(K.rescueAsked, today);
     setRescue(plan);
-  }, [saveKept]);
+  }, [mode, remoteWallet, saveKept]);
 
-  const buyFreeze = useCallback(() => {
-    if (freezesRef.current >= MAX_FREEZES || !spendGears(FREEZE_COST)) return false;
+  const buyFreeze = useCallback(async () => {
+    if(mode==="user")return remoteWallet("buy_freeze");
+    if (freezesRef.current >= MAX_FREEZES || !await spendGears(FREEZE_COST)) return false;
     const n = freezesRef.current + 1;
     freezesRef.current = n;
     setFreezes(n);
     writeJSON(K.freezes, n);
     return true;
-  }, [spendGears]);
+  }, [mode, remoteWallet, spendGears]);
 
-  const restoreStreak = useCallback(() => {
-    if (!rescue?.restore.length || !spendGears(rescue.restore.length * RESTORE_COST_PER_DAY)) return false;
+  const restoreStreak = useCallback(async () => {
+    if(mode==="user"){const ok=await remoteWallet("restore_streak");if(ok)setRescue(null);return ok;}
+    if (!rescue?.restore.length || !await spendGears(rescue.restore.length * RESTORE_COST_PER_DAY)) return false;
     saveKept(rescue.restore);
     setRescue(null);
     return true;
-  }, [rescue, saveKept, spendGears]);
+  }, [mode, remoteWallet, rescue, saveKept, spendGears]);
 
   const dismissRescue = useCallback(() => setRescue(null), []);
   const devPreviewRescue = useCallback(() => {
     const d = (n: number) => { const x = new Date(); x.setDate(x.getDate() - n); return dateKey(x); };
     setRescue({ streak: 5, auto: freezesRef.current > 0 ? [d(2)] : [], restore: freezesRef.current > 0 ? [d(1)] : [d(2), d(1)], tooLate: false });
   }, []);
+
+  const devSeedRecords = useCallback((topicIds: string[]) => {
+    if(!__DEV__ || mode!=="guest")return;
+    const seeded: StudyRecord[] = topicIds.slice(0, 7).flatMap((id, i) => {
+      const t = topicById(id);
+      if (!t) return [];
+      const at = new Date();
+      at.setDate(at.getDate() - (7 - i));
+      at.setHours(20, 0, 0, 0);
+      return [{
+        id: Crypto.randomUUID(), devOnly:true, topicId: t.id, topicKo: t.ko, domain: t.domain, category: t.category, level: t.level,
+        memo: "", score: 5, total: 7, rp: 30, wrong: [], studySec: 600, quizSource: "bank" as const, studiedAt: at.toISOString(), synced: false,
+      }];
+    });
+    saveRecordsLocal(sortRecords([...recordsRef.current, ...seeded]));
+  }, [mode, saveRecordsLocal]);
 
   // 연속 기록 확인: 앱을 열 때와 앱으로 돌아올 때
   useEffect(() => {
@@ -696,9 +648,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // ───────── 유료 버전 · 배틀권 · 배틀 경험치 ─────────
   const setPremium = useCallback((v: boolean) => {
+    if(mode==="user"){setWalletNotice("프리미엄 결제 확인을 준비하고 있어요.");return;}
     setPremiumState(v);
     writeJSON(K.premium, v);
-  }, []);
+  }, [mode]);
 
   // 배틀권: 사자마자 바로 쓰는 경우(톱니바퀴로 사서 매칭)가 있어서 최신 값을 ref로 들고 있음
   const saveTickets = useCallback((next: Tickets) => {
@@ -708,7 +661,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
   // 마지막으로 쓴 배틀권 종류 (돌려줄 때 같은 곳으로)
   const lastTicketRef = useRef<"free" | "bought">("free");
-  const spendBattleTicket = useCallback(() => {
+  const spendBattleTicket = useCallback(async () => {
+    if(mode==="user"){setWalletNotice("배틀 서버 연결을 준비하고 있어요.");return false;}
     if (premium) return true;
     const t = refillTickets(ticketsRef.current);
     const bought = t.bought ?? 0;
@@ -717,24 +671,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
     lastTicketRef.current = t.n > 0 ? "free" : "bought";
     saveTickets(t.n > 0 ? { ...t, n: t.n - 1 } : { ...t, bought: bought - 1 });
     return true;
-  }, [premium, saveTickets]);
+  }, [mode, premium, saveTickets]);
 
   /** 톱니바퀴로 배틀권 1개 사기 */
-  const buyBattleTicket = useCallback(() => {
+  const buyBattleTicket = useCallback(async () => {
+    if(mode==="user")return remoteWallet("buy_battle_ticket");
     const t = refillTickets(ticketsRef.current);
-    if ((t.bought ?? 0) >= MAX_BOUGHT_TICKETS || !spendGears(BATTLE_TICKET_COST)) return false;
+    if ((t.bought ?? 0) >= MAX_BOUGHT_TICKETS || !await spendGears(BATTLE_TICKET_COST)) return false;
     saveTickets({ ...t, bought: (t.bought ?? 0) + 1 });
     return true;
-  }, [spendGears, saveTickets]);
+  }, [mode, remoteWallet, spendGears, saveTickets]);
 
   /** 상대가 거절했거나 응답이 없어 배틀이 안 열리면 배틀권을 돌려줌 */
   const refundBattleTicket = useCallback(() => {
+    if(mode==="user")return;
     if (premium) return;
     const cur = refillTickets(ticketsRef.current);
     saveTickets(lastTicketRef.current === "bought"
       ? { ...cur, bought: (cur.bought ?? 0) + 1 }
       : { ...cur, n: Math.min(cur.n + 1, FREE_BATTLE_TICKETS) });
-  }, [premium, saveTickets]);
+  }, [mode, premium, saveTickets]);
 
   const claimOnce = useCallback((key: string) => {
     if (appliedRef.current.includes(key)) return false;
@@ -745,6 +701,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   /** 결제하는 순간 톱니바퀴를 계정에 추가. 같은 달에 껐다 켜도 한 번만 (결제 한 번 = 보너스 한 번) */
   const purchasePremium = useCallback(async () => {
+    if(mode==="user"){await remoteWallet("premium");return 0;}
     setPremium(true);
     const month = monthKey();
     const got = await readJSON<string[]>(K.premiumBonus, []);
@@ -755,19 +712,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setGears(gearsRef.current);
     writeJSON(K.gears, gearsRef.current);
     return PREMIUM_BONUS_GEARS;
-  }, [setPremium]);
+  }, [mode, remoteWallet, setPremium]);
 
   const applyBattleXp = useCallback((battleId: string, delta: number) => {
-    if (!claimOnce("xp:" + battleId)) return;
+    if (mode === "user" || !claimOnce("xp:" + battleId)) return;
     setBattleXp((x) => {
       const nx = x + delta;
       writeJSON(K.battleXp, nx);
       return nx;
     });
-  }, [claimOnce]);
+  }, [claimOnce, mode]);
 
   // ───────── 보상형 광고: 끝까지 보면 톱니바퀴 (하루 AD_DAILY_LIMIT번) ─────────
-  const grantAdReward = useCallback(() => {
+  const grantAdReward = useCallback(async () => {
+    if(mode==="user")return remoteWallet("ad_reward");
     const day = dateKey(new Date());
     const cur = adRef.current.day === day ? adRef.current : { day, n: 0 };
     if (cur.n >= AD_DAILY_LIMIT) return false;
@@ -778,10 +736,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setGears(gearsRef.current);
     writeJSON(K.gears, gearsRef.current);
     return true;
-  }, []);
+  }, [mode, remoteWallet]);
 
   // ───────── 오늘의 퀘스트 보상 ─────────
-  const claimQuest = useCallback((key: string, reward: number) => {
+  const claimQuest = useCallback(async (key: string, reward: number) => {
+    if(mode==="user")return remoteWallet("quest",{key});
     if (questRef.current.includes(key)) return false;
     questRef.current = [...questRef.current, key].slice(-200);
     setQuestClaims(questRef.current);
@@ -790,20 +749,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setGears(gearsRef.current);
     writeJSON(K.gears, gearsRef.current);
     return true;
-  }, []);
+  }, [mode, remoteWallet]);
 
   const addRecord = useCallback(async (r: NewRecord) => {
     const rec: StudyRecord = { ...r, id: Crypto.randomUUID(), studiedAt: new Date().toISOString(), synced: false };
     saveRecordsLocal(sortRecords([...recordsRef.current, rec]));
     if (mode === "user" && apiSession) await syncPending(apiSession.user.id).catch(() => {});
-    else if (mode === "user" && session) syncPending(session.user.id).catch(() => {});
     return recordsRef.current.find(x => x.id === rec.id) ?? rec;
-  }, [mode, session, apiSession, saveRecordsLocal, syncPending]);
+  }, [mode, apiSession, saveRecordsLocal, syncPending]);
 
   const removeRecord = useCallback(async (id: string) => {
     const target = recordsRef.current.find((r) => r.id === id);
     if (!target) return;
-    if (mysqlAuth && mode === "user") {
+    if (mode === "user") {
       const owner = ownerRef.current, client = mysqlAuth;
       await enqueueRecordOperation(syncQueue, async () => {
         if (ownerRef.current !== owner) return;
@@ -813,25 +771,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
       return;
     }
-    if (!mysqlAuth && mode === "user" && supabase && target.synced) {
-      const { error } = await supabase.from("study_records").delete().eq("id", id);
-      if (error) throw error;
-    }
     saveRecordsLocal(recordsRef.current.filter((r) => r.id !== id));
   }, [mode, saveRecordsLocal]);
 
-  const xp = useMemo(() => records.reduce((a, r) => a + (r.rp || 0), 0) + battleXp, [records, battleXp]);
+  const xp = useMemo(() => Math.max(0, records.reduce((a, r) => a + (r.rp || 0), 0) + (mode === "user" ? 0 : battleXp) + speedXp), [records, battleXp, speedXp, mode]);
 
   const value = useMemo<AppStateValue>(() => ({
-    ready, mode, email: apiSession?.user.email ?? session?.user.email ?? null, serverEnabled: !!mysqlAuth || !!supabase,
-    prefs, onboarded, records, active, gears, spendGears,
-    xp, freezes, keptDays, buyFreeze, rescue, restoreStreak, dismissRescue, devPreviewRescue,
-    premium, setPremium, purchasePremium, battleTickets: premium ? Infinity : refillTickets(tickets).n + (refillTickets(tickets).bought ?? 0), freeTickets: refillTickets(tickets).n, boughtTickets: refillTickets(tickets).bought ?? 0, buyBattleTicket, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid, questClaims, claimQuest, adViewsToday: adViews.day === dateKey(new Date()) ? adViews.n : 0, grantAdReward,
-    startGuest, signUp, signIn, signOut, cancelDeletion, refreshRecords, updateRecordMemo, deleteAccount, updatePrefs, setActive, addRecord, removeRecord,
-  }), [ready, mode, session, apiSession, prefs, onboarded, records, active, gears, spendGears,
-    xp, freezes, keptDays, buyFreeze, rescue, restoreStreak, dismissRescue, devPreviewRescue,
+    ready, mode, email: apiSession?.user.email ?? null, serverEnabled: true,
+    catalogVersion, prefs, onboarded, records, active, gears, spendGears, walletNotice,
+    xp, freezes, keptDays, buyFreeze, rescue, restoreStreak, dismissRescue, devPreviewRescue, devSeedRecords,
+    premium, setPremium, purchasePremium, battleTickets: premium ? Infinity : (mode === "user" ? tickets : refillTickets(tickets)).n + ((mode === "user" ? tickets : refillTickets(tickets)).bought ?? 0), freeTickets: (mode === "user" ? tickets : refillTickets(tickets)).n, boughtTickets: (mode === "user" ? tickets : refillTickets(tickets)).bought ?? 0, buyBattleTicket, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid, questClaims, claimQuest, adViewsToday: adViews.day === dateKey(new Date()) ? adViews.n : 0, grantAdReward,
+    startGuest, signUp, signIn, signOut, cancelDeletion, refreshRecords, refreshWallet, refreshSpeedXp, updateRecordMemo, deleteAccount, updatePrefs, setActive, addRecord, removeRecord,
+  }), [catalogVersion, ready, mode, apiSession, prefs, onboarded, records, active, gears, spendGears, walletNotice,
+    xp, freezes, keptDays, buyFreeze, rescue, restoreStreak, dismissRescue, devPreviewRescue, devSeedRecords,
     premium, setPremium, purchasePremium, tickets, buyBattleTicket, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid, questClaims, claimQuest, adViews, grantAdReward,
-    startGuest, signUp, signIn, signOut, cancelDeletion, refreshRecords, updateRecordMemo, deleteAccount, updatePrefs, setActive, addRecord, removeRecord]);
+    startGuest, signUp, signIn, signOut, cancelDeletion, refreshRecords, refreshWallet, refreshSpeedXp, updateRecordMemo, deleteAccount, updatePrefs, setActive, addRecord, removeRecord]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

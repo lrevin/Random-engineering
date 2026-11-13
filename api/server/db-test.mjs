@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { once } from 'node:events';
-import { connect, transaction } from './db.mjs';
+import { connect, createReadPool, transaction } from './db.mjs';
 import { importBank, sourceFiles } from './import-bank.mjs';
 import { loadCatalog } from './catalog.mjs';
 import { loadBank, rowsFor, hash } from '../shared/question-store.mjs';
@@ -20,9 +20,23 @@ test('MySQL schema, direct import, HTTP reads, constraints and transactions', as
   const catalog = loadCatalog(), files = sourceFiles(), source = loadBank();
   const expectedRows = rowsFor(source);
 
-  await t.test('all 25 current business tables exist; removed study columns are absent', async () => {
+  await t.test('public reads recover after MySQL closes an idle pooled connection',async()=>{
+    const pool=await createReadPool();
+    const publicServer=createServer({store:databaseStore(pool)});publicServer.listen(0,'127.0.0.1');await once(publicServer,'listening');
+    try{
+      const first=await pool.getConnection();const [[before]]=await first.query('SELECT CONNECTION_ID() AS id');
+      await first.query('SET SESSION wait_timeout=1');first.release();
+      await new Promise(resolve=>setTimeout(resolve,2100));
+      const base='http://127.0.0.1:'+publicServer.address().port;
+      assert.equal((await fetch(base+'/health')).status,200);
+      assert.equal((await fetch(base+'/catalog')).status,200);
+      assert.equal((await fetch(base+'/quiz-bank/ds-01')).status,200);
+      const next=await pool.getConnection();const [[after]]=await next.query('SELECT CONNECTION_ID() AS id');next.release();assert.notEqual(String(after.id),String(before.id));
+    }finally{publicServer.closeAllConnections();await new Promise(resolve=>publicServer.close(resolve));await pool.end();}
+  });
+  await t.test('all 31 current business tables exist; removed study columns are absent', async () => {
     const [tables] = await db.query('SHOW TABLES');
-    assert.equal(tables.filter(row=>Object.values(row)[0]!=='flyway_schema_history').length, 25);
+    assert.equal(tables.filter(row=>Object.values(row)[0]!=='flyway_schema_history').length, 31);
     const [columns] = await db.query('SHOW COLUMNS FROM study_records');
     for (const name of ['verification_status','quiz_source','xp_rule_version','wrong']) {
       assert.ok(!columns.some(c => c.Field === name), name);
@@ -104,7 +118,7 @@ test('MySQL schema, direct import, HTTP reads, constraints and transactions', as
       await db.execute("INSERT INTO question_details(question_id,type,body,answer,explanation) VALUES (?,'ox','질문','false','해설')",[qid]);
       await db.execute("INSERT INTO quiz_attempts(id,user_id,topic_id,status,verification_status,started_at,completed_at) VALUES (?,?,?,'completed','client_reported',UTC_TIMESTAMP(3),UTC_TIMESTAMP(3))",[attempt,user,topic.id]);
       for (let i=1;i<=7;i++) await db.execute('INSERT INTO quiz_attempt_items(attempt_id,position,question_snapshot,submitted_answer,is_correct) VALUES (?,?,?,?,1)',[attempt,i,JSON.stringify(source[topic.id][i-1]),'0']);
-      await assert.rejects(db.execute('INSERT INTO quiz_attempt_items(attempt_id,position,question_snapshot) VALUES (?,8,JSON_OBJECT())',[attempt]),e=>e.code==='ER_CHECK_CONSTRAINT_VIOLATED');
+      await assert.rejects(db.execute('INSERT INTO quiz_attempt_items(attempt_id,position,question_snapshot) VALUES (?,11,JSON_OBJECT())',[attempt]),e=>e.code==='ER_CHECK_CONSTRAINT_VIOLATED');
       const values = [record,user,attempt,topic.id,topic.name,category.domainId,category.id,topic.difficulty,'최초 메모',7,102,900,Buffer.alloc(32,1)];
       const insert = `INSERT INTO study_records(id,user_id,attempt_id,topic_id,topic_ko,domain,category,difficulty,memo,score,rp,study_sec,submission_hash,studied_at,study_date,time_validation_status,change_seq,received_at)
         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,UTC_TIMESTAMP(3),UTC_DATE(),'accepted',1,UTC_TIMESTAMP(3))`;

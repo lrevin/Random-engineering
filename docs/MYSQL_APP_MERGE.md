@@ -1,43 +1,39 @@
-# 실제 앱 MySQL 연결 병합 — 2026-11-12
+# 실제 앱 MySQL 연결·통합 상태
 
-현재 로컬 브랜치 feature/mysql-app-local의 app/에 전환 후보를 파일별로 병합했다. 후보 전체를 덮어쓰지 않았다. 인증·프로필·탈퇴·일반 학습 기록·기본 문제만 MySQL API에 연결하며, 전체 기능의 서버 이전을 의미하지 않는다.
+최종 갱신: 2026-11-14
 
-## 변경 파일
+현재 app/에 반영된 연결 방식을 요약한다. 초기 병합 당시의 제공자 선택·별도 시험 서버 설명은 현재 상태로 교체했다. 전환 상세는 [MYSQL_BACKEND_TRANSITION.md](MYSQL_BACKEND_TRANSITION.md), 기능별 진행과 develop 통합 기준은 [DEVELOPMENT_PROGRESS.md](DEVELOPMENT_PROGRESS.md)를 따른다.
 
-| 파일 | 변경 |
+## 1. 현재 연결 구조
+
+- app/은 자체 MySQL API 전용이다. Supabase SDK·클라이언트·제공자 선택 분기는 제거했다.
+- 공개 API는 https://ppobgong.o-r.kr이며 Nginx·HTTPS → EC2 API:8788 → RDS로 연결한다. 앱이 DB에 직접 접속하지 않는다.
+- 현재 로컬 앱의 EXPO_PUBLIC_API_URL도 공개 도메인이다. 로컬 API로 개발하려면 이 값만 기기에서 접근 가능한 주소로 바꾸고 개발 서버를 다시 시작한다. 에뮬레이터 예시는 http://10.0.2.2:8788이다.
+- 로그인 토큰은 모바일 SecureStore로 보관하며, 계정별 캐시·기록·전송 대기를 분리한다. 인증 실패 시 다른 제공자로 자동 전환하지 않는다.
+
+## 2. 실제 앱에 반영한 범위
+
+| 대상 | 현재 동작 |
 |---|---|
-| app/src/lib/api.ts, auth-client.ts, auth.ts | API 주소, 가입·로그인·회전·프로필·탈퇴·기록 요청과 오류 처리 |
-| app/src/lib/auth-storage.ts, auth-storage.native.ts | 웹 탭 저장소 / 모바일 SecureStore로 MySQL 로그인 보관 |
-| app/src/lib/app-state.tsx | 현재 배틀·광고·퀘스트·상점·UID 콜백을 유지하고 MySQL 세션·프로필·기록 연결 추가. 제공자별 캐시 분리, 계정별 기록과 최신 로컬 기능 상태 보관 |
-| app/src/lib/types.ts, record-sync.ts | 최신 타입에 답안 스냅샷·서버 XP·변경 순번·오프라인 메모 필드 추가 및 동기화 |
-| app/src/lib/quiz.ts | 최신 개인 학습·배틀 문제 생성 함수를 보존하고 기본 문제 조회를 MySQL 모드에서 API로 연결 |
-| app/src/lib/supabase.ts | MySQL 모드에서는 기존 Supabase 키가 남아 있어도 SDK 초기화하지 않음 |
-| app/src/app/login.tsx, signup.tsx, (tabs)/settings.tsx | 제공자별 오류 처리, 탈퇴 취소, MySQL 탈퇴 7일 유예 안내 |
-| app/src/app/quiz.tsx | 실제 7문제·제출 답안 전송, 결과 화면은 서버 확정 XP 우선 |
-| app/src/app/history.tsx, record/[id].tsx | 현재 화면 디자인을 유지하며 수동 동기화·메모 수정·충돌 선택 연결 |
-| app/src/lib/ads.web.ts | 기존 네이티브 광고 코드는 유지. 웹은 기존 시험용 광고 화면을 사용하도록 분리 |
-| app/package.json, package-lock.json, app.json | Expo 57에 맞는 expo-secure-store 의존성·플러그인 추가 |
-| app/.env.example, .env.local | 선택 예시 추가. 로컬 파일은 mysql 모드로 설정, 기존 다른 값은 보존. 비밀 값은 Git에 추가하지 않음 |
-| app/tests/mysql-mode.test.mjs, api/mysql/account-test.mjs, record-test.mjs | 모드 선택 검사와 실제 app/ 클라이언트를 대상으로 한 통합 검사 |
+| 인증·프로필·탈퇴 | 가입·로그인·토큰 갱신·프로필·탈퇴 신청/취소를 자체 API에 연결 |
+| 기록·답안 | 문제 스냅샷·답안·서버 XP·메모 충돌·삭제/전송 동기화. 일반/배틀은 공통 풀이 구조와 유형 구분 사용 |
+| 친구·배틀 | 같은 로그인 인증으로 친구 관계·대기열·진행·스킵·답안·승패·회원 XP 이전·배틀권을 서버에 저장 |
+| 스피드 | 회원은 서버 출제·채점·시간·일일 XP 검사, 게스트·오프라인은 XP 없는 기기 연습 |
+| 재화·일반 퀘스트 | 서버 잔액·원장·중복 지급 방지, 보호권/배틀권 등 구현된 구매 연결. 광고·결제·추가 상품은 미완료 |
+| 기본 문제 | 현재 220개 주제·5,520문제를 앱에 내장. 분야별 다운로드 화면·모듈·묶음 API 제거. 서버 문제 API는 배틀·원본 대조 및 부분 내장 빌드용으로 유지 |
+| 분류·주제 | DB 목록 API·버전·영구 캐시·실패 시 기존 목록 유지. 문제 묶음 다운로드와 구분 |
+| 화면 | develop 통합 기준의 랭크·홈·콘텐츠·스피드 반영. 콘텐츠 스크롤·하단 탭 잘림·중복 하단 여백 수정 |
 
-## 로컬 실행
+일반 기록 API의 허용 문항 수는 5~10개이며 현재 일반 출제는 7개다. 배틀은 본 문제 5개와 최대 5개 연장전을 공통 기록에 저장한다. 배틀 상세 규칙은 [BATTLE_SYSTEM.md](BATTLE_SYSTEM.md)를 따른다.
 
-터미널 1: 저장소의 api/server에서 npm start. server/.env의 MySQL 접속·JWT_SECRET과 DB 준비가 필요하다. 기존 DB를 초기화하거나 이 병합에서 데이터 적재하지 않았다.
+AI 실제 연결, 일반 오프라인 저장·보상 정책 보완, 광고·결제·추가 상품·계정 복구·운영 정리는 개발 진행 현황의 미완료 목록에서 관리한다. 기존 오프라인 저장·동기화 구현 자체를 제거한 것은 아니다.
 
-터미널 2: app에서 npm run web 또는 npx expo start. 로컬 app/.env.local은 EXPO_PUBLIC_AUTH_PROVIDER=mysql이며 API 주소를 사용한다. 기본 로컬 웹 주소는 http://127.0.0.1:8788이다. 주소가 이미 설정되어 있으면 기존 값을 보존했다. Android 에뮬레이터는 http://10.0.2.2:8788 등 기기에서 접근 가능한 주소를 사용한다. 실제 휴대폰은 PC LAN 주소·서버 바인딩을 맞춰야 한다.
+## 3. DB·운영 반영과 검증
 
-원하면 EXPO_PUBLIC_AUTH_PROVIDER=supabase로 기존 경로를 선택할 수 있다. 값이 없을 때 기본값도 supabase다. 설정 변경 후 앱 개발 서버를 다시 시작한다. MySQL 장애 시 Supabase로 자동 전환하지 않는다.
-
-## 범위와 남은 작업
-
-- 매칭·친구·배틀 서버는 기존 EXPO_PUBLIC_SOCIAL_URL을 사용한다. 이 API를 MySQL 인증과 통합한 것은 아니다.
-- 톱니바퀴·광고 보상·퀘스트·스킨·프리미엄·보호권·배틀 XP는 기존 최신 로컬 기능으로 유지했다. 이전 대화에서 로컬에만 두었던 wallet 실행 코드는 이 체크아웃에 없어 이번에 병합하지 않았다. 원격에 올라간 wallet DDL만으로 API가 생기지 않는다.
-- 현재 MySQL 기록 API는 일반 학습 7문제·전체 답안 계약이다. 이전 요약 기록·5문제 배틀 기록 등은 기기에 보관하고 서버 확정으로 표시하지 않는다. 서버가 계산한 XP를 우선하며 로컬 부스터·배틀 보상 등의 서버 검증은 별도다.
-- AI는 별도 퀴즈 서버 설정이 있으면 사용하며, MySQL 모드에서 Supabase generate-quiz를 호출하지 않는다. 서버가 없으면 기존 기본 문제·캐시·오프라인 구성으로 진행한다.
-- 실제 앱 병합은 로컬에 완료했으며, 실기기·모든 최신 기능의 종단 검증과 네이티브 설치 빌드는 별도다. 커밋·push하지 않았다.
-
-## 검증
-
-타입 검사·lint, MySQL 모드의 실제 app/ 웹 빌드를 확인했다. 첫 웹 빌드에서 기존 광고 SDK의 네이티브 전용 import를 발견하여 ads.web.ts로 분리했다.
-
-별도 임시 MySQL DB에 현재 SQL의 22개 테이블과 기본 문제를 준비하고 인증·프로필·탈퇴·기록·기본 문제의 실제 병합 클라이언트 테스트를 실행했다. 검증용 DB만 생성·삭제했으며 사용자 DB에는 DDL·테스트 데이터를 적용하지 않았다. 최종 실행에서 46개 테스트가 모두 통과했다.
+- 로컬 개발 DB는 백업 후 V5까지 적용·검증했으며 운영 RDS와 V1~V5 이력·체크섬이 일치한다. 업무 테이블 31개, Flyway 이력 포함 32개다.
+- EC2의 이전 Supabase 함수/스키마·후보 앱 복사본·클라이언트를 제거하고 최신 앱·검사·패키지 명세로 맞췄다. 보류 중인 AI 서버의 주제 경로도 공용 데이터로 통일했다.
+- API·앱 소스·검사·패키지 명세 145개가 줄바꿈 차이 제외 일치한다. 문서·Git 이력·환경 설정·설치/빌드 결과물·실제 DB 데이터는 비교 제외다.
+- GitHub를 거치지 않고 SCP/SSH로 직접 반영했다. 운영 배포 당시에는 커밋·push를 거치지 않았고, 이후 현재 변경을 feature/mysql-backend-integration 브랜치의 공유 커밋·push 대상으로 정리했다. 원격 develop 추가 병합은 하지 않았다.
+- 로컬 통합 124개·앱 자동 27개(일부 중복), EC2 회귀 9개 및 AI 모의 검사 통과. 주 API 재시작·HTTPS 응답 정상 확인. AI 실서비스는 시작하지 않았다.
+- 릴리스 APK 재빌드·전용 서명 검증·에뮬레이터 업데이트 완료. 사용자도 휴대폰·에뮬레이터 간 친구·배틀 동작을 확인했다. 모든 기기·기능·장애 상황 검증 완료를 뜻하지 않는다.
+- APK: app/android/app/build/outputs/apk/release/app-release.apk (약 123MiB). 팀원은 설치 후 공개 API를 사용하며 별도 개발 서버를 켤 필요가 없다.

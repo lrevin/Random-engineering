@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 export const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 export const BANK_DIR = path.join(ROOT, 'app/src/data/quizbank');
-export const TOPICS_FILE = path.join(ROOT, 'api/supabase/functions/generate-quiz/topics.json');
+export const TOPICS_FILE = path.join(ROOT, 'api/shared/data/topics.json');
 export const hash = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const object = v => v !== null && typeof v === 'object' && !Array.isArray(v);
 const text = (v, max) => typeof v === 'string' && v.trim().length > 0 && v.length <= max;

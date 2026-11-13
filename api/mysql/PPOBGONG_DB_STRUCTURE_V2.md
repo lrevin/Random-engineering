@@ -7,7 +7,7 @@
 - 다른 세션의 문서·계획은 참고하지 않음
 - 대상: AWS RDS for MySQL 8.4 LTS
 - 변경 관리: Flyway V1(기존 22개 테이블)·V2(자격증 3개 추가)로 이력을 시작한다. 이후 변경은 V3부터 추가하고 공유·적용한 마이그레이션은 수정하지 않는다.
-- 이 문서는 구조 명세이며, 실행 SQL은 api/mysql/schema-v2.sql, 실제 적용·검증 결과는 docs/JSON_BACKEND_VALIDATION.md와 docs/AUTH_MYSQL_VALIDATION.md에 별도로 기록
+- 이 문서는 구조 명세이며, 실행 SQL은 api/mysql/migrations/의 버전별 마이그레이션, 실제 적용·검증 결과는 docs/JSON_BACKEND_VALIDATION.md와 docs/AUTH_MYSQL_VALIDATION.md에 별도로 기록
 
 ## 1. 적용 범위와 전제
 
@@ -689,7 +689,7 @@ API JSON camelCase와 DB snake_case 변환은 서버에서 수행. 기존 total 
 ## 14. 구축과 마이그레이션
 
 - 이번부터 Flyway로 변경 이력을 관리한다. V1은 변경 전 22개 테이블, V2는 자격증 3개 테이블 추가다. 이후 변경은 V3__설명.sql부터 추가한다. 공유·적용한 마이그레이션은 덮어쓰지 않는다.
-- schema-v2.sql은 자격증 포함 25개 테이블의 최신 빈 DB용 스냅샷이다. 기존 DB에 재실행하지 않는다. Flyway 설치와 스냅샷 설치를 같은 DB에 중복 실행하지 않는다.
+- 단일 초기 SQL 스냅샷은 사용하지 않는다. 신규 설치와 변경 모두 migrations/를 Flyway로 적용한다.
 - 기존 22개 테이블 DB는 구조가 V1과 일치하는지 확인한 후 baselineVersion=1로 명시적으로 baseline하고 migrate한다. baseline은 구조 차이를 고쳐주지 않는다. 일부 지갑 테이블 등이 없는 DB는 먼저 차이를 조정해야 한다.
 - 신규 빈 DB는 Flyway migrate로 V1→V2를 적용한다. baselineOnMigrate=false를 유지한다.
 - api/mysql에서 Flyway CLI를 실행한다. FLYWAY_URL(jdbc:mysql://호스트:3306/DB), FLYWAY_USER, FLYWAY_PASSWORD는 환경별로 지정한다. Node 서버의 MYSQL_* 환경변수를 Flyway가 자동으로 읽지는 않는다. RDS TLS 설정도 별도로 맞춘다.
@@ -735,8 +735,8 @@ API JSON camelCase와 DB snake_case 변환은 서버에서 수행. 기존 total 
 - 구현·실행 가능: 전체 25개 테이블 초기 SQL(톱니바퀴 3개 포함), 기본 JSON 검증·MySQL 직접 적재·파일 버전 공개 전환, MySQL 문제 조회 API(JSON 모드도 지원), AI 파일 원자적 저장·상한 처리, 앱의 문제 API 연결.
 - 인증 API 구현: users·auth_identities·auth_sessions·refresh_tokens로 이메일 가입·로그인·세션 확인·회전·로그아웃을 처리한다. 비밀번호는 BCrypt 비용 12, Access Token은 HS256 JWT 15분, 세션은 연장 없는 30일이며 Refresh Token 원문은 DB에 저장하지 않는다. 가입 시 user_sync_states도 초기화한다.
 - 후속 업무 API: 프로필·회원 탈퇴·퀴즈 시도·답안·학습 기록·XP 계산·동기화·정리 작업. 해당 테이블 생성과 SQL 테스트 통과를 API 완성으로 간주하지 않는다.
-- 앱 연결: EXPO_PUBLIC_API_URL이 있으면 이메일 인증·로그인 유지·문제 조회는 MySQL API를 사용한다. 이 모드의 프로필·기록은 기기에만 보관하고 Supabase로 전송하지 않는다. 로그아웃 시 기기 내 계정별 보관본을 남기며 동일 계정 재로그인 시 복원한다. 기존 Supabase 계정·기록의 자동 이전은 하지 않는다. API URL이 없으면 기존 Supabase 경로를 유지한다.
-- DDL: api/mysql/schema-v2.sql이 현재 전체 초기 스키마다. 기존 schema.sql·question-files.sql은 이전 초안으로 함께 실행하지 않는다. 사용자 생성 DB ppobgong의 MySQL 8.0.46에서 19개 테이블 생성·기본 문제 5,520개 적재·통합 테스트를 수행했다. MySQL 8.4·RDS 적용은 별도 검증 대상이며 이후 변경은 Flyway 새 버전 파일로 누적한다.
+- 앱 연결: EXPO_PUBLIC_API_URL은 필수이며 실제 앱은 MySQL API 전용이다. 인증·프로필·학습 기록 동기화를 지원한다. 기존 외부 인증 계정·기록을 자동 이전하지 않는다.
+- DDL: migrations/V1__initial_schema.sql과 V2__add_certificates.sql이 실행 기준이다. db:setup은 새 DB 생성 후 Flyway migrate·validate를 수행한다. 후속 변경은 새 버전으로 추가하며 운영 DB는 별도 검증 후 적용한다.
 - 모든 정책을 구현 완료로 간주하지 않는다. 다른 프로젝트 세션은 조회하지 않았다.
 ### 자격증 추가의 로컬 재검증 (2026-11-12)
 

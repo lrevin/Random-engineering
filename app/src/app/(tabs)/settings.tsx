@@ -5,11 +5,11 @@ import { Linking, Platform, Pressable, Switch, View } from "react-native";
 import { showDialog } from "@/components/Dialog";
 import { TimeStepper } from "@/components/TimeStepper";
 import { Btn, Card, Field, Row, Screen, Segment, T, tap } from "@/components/ui";
-import { interestName } from "@/data";
+import { inInterests, interestName, TOPICS } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { FREE_MAX_STUDY_MIN, PREMIUM_MAX_STUDY_MIN, studyMinutesFor } from "@/lib/economy";
 import { notificationsSupported, requestNotificationPermission } from "@/lib/notify";
-import { AUTH_PROVIDER, authErrorMessage } from "@/lib/auth";
+import { authErrorMessage } from "@/lib/auth";
 import { radius, raised, shadow, useColors } from "@/theme";
 import { Icon } from "@/components/Icon";
 import { RankUp, type RankUpScene } from "@/components/RankUp";
@@ -71,7 +71,7 @@ const confirm = (title: string, msg: string, ok: string, run: () => void) =>
   showDialog({ title, message: msg, buttons: [{ text: "취소", style: "cancel" }, { text: ok, style: "destructive", onPress: run }] });
 
 export default function Settings() {
-  const { prefs, updatePrefs, mode, email, signOut, deleteAccount, premium, xp, uid, devPreviewRescue } = useApp();
+  const { prefs, updatePrefs, mode, email, signOut, deleteAccount, premium, xp, uid, devPreviewRescue, devSeedRecords } = useApp();
   const c = useColors();
   const [nick, setNick] = useState(prefs.nickname);
   const [notice, setNotice] = useState("");
@@ -129,7 +129,7 @@ export default function Settings() {
       <Card accent style={{ gap: 10 }}>
         <Row gap={8}><Icon name="crown" size={28} /><T size={17} weight="bold">{premium ? "유료 멤버십 사용 중" : "유료 멤버십"}</T></Row>
         <T size={14} color="ink2">
-          {premium ? "랜덤 매칭 배틀을 무제한으로 할 수 있어요." : "랜덤 매칭 배틀을 무제한으로 즐길 수 있어요. 무료 버전은 매월 2회예요."}
+          {premium ? "모의고사 · 오답 다시 풀기 · 배틀을 무제한으로 쓰고 있어요." : "모의고사 · 오답 다시 풀기 · 배틀 무제한, 결제 즉시 톱니바퀴 300개."}
         </T>
         <Btn
           title={premium ? "멤버십 관리" : "유료 멤버십으로 업그레이드"}
@@ -190,6 +190,12 @@ export default function Settings() {
       {__DEV__ && (
         <Section title="개발용 (출시 빌드에서는 안 보임)">
           <Item label="연속 기록 복구 창 미리 보기" sub="어제·그제를 빠진 날로 보고 창을 띄워요" onPress={devPreviewRescue} />
+          <Item label="시험 기록 넣기" sub="어제까지 7일 연속 공부한 기록 7개 (관심 분야 주제)" onPress={() => {
+            if(mode!=="guest"){setNotice("시험 기록은 게스트 모드에서만 만들 수 있어요.");return;}
+            const ids = TOPICS.filter((t) => inInterests(t, prefs.interests)).slice(0, 7).map((t) => t.id);
+            devSeedRecords(ids);
+            setNotice(`시험 기록 ${ids.length}개를 넣었어요`);
+          }} />
           <Item label="승급 연출 미리 보기" sub="레벨 업 → 주제 랭크 승급 연출을 차례로 보여 줘요" last onPress={() => setRankUpPreview([
             { kind: "level", from: userLevel(xp).level, to: userLevel(xp).level + 1 },
             { kind: "tier", from: 1, to: 2, topic: "트랜잭션 ACID" },
@@ -213,7 +219,7 @@ export default function Settings() {
           onPress={() =>
             confirm(
               mode === "user" ? "회원 탈퇴" : "데이터 지우기",
-              mode === "user" ? (AUTH_PROVIDER === "mysql" ? "즉시 이용이 중지되고 7일 후 서버 데이터가 삭제돼요. 7일 이내 로그인 화면에서 취소할 수 있어요. 이 기기의 데이터는 신청 후 지워져요." : "계정과 모든 공부 기록이 영구 삭제되고 되돌릴 수 없어요.") : "이 휴대폰의 기록과 설정이 모두 지워져요.",
+              mode === "user" ? "즉시 이용이 중지되고 7일 후 서버 데이터가 삭제돼요. 7일 이내 로그인 화면에서 취소할 수 있어요. 이 기기의 데이터는 신청 후 지워져요." : "이 휴대폰의 기록과 설정이 모두 지워져요.",
               mode === "user" ? "탈퇴하기" : "지우기",
               () => deleteAccount().catch((e) => setNotice(authErrorMessage(e))),
             )

@@ -155,16 +155,16 @@ def architecture():
 
     dashed_rect(d, 760, 60, 1660, 1120)
     lab = F(32, 700)
-    lw = d.textlength(" Supabase Cloud ", font=lab)
+    lw = d.textlength(" AWS API / RDS ", font=lab)
     d.rectangle([786, 34, 790 + 48 + lw + 4, 86], fill=WHITE)
-    logo(im, "supabase", 792, 40, 40)
-    d.text((838, 60), " Supabase Cloud ", font=lab, fill=GRAY, anchor="lm")
+    logo(im, "nodejs", 792, 40, 40)
+    d.text((838, 60), " AWS API / RDS ", font=lab, fill=GRAY, anchor="lm")
 
     box(d, 800, 110, 820, 300, "인증 · 보안", [], accent=GOLD)
     x = 844
-    x += tech(im, d, x, 200, "supabase", "Supabase Auth", "이메일 로그인", h=56) + 50
+    x += tech(im, d, x, 200, "nodejs", "JWT API", "이메일 로그인", h=56) + 50
     x += tech(im, d, x, 200, "jsonwebtokens", "JWT", "토큰 자동 갱신", h=56) + 50
-    lines_at(d, x, 205, ["**RLS**", "본인 데이터만"], size=24)
+    lines_at(d, x, 205, ["**API 권한 검사**", "본인 데이터만"], size=24)
     x = 844
     x += logo(im, "kakaotalk", x, 300, 40) + 10
     x += logo(im, "apple", x, 300, 40) + 14
@@ -200,7 +200,7 @@ def architecture():
     hero(im, d, 1800, 540, 925, "wikipedia", "한국어 위키백과", h=80, size=32)
     lines_at(d, 0, 1030, ["문서 718개 · 공식 문서 60개", "RFC · NIST · W3C · ISO 등"], size=24, center=2070)
 
-    # 앱 ↔ Supabase
+    # 앱 ↔ 자체 API
     arrow(d, [(620, 260), (800, 260)], both=True)
     chip(d, 710, 222, "HTTPS · JWT")
     arrow(d, [(620, 430), (700, 430), (700, 900), (800, 900)])
@@ -282,8 +282,8 @@ def gantt():
         ("퀴즈 · 레벨 · 랭크 · 오답 노트", "2026-11-05", "2026-11-10", "이재빈"),
         ("퀴즈 문제 은행 작성 · 분야별 검수", "2026-11-08", "2026-11-19", "이재빈"),
         ("AI 출제 · 2번 검수 지침, 문제 품질 점검", "2026-11-04", "2026-11-16", "김주안"),
-        ("Supabase DB · RLS · 기록 동기화", "2026-11-03", "2026-11-11", "김창원"),
-        ("카카오 · Apple 로그인 (Supabase Auth)", "2026-11-10", "2026-11-17", "김창원"),
+        ("MySQL · API 권한 검사 · 기록 동기화", "2026-11-03", "2026-11-11", "김창원"),
+        ("카카오 · Apple 로그인 (자체 API)", "2026-11-10", "2026-11-17", "김창원"),
         ("퀴즈 AI 서버 · 서버 함수 배포 · CI", "2026-11-04", "2026-11-17", "강건우"),
         ("화면 디자인 다듬기", "2026-11-12", "2026-11-18", "이재빈"),
         ("사용자 테스트 · 개선", "2026-11-17", "2026-11-21", "이재빈"),

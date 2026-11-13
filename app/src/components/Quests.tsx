@@ -6,6 +6,7 @@ import { readExamStore } from "@/lib/exam";
 import { useMilestones } from "./Milestones";
 import { ATTENDANCE, NO_EXTRA, PERIODS, questKey, questsFor, type Period, type Quest, type QuestExtra } from "@/lib/quests";
 import { readDone } from "@/lib/review";
+import { questDateKey } from "@/lib/quest-time";
 import { radius, raised, shadow, useColors } from "@/theme";
 import { Icon } from "./Icon";
 import { T, tap } from "./ui";
@@ -24,7 +25,7 @@ export function useQuests(period: Period) {
   /** 프리미엄 탭인데 무료 회원이면 잠김 (진행은 보이지만 보상은 못 받음) */
   const locked = period === "premium" && !premium;
   // 날짜가 바뀌면 다음 렌더 때 새 기간으로 계산됨
-  const day = new Date().toDateString();
+  const day = questDateKey(new Date());
   const quests = useMemo(() => questsFor(period, records, new Date(), extra), [period, records, day, extra]); // eslint-disable-line react-hooks/exhaustive-deps
   const claimed = (id: string) => questClaims.includes(questKey(period, id));
   const doneCount = quests.filter((q) => q.done).length;

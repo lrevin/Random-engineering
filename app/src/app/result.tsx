@@ -3,9 +3,9 @@ import { useState } from "react";
 import { View } from "react-native";
 import { LevelBadge, TierBadge, UserLevelBar } from "@/components/Rank";
 import { Btn, Card, Row, Screen, T } from "@/components/ui";
-import { topicById } from "@/data";
+import { domainById, topicById } from "@/data";
 import { useApp } from "@/lib/app-state";
-import { TIERS, TOPIC_TIER_MIN, topicMastery } from "@/lib/rank";
+import { DOMAIN_ENGINEER_TOPICS, DOMAIN_TIER_MIN, domainMastery, TIERS } from "@/lib/rank";
 import { useColors } from "@/theme";
 import { Icon } from "@/components/Icon";
 import { RankUp, type RankUpScene } from "@/components/RankUp";
@@ -35,7 +35,8 @@ function ResultInner({ snapshot }: { snapshot: NonNullable<ReturnType<typeof use
   const c = useColors();
   const r = snapshot.result!;
   const topic = topicById(snapshot.topicId);
-  const mastery = topicMastery(snapshot.topicId, records);
+  const domain = topic ? domainById(topic.domain) : undefined;
+  const mastery = domainMastery(topic?.domain ?? "", records);
   const levelUp = (r.userLevelAfter ?? 0) > (r.userLevelBefore ?? 0);
   const topicUp = r.topicTierAfter > r.topicTierBefore;
   const pct = r.total ? r.score / r.total : 0;
@@ -46,7 +47,7 @@ function ResultInner({ snapshot }: { snapshot: NonNullable<ReturnType<typeof use
     shownRankUp.add(key);
     const out: RankUpScene[] = [];
     if (levelUp) out.push({ kind: "level", from: r.userLevelBefore, to: r.userLevelAfter });
-    if (topicUp) out.push({ kind: "tier", from: r.topicTierBefore, to: r.topicTierAfter, topic: topic?.ko ?? "" });
+    if (topicUp) out.push({ kind: "tier", from: r.topicTierBefore, to: r.topicTierAfter, topic: domain?.name ?? "" });
     return out;
   });
 
@@ -101,17 +102,16 @@ function ResultInner({ snapshot }: { snapshot: NonNullable<ReturnType<typeof use
 
       <Card style={{ gap: 8 }}>
         <Row gap={8}>
-          <T size={16} weight="bold">[{topic?.categoryName ?? "주제"}]</T>
+          <T size={16} weight="bold">{domain?.name ?? "분야"} 랭크</T>
           <TierBadge index={r.topicTierAfter} />
         </Row>
-        <T size={13} color="ink2">{topic?.ko ?? snapshot.topicId}</T>
         {topicUp && r.topicTierBefore >= 0 && (
           <T size={14} color="success" weight="semibold">{TIERS[r.topicTierBefore].name} → {TIERS[r.topicTierAfter].name} 승급!</T>
         )}
         <T size={13} color="muted">
-          누적 정답 {mastery.points}개 · {mastery.attempts}번 풂
+          {domain?.name} 누적 정답 {mastery.points}개 · 주제 {mastery.topics}개
           {mastery.next !== null ? ` · 다음 단계까지 ${Math.max(0, mastery.next - mastery.points)}개` : ""}
-          {mastery.index === TIERS.length - 2 && mastery.points >= TOPIC_TIER_MIN[TIERS.length - 1] && !mastery.perfect ? " · 엔지니어는 만점 1회 필요" : ""}
+          {mastery.index === TIERS.length - 2 && mastery.points >= DOMAIN_TIER_MIN[TIERS.length - 1] && mastery.topics < DOMAIN_ENGINEER_TOPICS ? ` · 엔지니어는 주제 ${DOMAIN_ENGINEER_TOPICS}개 이상 필요` : ""}
         </T>
       </Card>
 

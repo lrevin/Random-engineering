@@ -3,8 +3,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, Share, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AchievementBadge, AchievementRow } from "@/components/Achievements";
-import { Icon, TierIcon } from "@/components/Icon";
-import { LevelBadge } from "@/components/Rank";
+import { DomainIcon, Icon, TierIcon } from "@/components/Icon";
+import { LevelBadge, TierBadge } from "@/components/Rank";
+import { ProgressBar } from "@/components/Quests";
+import { domainById } from "@/data";
 import { SectionTitle, StatGrid, StatTile } from "@/components/StatTile";
 import { Btn, Card, T, tap } from "@/components/ui";
 import { ACHIEVEMENT_GROUPS, achievements, type AchievementExtra } from "@/lib/achievements";
@@ -13,7 +15,7 @@ import { readExamStore } from "@/lib/exam";
 import { readDone } from "@/lib/review";
 import { titleById, useCosmetics } from "@/lib/skins";
 import { TitleBadge } from "./skins";
-import { topicMastery, userLevel } from "@/lib/rank";
+import { domainRanks, userLevel } from "@/lib/rank";
 import { getFriends, socialEnabled } from "@/lib/social";
 import { calcStreak, isBattleRecord } from "@/lib/stats";
 import { radius, raised, shadow, useColors } from "@/theme";
@@ -45,10 +47,12 @@ export default function Profile() {
   const name = prefs.nickname || "나";
   const lv = userLevel(xp);
   const { streak } = calcStreak(records, new Date(), keptDays);
+  const ranks = useMemo(() => domainRanks(records), [records]);
   const stats = useMemo(() => {
-    const topicIds = [...new Set(records.map((r) => r.topicId))];
-    const tiers = topicIds.map((id) => topicMastery(id, records).index);
-    const first = records.length ? records.reduce((a, r) => (r.studiedAt < a ? r.studiedAt : a), records[0].studiedAt) : null;
+    const eligible = records.filter(r=>r.countsAsStudy !== false);
+    const topicIds = [...new Set(eligible.map((r) => r.topicId))];
+    const tiers = domainRanks(records).map((d) => d.index);
+    const first = eligible.length ? eligible.reduce((a, r) => (r.studiedAt < a ? r.studiedAt : a), eligible[0].studiedAt) : null;
     return {
       topics: topicIds.length,
       best: tiers.length ? Math.max(...tiers) : -1,
@@ -143,9 +147,28 @@ export default function Profile() {
           <StatGrid>
             <StatTile icon={<Icon name="flame" size={30} />} value={`${streak}일`} label="연속 공부" dim={!streak} />
             <StatTile icon={<Icon name="bolt" size={30} />} value={`${xp.toLocaleString()} XP`} label="누적 경험치" />
-            <StatTile icon={<TierIcon index={Math.max(0, stats.best)} size={30} />} value={stats.engineers ? `${stats.engineers}개` : stats.best >= 0 ? ["브론즈", "실버", "골드", "플래티넘", "다이아", "엔지니어"][stats.best] : "-"} label={stats.engineers ? "엔지니어 랭크 주제" : "최고 랭크"} dim={stats.best < 0} />
+            <StatTile icon={<TierIcon index={Math.max(0, stats.best)} size={30} />} value={stats.engineers ? `${stats.engineers}개` : stats.best >= 0 ? ["브론즈", "실버", "골드", "플래티넘", "다이아", "엔지니어"][stats.best] : "-"} label={stats.engineers ? "엔지니어 랭크 분야" : "최고 분야 랭크"} dim={stats.best < 0} />
             <StatTile icon={<Icon name="gear" size={30} />} value={`${gears}개`} label={freezes ? `톱니바퀴 · 보호권 ${freezes}개` : "톱니바퀴"} />
           </StatGrid>
+
+          {/* 분야별 랭크 */}
+          {ranks.length > 0 && (
+            <>
+              <SectionTitle title="분야 랭크" right={<T size={13} color="muted">{ranks.length}개 분야</T>} />
+              <Card style={{ gap: 14 }}>
+                {ranks.map((d) => (
+                  <View key={d.domain} style={{ gap: 6 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                      <DomainIcon id={d.domain} size={26} />
+                      <T size={15} weight="bold" style={{ flex: 1 }} numberOfLines={1}>{domainById(d.domain)?.name ?? d.domain}</T>
+                      <TierBadge index={d.index} size="sm" />
+                    </View>
+                    {d.next !== null && <ProgressBar value={d.points} goal={d.next} height={8} color={d.tier?.color} />}
+                  </View>
+                ))}
+              </Card>
+            </>
+          )}
 
           {/* 업적 */}
           <SectionTitle title="업적" right={<T size={13} color="muted">{earned} / {list.length}개 획득</T>} />

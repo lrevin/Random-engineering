@@ -2,6 +2,12 @@ const json = value => typeof value === 'string' ? JSON.parse(value) : value;
 
 export function databaseStore(db) {
   return {
+    async catalog() {
+      const [domains]=await db.query('SELECT id,name_ko AS name,is_active AS active FROM domains ORDER BY id');
+      const [categories]=await db.query('SELECT id,domain_id AS domainId,name_ko AS name,is_active AS active FROM categories ORDER BY id');
+      const [topics]=await db.query('SELECT id,category_id AS categoryId,name_ko AS name,difficulty,is_active AS active FROM topics ORDER BY id');
+      return {domains,categories,topics};
+    },
     async health() {
       const [[counts]] = await db.query(`SELECT
         (SELECT COUNT(*) FROM topics) AS topics,

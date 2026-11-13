@@ -57,7 +57,8 @@
           "defaultChannel": "default"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "./plugins/with-windows-native-paths"
     ],
     "scheme": "ppobgong",
     "experiments": {

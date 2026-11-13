@@ -6,7 +6,6 @@
     "@expo-google-fonts/ibm-plex-sans-kr": "^0.4.1",
     "@expo/vector-icons": "^15.0.2",
     "@react-native-async-storage/async-storage": "2.2.0",
-    "@supabase/supabase-js": "^2.117.2",
     "expo": "~57.0.26",
     "expo-constants": "~57.0.20",
     "expo-crypto": "~57.0.3",
@@ -45,7 +44,8 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "test": "node --test tests/*.test.mjs"
   },
   "private": true
 }

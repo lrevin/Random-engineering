@@ -1,3 +1,5 @@
+> **현재 실행 경로 (2026-11-13):** 단일 SQL 스냅샷 비교와 SQL 직접 실행 대체 경로를 제거했다. `npm run test:integration`은 실제 Flyway가 필수이며 로컬 고유 임시 DB만 사용한다. 아래의 스냅샷 실행 결과는 2026-11-12 당시 이력이다. 현재 명령은 api/server/README.md를 따른다.
+
 # 자격증 DB·Flyway 적용 및 재검증 — 2026-11-12
 
 ## 반영 범위
@@ -38,7 +40,7 @@ api/server에서:
 
 - npm run db:import-certificates: 이미 준비된 지정 DB에 초기 자격증 데이터 적재
 - npm run certificates:test: 고유 임시 DB 3개를 생성하여 SQL 비교·적재·통합 테스트 후 정리
-- 실제 Flyway까지 재검증하려면 FLYWAY_EXECUTABLE에 Flyway 실행 파일 절대 경로를 지정한 뒤 certificates:test 실행. 지정하지 않으면 SQL 직접 실행 경로를 검증하고 CLI 미사용 여부를 출력한다.
+- 실제 Flyway까지 재검증하려면 FLYWAY_EXECUTABLE에 Flyway 실행 파일 절대 경로를 지정한 뒤 certificates:test 실행. PATH에도 Flyway가 없으면 검증을 중단하며 SQL 직접 실행으로 대체하지 않는다.
 
 검증용 공식 배포본은 작업 폴더 output/tools/flyway/flyway-13.12.1/에만 두었고 시스템 PATH나 저장소에는 설치하지 않았다. 마이그레이션 파일은 적용 후 수정하지 않는다.
 

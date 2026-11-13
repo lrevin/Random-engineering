@@ -92,7 +92,7 @@ export default function Quests() {
           {/* 출석 (일일 탭) */}
           {q.attendance && (
             <Card style={{ paddingVertical: 2, borderTopWidth: 4, borderTopColor: def.color }}>
-              <QuestRow q={q.attendance} claimed={q.claimed(q.attendance.id)} onClaim={() => { if (q.claim(q.attendance!)) setGot(q.attendance!.reward); }} last />
+              <QuestRow q={q.attendance} claimed={q.claimed(q.attendance.id)} onClaim={async () => { if (await q.claim(q.attendance!)) setGot(q.attendance!.reward); }} last />
             </Card>
           )}
 
@@ -121,7 +121,7 @@ export default function Quests() {
             {q.bonusClaimed ? (
               <T size={13} color="success" weight="semibold">보너스 톱니바퀴 {q.bonus}개를 받았어요.</T>
             ) : q.allDone && !q.locked ? (
-              <Btn title={`보너스 상자 열기 · 톱니바퀴 ${q.bonus}개`} variant="accent" icon={<Icon name="chest-open" size={24} />} onPress={() => { if (q.claimBonus()) setGot(q.bonus); }} />
+              <Btn title={`보너스 상자 열기 · 톱니바퀴 ${q.bonus}개`} variant="accent" icon={<Icon name="chest-open" size={24} />} onPress={async () => { if (await q.claimBonus()) setGot(q.bonus); }} />
             ) : (
               <T size={13} color="muted">다 끝내면 보너스 상자에서 톱니바퀴 {q.bonus}개를 더 받아요.</T>
             )}
@@ -130,7 +130,7 @@ export default function Quests() {
           {/* 퀘스트 목록 */}
           <Card style={{ paddingVertical: 2 }}>
             {q.quests.map((x, i) => (
-              <QuestRow key={x.id} q={x} claimed={q.claimed(x.id)} onClaim={() => { if (q.claim(x)) setGot(x.reward); }} last={i === q.quests.length - 1} locked={q.locked} />
+              <QuestRow key={x.id} q={x} claimed={q.claimed(x.id)} onClaim={async () => { if (await q.claim(x)) setGot(x.reward); }} last={i === q.quests.length - 1} locked={q.locked} />
             ))}
           </Card>
 

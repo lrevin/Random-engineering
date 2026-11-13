@@ -67,3 +67,6 @@ flyway.user.toml
 *.sql.gz
 *.sql.zip
 *.log
+
+# Native CMake build cache
+.cxx/

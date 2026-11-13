@@ -14,7 +14,7 @@ export const MODEL = process.env.QUIZ_MODEL || "claude-opus-5-5";
 export const readGem = () => fs.readFileSync(path.join(HERE, "gem.md"), "utf8");
 
 // ───────── 데이터: 주제 목록 + 우리가 미리 만든 문제 ─────────
-const TOPICS_FILE = path.join(ROOT, "api", "supabase", "functions", "generate-quiz", "topics.json");
+const TOPICS_FILE = path.join(ROOT, "api", "shared", "data", "topics.json");
 const BANK_DIR = path.join(ROOT, "app", "src", "data", "quizbank");
 
 export const loadTopics = () => JSON.parse(fs.readFileSync(TOPICS_FILE, "utf8"));
@@ -99,7 +99,7 @@ export function toQuestions(raw) {
 }
 
 // ───────── 말투 (docs/quiz-authoring.md "말투" — 우리 문제 은행과 같게) ─────────
-// 같은 규칙을 scripts/quizbank.py check 와 Supabase 함수에서도 씁니다.
+// 같은 규칙을 scripts/quizbank.py check 와 앱에서도 씁니다.
 const COND = String.raw`(\s*\([^()]*\))?`; // 끝에 붙는 조건 괄호: "… (원소 n개)"
 const MC_END = new RegExp(String.raw`\?` + COND + "$");
 const OX_END = new RegExp(String.raw`다\.` + COND + "$");

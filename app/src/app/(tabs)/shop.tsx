@@ -67,7 +67,7 @@ function PlanCard({ ribbon, title, art, children, footer, highlight }: {
 
 /** 톱니바퀴 쓰는 곳 + 무료/유료 버전 */
 export default function Shop() {
-  const { gears, freezes, buyFreeze, premium, setPremium, purchasePremium, spendGears, battleTickets, freeTickets, boughtTickets, buyBattleTicket } = useApp();
+  const { mode, walletNotice, gears, freezes, buyFreeze, premium, setPremium, purchasePremium, spendGears, battleTickets, freeTickets, boughtTickets, buyBattleTicket } = useApp();
   const c = useColors();
   const [askUpgrade, setAskUpgrade] = useState(false);
   const [notice, setNotice] = useState("");
@@ -80,7 +80,7 @@ export default function Shop() {
   useFocusEffect(useCallback(() => { readExamStore().then((s) => setExamTickets(s.tickets)); }, []));
   const examFull = examTickets >= MAX_EXAM_TICKETS;
   const buyExamTicket = async () => {
-    if (examFull || !spendGears(EXAM_TICKET_COST)) return;
+    if (examFull || !await spendGears(EXAM_TICKET_COST)) return;
     setExamTickets((await addExamTicket()).tickets);
     setExamNotice("모의고사 1회권을 1개 샀어요");
   };
@@ -88,20 +88,22 @@ export default function Shop() {
   const boost = useBoost();
   const [boostNotice, setBoostNotice] = useState("");
   const boostFull = !canStackBoost();
-  const buyBoost = () => {
-    if (boostFull || !spendGears(BOOST_COST)) return;
+  const buyBoost = async () => {
+    if (boostFull || !await spendGears(BOOST_COST)) return;
     addBoost();
     setBoostNotice(`부스터를 켰어요. ${BOOST_MIN}분 동안 퀴즈 경험치가 2배예요`);
   };
   const ticketsFull = boughtTickets >= MAX_BOUGHT_TICKETS;
 
-  const buy = () => {
-    if (buyFreeze()) setNotice("보호권을 1개 샀어요");
+  const buy = async () => {
+    if (await buyFreeze()) setNotice("보호권을 1개 샀어요");
   };
 
   return (
     <Screen scroll edges={["top"]}>
       <T size={26} weight="bold">상점</T>
+      {walletNotice ? <T color="accent">{walletNotice}</T> : null}
+      {mode === "user" ? <T size={13} color="muted">회원 재화는 서버에 저장해요. 보호권·배틀권 구매와 일반 퀘스트 보상을 연결했으며, 모의고사권·꾸미기·부스터·결제는 계정 연결을 준비하고 있어요. 배틀권 사용은 배틀 서버 연결 후 가능해요.</T> : null}
 
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: c.chip, borderRadius: radius.md, paddingHorizontal: 16, paddingVertical: 12, ...inset(c) }}>
         <T size={15} color="ink2">내 톱니바퀴</T>
@@ -154,7 +156,7 @@ export default function Shop() {
                 title={ticketsFull ? `산 배틀권은 ${MAX_BOUGHT_TICKETS}개까지 가질 수 있어요` : `배틀권 사기 · 톱니바퀴 ${BATTLE_TICKET_COST}개`}
                 variant="accent"
                 icon={ticketsFull ? undefined : <Icon name="gear" size={22} />}
-                onPress={() => { if (buyBattleTicket()) setTicketNotice("배틀권을 1개 샀어요"); }}
+                onPress={async () => { if (await buyBattleTicket()) setTicketNotice("배틀권을 1개 샀어요"); }}
                 disabled={ticketsFull || gears < BATTLE_TICKET_COST}
               />
               {!ticketsFull && gears < BATTLE_TICKET_COST && <T size={13} color="accent" center>톱니바퀴가 {BATTLE_TICKET_COST - gears}개 부족해요</T>}
@@ -253,10 +255,10 @@ export default function Shop() {
             {!premium && askUpgrade && (
               <View style={{ gap: 10, borderWidth: 1.5, borderColor: c.gold, borderRadius: radius.md, padding: 14, backgroundColor: c.goldSoft }}>
                 <T size={14} weight="semibold">앱스토어 · 구글 플레이 결제는 아직 연결 전이에요.</T>
-                <T size={13} color="ink2">지금은 결제 없이 시험용으로 켜져요.</T>
+                <T size={13} color="ink2">{mode === "user" ? "회원 계정은 결제 연동 후 이용할 수 있어요." : "게스트 모드에서만 시험용으로 켤 수 있어요."}</T>
                 <Row gap={8} style={{ flexWrap: "nowrap" }}>
                   <Btn title="취소" size="sm" onPress={() => setAskUpgrade(false)} style={{ flex: 1 }} />
-                  <Btn title="시험용으로 켜기" variant="accent" size="sm" onPress={async () => {
+                  <Btn title="시험용으로 켜기" disabled={mode === "user"} variant="accent" size="sm" onPress={async () => {
                     const got = await purchasePremium();
                     setBonusNotice(got ? `결제 보너스로 톱니바퀴 ${got}개를 받았어요!` : "이번 달 결제 보너스는 이미 받았어요.");
                     setAskUpgrade(false);

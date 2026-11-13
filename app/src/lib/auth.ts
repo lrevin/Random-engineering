@@ -1,17 +1,15 @@
 import { API_URL } from "./api";
 import { createAuthClient, AuthApiError } from "./auth-client";
 import { authStorage } from "./auth-storage";
-import { authErrorMessage as legacyErrorMessage } from "./supabase";
-export const AUTH_PROVIDER = process.env.EXPO_PUBLIC_AUTH_PROVIDER ?? "supabase";
-if (AUTH_PROVIDER !== "supabase" && AUTH_PROVIDER !== "mysql") {
-  throw new Error("EXPO_PUBLIC_AUTH_PROVIDER must be supabase or mysql");
-}
-if (AUTH_PROVIDER === "mysql" && !API_URL) {
-  throw new Error("EXPO_PUBLIC_API_URL is required for MySQL authentication");
-}
-export const mysqlAuth = AUTH_PROVIDER === "mysql" ? createAuthClient(API_URL, authStorage) : null;
+// Authentication always uses the MySQL-backed API.
+if (!API_URL) throw new Error('MySQL API URL is required');
+export const mysqlAuth = createAuthClient(API_URL, authStorage);
 export function authErrorMessage(error: unknown) {
-  if (!(error instanceof AuthApiError)) return legacyErrorMessage(error);
+  if (!(error instanceof AuthApiError)) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (/network|fetch/i.test(message)) return "인터넷 연결을 확인해 주세요.";
+    return "문제가 생겼어요. 잠시 후 다시 시도해 주세요.";
+  }
   const messages: Record<string, string> = {
     invalid_credentials: "이메일 또는 비밀번호가 맞지 않아요.",
     invalid_email: "이메일 형식을 확인해 주세요.",

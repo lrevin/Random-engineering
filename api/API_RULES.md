@@ -4,12 +4,12 @@
 
 | 구성 | 무엇 | 담당 | 어디 |
 |---|---|---|---|
-| API 서버 | Node.js + TypeScript, EC2에서 상시 구동 — 회원가입·로그인(JWT), 프로필·기록 저장, 문제 은행 | 서버(강건우) | `api/server/` (만들 예정) · 동작 견본은 [`mock-server/`](mock-server) |
+| API 서버 | Node.js + TypeScript, EC2에서 상시 구동 — 회원가입·로그인(JWT), 프로필·기록 저장, 문제 은행 | 서버(강건우) | `api/server/` · 동작 견본은 [`mock-server/`](mock-server) |
 | 퀴즈 AI 서버 | Node, 같은 EC2에서 상시 구동 — AI 문제 출제 + 2번 검수, 주제별 문제 창고 | 서버(강건우) · 출제 지침(김주안) | [`quiz-server/`](quiz-server) |
 | 데이터베이스 | AWS RDS MySQL 8.0 — API 서버만 접속 | DB(김창원) | [`mysql/schema.sql`](mysql/schema.sql) |
 | 앞단 | Nginx + Let's Encrypt HTTPS — `/api/*` → API 서버, `/quiz` → 퀴즈 AI 서버 | 서버(강건우) | EC2 설정 |
 
-앱은 두 서버를 모두 `fetch`로 부르며, 호출 코드는 [`app/src/lib/api.ts`](../app/src/lib/api.ts)(인증·프로필·기록·문제 은행)와 [`app/src/lib/quiz.ts`](../app/src/lib/quiz.ts)(퀴즈)에만 둡니다. **화면 파일에서 직접 서버를 부르지 않습니다.**
+앱은 두 서버를 모두 `fetch`로 부르며, 호출 코드는 [`app/src/lib/auth-client.ts`](../app/src/lib/auth-client.ts)(인증·프로필·기록)와 [`app/src/lib/api.ts`](../app/src/lib/api.ts)(문제 은행)와 [`app/src/lib/quiz.ts`](../app/src/lib/quiz.ts)(퀴즈)에만 둡니다. **화면 파일에서 직접 서버를 부르지 않습니다.**
 
 ---
 

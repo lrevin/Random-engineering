@@ -41,8 +41,8 @@ function StudyInner() {
   }, [setActive]));
   // 앱을 껐다 켜도 시간이 끝난 상태면 같은 창이 다시 뜸
   const timeUp = !timer.running && timer.left <= 0;
-  const extend = () => {
-    if (spendGears(EXTEND_COST)) timer.extend(EXTEND_SECONDS);
+  const extend = async () => {
+    if (await spendGears(EXTEND_COST, "study_extend")) timer.extend(EXTEND_SECONDS);
   };
 
   // 처음 들어오면 바로 시작하고, 퀴즈를 미리 받아 둠 (공부 시작 버튼에서 이미 시작했으면 그대로 씀, 앱을 다시 켠 경우 대비)

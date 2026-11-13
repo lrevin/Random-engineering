@@ -1,3 +1,4 @@
+import {verifyBankItems} from './verify-bank.mjs';
 import { randomUUID } from 'node:crypto';
 import { connect, transaction } from '../server/db.mjs';
 import { AuthError } from '../server/auth.mjs';
@@ -13,9 +14,9 @@ class RecordError extends AuthError {constructor(code,status=400,details={}){sup
 export function validateRecord(p) {
  if(!p||typeof p!=='object'||!UUID.test(p.id??'')||!UUID.test(p.attemptId??p.id??'')||typeof p.topicId!=='string'||!/^[a-z0-9_-]{1,32}$/.test(p.topicId)||
   typeof p.memo!=='string'||[...p.memo].length>5000||!Number.isInteger(p.studySec)||p.studySec<0||p.studySec>2147483647||
-  !Number.isInteger(p.score)||p.score<0||p.score>7||p.total!==7||typeof p.studiedAt!=='string'||!/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(p.studiedAt))throw new RecordError('invalid_record');
+  !Number.isInteger(p.score)||p.score<0||p.score>p.total||!Number.isInteger(p.total)||p.total<5||p.total>10||(p.studyType!==undefined&&p.studyType!=='study')||typeof p.studiedAt!=='string'||!/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(p.studiedAt))throw new RecordError('invalid_record');
  const date=new Date(p.studiedAt);if(!Number.isFinite(date.getTime())||date.getUTCFullYear()<1000||date.toISOString()!==p.studiedAt)throw new RecordError('invalid_record');
- if(!Array.isArray(p.items)||p.items.length!==7)throw new RecordError('incomplete_record');
+ if(!Array.isArray(p.items)||p.items.length!==p.total)throw new RecordError('incomplete_record');
  const items=p.items.map(item=>{
   if(!item||typeof item!=='object')throw new RecordError('invalid_answers');
   let q;try{q=question(item.question);}catch{throw new RecordError('invalid_answers');}
@@ -26,13 +27,13 @@ export function validateRecord(p) {
  });
  const score=items.filter(i=>i.answer!==null&&i.answer===i.question.answer).length;
  if(score!==p.score)throw new RecordError('invalid_score');
- return {id:p.id,attemptId:p.attemptId??p.id,topicId:p.topicId,memo:p.memo,studySec:p.studySec,studiedAt:p.studiedAt,total:7,score,items};
+ return {id:p.id,attemptId:p.attemptId??p.id,topicId:p.topicId,memo:p.memo,studySec:p.studySec,studiedAt:p.studiedAt,total:p.total,score,items};
 }
-export function calculateXp(difficulty,score,prior,streak) {
+export function calculateXp(difficulty,score,prior,streak,total=7) {
  const per=[0,6,9,13][difficulty],repeat=prior===0?1:prior===1?.7:.5;
  const base=Math.round(score*per*repeat),parts=[{label:'기본 경험치',value:base}];
- if(score===7)parts.push({label:'만점 보너스',value:Math.round(base*.2)});
- if(prior===0&&score>=5)parts.push({label:'첫 시도 클리어',value:difficulty*10});
+ if(score===total)parts.push({label:'만점 보너스',value:Math.round(base*.2)});
+ if(prior===0&&score>=Math.ceil(total*.7))parts.push({label:'첫 시도 클리어',value:difficulty*10});
  if(streak>=3)parts.push({label:'연속 학습 보너스',value:Math.round(base*.1)});
  return {total:parts.reduce((n,p)=>n+p.value,0),parts,base,repeat,priorAttempts:prior,streak};
 }
@@ -62,12 +63,12 @@ export function createRecordService({auth,connectionFactory=connect,now=()=>new 
   }
   return records.map(r=>{
    const items=map.get(r.attempt_id)??[],snapshots=items.map(i=>json(i.question_snapshot)),details=json(r.calculation_details);
-   return {id:r.id,attemptId:r.attempt_id,topicId:r.topic_id,topicKo:r.topic_ko,domain:r.domain,category:r.category,
+   return {studyType:r.study_type,battleId:r.battle_id,rankScore:r.rank_score===null?undefined:Number(r.rank_score),countsAsStudy:r.study_type!=='battle'||r.study_date!==null,id:r.id,attemptId:r.attempt_id,topicId:r.topic_id,topicKo:r.topic_ko,domain:r.domain,category:r.category,
     level:['','기초','중급','심화'][r.difficulty],memo:r.memo,score:r.score,total:r.quiz_total,rp:r.rp,studySec:r.study_sec,
     studiedAt:iso(r.studied_at),studyDate:r.study_date,changeSeq:String(r.change_seq),synced:true,verificationStatus:r.verification_status,
     quizSource:snapshots.some(q=>q.src==='ai')?'ai':snapshots.some(q=>q.src==='bank')?'bank':'offline',
     wrong:items.filter(i=>Number(i.is_correct)===0).map(i=>{const q=json(i.question_snapshot);return {q:q.q,answer:q.type==='mc'?q.choices[q.answer]:q.answer?'O (맞다)':'X (틀리다)',explain:q.explain};}),
-    items:items.map(i=>{const s=json(i.question_snapshot);return {question:{...question(s),src:s.src},answer:i.submitted_answer===null?null:json(i.submitted_answer)};}),
+    items:items.map(i=>{const s=json(i.question_snapshot);return {stage:s.stage??'main',question:{...question(s),src:s.src},answer:i.submitted_answer===null?null:json(i.submitted_answer)};}),
     xpParts:details.parts??[],streak:details.streak??0};
   });
  }
@@ -90,21 +91,22 @@ export function createRecordService({auth,connectionFactory=connect,now=()=>new 
       if(attempt)throw new RecordError('attempt_conflict',409);
       const [[topic]]=await db.execute('SELECT t.*,c.domain_id FROM topics t JOIN categories c ON c.id=t.category_id WHERE t.id=?',[p.topicId]);
       if(!topic)throw new RecordError('unknown_topic');
+      const verification=await verifyBankItems(db,p.topicId,p.items);
       const received=now(),studied=new Date(p.studiedAt),future=studied-received>300000;
       const studyDate=!future&&received-studied<=30*86400000?day(new Date(Math.min(studied.getTime(),received.getTime()))):null;
-      const [[prior]]=await db.execute("SELECT COUNT(*) AS n FROM xp_ledger WHERE user_id=? AND topic_id=? AND event_type='award'",[user.id,p.topicId]);
+      const [[prior]]=await db.execute("SELECT COUNT(*) AS n FROM xp_ledger WHERE user_id=? AND topic_id=? AND event_type='award' AND source_type='study'",[user.id,p.topicId]);
       let streak=0;
       if(studyDate){const [days]=await db.execute('SELECT DISTINCT study_date FROM study_records WHERE user_id=? AND study_date<=?',[user.id,studyDate]);const set=new Set(days.map(d=>d.study_date));set.add(studyDate);for(let d=studyDate;set.has(d);d=prev(d))streak++;}
-      const xp=calculateXp(topic.difficulty,p.score,Number(prior.n),streak),seq=await nextSeq(db,user,state);
-      await db.execute("INSERT INTO quiz_attempts(id,user_id,topic_id,status,verification_status,started_at,completed_at) VALUES (?,?,?,'completed','client_reported',?,?)",[p.attemptId,user.id,p.topicId,studied,studied]);
-      for(let i=0;i<7;i++){
+      const xp=calculateXp(topic.difficulty,p.score,Number(prior.n),streak,p.total),seq=await nextSeq(db,user,state);
+      await db.execute("INSERT INTO quiz_attempts(id,user_id,topic_id,status,verification_status,started_at,completed_at) VALUES (?,?,?,'completed',?,?,?)",[p.attemptId,user.id,p.topicId,verification,studied,studied]);
+      for(let i=0;i<p.total;i++){
        const item=p.items[i],snapshot={...item.question,topicId:p.topicId,topicKo:topic.name_ko,domain:topic.domain_id,category:topic.category_id,difficulty:topic.difficulty};
-       await db.execute('INSERT INTO quiz_attempt_items(attempt_id,position,question_snapshot,submitted_answer,is_correct,answered_at) VALUES (?,?,?,?,?,?)',
-        [p.attemptId,i+1,JSON.stringify(snapshot),item.answer===null?null:JSON.stringify(item.answer),item.answer!==null&&item.answer===item.question.answer,studied]);
+       await db.execute('INSERT INTO quiz_attempt_items(attempt_id,position,question_id,question_snapshot,submitted_answer,is_correct,answered_at) VALUES (?,?,?,?,?,?,?)',
+        [p.attemptId,i+1,item.questionId??null,JSON.stringify(snapshot),item.answer===null?null:JSON.stringify(item.answer),item.answer!==null&&item.answer===item.question.answer,studied]);
       }
       await db.execute(`INSERT INTO study_records(id,user_id,attempt_id,topic_id,topic_ko,domain,category,difficulty,memo,score,quiz_total,rp,study_sec,studied_at,study_date,time_validation_status,submission_hash,change_seq,received_at)
-       VALUES (?,?,?,?,?,?,?,?,?,?,7,?,?,?,?,?,?,?,?)`,[p.id,user.id,p.attemptId,p.topicId,topic.name_ko,topic.domain_id,topic.category_id,topic.difficulty,p.memo,p.score,xp.total,p.studySec,studied,studyDate,future?'needs_review':'accepted',digest,seq,received]);
-      await db.execute("INSERT INTO xp_ledger(id,user_id,source_record_id,topic_id,event_type,amount,rule_version,verification_status,calculation_details,idempotency_key) VALUES (?,?,?,?,'award',?,'rp-v1','client_reported',?,?)",[randomUUID(),user.id,p.id,p.topicId,xp.total,JSON.stringify(xp),`award:${user.id}:${p.id}`]);
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,[p.id,user.id,p.attemptId,p.topicId,topic.name_ko,topic.domain_id,topic.category_id,topic.difficulty,p.memo,p.score,p.total,xp.total,p.studySec,studied,studyDate,future?'needs_review':'accepted',digest,seq,received]);
+      await db.execute("INSERT INTO xp_ledger(id,user_id,source_record_id,topic_id,event_type,amount,rule_version,verification_status,calculation_details,idempotency_key) VALUES (?,?,?,?,'award',?,'rp-v1',?,?,?)",[randomUUID(),user.id,p.id,p.topicId,xp.total,verification,JSON.stringify(xp),`award:${user.id}:${p.id}`]);
       return one(db,user,p.id);
      });
      results.push({index,id:p.id,ok:true,record});
@@ -139,8 +141,9 @@ export function createRecordService({auth,connectionFactory=connect,now=()=>new 
   },
   async remove(header,id){
    if(!UUID.test(id))throw new RecordError('not_found',404);
-   return withUser(header,async(db,user,state)=>{const [[r]]=await db.execute('SELECT attempt_id FROM study_records WHERE user_id=? AND id=?',[user.id,id]);
+   return withUser(header,async(db,user,state)=>{const [[r]]=await db.execute('SELECT attempt_id,study_type FROM study_records WHERE user_id=? AND id=?',[user.id,id]);
     if(!r){const [[gone]]=await db.execute("SELECT id FROM xp_ledger WHERE user_id=? AND source_record_id=? AND event_type='reversal'",[user.id,id]);if(gone)return;throw new RecordError('not_found',404);}
+    if(r.study_type==='battle')throw new RecordError('battle_record_locked',409);
     const [[award]]=await db.execute("SELECT * FROM xp_ledger WHERE user_id=? AND source_record_id=? AND event_type='award'",[user.id,id]);if(!award)throw new Error('Missing award');
     const seq=await nextSeq(db,user,state);
     await db.execute('DELETE FROM study_records WHERE user_id=? AND id=?',[user.id,id]);
@@ -163,8 +166,9 @@ export function createRecordService({auth,connectionFactory=connect,now=()=>new 
    });
   },
   async stats(header){return withUser(header,async(db,user)=>{const [[xp]]=await db.execute('SELECT COALESCE(SUM(amount),0) AS n FROM xp_ledger WHERE user_id=?',[user.id]);
-   const [topics]=await db.execute('SELECT topic_id AS topicId,COUNT(*) AS attempts,SUM(score) AS correct,MAX(score) AS best,MAX(score=quiz_total) AS perfect FROM study_records WHERE user_id=? GROUP BY topic_id',[user.id]);
-   return {totalXp:Number(xp.n),topics:topics.map(t=>({...t,attempts:Number(t.attempts),correct:Number(t.correct),perfect:!!Number(t.perfect)}))};
+   const [topics]=await db.execute("SELECT topic_id AS topicId,COUNT(*) AS attempts,SUM(COALESCE(rank_score,score)) AS correct,MAX(COALESCE(rank_score,score)) AS best,MAX(IF(study_type='battle',rank_score=5,score=quiz_total)) AS perfect FROM study_records WHERE user_id=? AND (study_type='study' OR study_date IS NOT NULL) GROUP BY topic_id",[user.id]);
+   const [[speed]]=await db.execute("SELECT COALESCE(SUM(awarded_xp),0) AS n FROM speed_runs WHERE user_id=?",[user.id]);
+   return {totalXp:Math.max(0,Number(xp.n)+Number(speed.n)),studyXp:Number(xp.n),speedXp:Number(speed.n),topics:topics.map(t=>({...t,attempts:Number(t.attempts),correct:Number(t.correct),perfect:!!Number(t.perfect)}))};
   });},
  };
 }

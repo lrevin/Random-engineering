@@ -84,7 +84,7 @@ export function Btn({ title, onPress, variant = "outline", size = "md", disabled
   );
 }
 
-/** 나란히 놓는 알약 버튼 크기 (홈의 난이도 버튼과 '마스터한 주제 포함'이 같은 크기) */
+/** 나란히 놓는 알약 버튼 크기 (홈의 난이도 버튼과 '많이 푼 주제 포함'이 같은 크기) */
 export const PILL_FILL: ViewStyle = { flex: 1, height: 54, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4 };
 
 export function Chip({ label, selected, onPress, disabled, fill, icon }: { label: string; selected?: boolean; onPress?: () => void; disabled?: boolean; fill?: boolean; icon?: ReactNode }) {

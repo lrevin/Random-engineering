@@ -9,8 +9,13 @@ export interface WrongAnswer {
 }
 
 export interface StudyRecord {
+  studyType?: "study" | "battle";
+  battleId?: string | null;
+  rankScore?: number | null;
+  countsAsStudy?: boolean;
+  devOnly?: boolean;
   attemptId?: string;
-  items?: {question: QuizQuestion; answer: number | boolean | null}[];
+  items?: {question: QuizQuestion; answer: number | boolean | null; stage?: "main" | "overtime"}[];
   changeSeq?: string;
   verificationStatus?: "client_reported" | "server_verified";
   xpParts?: RpPart[];
@@ -81,6 +86,7 @@ export interface QuizResult {
   parts: RpPart[];
   userLevelBefore: number;
   userLevelAfter: number;
+  /** 분야 랭크 (이름은 예전 그대로 topicTier) */
   topicTierBefore: number;
   topicTierAfter: number;
   streak: number;

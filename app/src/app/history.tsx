@@ -1,21 +1,20 @@
-import { AUTH_PROVIDER } from "@/lib/auth";
 import { showDialog } from "@/components/Dialog";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import { FlatList, Pressable, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Btn, Card, Row, Segment, T } from "@/components/ui";
-import { ALL_CATEGORIES } from "@/data";
+import { ALL_CATEGORIES, domainById } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { UserLevelBar, TierBadge } from "@/components/Rank";
-import { topicMastery } from "@/lib/rank";
+import { domainMastery } from "@/lib/rank";
 import { averageScore, calcStreak, fmtDate } from "@/lib/stats";
 import type { StudyRecord } from "@/lib/types";
 import { radius, raised, shadow, useColors } from "@/theme";
 import { DomainIcon, Icon } from "@/components/Icon";
 import { SectionTitle, StatGrid, StatTile } from "@/components/StatTile";
 
-type Filter = "all" | "review";
+type Filter = "all" | "study" | "battle" | "review";
 
 /** 다시 볼 주제 기준: 정답률 60% 이하 */
 const needsReview = (r: StudyRecord) => r.total > 0 && r.score / r.total <= 0.6;
@@ -39,11 +38,11 @@ export default function History() {
   const { streak, today } = calcStreak(records, new Date(), keptDays);
   const avg = averageScore(records);
   const list = useMemo(
-    () => [...records].filter((r) => filter === "all" || needsReview(r)).reverse(),
+    () => [...records].filter((r) => filter === "all" || (filter === "study" ? r.studyType !== "battle" : filter === "battle" ? r.studyType === "battle" : needsReview(r))).reverse(),
     [records, filter],
   );
   const bars = useMemo(() => {
-    const counts = ALL_CATEGORIES.map((cat) => ({ ...cat, n: records.filter((r) => r.category === cat.id).length }));
+    const counts = ALL_CATEGORIES.map((cat) => ({ ...cat, n: records.filter((r) => r.category === cat.id && r.countsAsStudy !== false).length }));
     const max = Math.max(1, ...counts.map((x) => x.n));
     return { counts: counts.filter((x) => x.n > 0).sort((a, b) => b.n - a.n), max };
   }, [records]);
@@ -57,11 +56,11 @@ export default function History() {
         </Pressable>
       </Row>
 
-      {AUTH_PROVIDER === "mysql" && mode === "user" && <>
+      {mode === "user" && <>
         <Btn title={syncing ? "동기화 중…" : "기록 동기화"} disabled={syncing} onPress={async()=>{
           setSyncing(true);try{await refreshRecords();}catch{showDialog({icon:"offline",title:"연결하지 못했어요",message:"기기의 기록은 유지돼요. 연결 후 다시 시도해 주세요."});}finally{setSyncing(false);}
         }}/>
-        {records.some(r=>!r.synced)&&<T size={13} color="muted">서버 미반영 기록이 있어요. 이전 기록·배틀 기록 등은 기기에만 보관될 수 있어요.</T>}
+        {records.some(r=>!r.synced)&&<T size={13} color="muted">서버 미반영 기록이 있어요. 전체 답안이 없는 이전 기록 등은 기기에만 보관될 수 있어요.</T>}
       </>}
       {mode === "guest" && (
         <Card style={{ backgroundColor: c.accentSoft, borderColor: c.accent, gap: 8 }}>
@@ -73,7 +72,7 @@ export default function History() {
       <SectionTitle title="학습 현황" right={<Pressable onPress={() => router.push("/profile")} hitSlop={8}><T size={14} weight="semibold" color="accent">프로필 · 업적 ›</T></Pressable>} />
       <StatGrid>
         <StatTile icon={<Icon name="flame" size={30} />} value={`${streak}일`} label={streak && !today ? "연속 · 오늘 아직!" : "연속 공부"} dim={!streak} />
-        <StatTile icon={<Icon name="calendar" size={30} />} value={`${records.length}회`} label="총 공부" />
+        <StatTile icon={<Icon name="calendar" size={30} />} value={`${records.filter(r=>r.countsAsStudy !== false).length}회`} label="총 공부" />
         <StatTile icon={<Icon name="target" size={30} />} value={records.length ? `${avg.toFixed(1)}점` : "-"} label="평균 점수 (10점)" />
         <StatTile icon={<Icon name="bolt" size={30} />} value={`${xp.toLocaleString()}`} label="누적 XP" />
       </StatGrid>
@@ -114,7 +113,7 @@ export default function History() {
       )}
 
       <Row style={{ justifyContent: "space-between" }}>
-        <Segment<Filter> value={filter} onChange={setFilter} options={[{ value: "all", label: "전체" }, { value: "review", label: "다시 볼 주제 (6점↓)" }]} />
+        <Segment<Filter> value={filter} onChange={setFilter} options={[{ value: "all", label: "전체" }, { value: "study", label: "일반" }, { value: "battle", label: "배틀" }, { value: "review", label: "복습" }]} />
         <T size={13} color="muted">{list.length}개</T>
       </Row>
     </View>
@@ -130,15 +129,15 @@ export default function History() {
     >
       <View style={{ gap: 2 }}>
         <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
-          <T size={16} weight="semibold" numberOfLines={1} style={{ flex: 1 }}>{r.topicKo}</T>
+          <T size={16} weight="semibold" numberOfLines={1} style={{ flex: 1 }}>{r.studyType === "battle" ? "[배틀] " : ""}{r.topicKo}</T>
           <Score r={r} />
         </Row>
         <T size={13} color="muted">
-          {fmtDate(r.studiedAt)} · {ALL_CATEGORIES.find((x) => x.id === r.category)?.name ?? r.category} · +{r.rp} XP
+          {fmtDate(r.studiedAt)} · {ALL_CATEGORIES.find((x) => x.id === r.category)?.name ?? r.category} · {r.rp >= 0 ? "+" : ""}{r.rp} XP
           {!r.synced && mode === "user" ? " · 동기화 대기" : ""}
         </T>
         <Row gap={6}>
-          <TierBadge index={topicMastery(r.topicId, records).index} size="sm" />
+          <TierBadge index={domainMastery(r.domain, records).index} prefix={domainById(r.domain)?.name} size="sm" />
         </Row>
       </View>
     </Pressable>

@@ -1,4 +1,8 @@
 import type { StudyRecord } from "./types";
+export interface WalletState {
+ balance: number; revision: string; claims: string[];
+ state: {freezes: number; boughtTickets: number; freeTickets: number; month: string; premium: boolean; keptDays: string[]};
+}
 export interface AuthSession {
   accessToken: string; refreshToken: string; expiresAt: number;
   user: { id: string; email: string | null };
@@ -64,10 +68,11 @@ export function createAuthClient(url: string, storage: SessionStorage, fetcher: 
     })();
     try { return await refreshTask; } finally { refreshTask = null; }
   }
-  async function ensure(): Promise<AuthSession> {
+  async function ensure(checkServer = true): Promise<AuthSession> {
     if (!session) throw new AuthApiError("unauthorized", 401);
     if (session.expiresAt <= Date.now() + 30000) return refresh();
     const current = session, version = epoch;
+    if (!checkServer) return current; // The target API validates this token and account itself.
     try {
       await request("/auth/me", undefined, current.accessToken);
       if (version !== epoch) throw new AuthApiError("session_changed");
@@ -80,9 +85,9 @@ export function createAuthClient(url: string, storage: SessionStorage, fetcher: 
       throw error;
     }
   }
-  async function authorized(path: string, body?: unknown, method?: "GET" | "PUT" | "DELETE") {
+  async function authorized(path: string, body?: unknown, method?: "GET" | "POST" | "PUT" | "DELETE") {
     const version = epoch;
-    const current = await ensure();
+    const current = await ensure(false);
     try { const result = await request(path, body, current.accessToken, method); if (version !== epoch) throw new AuthApiError("session_changed"); return result; }
     catch (error) {
       if (!(error instanceof AuthApiError) || error.status !== 401 || version !== epoch) throw error;
@@ -91,6 +96,13 @@ export function createAuthClient(url: string, storage: SessionStorage, fetcher: 
     }
   }
   return {
+    getUserId() { return session?.user.id ?? null; },
+    async getSpeedStats(): Promise<{best:number;plays:number;day:string;xpToday:number;totalXp:number}> {return authorized("/me/speed/stats");},
+    async apiRequest(path: string, body?: unknown, method?: "GET" | "POST" | "PUT" | "DELETE") { return authorized(path, body, method); },
+    async getWallet(): Promise<WalletState> { return authorized("/me/wallet"); },
+    async walletOperation(requestId: string, action: string, payload: Record<string, unknown> = {}): Promise<WalletState> {
+      return authorized("/me/wallet/operations", {requestId, action, payload}, "POST");
+    },
     async uploadRecords(records: StudyRecord[]): Promise<{results: {id: string; ok: boolean; record?: StudyRecord; error?: string}[]}> {
       return authorized("/me/records", {records}, "PUT");
     },

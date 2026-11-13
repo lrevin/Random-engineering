@@ -44,7 +44,7 @@ export default function Recall() {
 
   const finish = async (all: (number | boolean)[], qs: ExamItem[]) => {
     setLog(await markRecalled([...new Set(qs.map((x) => x.topic.id))]));
-    if (claimQuest(`recall:${todayKey()}`, RECALL_GEARS)) setGot(RECALL_GEARS);
+    if (await claimQuest(`recall:${todayKey()}`, RECALL_GEARS)) setGot(RECALL_GEARS);
     void all;
   };
 

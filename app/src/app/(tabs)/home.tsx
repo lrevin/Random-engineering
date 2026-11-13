@@ -1,4 +1,5 @@
 import { router } from "expo-router";
+import { domainById } from "@/data";
 import { dailyTopic } from "@/lib/daily";
 import { TodayRow } from "@/components/TodayRow";
 import { useMemo, useState, type ReactNode } from "react";
@@ -11,16 +12,15 @@ import { inInterests, levelText, TOPICS, type Topic } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { studyMinutesFor } from "@/lib/economy";
 import { prefetchQuiz } from "@/lib/quiz";
-import { MAX_LEVEL, maxRpFor, TIERS, topicMastery, userLevel } from "@/lib/rank";
+import { domainMastery, MAX_LEVEL, maxRpFor, TIERS, topicMastery, userLevel } from "@/lib/rank";
 import { calcStreak } from "@/lib/stats";
 import { radius, shadow, useColors } from "@/theme";
 import { DomainIcon, Icon, TierIcon } from "@/components/Icon";
-import { QuestSummary } from "@/components/Quests";
 
 type LevelFilter = "0" | "1" | "2" | "3"; // 0 = 전체
 
 export default function Home() {
-  const { prefs, records, active, setActive, gears, updatePrefs, xp, keptDays, freezes, premium, uid } = useApp();
+  const { catalogVersion, prefs, records, active, setActive, gears, updatePrefs, xp, keptDays, freezes, premium, uid } = useApp();
   const lv = userLevel(xp);
   const studyMin = studyMinutesFor(prefs.studyMinutes, premium);
   const c = useColors();
@@ -39,7 +39,7 @@ export default function Home() {
   const [reel, setReel] = useState<{ key: number; names: string[]; pick: Topic } | null>(null);
 
   const { streak } = calcStreak(records, new Date(), keptDays);
-  // 마스터 = 주제 랭크가 최고 단계(엔지니어). 같은 개념이 여러 분야에 있을 수 있어서(예: 레이놀즈 수) 이름으로도 확인
+  // 많이 푼 주제 = 그 주제에서 누적 정답 50개 + 만점 1번 이상. 같은 개념이 여러 분야에 있을 수 있어서(예: 레이놀즈 수) 이름으로도 확인
   const mastered = useMemo(() => {
     const set = new Set<string>();
     for (const id of new Set(records.map((r) => r.topicId))) {
@@ -53,8 +53,9 @@ export default function Home() {
 
   // 오늘의 주제는 홈 위 칸에서 따로 보여 주므로 슬롯머신 후보에서 뺌
   const today = new Date().toDateString();
-  const daily = useMemo(() => dailyTopic(uid, prefs.interests), [uid, prefs.interests, today]); // eslint-disable-line react-hooks/exhaustive-deps
+  const daily = useMemo(() => dailyTopic(uid, prefs.interests), [catalogVersion, uid, prefs.interests, today]); // eslint-disable-line react-hooks/exhaustive-deps
   const inScope = useMemo(() => {
+    void catalogVersion; // Invalidate selections when the shared catalog changes.
     const seen = new Set<string>();
     return TOPICS.filter((t) => {
       if (daily && (t.id === daily.id || t.ko === daily.ko)) return false;
@@ -63,7 +64,7 @@ export default function Home() {
       seen.add(t.ko);
       return true;
     });
-  }, [prefs.interests, level, daily]);
+  }, [catalogVersion, prefs.interests, level, daily]);
   const pool = useMemo(
     () => (includeMastered ? inScope : inScope.filter((t) => !mastered.has(t.id) && !mastered.has(t.ko))),
     [inScope, includeMastered, mastered],
@@ -110,7 +111,7 @@ export default function Home() {
   const emptyText = !prefs.interests.length
     ? "관심 분야를 먼저 골라 주세요."
     : !pool.length
-      ? includeMastered ? "조건에 맞는 주제가 없어요." : "이 조건의 주제를 모두 마스터했어요!\n'마스터한 주제 포함'을 눌러 보세요."
+      ? includeMastered ? "조건에 맞는 주제가 없어요." : "이 조건의 주제를 모두 충분히 풀었어요!\n'많이 푼 주제 포함'을 눌러 보세요."
       : "레버를 당기거나 버튼을 눌러\n오늘의 주제를 뽑아 보세요";
 
   return (
@@ -146,7 +147,6 @@ export default function Home() {
         </HeaderTile>
       </Row>
 
-      <QuestSummary />
       <TodayRow />
 
       {active && (
@@ -166,7 +166,7 @@ export default function Home() {
             onChange={(v) => { setLevel(String(v) as LevelFilter); updatePrefs({ level: v }).catch(() => {}); }}
           />
           <Chip
-            label="마스터한 주제 포함"
+            label="많이 푼 주제 포함"
             icon={includeMastered ? <Icon name="check" size={16} color={c.navyInk} /> : <TierIcon index={5} size={20} />}
             selected={includeMastered}
             onPress={() => setIncludeMastered((v) => !v)}
@@ -206,7 +206,7 @@ export default function Home() {
                   <T size={14} color="muted" center>{shown.en}</T>
                   <T size={16} color="ink2" center style={{ marginTop: 4 }}>{shown.hint}</T>
                   <Row gap={8} style={{ justifyContent: "center", marginTop: 4 }}>
-                    <TierBadge index={topicMastery(shown.id, records).index} size="sm" />
+                    <TierBadge index={domainMastery(shown.domain, records).index} prefix={domainById(shown.domain)?.name} size="sm" />
                     <T size={12} color="muted">퀴즈 최대 +{maxRpFor(shown)} XP</T>
                   </Row>
                 </>

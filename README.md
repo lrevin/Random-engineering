@@ -10,7 +10,7 @@
 | 폴더 | 내용 |
 |---|---|
 | [`app/`](app) | 모바일 앱 — React Native 0.86 · Expo SDK 57 · TypeScript (iOS·안드로이드 공용) |
-| [`api/`](api) | 백엔드 — Supabase (PostgreSQL · Auth · RLS) + AI 퀴즈 서버 함수 (Deno · Claude API) |
+| [`api/`](api) | 백엔드 — 자체 API 서버(Node.js · JWT) + AWS RDS MySQL |
 | [`api/quiz-server/`](api/quiz-server) | **퀴즈 AI 서버** — PC 등에서 계속 켜 두고 퀴즈를 만들어 쌓아 두는 출제 AI (Node · Claude API) |
 | [`api/API_RULES.md`](api/API_RULES.md) | **API 규칙** — 엔드포인트 목록, 이름·인증·오류 형식, DB 변경 방법 |
 | [`docs/`](docs) | 졸업작품 계획서(`docs/plan`), 로고·그림(`docs/images`), 퀴즈 작성 기준·검토 메모 |
@@ -37,7 +37,7 @@
 - **15분 공부**: 원형 타이머, 자동 저장 메모, 앱을 껐다 켜도 이어 하기, 끝나는 순간 알림
 - **퀴즈 7문제**: 🤖 AI가 새로 낸 4문제 + 📚 미리 만든 3문제, 문제마다 정답·해설 바로 표시, 오답 노트, 퀴즈만 다시 풀기
   - AI는 우리 문제 은행을 먼저 보고 겹치지 않는 새 유형(상황 판단·비교·계산·오개념 찾기)으로 출제, 그래도 비슷한 문제는 유사도 검사로 버림
-  - AI 출처: 퀴즈 AI 서버 → Supabase 함수 → 휴대폰에 저장한 AI 문제, 모자라면 미리 만든 문제 → 연습 문제
+  - AI 출처: 퀴즈 AI 서버 → 휴대폰에 저장한 AI 문제, 모자라면 미리 만든 문제 → 연습 문제
 - **랭크**
   - 사용자 랭크: 퀴즈로 얻은 RP 누적 (실버 300 · 골드 900 · 플래티넘 2,000 · 다이아 4,000 · 엔지니어 7,000)
   - 주제별 숙련 랭크: 그 주제에서 맞힌 문제 누적 (실버 10 · 골드 20 · 플래티넘 30 · 다이아 40 · 엔지니어 50 + 만점 1회)
@@ -73,8 +73,8 @@
 | 구분 | 사용 기술 |
 |---|---|
 | 앱 | React Native 0.86, Expo SDK 57, TypeScript, Expo Router |
-| 백엔드 | Supabase (PostgreSQL, Auth, Row Level Security) |
-| AI 퀴즈 | 퀴즈 AI 서버 (Node, 계속 켜 두는 출제 AI) / Supabase Edge Functions (Deno) + Anthropic Claude API (`claude-opus-5-5`) |
+| 백엔드 | AWS EC2 API 서버 · RDS MySQL · JWT |
+| AI 퀴즈 | 퀴즈 AI 서버 (Node, 계속 켜 두는 출제 AI) + Anthropic Claude API (`claude-opus-5-5`) |
 | 알림 | expo-notifications (로컬 알림) |
 | 데이터 도구 | Python 3 (위키백과 API, 링크 검사, 퀴즈 검사) |
 | 협업 | Git / GitHub (Git Flow), GitHub Actions CI |
@@ -117,6 +117,5 @@ npx expo start --android  # 안드로이드 에뮬레이터
 
 | 파일·값 | 위치 | 용도 |
 |---|---|---|
-| `.env.local` | `app/` | Supabase 주소와 Publishable key, 퀴즈 AI 서버 주소 (`app/.env.example` 참고) |
-| `ANTHROPIC_API_KEY` | Supabase secrets, `api/quiz-server/.env` | AI 퀴즈 생성 (코드·저장소에 적지 않음) |
-| Supabase service role 키 | Supabase 대시보드 | 서버 함수 전용, 앱·저장소에 절대 넣지 않음 |
+| `.env.local` | `app/` | 자체 API 서버 HTTPS 주소, 별도 퀴즈 AI 서버 주소 (`app/.env.example` 참고) |
+| `ANTHROPIC_API_KEY` | `api/quiz-server/.env` | AI 퀴즈 생성 (코드·저장소에 적지 않음) |

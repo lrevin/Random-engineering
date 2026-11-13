@@ -5,7 +5,6 @@
   python scripts/quizbank.py check     # 모든 문제 파일 검사 (형식·개수·중복)
   python scripts/quizbank.py index     # app/src/data/quizbank/index.ts 다시 만들기 (문제 은행 전체를 앱에 넣음)
   python scripts/quizbank.py index --remote  # 서버(quiz_bank 표)에서 받아 쓰는 방식: 앱에는 주제당 4문제만 넣음
-  python scripts/quizbank.py upload    # 문제 은행을 Supabase quiz_bank 표에 올림 (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY 환경 변수)
   python scripts/quizbank.py status    # 진행 현황
 
 문제 파일 형식 (app/src/data/quizbank/<이름>.json):
@@ -21,7 +20,7 @@ import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BANK = os.path.join(ROOT, "app", "src", "data", "quizbank")
-TOPICS = os.path.join(ROOT, "api", "supabase", "functions", "generate-quiz", "topics.json")
+TOPICS = os.path.join(ROOT, "api", "shared", "data", "topics.json")
 # 주제당 목표: 30문제 (4지선다 22 + OX 8). 한 주제의 문제는 여러 파일에 나뉘어 있어도 됨 (나중에 더 채울 때)
 TARGET, TARGET_MC, TARGET_OX = 30, 22, 8
 MIN_TOTAL, MIN_MC, MIN_OX = 12, 8, 3  # 이보다 적으면 오류 (작성 중인 주제 포함)
@@ -169,22 +168,6 @@ def write_index(remote=False):
     return len(files)
 
 
-def upload(batch=50):
-    """문제 은행을 quiz_bank 표에 올림 (같은 주제는 덮어씀). service role 키는 DB 담당자 PC의 환경 변수에만 둠"""
-    url, key = os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
-    if not url or not key:
-        sys.exit("SUPABASE_URL 과 SUPABASE_SERVICE_ROLE_KEY 환경 변수를 먼저 정해 주세요.")
-    rows = [{"topic_id": t, "questions": qs} for t, qs in sorted(load_bank().items())]
-    for i in range(0, len(rows), batch):
-        req = urllib.request.Request(
-            url.rstrip("/") + "/rest/v1/quiz_bank", method="POST",
-            data=json.dumps(rows[i:i + batch], ensure_ascii=False).encode("utf8"),
-            headers={"apikey": key, "Authorization": "Bearer " + key, "Content-Type": "application/json",
-                     "Prefer": "resolution=merge-duplicates,return=minimal"})
-        urllib.request.urlopen(req, timeout=60).read()
-        print(f"올림 {min(i + batch, len(rows))}/{len(rows)}")
-    return len(rows)
-
 
 def need_of(qs):
     """주제당 30문제(mc 22 + ox 8)까지 더 써야 할 개수"""
@@ -237,7 +220,7 @@ if __name__ == "__main__":
         else:
             print(f"index.ts: 파일 {write_index()}개")
     elif cmd == "upload":
-        print(f"주제 {upload()}개를 quiz_bank 표에 올렸습니다.")
+        sys.exit("MySQL 적재는 api/server에서 npm run db:import를 사용하세요.")
     else:
         t, b = load_topics(), load_bank()
         full = sum(1 for k in t if sum(need_of(b.get(k, []))) == 0)

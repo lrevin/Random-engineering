@@ -1,7 +1,7 @@
 import type { IconName } from "@/components/Icon";
 import { domainById } from "@/data";
 import type { ExamResult } from "./exam";
-import { topicMastery, userLevel } from "./rank";
+import { domainRanks, userLevel } from "./rank";
 import { dateKey, isBattleRecord, studyDays } from "./stats";
 import type { StudyRecord } from "./types";
 
@@ -72,8 +72,9 @@ function make(id: string, group: AchievementGroup, title: string, desc: string, 
 const count = <T,>(xs: T[], f: (x: T) => boolean) => xs.filter(f).length;
 
 export function achievements(records: StudyRecord[], xp: number, kept: readonly string[] = [], extra: AchievementExtra = {}): Achievement[] {
+  records = records.filter(r=>r.countsAsStudy !== false);
   const topicIds = [...new Set(records.map((r) => r.topicId))];
-  const tiers = topicIds.map((id) => topicMastery(id, records).index);
+  const tiers = domainRanks(records).map((d) => d.index);
   const isPerfect = (r: StudyRecord) => r.total > 0 && r.score === r.total;
   const hour = (r: StudyRecord) => new Date(r.studiedAt).getHours();
   const dow = (r: StudyRecord) => new Date(r.studiedAt).getDay();
@@ -116,8 +117,8 @@ export function achievements(records: StudyRecord[], xp: number, kept: readonly 
     make("perfectRun", "skill", "연속 만점", "만점을 {n}번 연속으로 받기", ["medal", "#f2a900", "#c07f00"], perfectRun, [2, 3, 5, 10]),
     make("correct", "skill", "정답 수집가", "퀴즈 정답 {n}개 맞히기", ["check", "#2f8f5b", "#1f6b42"], records.reduce((a, r) => a + r.score, 0), [50, 300, 1000, 3000, 10000]),
     make("high", "skill", "고득점", "정답률 80% 이상인 퀴즈 {n}번", ["chart", "#3d6fd8", "#2a4fa3"], count(records, (r) => r.total > 0 && r.score / r.total >= 0.8), [5, 30, 100, 300]),
-    make("gold", "skill", "골드 수집", "골드 랭크 이상 주제 {n}개 만들기", ["trophy", "#d4a017", "#a57a0c"], count(tiers, (t) => t >= 2), [1, 10, 30, 80]),
-    make("engineer", "skill", "엔지니어", "엔지니어 랭크 주제 {n}개 만들기", ["gear", "#6b7a90", "#4c586b"], count(tiers, (t) => t >= 5), [1, 5, 15, 40]),
+    make("gold", "skill", "골드 수집", "골드 랭크 이상 분야 {n}개 만들기", ["trophy", "#d4a017", "#a57a0c"], count(tiers, (t) => t >= 2), [1, 2, 4, 8]),
+    make("engineer", "skill", "엔지니어", "엔지니어 랭크 분야 {n}개 만들기", ["gear", "#6b7a90", "#4c586b"], count(tiers, (t) => t >= 5), [1, 2, 3, 5]),
     make("level", "skill", "성장", "{n}레벨 달성하기", ["star", "#f2a900", "#c07f00"], userLevel(xp).level, [5, 10, 30, 50, 100]),
     make("xp", "skill", "경험치 부자", "누적 경험치 {n} XP 모으기", ["bolt", "#f2a900", "#c07f00"], Math.max(0, xp), [500, 2000, 10000, 30000, 100000]),
     // ── 도전

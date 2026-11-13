@@ -40,15 +40,16 @@ function SimulatedAd({ onDone }: { onDone: (earned: boolean) => void }) {
 /** "광고 보고 톱니바퀴 AD_REWARD개 받기" 버튼 (하루 AD_DAILY_LIMIT번) */
 export function AdRewardButton() {
   const c = useColors();
-  const { adViewsToday, grantAdReward } = useApp();
+  const { mode, adViewsToday, grantAdReward } = useApp();
   const [loading, setLoading] = useState(false);
   const [sim, setSim] = useState(false);
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const left = Math.max(0, AD_DAILY_LIMIT - adViewsToday);
-  const disabled = loading || left === 0;
+  const disabled = mode === "user" || loading || left === 0;
 
-  const done = (earned: boolean) => {
-    if (earned && grantAdReward()) setMsg({ text: `톱니바퀴 ${AD_REWARD}개를 받았어요!`, ok: true });
+  const done = async (earned: boolean) => {
+    if (earned && await grantAdReward()) setMsg({ text: `톱니바퀴 ${AD_REWARD}개를 받았어요!`, ok: true });
+    else if (earned) setMsg({text:"보상 지급을 확인하지 못했어요. 상점의 안내를 확인해 주세요.",ok:false});
     else if (!earned) setMsg({ text: "광고를 끝까지 봐야 톱니바퀴를 받아요.", ok: false });
   };
 
@@ -64,6 +65,7 @@ export function AdRewardButton() {
     else done(r === "earned");
   };
 
+  if(mode === "user")return <T size={13} color="muted">광고 보상은 서버 지급 확인 연결 후 이용할 수 있어요.</T>;
   return (
     <View style={{ gap: 6 }}>
       <Pressable
