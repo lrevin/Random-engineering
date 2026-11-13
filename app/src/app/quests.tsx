@@ -81,10 +81,10 @@ export default function Quests() {
               <T size={28} weight="bold" style={{ color: "#ffffff" }}>{def.title}</T>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                 <Icon name="clock" size={18} />
-                <T size={14} weight="semibold" style={{ color: def.soft }}>{untilEnd(tab, now)} 남음 · {RESET[tab]}</T>
+                <T size={14} weight="semibold" numberOfLines={1} style={{ color: def.soft, flexShrink: 1 }}>{untilEnd(tab, now)} 남음 · {RESET[tab]}</T>
               </View>
             </View>
-            <Icon name={q.allDone && q.bonusClaimed ? "chest-open" : "chest"} size={tab === "day" ? 72 : tab === "month" ? 88 : 80} />
+            <Icon name={q.allDone && q.bonusClaimed ? "chest-open" : "chest"} size={80} />
           </View>
         </View>
 
