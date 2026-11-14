@@ -195,6 +195,11 @@ export function applyTitle(id: string | null) {
   set({ ...state, title: id });
 }
 
+/** 개발·시연용: 모든 스킨과 칭호를 가진 상태로 (쓰는 스킨·칭호는 그대로) */
+export function unlockAllCosmetics() {
+  set({ ...state, owned: SKINS.map((x) => x.id), titles: TITLES.map((t) => t.id) });
+}
+
 /** 연속 기록 보상을 받은 것으로 표시. 이미 받았으면 false */
 export function markMilestone(days: number) {
   if (state.milestones.includes(days)) return false;
