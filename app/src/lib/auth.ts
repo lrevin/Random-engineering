@@ -14,7 +14,7 @@ export function authErrorMessage(error: unknown) {
     invalid_credentials: "이메일 또는 비밀번호가 맞지 않아요.",
     invalid_email: "이메일 형식을 확인해 주세요.",
     email_taken: "이미 가입된 이메일이에요. 로그인해 주세요.",
-    weak_password: "비밀번호는 8자 이상으로, 영어 대문자·소문자·숫자·특수문자(!@# 등)를 하나씩 꼭 넣어 주세요.",
+    weak_password: "비밀번호는 8자 이상으로 정해 주세요.",
     unauthorized: "로그인이 만료됐어요. 다시 로그인해 주세요.",
     rate_limited: "요청이 너무 많아요. 잠시 후 다시 시도해 주세요.",
     network_error: "서버에 연결할 수 없어요. 인터넷 연결을 확인해 주세요.",

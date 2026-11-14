@@ -100,7 +100,7 @@ AI pool은 아직 별도 JSON 저장이다. AI 문제의 MySQL 수신·적재는
 | POST | /auth/logout | 해당 로그인 세션과 Refresh Token 폐기, 204 |
 | GET | /auth/me | Bearer Access Token으로 사용자·계정 상태 확인 |
 
-/api 접두사도 지원한다. signup/login/refresh 응답은 accessToken·refreshToken·expiresIn·user를 포함한다. expiresIn은 900초, 세션 절대 만료는 로그인 후 30일이다. 비밀번호는 대문자·소문자·숫자·특수문자를 포함한 8자 이상, UTF-8 72바이트 이하다. BCrypt 비용은 12다.
+/api 접두사도 지원한다. signup/login/refresh 응답은 accessToken·refreshToken·expiresIn·user를 포함한다. expiresIn은 900초, 세션 절대 만료는 로그인 후 30일이다. 비밀번호는 8자 이상, UTF-8 72바이트 이하다(글자 종류 제한 없음). BCrypt 비용은 12다.
 
 이메일 인증 메일은 아직 도입하지 않았다. 현재 가입은 email_verified_at=NULL로 로그인하며, 메일을 보냈다고 표시하지 않는다. 소셜 로그인·비밀번호 재설정·기존 Supabase 계정 이전은 이번 범위가 아니다.
 
