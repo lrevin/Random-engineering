@@ -15,6 +15,7 @@ import { Icon, type IconName } from "@/components/Icon";
 import { RankUp, type RankUpScene } from "@/components/RankUp";
 import { HomeIntro } from "@/components/HomeIntro";
 import { userLevel } from "@/lib/rank";
+import { unlockAllCosmetics } from "@/lib/skins";
 import { setSfxEnabled, sfx, sfxEnabled } from "@/lib/sfx";
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -250,6 +251,7 @@ export default function Settings() {
             devSeedRecords(ids);
             setNotice(`시험 기록 ${ids.length}개를 넣었어요`);
           }} />
+          <Item label="모든 스킨 · 칭호 열기" sub="시연용: 이 휴대폰에 슬롯머신 스킨과 칭호를 전부 넣어요" onPress={() => { unlockAllCosmetics(); setNotice("스킨과 칭호를 모두 열었어요"); }} />
           <Item label="승급 연출 미리 보기" sub="레벨 업 → 주제 랭크 승급 연출을 차례로 보여 줘요" last onPress={() => setRankUpPreview([
             { kind: "level", from: userLevel(xp).level, to: userLevel(xp).level + 1 },
             { kind: "tier", from: 1, to: 2, topic: "트랜잭션 ACID" },
