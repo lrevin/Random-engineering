@@ -1,16 +1,21 @@
 import { Redirect, router } from "expo-router";
 import { useState } from "react";
 import { View } from "react-native";
-import { TierBadge, UserRankBar } from "@/components/Rank";
+import { LevelBadge, TierBadge, UserLevelBar } from "@/components/Rank";
 import { Btn, Card, Row, Screen, T } from "@/components/ui";
-import { topicById } from "@/data";
+import { domainById, topicById } from "@/data";
 import { useApp } from "@/lib/app-state";
-import { TIERS, TOPIC_TIER_MIN, topicMastery, totalRp } from "@/lib/rank";
+import { DOMAIN_ENGINEER_TOPICS, DOMAIN_TIER_MIN, domainMastery, TIERS } from "@/lib/rank";
 import { useColors } from "@/theme";
+import { Icon } from "@/components/Icon";
+import { RankUp, type RankUpScene } from "@/components/RankUp";
+
+/** 승급 연출을 이미 보여 준 결과 (결과 화면에 다시 들어와도 한 번만) */
+const shownRankUp = new Set<string>();
 
 const scoreMessage = (score: number, total: number) => {
   const p = total ? score / total : 0;
-  if (p === 1) return "완벽해요! 이 주제는 확실히 알고 있어요 🎉";
+  if (p === 1) return "완벽해요! 이 주제는 확실히 알고 있어요";
   if (p >= 0.8) return "아주 잘했어요! 거의 다 알고 있어요";
   if (p >= 0.6) return "좋아요. 틀린 문제만 한 번 더 보면 돼요";
   if (p >= 0.4) return "절반 정도 이해했어요. 다시 공부해 볼까요?";
@@ -26,14 +31,25 @@ export default function Result() {
 }
 
 function ResultInner({ snapshot }: { snapshot: NonNullable<ReturnType<typeof useApp>["active"]> }) {
-  const { records, setActive } = useApp();
+  const { records, setActive, xp } = useApp();
   const c = useColors();
   const r = snapshot.result!;
   const topic = topicById(snapshot.topicId);
-  const mastery = topicMastery(snapshot.topicId, records);
-  const rankUp = r.userTierAfter > r.userTierBefore;
+  const domain = topic ? domainById(topic.domain) : undefined;
+  const mastery = domainMastery(topic?.domain ?? "", records);
+  const levelUp = (r.userLevelAfter ?? 0) > (r.userLevelBefore ?? 0);
   const topicUp = r.topicTierAfter > r.topicTierBefore;
   const pct = r.total ? r.score / r.total : 0;
+  // 승급 연출: 레벨 업 → 주제 랭크 승급 순서로
+  const [scenes, setScenes] = useState<RankUpScene[]>(() => {
+    const key = r.recordId ?? snapshot.startedAt;
+    if (shownRankUp.has(key)) return [];
+    shownRankUp.add(key);
+    const out: RankUpScene[] = [];
+    if (levelUp) out.push({ kind: "level", from: r.userLevelBefore, to: r.userLevelAfter });
+    if (topicUp) out.push({ kind: "tier", from: r.topicTierBefore, to: r.topicTierAfter, topic: domain?.name ?? "" });
+    return out;
+  });
 
   const done = (to: "/home" | "/history") => {
     setActive(null);
@@ -46,10 +62,11 @@ function ResultInner({ snapshot }: { snapshot: NonNullable<ReturnType<typeof use
 
   return (
     <Screen scroll>
-      {rankUp && (
-        <Card style={{ backgroundColor: TIERS[r.userTierAfter].color + "22", borderColor: TIERS[r.userTierAfter].color, alignItems: "center", gap: 6 }}>
-          <T size={40}>{TIERS[r.userTierAfter].emoji}</T>
-          <T size={20} weight="bold" center>랭크 승급! {TIERS[r.userTierAfter].name} 달성</T>
+      {scenes.length > 0 && <RankUp scenes={scenes} onDone={() => setScenes([])} />}
+      {levelUp && (
+        <Card style={{ backgroundColor: c.goldSoft, borderColor: c.gold, alignItems: "center", gap: 8 }}>
+          <LevelBadge level={r.userLevelAfter} size="lg" />
+          <T size={20} weight="bold" center>레벨 업! {r.userLevelAfter}레벨 달성</T>
         </Card>
       )}
 
@@ -59,13 +76,18 @@ function ResultInner({ snapshot }: { snapshot: NonNullable<ReturnType<typeof use
           {r.score}<T size={30} color="muted"> / {r.total}</T>
         </T>
         <T size={16} color="ink2" center>{scoreMessage(r.score, r.total)}</T>
-        {r.streak > 0 && <T size={15} weight="semibold" color="flame">🔥 {r.streak}일 연속 공부</T>}
+        {r.streak > 0 && (
+          <Row gap={4} style={{ justifyContent: "center" }}>
+            <Icon name="flame" size={22} />
+            <T size={15} weight="semibold" color="flame">{r.streak}일 연속 공부</T>
+          </Row>
+        )}
       </View>
 
       <Card style={{ gap: 10 }}>
         <Row style={{ justifyContent: "space-between" }}>
-          <T size={16} weight="bold">획득 RP</T>
-          <T size={22} weight="bold" color="accent">+{r.rp}</T>
+          <T size={16} weight="bold">획득 경험치</T>
+          <T size={22} weight="bold" color="accent">+{r.rp} XP</T>
         </Row>
         {r.parts.filter((p) => p.value > 0).map((p) => (
           <Row key={p.label} style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
@@ -74,23 +96,22 @@ function ResultInner({ snapshot }: { snapshot: NonNullable<ReturnType<typeof use
           </Row>
         ))}
         <View style={{ height: 1, backgroundColor: c.line, marginVertical: 4 }} />
-        <T size={13} weight="semibold" color="ink2">내 랭크</T>
-        <UserRankBar rp={totalRp(records)} />
+        <T size={13} weight="semibold" color="ink2">내 레벨</T>
+        <UserLevelBar xp={xp} />
       </Card>
 
       <Card style={{ gap: 8 }}>
         <Row gap={8}>
-          <T size={16} weight="bold">[{topic?.categoryName ?? "주제"}]</T>
+          <T size={16} weight="bold">{domain?.name ?? "분야"} 랭크</T>
           <TierBadge index={r.topicTierAfter} />
         </Row>
-        <T size={13} color="ink2">{topic?.ko ?? snapshot.topicId}</T>
         {topicUp && r.topicTierBefore >= 0 && (
           <T size={14} color="success" weight="semibold">{TIERS[r.topicTierBefore].name} → {TIERS[r.topicTierAfter].name} 승급!</T>
         )}
         <T size={13} color="muted">
-          누적 정답 {mastery.points}개 · {mastery.attempts}번 풂
+          {domain?.name} 누적 정답 {mastery.points}개 · 주제 {mastery.topics}개
           {mastery.next !== null ? ` · 다음 단계까지 ${Math.max(0, mastery.next - mastery.points)}개` : ""}
-          {mastery.index === TIERS.length - 2 && mastery.points >= TOPIC_TIER_MIN[TIERS.length - 1] && !mastery.perfect ? " · 엔지니어는 만점 1회 필요" : ""}
+          {mastery.index === TIERS.length - 2 && mastery.points >= DOMAIN_TIER_MIN[TIERS.length - 1] && mastery.topics < DOMAIN_ENGINEER_TOPICS ? ` · 엔지니어는 주제 ${DOMAIN_ENGINEER_TOPICS}개 이상 필요` : ""}
         </T>
       </Card>
 

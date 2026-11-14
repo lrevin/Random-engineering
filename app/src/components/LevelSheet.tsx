@@ -10,7 +10,7 @@ import { PILL_FILL, T, tap } from "./ui";
 const LABEL: Record<Prefs["level"], string> = { 0: "전체", 1: "Lv.1 기초", 2: "Lv.2 중급", 3: "Lv.3 심화" };
 const SHORT: Record<Prefs["level"], string> = { 0: "전체", 1: "Lv.1", 2: "Lv.2", 3: "Lv.3" };
 
-/** "현재 난이도 : Lv.2 중급" 버튼. 누르면 아래에서 난이도(1~3) 고르는 창이 올라옴 */
+/** "현재 난이도 : Lv.2 중급" 버튼. 누르면 아래에서 난이도(전체·1~3) 고르는 창이 올라옴 */
 export function LevelButton({ value, onChange, interests }: {
   value: Prefs["level"]; onChange: (v: Prefs["level"]) => void; interests: string[];
 }) {
@@ -46,7 +46,6 @@ export function LevelButton({ value, onChange, interests }: {
           <LevelPicker
             value={value}
             interests={interests}
-            onlyLevels
             onChange={(v) => { onChange(v); setOpen(false); }}
           />
           <View style={{ height: 12 }} />

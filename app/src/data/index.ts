@@ -1,6 +1,7 @@
 import { AERO_CATEGORIES, AERO_RAW } from "./aero";
 import { ARCH_CATEGORIES, ARCH_RAW } from "./arch";
 import { BIO_CATEGORIES, BIO_RAW } from "./bio";
+import { certById, CERTS, isCertId } from "./cert";
 import { CHE_CATEGORIES, CHE_RAW } from "./che";
 import { CHEM_CATEGORIES, CHEM_RAW } from "./chem";
 import { CIVIL_CATEGORIES, CIVIL_RAW } from "./civil";
@@ -20,6 +21,7 @@ import type { CategoryDef, Domain, Level, LevelNum, RawTopic, Topic } from "./ty
 
 export * from "./types";
 export { RELATED, relatedFor } from "./related";
+export { CERTS, certById, isCertId, type CertDef } from "./cert";
 
 export const LEVEL_NAMES: Record<LevelNum, Level> = { 1: "기초", 2: "중급", 3: "심화" };
 const LEVEL_BY_NAME: Record<string, LevelNum> = { 기초: 1, 중급: 2, 심화: 3 };
@@ -88,6 +90,23 @@ export const categoryById = (id: string) => ALL_CATEGORIES.find((c) => c.id === 
 export const domainById = (id: string) => DOMAINS.find((d) => d.id === id);
 export const topicCount = (pred: (t: Topic) => boolean) => TOPICS.filter(pred).length;
 
+// 자격증 → 주제 id 묶음 (과목에 적힌 주제 id나 세부 분야 id를 실제 주제로 풀어 둠)
+const CERT_TOPICS = new Map<string, Set<string>>(
+  CERTS.map((c) => [c.id, new Set(c.subjects.flatMap((s) => s.items.flatMap((it) =>
+    topicMap.has(it) ? [it] : TOPICS.filter((t) => t.category === it).map((t) => t.id))))]),
+);
+/** 자격증에 들어 있는 주제들 */
+export const certTopics = (certId: string) => TOPICS.filter((t) => CERT_TOPICS.get(certId)?.has(t.id));
+/** 이 주제가 내 관심 분야(세부 분야 또는 준비 중인 자격증)에 들어가는지 */
+export const inInterests = (t: Topic, interests: string[]) =>
+  interests.includes(t.category) || interests.some((id) => isCertId(id) && !!CERT_TOPICS.get(id)?.has(t.id));
+/** 관심 분야 id → 화면에 보여 줄 이름 (세부 분야 · 자격증) */
+export const interestName = (id: string) => categoryById(id)?.name ?? certById(id)?.name ?? id;
+/** 서버 매칭용: 자격증을 그 자격증 주제의 세부 분야들로 풀어서 돌려줌 */
+export const expandInterests = (interests: string[]) => [
+  ...new Set(interests.flatMap((id) => (isCertId(id) ? certTopics(id).map((t) => t.category) : [id]))),
+];
+
 /** 위키 검색어: 괄호 안 설명은 빼고 검색 */
 export const searchTerm = (ko: string) => ko.replace(/\s*\(.*?\)\s*/g, " ").trim();
 
@@ -114,3 +133,30 @@ export const topicLinks = (t: Topic): TopicLinks => {
     namu: `https://namu.wiki/Search?q=${encodeURIComponent(searchTerm(t.ko))}`,
   };
 };
+
+export interface RemoteCatalog {
+ version: string;
+ domains: {id:string;name:string;active:number}[];
+ categories: {id:string;name:string;domainId:string;active:number}[];
+ topics: {id:string;name:string;categoryId:string;difficulty:LevelNum;active:number}[];
+}
+/** Keep exported array identities so existing screens and selectors see one catalog. */
+export function applyCatalog(input: unknown, validateOnly=false) {
+ const c=input as RemoteCatalog;
+ if(!c||typeof c.version!=="string"||!c.version||![c.domains,c.categories,c.topics].every(Array.isArray))throw new Error("invalid_catalog");
+ for(const list of [c.domains,c.categories,c.topics]){
+  if(new Set(list.map(x=>x?.id)).size!==list.length||list.some(x=>!x||typeof x.id!=="string"||!/^[a-z0-9_-]{1,32}$/.test(x.id)||typeof x.name!=="string"||!x.name.trim()||![0,1].includes(x.active)))throw new Error("invalid_catalog");
+ }
+ const ds=new Map(c.domains.map(x=>[x.id,x])),cs=new Map(c.categories.map(x=>[x.id,x]));
+ if(c.categories.some(x=>!ds.has(x.domainId))||c.topics.some(x=>!cs.has(x.categoryId)||![1,2,3].includes(x.difficulty)))throw new Error("invalid_catalog");
+ if(validateOnly)return;
+ const existingDomains=new Map(DOMAINS.map(x=>[x.id,x]));
+ const categories=c.categories.filter(x=>x.active&&ds.get(x.domainId)?.active).map(x=>({id:x.id,name:x.name,domain:x.domainId,emoji:categoryById(x.id)?.emoji??"📚"}));
+ const topics=c.topics.map(x=>{const cat=cs.get(x.categoryId)!;const previous=topicMap.get(x.id);return {id:x.id,ko:x.name,en:previous?.en??x.name,hint:previous?.hint??"",domain:cat.domainId,category:cat.id,categoryName:cat.name,lv:x.difficulty,level:LEVEL_NAMES[x.difficulty]};});
+ DOMAINS.splice(0,DOMAINS.length,...c.domains.filter(x=>x.active).map(x=>({...existingDomains.get(x.id),id:x.id,name:x.name,emoji:existingDomains.get(x.id)?.emoji??"📚",description:existingDomains.get(x.id)?.description??"",group:existingDomains.get(x.id)?.group??"eng",available:true,categories:categories.filter(y=>y.domain===x.id)})));
+ ALL_CATEGORIES.splice(0,ALL_CATEGORIES.length,...categories);
+ const active=new Set(c.topics.filter(x=>x.active&&cs.get(x.categoryId)?.active&&ds.get(cs.get(x.categoryId)!.domainId)?.active).map(x=>x.id));
+ TOPICS.splice(0,TOPICS.length,...topics.filter(x=>active.has(x.id)));
+ topicMap.clear();for(const t of topics)topicMap.set(t.id,t);
+ CERT_TOPICS.clear();for(const cert of CERTS)CERT_TOPICS.set(cert.id,new Set(cert.subjects.flatMap(s=>s.items.flatMap(id=>topicMap.has(id)?[id]:TOPICS.filter(t=>t.category===id).map(t=>t.id)))));
+}

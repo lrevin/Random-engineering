@@ -1,4 +1,5 @@
 import Constants, { ExecutionEnvironment } from "expo-constants";
+import { dueTopics, readRecallLog } from "./recall";
 import type * as NotificationsModule from "expo-notifications";
 import { Platform } from "react-native";
 import { calcStreak, studiedToday } from "./stats";
@@ -59,10 +60,10 @@ async function cancelKind(kind: "reminder" | "timer") {
 }
 
 const LATER_MESSAGES = [
-  ["오늘의 주제가 기다리고 있어요 🎲", "15분 공부하고 퀴즈 7문제면 오늘 공부 끝!"],
-  ["딱 17분이면 돼요 ⏱", "주제 하나 뽑아서 설명할 수 있게 만들어 볼까요?"],
-  ["어제보다 하나 더 아는 사람 📚", "오늘의 랜덤 주제를 뽑아 보세요."],
-  ["오늘의 퀴즈로 RP 모으기 🏅", "오늘은 어떤 주제가 나올까요?"],
+  ["오늘의 주제가 기다리고 있어요", "15분 공부하고 퀴즈 7문제면 오늘 공부 끝!"],
+  ["딱 17분이면 돼요", "주제 하나 뽑아서 설명할 수 있게 만들어 볼까요?"],
+  ["어제보다 하나 더 아는 사람", "오늘의 랜덤 주제를 뽑아 보세요."],
+  ["오늘의 퀴즈로 경험치 모으기", "오늘은 어떤 주제가 나올까요?"],
 ];
 
 /**
@@ -83,6 +84,7 @@ export async function rescheduleReminders(prefs: Prefs, records: StudyRecord[]) 
   const doneToday = studiedToday(records, now);
   const { streak } = calcStreak(records, now);
   const name = prefs.nickname ? `${prefs.nickname}님, ` : "";
+  const recallLog = await readRecallLog();
 
   for (let i = 0; i < 7; i++) {
     const date = new Date(now);
@@ -93,11 +95,16 @@ export async function rescheduleReminders(prefs: Prefs, records: StudyRecord[]) 
 
     let title: string, body: string;
     if (i === 0 && streak > 0) {
-      title = `🔥 ${streak}일 연속 기록이 오늘 끊겨요!`;
+      title = `${streak}일 연속 기록이 오늘 끊겨요!`;
       body = `${name}주제 하나만 공부하면 ${streak + 1}일째가 돼요.`;
     } else if (i === 1 && doneToday && streak > 0) {
-      title = `🔥 ${streak}일 연속 공부 중`;
+      title = `${streak}일 연속 공부 중`;
       body = `${name}내일도 이어 가 볼까요? 오늘의 주제를 뽑아 보세요.`;
+    } else if (dueTopics(records, recallLog, date).length > 0) {
+      // 2일마다: 공부한 지 2일 지난 주제가 있으면 복습 알림
+      const n = dueTopics(records, recallLog, date).length;
+      title = `복습할 주제가 ${n}개 있어요`;
+      body = `${name}잊기 전에 3문제씩 다시 풀어 볼까요?`;
     } else {
       const [t, b] = LATER_MESSAGES[(date.getDate() + i) % LATER_MESSAGES.length];
       title = t;
@@ -132,4 +139,14 @@ export async function cancelTimerEnd() {
 export async function cancelAllNotifications() {
   if (!enabled) return;
   await Notifications.cancelAllScheduledNotificationsAsync();
+}
+
+/** 지금 바로 알림 (배틀 신청이 왔을 때). 알림을 못 쓰는 환경(웹 · 안드로이드 Expo Go)에서는 아무것도 안 함 */
+export async function notifyNow(title: string, body: string) {
+  if (!enabled || !(await requestNotificationPermission())) return;
+  await ensureChannels();
+  await Notifications.scheduleNotificationAsync({
+    content: { title, body, sound: true, data: { kind: "battle" } },
+    trigger: Platform.OS === "android" ? { channelId: "timer" } as never : null,
+  });
 }

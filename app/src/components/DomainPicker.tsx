@@ -2,6 +2,7 @@ import { Pressable, View } from "react-native";
 import { DOMAIN_GROUPS, DOMAINS, topicCount, type Domain } from "@/data";
 import { radius, raised, shadow, useColors } from "@/theme";
 import { T, tap } from "./ui";
+import { DomainIcon, Icon } from "./Icon";
 
 /** 듀오링고식 분야 고르기: 공학·과학으로 나눠 큰 카드 2열, 여러 개 선택 */
 export function DomainPicker({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
@@ -41,13 +42,13 @@ function DomainCard({ d, on, onPress }: { d: Domain; on: boolean; onPress: () =>
       })}
     >
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <T size={30} style={{ lineHeight: 38 }}>{d.emoji}</T>
+        <DomainIcon id={d.id} size={40} />
         <View style={{
           width: 22, height: 22, borderRadius: 11, borderWidth: 1.5,
           borderColor: on ? c.accent : c.line2, backgroundColor: on ? c.accent : "transparent",
           alignItems: "center", justifyContent: "center",
         }}>
-          {on && <T size={12} weight="bold" color="accentInk">✓</T>}
+          {on && <Icon name="check" size={14} color="#ffffff" />}
         </View>
       </View>
       <T size={16} weight="bold">{d.name}</T>

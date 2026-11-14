@@ -2,6 +2,7 @@ import { Pressable, View } from "react-native";
 import { DOMAINS, TOPICS } from "@/data";
 import { radius, useColors } from "@/theme";
 import { Chip, Row, T, tap } from "./ui";
+import { DomainIcon } from "./Icon";
 
 const countBy = (cat: string) => TOPICS.filter((t) => t.category === cat).length;
 
@@ -23,7 +24,10 @@ export function InterestPicker({ value, onChange, domains }: {
           <View key={d.id} style={{ gap: 10 }}>
             <Row style={{ justifyContent: "space-between" }}>
               <View style={{ flex: 1 }}>
-                <T size={17} weight="bold">{d.emoji} {d.name}</T>
+                <Row gap={8} style={{ flexWrap: "nowrap" }}>
+                  <DomainIcon id={d.id} size={26} />
+                  <T size={17} weight="bold">{d.name}</T>
+                </Row>
                 <T size={13} color="muted">{d.description}</T>
               </View>
               {d.available ? (
@@ -48,7 +52,7 @@ export function InterestPicker({ value, onChange, domains }: {
                 {d.categories.map((cat) => (
                   <Chip
                     key={cat.id}
-                    label={`${cat.emoji} ${cat.name} ${countBy(cat.id)}`}
+                    label={`${cat.name} ${countBy(cat.id)}`}
                     selected={value.includes(cat.id)}
                     onPress={() => toggle(cat.id)}
                   />

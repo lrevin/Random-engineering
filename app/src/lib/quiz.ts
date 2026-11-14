@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { TOPICS, type Topic } from "@/data";
-import { QUIZ_BANK } from "@/data/quizbank";
-import { supabase } from "./supabase";
+import { BANK_BUNDLED_FULL, QUIZ_BANK } from "@/data/quizbank";
+import { fetchBankQuestions } from "./api";
 
 /** 문제마다 어디서 왔는지: bank = 우리가 미리 만든 문제 · ai = 퀴즈 AI가 새로 만든 문제 · offline = 앱 데이터로 만든 연습 문제 */
 export type QuestionSource = "bank" | "ai" | "offline";
@@ -24,7 +24,7 @@ export interface QuizSet {
 export const QUIZ_LENGTH = 7;
 export const AI_COUNT = 4;
 
-/** 퀴즈 AI 서버 (api/quiz-server). 개인 PC 등에서 계속 켜 두는 출제 AI. 없으면 Supabase 함수 → 오프라인 문제 */
+/** 퀴즈 AI 서버 (api/quiz-server). 개인 PC 등에서 계속 켜 두는 출제 AI. 실패하면 저장된 AI 문제·기본 문제·대체 연습 문제 사용 */
 const QUIZ_SERVER_URL = (process.env.EXPO_PUBLIC_QUIZ_SERVER_URL ?? "").replace(/\/+$/, "");
 const QUIZ_SERVER_TOKEN = process.env.EXPO_PUBLIC_QUIZ_SERVER_TOKEN ?? "";
 // 새로 만들기 + 검수 2번까지 기다리는 시간 (공부 시작을 누른 즉시 시작하므로 보통 공부하는 동안 끝남)
@@ -194,10 +194,10 @@ async function postJson(url: string, body: unknown): Promise<unknown> {
 /**
  * 퀴즈 AI에게 새 문제를 받아 옴. 미리 만든 문제(avoid)를 함께 보내서 비슷하지 않은 새 유형으로 만들게 함.
  * fresh면 그 자리에서 새로 만들고 2번 검수한 문제를 받음 (공부 시작을 누른 즉시). 서버는 검수를 통과한 문제만 줌.
- * 1) 퀴즈 AI 서버 → 2) Supabase 함수 → 실패하면 빈 배열
+ * 별도 퀴즈 AI 서버를 호출하며 실패하면 빈 배열을 반환해 캐시·기본 문제로 보충
  */
-async function fetchAiQuestions(topic: Topic, avoid: QuizQuestion[], fresh: boolean): Promise<QuizQuestion[]> {
-  const body = { topicId: topic.id, count: AI_COUNT, avoid: avoid.map((q) => q.q).slice(0, 40), fresh };
+async function fetchAiQuestions(topic: Topic, avoid: QuizQuestion[], fresh: boolean, count = AI_COUNT): Promise<QuizQuestion[]> {
+  const body = { topicId: topic.id, count, avoid: avoid.map((q) => q.q).slice(0, 40), fresh };
   if (QUIZ_SERVER_URL) {
     try {
       const data = await postJson(`${QUIZ_SERVER_URL}/quiz`, body);
@@ -205,15 +205,6 @@ async function fetchAiQuestions(topic: Topic, avoid: QuizQuestion[], fresh: bool
       if (qs.length) return qs;
     } catch {
       // 서버가 꺼져 있으면 다음 방법으로
-    }
-  }
-  if (supabase) {
-    try {
-      const { data, error } = await supabase.functions.invoke("generate-quiz", { body });
-      const qs = validQuestions((data as { questions?: unknown } | null)?.questions);
-      if (!error && qs.length) return qs;
-    } catch {
-      // 네트워크 오류
     }
   }
   return [];
@@ -234,12 +225,38 @@ async function saveAiCache(topicId: string, qs: QuizQuestion[]) {
   AsyncStorage.setItem(aiCacheKey(topicId), JSON.stringify(merged)).catch(() => {});
 }
 
+// ───────── MySQL 기본 문제 조회 및 기기 캐시 ─────────
+const bankCacheKey = (id: string) => `pg.mysql.bank.${id}`;
+const BANK_CACHE_MS = 7 * 24 * 60 * 60 * 1000;
+
+/** 기본 문제 은행 전체를 앱에 포함한다. 부분 내장 빌드에서만 서버·캐시로 보완한다. */
+export async function bankQuestions(topicId: string): Promise<QuizQuestion[]> {
+  const bundled = validQuestions(QUIZ_BANK[topicId]);
+  if (BANK_BUNDLED_FULL) return bundled;
+  let cached: QuizQuestion[] = [];
+  try {
+    const raw = await AsyncStorage.getItem(bankCacheKey(topicId));
+    const c = raw ? (JSON.parse(raw) as { at?: number; qs?: unknown }) : null;
+    cached = validQuestions(c?.qs);
+    if (cached.length && Date.now() - (c?.at ?? 0) < BANK_CACHE_MS) return cached;
+  } catch { /* 손상된 캐시는 서버에서 다시 받음 */ }
+  try {
+    const qs = validQuestions(await fetchBankQuestions(topicId));
+    await AsyncStorage.setItem(bankCacheKey(topicId), JSON.stringify({ at: Date.now(), qs }));
+    return qs;
+  } catch { return cached.length ? cached : bundled; }
+}
+
 // ───────── 한 번 풀 퀴즈 만들기 ─────────
-async function buildQuiz(topic: Topic, fresh: boolean): Promise<QuizSet> {
-  const bank = distinct(validQuestions(QUIZ_BANK[topic.id]).map((q) => ({ ...q, src: "bank" as const })));
+async function buildQuiz(topic: Topic, fresh: boolean, seen: string[] = []): Promise<QuizSet> {
+  const all = distinct((await bankQuestions(topic.id)).map((q) => ({ ...q, src: "bank" as const })));
+  // 다시 공부: 전에 풀었던 문제(seen)와 비슷한 건 빼고 새 문제 위주로 (남는 게 모자라면 전체에서)
+  const seenQs: QuizQuestion[] = seen.map((q) => ({ type: "ox", q, answer: true, explain: "" }));
+  const unseen = distinct(all, seenQs);
+  const bank = unseen.length >= QUIZ_LENGTH - AI_COUNT ? unseen : all;
 
   // AI 문제: 미리 만든 문제와 비슷하면 버림
-  let ai: QuizQuestion[] = distinct(await fetchAiQuestions(topic, bank, fresh), bank).map((q) => ({ ...q, src: "ai" as const }));
+  let ai: QuizQuestion[] = distinct(await fetchAiQuestions(topic, [...bank, ...seenQs], fresh), [...bank, ...seenQs]).map((q) => ({ ...q, src: "ai" as const }));
   if (ai.length) saveAiCache(topic.id, ai).catch(() => {});
   else ai = distinct(shuffle(await readAiCache(topic.id)), bank).map((q) => ({ ...q, src: "ai" as const }));
   ai = pickQuestions(ai, AI_COUNT);
@@ -273,10 +290,91 @@ export function loadQuiz(topic: Topic): Promise<QuizSet> {
  * 주제를 뽑기만 하고 다시 뽑는 경우에는 AI를 부르지 않아 비용이 들지 않음.
  * 같은 주제로 이미 시작했으면 다시 만들지 않음 (공부 화면에서도 불러도 됨).
  */
-export const prefetchQuiz = (topic: Topic) => {
+export const prefetchQuiz = (topic: Topic, seen: string[] = []) => {
   const ready = prepared.get(topic.id);
-  if (ready && Date.now() - ready.at < PREPARED_TTL) return;
-  const p = buildQuiz(topic, true);
+  if (ready && Date.now() - ready.at < PREPARED_TTL && !seen.length) return;
+  const p = buildQuiz(topic, true, seen);
   p.catch(() => {});
   prepared.set(topic.id, { at: Date.now(), p });
 };
+
+// ───────── 배틀 문제: 전부 AI가 새로 만들고 2번 검수한 문제 ─────────
+/** 배틀 본 문제 수 · 연장전에 한 번에 만드는 문제 수 */
+export const BATTLE_QUIZ_LENGTH = 5;
+export const OVERTIME_BATCH = 2;
+
+/**
+ * 배틀용 AI 문제 count개. 퀴즈 AI 서버에 fresh로 요청해 그 자리에서 만들고 2번 검수한 문제만 받음.
+ * avoid(이미 낸 배틀 문제 · 문제 은행)와 비슷한 문제는 버림.
+ * AI 서버가 꺼져 있으면 이 휴대폰에 모아 둔 AI 문제 → 문제 은행 → 연습 문제 순으로 채워 배틀이 멈추지 않게 함.
+ */
+export async function battleQuestions(topic: Topic, count: number, avoid: QuizQuestion[] = []): Promise<QuizQuestion[]> {
+  const bank = distinct((await bankQuestions(topic.id)).map((q) => ({ ...q, src: "bank" as const })));
+  const against = [...avoid, ...bank];
+  let ai = distinct(await fetchAiQuestions(topic, against, true, count), against).map((q) => ({ ...q, src: "ai" as const }));
+  if (ai.length) saveAiCache(topic.id, ai).catch(() => {});
+  if (ai.length < count) ai = [...ai, ...distinct(shuffle(await readAiCache(topic.id)), [...against, ...ai]).map((q) => ({ ...q, src: "ai" as const }))];
+  let out = pickQuestions(ai, count);
+  if (out.length < count) out = [...out, ...pickQuestions(distinct(bank, [...avoid, ...out]), count - out.length)];
+  if (out.length < count) out = [...out, ...pickQuestions(distinct(offlineQuestions(topic), [...avoid, ...out]), count - out.length)];
+  return shuffle(out).slice(0, count).map(shuffleChoices);
+}
+
+// ───────── 자격증 모의고사 ─────────
+export interface ExamItem { q: QuizQuestion; topic: Topic }
+
+/**
+ * 모의고사 한 과목 문제: 과목에 든 주제들에서 골고루 n문제.
+ * 미리 만든 문제 은행에서 뽑고, 은행에 없는 주제는 연습 문제로 채웁니다. (AI는 쓰지 않아 바로 시작됨)
+ */
+export async function examQuestions(topics: Topic[], n: number): Promise<ExamItem[]> {
+  const chosen = shuffle(topics).slice(0, n);
+  const pools = await Promise.all(chosen.map(async (topic) => {
+    const bank = distinct((await bankQuestions(topic.id)).map((q) => ({ ...q, src: "bank" as const })));
+    return { topic, qs: shuffle(bank.length ? bank : offlineQuestions(topic)) };
+  }));
+  // 주제마다 한 문제씩 돌아가며 뽑음 (주제 수가 n보다 적으면 두 번째 바퀴에서 더 뽑음)
+  const out: ExamItem[] = [];
+  for (let round = 0; out.length < n && pools.some((p) => p.qs.length > round); round++) {
+    for (const p of pools) {
+      if (out.length >= n) break;
+      const q = p.qs[round];
+      if (q && !tooSimilar(q, out.map((x) => x.q))) out.push({ q: shuffleChoices(q), topic: p.topic });
+    }
+  }
+  return shuffle(out);
+}
+
+// ───────── 오답 다시 풀기 (프리미엄): 틀린 문제의 변형 ─────────
+/**
+ * 틀렸던 문제와 같은 주제·같은 유형(4지선다/OX)이면서 가장 비슷한 다른 문제를 골라 줍니다.
+ * 같은 걸 묻지만 정답이 달라서, 답을 외워서는 못 맞힙니다. 비슷한 문제가 없으면 원래 문제의 보기 순서를 섞어서 냅니다.
+ * changed: 원래 문제와 다른 문제로 바뀌었는지
+ */
+export async function variantQuestion(topic: Topic, wrong: { q: string; answer: string }): Promise<{ q: QuizQuestion; changed: boolean }> {
+  const bank = distinct((await bankQuestions(topic.id)).map((q) => ({ ...q, src: "bank" as const })));
+  const orig = bank.find((b) => b.q === wrong.q);
+  const type: QuizQuestion["type"] = orig?.type ?? (/^[OX] \(/.test(wrong.answer) ? "ox" : "mc");
+  const ranked = bank
+    .filter((b) => b.type === type && b.q !== wrong.q && answerLabel(b) !== wrong.answer)
+    .map((b) => ({ b, s: similarity(b.q, wrong.q) }))
+    .sort((x, y) => y.s - x.s);
+  // 가장 비슷한 3개 중 하나 (풀 때마다 조금씩 달라지게)
+  const near = ranked.slice(0, 3);
+  if (near.length) return { q: shuffleChoices(near[Math.floor(Math.random() * near.length)].b), changed: true };
+  if (orig) return { q: shuffleChoices(orig), changed: false };
+  const any = shuffle(bank.length ? bank : offlineQuestions(topic))[0];
+  return { q: shuffleChoices(any), changed: true };
+}
+const answerLabel = (q: QuizQuestion) => (q.type === "mc" ? q.choices[q.answer] : q.answer ? "O (맞다)" : "X (틀리다)");
+
+// ───────── 스피드 퀴즈: 공부한 주제의 4지선다 ─────────
+/** 주제들의 4지선다 모으기 (문제 은행 → 모자라면 연습 문제의 4지선다). 보기 순서는 섞음 */
+export async function speedQuestions(topics: Topic[]): Promise<ExamItem[]> {
+  const parts = await Promise.all(topics.map(async (topic) => {
+    const bank = (await bankQuestions(topic.id)).filter((q) => q.type === "mc").map((q) => ({ ...q, src: "bank" as const }));
+    const qs = bank.length >= 2 ? bank : [...bank, ...offlineQuestions(topic).filter((q) => q.type === "mc")];
+    return distinct(qs).map((q) => ({ q: shuffleChoices(q), topic }));
+  }));
+  return shuffle(parts.flat());
+}

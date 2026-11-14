@@ -8,13 +8,16 @@ import { levelText, topicById } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { confirmQuit } from "@/lib/confirm";
 import { loadQuiz, type QuizQuestion } from "@/lib/quiz";
-import { calcRp, topicMastery, totalRp, userRank } from "@/lib/rank";
+import { boostActive } from "@/lib/booster";
+import { calcRp, domainMastery, userLevel } from "@/lib/rank";
+import { sfx } from "@/lib/sfx";
 import { calcStreak } from "@/lib/stats";
 import type { WrongAnswer } from "@/lib/types";
 import { radius, raised, shadow, useColors } from "@/theme";
+import { Icon } from "@/components/Icon";
 
-const isCorrect = (q: QuizQuestion, a: number | boolean | undefined) => a !== undefined && a === q.answer;
-const answerText = (q: QuizQuestion) => (q.type === "mc" ? q.choices[q.answer] : q.answer ? "O (맞다)" : "X (틀리다)");
+export const isCorrect = (q: QuizQuestion, a: number | boolean | undefined) => a !== undefined && a === q.answer;
+export const answerText = (q: QuizQuestion) => (q.type === "mc" ? q.choices[q.answer] : q.answer ? "O (맞다)" : "X (틀리다)");
 
 export default function Quiz() {
   const { active } = useApp();
@@ -23,7 +26,7 @@ export default function Quiz() {
 }
 
 function QuizInner() {
-  const { active, setActive, records, addRecord } = useApp();
+  const { active, setActive, records, addRecord, xp, keptDays } = useApp();
   const c = useColors();
   const a = active!;
   const topic = topicById(a.topicId);
@@ -76,22 +79,28 @@ function QuizInner() {
     const wrong: WrongAnswer[] = quiz.questions
       .filter((qq, i) => !isCorrect(qq, answers[i]))
       .map((qq) => ({ q: qq.q, answer: answerText(qq), explain: qq.explain }));
-    const before = calcStreak(records);
+    const before = calcStreak(records, new Date(), keptDays);
     const streak = before.today ? before.streak : before.streak + 1;
     const priorAttempts = records.filter((r) => r.topicId === topic.id).length;
     const rp = calcRp({ topic, correct: score, total, priorAttempts, streak });
-    const rpBefore = totalRp(records);
-    const topicBefore = topicMastery(topic.id, records);
+    // 경험치 2배 부스터가 켜져 있으면 받은 경험치만큼 한 번 더
+    if (boostActive() && rp.total > 0) {
+      rp.parts.push({ label: "경험치 2배 부스터", value: rp.total });
+      rp.total *= 2;
+    }
+    const rpBefore = xp;
+    const topicBefore = domainMastery(topic.domain, records);
     const rec = await addRecord({
       topicId: topic.id, topicKo: topic.ko, domain: topic.domain, category: topic.category, level: topic.level,
+      items: quiz.questions.map((question,i)=>({question,answer:answers[i]??null})),
       memo: a.memo, score, total, rp: rp.total, wrong, studySec: a.quizOnly ? 0 : a.studyUsed, quizSource: quiz.source,
     });
-    const topicAfter = topicMastery(topic.id, [...records, rec]);
+    const topicAfter = domainMastery(topic.domain, [...records, rec]);
     setActive((x) => x ? {
       ...x, stage: "result", quiz: { ...quiz, answers },
       result: {
-        recordId: rec.id, score, total, rp: rp.total, parts: rp.parts, streak,
-        userTierBefore: userRank(rpBefore).index, userTierAfter: userRank(rpBefore + rp.total).index,
+        recordId: rec.id, score, total, rp: rec.rp, parts: rec.xpParts ?? rp.parts, streak: rec.streak ?? streak,
+        userLevelBefore: userLevel(rpBefore).level, userLevelAfter: userLevel(rpBefore + rec.rp).level,
         topicTierBefore: topicBefore.index, topicTierAfter: topicAfter.index,
       },
     } : x);
@@ -115,7 +124,7 @@ function QuizInner() {
   />;
 }
 
-function QuestionView({ q, index, count, topicName, badges, saving, onQuit, onNext }: {
+export function QuestionView({ q, index, count, topicName, badges, saving, onQuit, onNext }: {
   q: QuizQuestion; index: number; count: number; topicName: string;
   badges: ReactNode; saving: boolean;
   onQuit: () => void; onNext: (answer: number | boolean) => void;
@@ -128,6 +137,7 @@ function QuestionView({ q, index, count, topicName, badges, saving, onQuit, onNe
   const choose = (v: number | boolean) => {
     if (answered) return;
     setPicked(v);
+    sfx(v === q.answer ? "correct" : "wrong");
     if (Platform.OS !== "web") {
       Haptics.notificationAsync(v === q.answer ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Error).catch(() => {});
     }
@@ -145,7 +155,7 @@ function QuestionView({ q, index, count, topicName, badges, saving, onQuit, onNe
       {/* 상단: 닫기 + 진행 막대 */}
       <Row gap={12} style={{ paddingHorizontal: 20, paddingTop: 8, flexWrap: "nowrap" }}>
         <Pressable onPress={onQuit} hitSlop={10} accessibilityRole="button" accessibilityLabel="그만두기">
-          <T size={22} color="muted">✕</T>
+          <Icon name="close" size={22} color={c.muted} />
         </Pressable>
         <View style={{ flex: 1, height: 12, borderRadius: 6, backgroundColor: c.chip, overflow: "hidden" }}>
           <View style={{ width: `${((index + (answered ? 1 : 0)) / count) * 100}%`, height: "100%", backgroundColor: c.success, borderRadius: 6 }} />
@@ -158,7 +168,7 @@ function QuestionView({ q, index, count, topicName, badges, saving, onQuit, onNe
           {badges}
           <T size={13} color="muted">
             {topicName} · {q.type === "mc" ? "4지선다" : "O / X"}
-            {q.src === "ai" ? " · 🤖 AI 출제" : q.src === "bank" ? " · 📚 기본 문제" : ""}
+            {q.src === "ai" ? " · AI 출제" : q.src === "bank" ? " · 기본 문제" : ""}
           </T>
           {q.src === "offline" && <T size={12} color="accent">연습 문제예요 (퀴즈 AI에 연결되면 새 문제로 바뀌어요)</T>}
         </View>
@@ -216,7 +226,12 @@ function QuestionView({ q, index, count, topicName, badges, saving, onQuit, onNe
       {/* 하단 피드백 (듀오링고식) */}
       {answered && (
         <View style={{ padding: 20, gap: 10, backgroundColor: correct ? c.successSoft : c.accentSoft, borderTopWidth: 2, borderTopColor: correct ? c.success : c.accent, boxShadow: `0px -4px 12px ${c.shadow}` }}>
-          <T size={18} weight="bold" color={correct ? "success" : "accent"}>{correct ? "정답이에요! 🎉" : `아쉬워요. 정답: ${answerText(q)}`}</T>
+          <Row gap={8} style={{ flexWrap: "nowrap" }}>
+            <View style={{ width: 30, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: correct ? c.success : c.accent }}>
+              <Icon name={correct ? "check" : "close"} size={16} color="#ffffff" />
+            </View>
+            <T size={18} weight="bold" color={correct ? "success" : "accent"} style={{ flex: 1 }}>{correct ? "정답이에요!" : `아쉬워요. 정답: ${answerText(q)}`}</T>
+          </Row>
           <T size={15} color="ink2">{q.explain}</T>
           <Btn
             title={index + 1 >= count ? "결과 보기" : "다음 문제"}

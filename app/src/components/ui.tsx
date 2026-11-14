@@ -1,11 +1,12 @@
 import * as Haptics from "expo-haptics";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
   ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
   type StyleProp, type TextInputProps, type TextProps, type TextStyle, type ViewStyle,
 } from "react-native";
 import { SafeAreaView, type Edge } from "react-native-safe-area-context";
 import { inset, radius, raised, shadow, useColors } from "@/theme";
+import { Icon } from "./Icon";
 
 export const FONT = {
   regular: "IBMPlexSansKR_400Regular",
@@ -43,7 +44,7 @@ export function T({ size = 16, weight = "regular", color = "ink", center, style,
 type BtnProps = {
   title: string;
   onPress?: () => void;
-  variant?: "primary" | "accent" | "outline" | "ghost";
+  variant?: "primary" | "accent" | "outline" | "ghost" | "premium";
   size?: "sm" | "md" | "lg";
   disabled?: boolean;
   loading?: boolean;
@@ -53,11 +54,11 @@ type BtnProps = {
 
 export function Btn({ title, onPress, variant = "outline", size = "md", disabled, loading, icon, style }: BtnProps) {
   const c = useColors();
-  const bg = { primary: c.navy, accent: c.accent, outline: c.paper, ghost: "transparent" }[variant];
-  const fg = { primary: c.navyInk, accent: c.accentInk, outline: c.ink, ghost: c.ink2 }[variant];
-  const border = { primary: c.navy, accent: c.accent, outline: c.line2, ghost: "transparent" }[variant];
+  const bg = { primary: c.navy, accent: c.accent, outline: c.paper, ghost: "transparent", premium: "#7d4bc7" }[variant];
+  const fg = { primary: c.navyInk, accent: c.accentInk, outline: c.ink, ghost: c.ink2, premium: "#ffffff" }[variant];
+  const border = { primary: c.navy, accent: c.accent, outline: c.line2, ghost: "transparent", premium: "#7d4bc7" }[variant];
   // 슬롯머신 버튼처럼 아래쪽이 두꺼운 입체 버튼 (누르면 내려감)
-  const under = { primary: c.navyDeep, accent: c.accentDeep, outline: c.paperEdge, ghost: "transparent" }[variant];
+  const under = { primary: c.navyDeep, accent: c.accentDeep, outline: c.paperEdge, ghost: "transparent", premium: "#55309a" }[variant];
   const depth = variant === "ghost" ? 0 : variant === "outline" ? 4 : 5;
   const pad = { sm: [7, 14], md: [12, 20], lg: [17, 28] }[size];
   const fs = { sm: 14, md: 16, lg: 19 }[size];
@@ -84,10 +85,10 @@ export function Btn({ title, onPress, variant = "outline", size = "md", disabled
   );
 }
 
-/** 나란히 놓는 알약 버튼 크기 (홈의 난이도 버튼과 '마스터한 주제 포함'이 같은 크기) */
+/** 나란히 놓는 알약 버튼 크기 (홈의 난이도 버튼과 '많이 푼 주제 포함'이 같은 크기) */
 export const PILL_FILL: ViewStyle = { flex: 1, height: 54, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4 };
 
-export function Chip({ label, selected, onPress, disabled, fill }: { label: string; selected?: boolean; onPress?: () => void; disabled?: boolean; fill?: boolean }) {
+export function Chip({ label, selected, onPress, disabled, fill, icon }: { label: string; selected?: boolean; onPress?: () => void; disabled?: boolean; fill?: boolean; icon?: ReactNode }) {
   const c = useColors();
   return (
     <Pressable
@@ -102,8 +103,10 @@ export function Chip({ label, selected, onPress, disabled, fill }: { label: stri
         ...(!pressed ? shadow(c, 1) : null),
         opacity: disabled ? 0.4 : 1,
         ...(fill ? PILL_FILL : null),
+        ...(icon ? { flexDirection: "row", alignItems: "center", gap: 6 } : null),
       })}
     >
+      {icon}
       <Text
         numberOfLines={1}
         adjustsFontSizeToFit
@@ -157,12 +160,13 @@ export function Card({ children, style, accent }: { children: ReactNode; style?:
   );
 }
 
-export function Badge({ label, tone = "plain" }: { label: string; tone?: "plain" | "navy" | "accent" | "outline" }) {
+export function Badge({ label, tone = "plain", icon }: { label: string; tone?: "plain" | "navy" | "accent" | "outline"; icon?: ReactNode }) {
   const c = useColors();
   const bg = { plain: c.chip, navy: c.navy, accent: c.accent, outline: "transparent" }[tone];
   const fg = { plain: c.ink2, navy: c.navyInk, accent: c.accentInk, outline: c.ink2 }[tone];
   return (
-    <View style={{ backgroundColor: bg, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 2, borderWidth: tone === "outline" ? 1 : 0, borderColor: c.line2 }}>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: bg, borderRadius: radius.pill, paddingLeft: icon ? 4 : 10, paddingRight: 10, paddingVertical: 2, borderWidth: tone === "outline" ? 1 : 0, borderColor: c.line2 }}>
+      {icon}
       <Text style={{ fontFamily: FONT.medium, fontSize: 13, color: fg }}>{label}</Text>
     </View>
   );
@@ -172,20 +176,38 @@ export const levelTone = (lv: string) => (lv === "심화" ? "accent" : lv === "�
 
 export function Field({ label, error, ...props }: TextInputProps & { label: string; error?: string }) {
   const c = useColors();
+  // 비밀번호 칸이면 오른쪽에 눈 버튼: 누르면 입력한 글자를 보여 주고 다시 누르면 가림
+  const secret = !!props.secureTextEntry;
+  const [shown, setShown] = useState(false);
   return (
     <View style={{ gap: 6 }}>
       <T size={14} weight="semibold" color="ink2">{label}</T>
-      <TextInput
-        placeholderTextColor={c.muted}
-        {...props}
-        style={[
-          {
-            borderWidth: 1.5, borderColor: error ? c.accent : c.line2, backgroundColor: c.paper, borderRadius: radius.md, ...inset(c),
-            paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, color: c.ink, fontFamily: FONT.regular,
-          },
-          props.style as StyleProp<TextStyle>,
-        ]}
-      />
+      <View style={{ justifyContent: "center" }}>
+        <TextInput
+          placeholderTextColor={c.muted}
+          {...props}
+          secureTextEntry={secret && !shown}
+          style={[
+            {
+              borderWidth: 1.5, borderColor: error ? c.accent : c.line2, backgroundColor: c.paper, borderRadius: radius.md, ...inset(c),
+              paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, color: c.ink, fontFamily: FONT.regular,
+            },
+            secret ? { paddingRight: 52 } : null,
+            props.style as StyleProp<TextStyle>,
+          ]}
+        />
+        {secret && (
+          <Pressable
+            onPress={() => setShown((v) => !v)}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={shown ? "비밀번호 숨기기" : "비밀번호 보기"}
+            style={{ position: "absolute", right: 6, width: 40, height: 40, alignItems: "center", justifyContent: "center" }}
+          >
+            <Icon name={shown ? "eye-off" : "eye"} size={22} color={c.muted} />
+          </Pressable>
+        )}
+      </View>
       {error ? <T size={13} color="accent">{error}</T> : null}
     </View>
   );

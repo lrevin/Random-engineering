@@ -1,7 +1,7 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { Modal, View } from "react-native";
 import { inset, radius, shadow, useColors } from "@/theme";
 import { Btn, Row, T } from "./ui";
+import { Icon } from "./Icon";
 
 /** 공부 시간 추가: 2분에 톱니바퀴 10개 */
 export const EXTEND_SECONDS = 120;
@@ -9,10 +9,9 @@ export const EXTEND_COST = 10;
 
 /** 톱니바퀴 개수 표시 */
 export function GearCount({ n, size = 15 }: { n: number; size?: number }) {
-  const c = useColors();
   return (
     <Row gap={4} style={{ flexWrap: "nowrap" }}>
-      <Ionicons name="cog" size={size + 3} color={c.gold} />
+      <Icon name="gear" size={size + 5} />
       <T size={size} weight="bold">{n.toLocaleString()}</T>
     </Row>
   );
@@ -35,7 +34,7 @@ export function TimeUpSheet({ visible, gears, onExtend, onQuiz }: {
           borderTopWidth: 5, borderTopColor: c.gold, ...shadow(c, 3),
         }}>
           <View style={{ alignItems: "center", gap: 4 }}>
-            <T size={40}>⏰</T>
+            <Icon name="hourglass" size={60} style={{ marginBottom: 4 }} />
             <T size={22} weight="bold" center>공부 시간이 끝났어요</T>
             <T size={15} color="ink2" center>조금 더 볼까요, 아니면 바로 퀴즈를 풀까요?</T>
           </View>
@@ -50,7 +49,7 @@ export function TimeUpSheet({ visible, gears, onExtend, onQuiz }: {
               title={`2분 추가 (톱니바퀴 ${EXTEND_COST}개)`}
               variant="accent"
               size="lg"
-              icon={<Ionicons name="cog" size={20} color={c.accentInk} />}
+              icon={<Icon name="gear" size={22} />}
               onPress={onExtend}
               disabled={!enough}
             />

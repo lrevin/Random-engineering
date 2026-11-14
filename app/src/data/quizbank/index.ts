@@ -13,8 +13,15 @@ import b_arch_2 from "./arch-2.json";
 import b_arch_3 from "./arch-3.json";
 import b_db_1 from "./db-1.json";
 import b_db_2 from "./db-2.json";
+import b_db_3 from "./db-3.json";
 import b_ds_1 from "./ds-1.json";
 import b_ds_2 from "./ds-2.json";
+import b_net_1 from "./net-1.json";
+import b_net_2 from "./net-2.json";
+import b_net_3 from "./net-3.json";
+import b_os_1 from "./os-1.json";
+import b_pl_2 from "./pl-2.json";
+import b_pl_3 from "./pl-3.json";
 import b_sec_1 from "./sec-1.json";
 import b_sec_3 from "./sec-3.json";
 import b_sec_4 from "./sec-4.json";
@@ -31,12 +38,22 @@ const FILES = [
   b_arch_3,
   b_db_1,
   b_db_2,
+  b_db_3,
   b_ds_1,
   b_ds_2,
+  b_net_1,
+  b_net_2,
+  b_net_3,
+  b_os_1,
+  b_pl_2,
+  b_pl_3,
   b_sec_1,
   b_sec_3,
   b_sec_4,
 ] as Record<string, QuizQuestion[]>[];
+
+/** 문제 은행 전체가 앱에 들어 있음 (서버에서 받을 필요 없음) */
+export const BANK_BUNDLED_FULL = true;
 
 // 한 주제의 문제가 여러 파일에 나뉘어 있으면 합칩니다
 export const QUIZ_BANK: Record<string, QuizQuestion[]> = {};

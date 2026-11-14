@@ -3,13 +3,14 @@ import { Pressable, View } from "react-native";
 import { topicLinks, type Topic } from "@/data";
 import { radius, raised, shadow, useColors } from "@/theme";
 import { Row, T, tap } from "./ui";
+import { Icon, type IconName } from "./Icon";
 
 const openExternal = (url: string) => {
   // createTask: false → 안드로이드에서 브라우저를 닫으면 앱으로 바로 돌아오게 함
   WebBrowser.openBrowserAsync(url, { createTask: false }).catch(() => {});
 };
 
-function LinkButton({ icon, title, sub, onPress, primary }: { icon: string; title: string; sub: string; onPress: () => void; primary?: boolean }) {
+function LinkButton({ icon, title, sub, onPress, primary }: { icon: IconName; title: string; sub: string; onPress: () => void; primary?: boolean }) {
   const c = useColors();
   return (
     <Pressable
@@ -24,7 +25,7 @@ function LinkButton({ icon, title, sub, onPress, primary }: { icon: string; titl
         ...(!pressed ? shadow(c, 1) : null),
       })}
     >
-      <T size={22}>{icon}</T>
+      <Icon name={icon} size={28} />
       <View style={{ flex: 1 }}>
         <T size={14} weight="semibold" numberOfLines={1}>{title} ↗</T>
         <T size={12} color="muted" numberOfLines={1}>{sub}</T>
@@ -48,22 +49,16 @@ export function TopicLinks({ topic, compact, onOpen }: { topic: Topic; compact?:
     <View style={{ gap: 8, alignSelf: "stretch" }}>
       <Row gap={8} style={{ alignItems: "stretch" }}>
         {l.koWiki ? (
-          <LinkButton primary icon="📖" title="한국어 위키백과" sub={l.koWiki.title} onPress={() => open(l.koWiki!.url, l.koWiki!.title)} />
+          <LinkButton primary icon="book" title="한국어 위키백과" sub={l.koWiki.title} onPress={() => open(l.koWiki!.url, l.koWiki!.title)} />
         ) : (
-          <LinkButton primary icon="📖" title="영어 위키피디아" sub={`${l.enWiki.title} (한국어 문서 없음)`} onPress={() => open(l.enWiki.url, l.enWiki.title)} />
+          <LinkButton primary icon="globe" title="영어 위키피디아" sub={`${l.enWiki.title} (한국어 문서 없음)`} onPress={() => open(l.enWiki.url, l.enWiki.title)} />
         )}
-        {l.official && <LinkButton icon="📄" title="공식 문서" sub={l.official.label} onPress={() => open(l.official!.url, l.official!.label)} />}
+        {l.official && <LinkButton icon="doc" title="공식 문서" sub={l.official.label} onPress={() => open(l.official!.url, l.official!.label)} />}
       </Row>
       {!compact && (
-        <Row gap={14} style={{ justifyContent: "center" }}>
-          {l.koWiki && (
-            <Pressable onPress={() => open(l.enWiki.url, l.enWiki.title)} hitSlop={6}>
-              <T size={13} color="muted" style={{ textDecorationLine: "underline" }}>영어 위키피디아</T>
-            </Pressable>
-          )}
-          <Pressable onPress={() => open(l.namu, `나무위키: ${topic.ko}`)} hitSlop={6}>
-            <T size={13} color="muted" style={{ textDecorationLine: "underline" }}>나무위키 검색</T>
-          </Pressable>
+        <Row gap={8} style={{ alignItems: "stretch" }}>
+          {l.koWiki && <LinkButton icon="globe" title="영어 위키피디아" sub={l.enWiki.title} onPress={() => open(l.enWiki.url, l.enWiki.title)} />}
+          <LinkButton icon="tree" title="나무위키" sub={`'${topic.ko}' 검색`} onPress={() => open(l.namu, `나무위키: ${topic.ko}`)} />
         </Row>
       )}
     </View>

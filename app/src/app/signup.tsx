@@ -3,8 +3,10 @@ import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, View } from "react-native";
 import { Btn, Card, Field, Row, Screen, T, tap } from "@/components/ui";
 import { useApp } from "@/lib/app-state";
-import { authErrorMessage } from "@/lib/supabase";
+import { authErrorMessage } from "@/lib/auth";
 import { radius, shadow, useColors } from "@/theme";
+import { Icon } from "@/components/Icon";
+import { KakaoButton } from "@/components/KakaoButton";
 
 function Check({ checked, onToggle, label, onOpen }: { checked: boolean; onToggle: () => void; label: string; onOpen?: () => void }) {
   const c = useColors();
@@ -12,7 +14,7 @@ function Check({ checked, onToggle, label, onOpen }: { checked: boolean; onToggl
     <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
       <Pressable accessibilityRole="checkbox" accessibilityState={{ checked }} onPress={() => { tap(); onToggle(); }} style={{ flexDirection: "row", gap: 10, alignItems: "center", flex: 1 }}>
         <View style={{ width: 22, height: 22, borderRadius: 6, borderWidth: 1.5, borderColor: checked ? c.accent : c.line2, backgroundColor: checked ? c.accent : "transparent", alignItems: "center", justifyContent: "center" }}>
-          {checked && <T size={13} weight="bold" color="accentInk">✓</T>}
+          {checked && <Icon name="check" size={15} color="#ffffff" />}
         </View>
         <T size={15} style={{ flexShrink: 1 }}>{label}</T>
       </Pressable>
@@ -42,7 +44,8 @@ export default function Signup() {
 
   const submit = async () => {
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) return setErr("이메일 형식을 확인해 주세요.");
-    if (pw.length < 8) return setErr("비밀번호는 8자 이상으로 정해 주세요.");
+    // 서버 규칙과 같음: 8자 이상 (글자 종류 제한 없음)
+    if ([...pw].length < 8) return setErr("비밀번호는 8자 이상으로 정해 주세요.");
     if (pw !== pw2) return setErr("비밀번호 확인이 일치하지 않아요.");
     if (!allAgreed) return setErr("필수 항목에 모두 동의해 주세요.");
     setBusy(true);
@@ -61,7 +64,8 @@ export default function Signup() {
     return (
       <Screen contentStyle={{ justifyContent: "center" }}>
         <Card accent style={{ gap: 10 }}>
-          <T size={22} weight="bold">메일함을 확인해 주세요 ✉️</T>
+          <Icon name="mail" size={52} />
+          <T size={22} weight="bold">메일함을 확인해 주세요</T>
           <T color="ink2">{email} 로 인증 메일을 보냈어요. 메일의 링크를 누른 뒤 로그인하면 가입이 끝나요.</T>
         </Card>
         <Btn title="로그인하러 가기" variant="primary" size="lg" onPress={() => router.replace("/login")} />
@@ -92,6 +96,12 @@ export default function Signup() {
 
         {err ? <T color="accent">{err}</T> : null}
         <Btn title="가입하기" variant="accent" size="lg" onPress={submit} loading={busy} />
+        <T size={13} color="muted" center>또는</T>
+        <KakaoButton
+          label="카카오로 가입하기"
+          onError={setErr}
+          guard={() => { if (allAgreed) return true; setErr("필수 항목에 모두 동의해 주세요."); return false; }}
+        />
         <View style={{ alignItems: "center" }}>
           <Btn title="이미 계정이 있어요 → 로그인" variant="ghost" onPress={() => router.replace("/login")} />
         </View>

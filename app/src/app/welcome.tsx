@@ -1,4 +1,6 @@
 import { router } from "expo-router";
+import { useState } from "react";
+import { KakaoButton } from "@/components/KakaoButton";
 import { Image, useColorScheme, useWindowDimensions, View } from "react-native";
 import { Btn, Card, Screen, T } from "@/components/ui";
 import { APP_NAME, APP_SUBTITLE, APP_TAGLINE } from "@/config";
@@ -8,25 +10,31 @@ import { useColors } from "@/theme";
 const STEPS = [
   { n: "1", title: "뽑기", body: "관심 분야에서 랜덤 주제 하나" },
   { n: "2", title: "15분 공부", body: "AI 없이 위키·백과사전으로" },
-  { n: "3", title: "퀴즈 7문제", body: "AI가 새로 낸 문제 + 기본 문제, 맞힐수록 랭크 UP" },
+  { n: "3", title: "퀴즈 7문제", body: "AI가 새로 낸 문제 + 기본 문제, 맞힐수록 레벨 UP" },
 ];
 
 export default function Welcome() {
   const { width } = useWindowDimensions();
-  const logoW = Math.min(width - 40, 360);
-  const { startGuest, serverEnabled } = useApp();
+  const markH = Math.min(width * 0.28, 120);
+  const { startGuest } = useApp();
   const c = useColors();
   const dark = useColorScheme() === "dark";
+  const [err, setErr] = useState("");
   return (
     <Screen contentStyle={{ justifyContent: "space-between" }}>
       <View style={{ gap: 10, marginTop: 40 }}>
+        {/* 슬롯머신 아이콘만 두고, 그 왼쪽 끝에 이름 줄을 맞춤 */}
         <Image
-          source={dark ? require("../../assets/logo-dark.png") : require("../../assets/logo.png")}
+          source={dark ? require("../../assets/logo-mark-dark.png") : require("../../assets/logo-mark.png")}
           accessibilityLabel={`${APP_NAME} 로고`}
-          style={{ width: logoW, height: (logoW * 504) / 1200 }}
+          style={{ width: markH * (404 / 360), height: markH }}
           resizeMode="contain"
         />
-        <T size={22} weight="bold" style={{ marginTop: 8 }}>{APP_SUBTITLE}</T>
+        <T size={30} weight="bold" style={{ marginTop: 14, letterSpacing: -0.6 }}>
+          <T size={30} weight="bold" color="accent">{APP_NAME}</T>
+          <T size={30} weight="bold" color="muted">{"  -  "}</T>
+          {APP_SUBTITLE}
+        </T>
         <T size={16} color="ink2">{APP_TAGLINE}</T>
       </View>
 
@@ -45,12 +53,14 @@ export default function Welcome() {
       </Card>
 
       <View style={{ gap: 10 }}>
-        <Btn title="이메일로 시작하기" variant="accent" size="lg" onPress={() => router.push("/signup")} disabled={!serverEnabled} />
-        <Btn title="이미 계정이 있어요" size="lg" onPress={() => router.push("/login")} disabled={!serverEnabled} />
+        <KakaoButton label="카카오로 시작하기" onError={setErr} />
+        {err ? <T color="accent" center>{err}</T> : null}
+        <Btn title="이메일로 시작하기" variant="accent" size="lg" onPress={() => router.push("/signup")} />
+        <Btn title="이미 계정이 있어요" size="lg" onPress={() => router.push("/login")} />
         <Btn title="로그인 없이 둘러보기" variant="ghost" onPress={startGuest} />
-        {!serverEnabled && (
-          <T size={12} color="muted" center>개발용 안내: 서버(Supabase)가 아직 연결되지 않아 둘러보기만 가능해요.</T>
-        )}
+        <T size={11} color="muted" center>
+          카카오로 시작하면 만 14세 이상이며 이용약관과 개인정보 수집·이용에 동의한 것으로 봐요.
+        </T>
       </View>
     </Screen>
   );
