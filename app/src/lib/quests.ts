@@ -1,7 +1,6 @@
 import type { IconName } from "@/components/Icon";
-import { monthKey } from "./economy";
+import { questDateKey as dateKey, questMonthKey as monthKey, questPeriodStart, questPeriodEnd } from "./quest-time";
 import type { ExamResult } from "./exam";
-import { dateKey } from "./stats";
 import type { StudyRecord } from "./types";
 
 /**
@@ -142,22 +141,9 @@ PERIODS.premium = {
   ],
 };
 
-/** 기간 시작 (일: 0시 · 주: 월요일 0시 · 달: 1일 0시) */
-export function periodStart(p: Period, now = new Date()) {
-  const d = new Date(now);
-  d.setHours(0, 0, 0, 0);
-  if (p === "week" || p === "premium") d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
-  if (p === "month") d.setDate(1);
-  return d;
-}
-
-export function periodEnd(p: Period, now = new Date()) {
-  const d = periodStart(p, now);
-  if (p === "day") d.setDate(d.getDate() + 1);
-  if (p === "week" || p === "premium") d.setDate(d.getDate() + 7);
-  if (p === "month") d.setMonth(d.getMonth() + 1);
-  return d;
-}
+/** Asia/Seoul 기준 일: 0시 · 주: 월요일 0시 · 달: 1일 0시 */
+export const periodStart = questPeriodStart;
+export const periodEnd = questPeriodEnd;
 
 /** 기간을 나타내는 키 (보상 받은 기록에 씀). 일일은 예전 형식 그대로 "YYYY-MM-DD" */
 export function periodKey(p: Period, now = new Date()) {
@@ -181,6 +167,7 @@ function seeded(key: string) {
 }
 
 export function questsFor(p: Period, records: StudyRecord[], now = new Date(), extra: QuestExtra = NO_EXTRA): Quest[] {
+  records = records.filter(r=>r.studyType !== "battle");
   const def = PERIODS[p];
   const start = periodStart(p, now);
   const end = periodEnd(p, now);

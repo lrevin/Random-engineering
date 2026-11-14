@@ -49,9 +49,10 @@ export default function Profile() {
   const { streak } = calcStreak(records, new Date(), keptDays);
   const ranks = useMemo(() => domainRanks(records), [records]);
   const stats = useMemo(() => {
-    const topicIds = [...new Set(records.map((r) => r.topicId))];
+    const eligible = records.filter(r=>r.countsAsStudy !== false);
+    const topicIds = [...new Set(eligible.map((r) => r.topicId))];
     const tiers = domainRanks(records).map((d) => d.index);
-    const first = records.length ? records.reduce((a, r) => (r.studiedAt < a ? r.studiedAt : a), records[0].studiedAt) : null;
+    const first = eligible.length ? eligible.reduce((a, r) => (r.studiedAt < a ? r.studiedAt : a), eligible[0].studiedAt) : null;
     return {
       topics: topicIds.length,
       best: tiers.length ? Math.max(...tiers) : -1,

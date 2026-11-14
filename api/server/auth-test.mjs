@@ -16,7 +16,7 @@ import { ROOT } from '../shared/question-store.mjs';
 function appClient() {
   const ts=createRequire(path.join(ROOT,'app/package.json'))('typescript');
   const activeClient=path.join(ROOT,'app/src/lib/auth-client.ts');
-  const clientFile=fs.existsSync(activeClient)?activeClient:path.join(ROOT,'api/mysql/app-integration/app/src/lib/auth-client.ts');
+  const clientFile=activeClient;
   const code=ts.transpileModule(fs.readFileSync(clientFile,'utf8'),{
     compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022},
   }).outputText;
@@ -136,6 +136,17 @@ test('MySQL authentication HTTP and app login persistence',async t=>{
       const opts={method:'POST',headers:{'Content-Type':'application/json'},body:'{}'};
       assert.equal((await fetch(address,opts)).status,400);assert.equal((await fetch(address,opts)).status,429);
     } finally {limited.closeAllConnections();await new Promise(resolve=>limited.close(resolve));}
+  });
+  await t.test('authenticated me quota is per user behind the same proxy, not per token or socket',async()=>{
+    const one=await auth.signup({email:prefix+'-quota-a@example.com',password:pass}),two=await auth.signup({email:prefix+'-quota-b@example.com',password:pass});
+    const limited=createServer({store:databaseStore(db),auth,authLimits:{me:1},battleSweep:false});limited.listen(0,'127.0.0.1');await once(limited,'listening');
+    const get=token=>fetch('http://127.0.0.1:'+limited.address().port+'/auth/me',{headers:{authorization:'Bearer '+token}});
+    try{
+      assert.equal((await get(one.accessToken)).status,200);assert.equal((await get(one.accessToken)).status,429);
+      assert.equal((await get(two.accessToken)).status,200);
+      const another=await auth.login({email:prefix+'-quota-a@example.com',password:pass});assert.equal((await get(another.accessToken)).status,429);
+      assert.equal((await get('invalid-a')).status,401);assert.equal((await get('invalid-b')).status,429);
+    }finally{limited.closeAllConnections();await new Promise(resolve=>limited.close(resolve));}
   });
   const createClient=appClient();
   await t.test('actual app client signs in, restores saved login, rotates once for concurrent calls',async()=>{

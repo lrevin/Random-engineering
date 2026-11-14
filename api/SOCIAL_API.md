@@ -1,97 +1,49 @@
-# 친구 · 1:1 배틀 API 약속
+# 친구·랜덤 배틀 API
 
-앱의 친구 탭과 1:1 배틀(랜덤 매칭)이 쓰는 API입니다. 앱 쪽 호출 코드는 [`app/src/lib/social.ts`](../app/src/lib/social.ts) 한 곳에 있습니다.
-지금은 같은 약속으로 동작하는 **시험용 서버** [`mock-social/server.mjs`](mock-social/server.mjs)(메모리 저장)로 개발하고, 실제 서비스에서는 [`server/`](server)(MySQL · 로그인 토큰)에 같은 주소로 붙입니다.
-
-## 규칙 요약
-
-| 항목 | 내용 |
-|---|---|
-| 친구 | 사용자마다 8자리 **UID**(영어 대문자 + 숫자, 0/O·1/I 제외). UID로 친구 신청 → 상대가 수락하면 친구. 서로 신청하면 바로 친구 |
-| 랜덤 매칭 | 앱은 **랜덤 매칭만** 씀. 분야·공부 시간은 고르지 않음. 앱이 내 관심 분야(세부 분야 id)와 그 안의 주제 후보 id들을 올리고, 서버는 **서로의 관심 분야에 들어가는 주제**가 있는 상대와 맺음 (먼저 기다린 사람 후보부터) |
-| 공부 시간 | **모두 10분 고정** |
-| 문제 | **AI가 새로 만들고 2번 검수한 5문제** (퀴즈 AI 서버 `fresh`). 매칭 뒤 공부하는 동안 먼저 기다린 사람(`from`)의 앱이 만들어 `POST /battles/:id/questions`로 올림. 늦으면 상대 앱이 대신 만듦 (먼저 올린 것만 인정). 문제가 늦게 올라오면 퀴즈 시작(`quizStartAt`)도 그만큼 늦춤 |
-| 연장전 | **점수가 같으면(만점끼리든 아니든) 비기지 않고 연장전.** 둘 다 제출 안 했으면 무승부. AI가 2문제씩 만들어 두고 한 문제씩 같이 풂(45초). 한 사람만 맞히면 승리, 아니면 다음 문제. 한 문제를 푸는 동안 다음 2문제를 미리 만듦(파이프라인). 10문제까지 가거나 문제가 2분 동안 안 올라오면 무승부 |
-| 배틀권 | 매칭을 돌리는 **두 사람 모두 1개씩** 씀. 무료 버전은 매월 1일 00시에 2개로 다시 채움(쌓이지 않음), 유료 버전은 무제한. 톱니바퀴 50개로 살 수 있음(산 배틀권은 안 사라짐, 최대 5개). 취소 · 3분 동안 못 찾으면 돌려줌 |
-| 시작 | 매칭되면 서버가 시작 시각(`startAt` = 매칭 + 8초)을 정함. 두 사람 모두 그 시각에 같은 주제가 공개되고 같은 공부 시간이 흐름 |
-| 공정성 | **배틀 중 시간 추가 불가.** 공부 시간이 끝나기 전에는 결과를 받지 않음 |
-| 퀴즈 | 공부가 끝나면 같은 5문제를 5분 안에 풂. 시간이 끝나면 그때까지 푼 문제로 채점, 안 낸 사람은 0점 |
-| 승패 | 정답 수가 많은 사람이 승리. 같으면 연장전 |
-| 경험치 이동 | 진 사람 **누적 경험치의 5% (최대 100 XP)** 를 이긴 사람이 가져감. 무승부면 이동 없음 |
-
-## 사용자 구분
-
-- 시험용 서버: 요청 헤더 `x-pg-uid`(UID), `x-pg-name`(닉네임, URL 인코딩), `x-pg-level`, `x-pg-xp`(내 누적 경험치)
-- 실제 서버: `Authorization: Bearer <access token>`으로 사용자를 구분하고, UID · 닉네임 · 경험치는 DB에서 읽음 (헤더 값은 믿지 않음)
-- 모든 응답에 `serverNow`(서버 시각, ISO)를 넣어 줌 → 앱이 휴대폰 시계 차이를 보정해서 두 사람이 같은 순간에 시작
+실제 구현은 `server/server.mjs`와 `mysql/member-service.mjs`, `mysql/battle-service.mjs`다. 모든 회원 요청은 `Authorization: Bearer <access token>`을 사용한다. 기기의 UID·점수·XP·관심 분야를 인증 또는 판정 근거로 믿지 않는다. 예전 `mock-social`은 운영 경로에 연결하지 않는다.
 
 ## 친구
 
-| 메서드 | 주소 | 요청 | 응답 |
-|---|---|---|---|
-| POST | `/social/me` | `{}` | `200 { ok }` 접속 표시 |
-| GET | `/social/friends` | | `200 { friends, incoming, outgoing }` (각 `[{ uid, nickname, level, online }]`) |
-| POST | `/social/friends/requests` | `{ uid }` | `200` 친구 목록. `404 not_found` · `400 self` · `409 already_friends / already_requested` |
-| POST | `/social/friends/requests/:uid/accept` · `/decline` | | `200` 친구 목록 |
-| DELETE | `/social/friends/:uid` | | `200` 친구 목록 |
+| 요청 | 동작 |
+|---|---|
+| POST `/social/me` | 서버 발급 8자리 친구 코드와 접속 표시 |
+| GET `/social/friends` | 친구·받은 신청·보낸 신청 |
+| POST `/social/friends/requests` `{uid}` | 신청. 서로 신청하면 즉시 친구 |
+| POST `/social/friends/requests/:uid/accept` 또는 `/decline` | 받은 신청 수락·거절 |
+| DELETE `/social/friends/:uid` | 관계 삭제 |
 
-`online`: 최근 30초 안에 요청이 있었는지.
+## 매칭·진행
 
-## 랜덤 매칭
+| 요청 | 동작 |
+|---|---|
+| POST `/match` `{requestId: UUID}` | 배틀권 예약과 대기열 등록. 같은 UUID 재시도는 중복 차감하지 않음 |
+| GET `/match` | 대기 상태·매칭된 배틀. 대기 중 접속 표시 갱신 |
+| DELETE `/match` `{entryId}` | 해당 대기만 취소·반환. 이미 매칭되면 배틀 반환 |
+| GET `/battles/inbox` | 현재 배틀. 직접 초대는 제공하지 않아 incoming은 빈 배열 |
+| GET `/battles/history` | 본인 최근 완료·무효 배틀 최대 50개 |
+| GET `/battles/:id` | 서버 단계·시간·본인 저장 답안·결과 |
+| POST `/battles/:id/study-skip` `{agree:boolean}` | 학습 중 동의·취소를 명시적으로 저장. 두 명 모두 동의하면 즉시 같은 퀴즈 시작 |
+| POST `/battles/:id/answers` `{position:1..5,answer:number/boolean}` | 순서대로 답안 저장. 같은 답 재전송 허용, 변경 차단 |
+| POST `/battles/:id/result` | 현재 답안으로 제출. 클라이언트 점수·XP 무시 |
+| POST `/battles/:id/overtime` `{round:0..4,answer:number/boolean}` | 실제 연장전 답안 제출 |
+| POST `/battles/:id/forfeit` | 명시적 포기. 패배·배틀권 미반환 |
 
-| 메서드 | 주소 | 요청 | 응답 |
-|---|---|---|---|
-| POST | `/match` | `{ interests: string[], candidates: string[] }` (candidates = 관심 분야 주제 id, 분야마다 3개쯤) | `200 { status: "waiting", id, joinedAt }` 또는 바로 `{ status: "matched", battle }`. 이미 배틀 중이면 `409 busy` |
-| GET | `/match` | | `{ status: "none" \| "waiting" \| "matched", … }` (앱이 3초마다 부름. 3분 지나면 `none`) |
-| DELETE | `/match` | | `{ status: "none" }` 매칭 취소 |
+DB 프로필의 공통 관심 분야·자격증 연결 주제에서 매칭한다. 활성 분류이며 발행된 기본 문제가 10개 이상인 주제만 사용한다. 대기 3분 만료·취소 시 예약권을 반환한다. 새 상대를 연결할 때 최근 15초 안에 대기 상태를 확인한 사람을 선택한다. 매칭 이후 앱 종료·접속 끊김은 타이머를 멈추지 않는다.
 
-매칭으로 만든 배틀은 `kind: "random"`, 처음부터 `accepted`이며 아래 배틀 API(`GET /battles/:id`, `POST /battles/:id/result`)를 그대로 씁니다.
+매칭 +8초에 주제 공개 → 학습 최대 600초(양쪽 스킵 동의 시 즉시 종료) → 같은 순서·보기의 본 문제 5개를 300초 안에 풀이한다. 동점이면 문항당 45초의 연장전을 최대 5회 진행한다. 각 연장전 시작 전 3초를 두고 한 명만 정답이면 승리, 최대 10문항 후에도 같으면 무승부다. 답안·진행은 DB에서 복원하며 해당 단계의 남은 시간 안에서 복귀한다. 추가 유예 시간은 없다.
 
-## 배틀 (친구 신청 방식 — 지금 앱은 안 쓰지만 API는 남겨 둠)
+서버가 정답을 보존·채점하고 완료 전 정답·해설은 공개하지 않는다. 클라이언트의 문제 업로드·채점 결과는 받지 않는다. AI 연동은 보류 상태이므로 현재는 기본 문제 은행에서 출제한다.
 
-| 메서드 | 주소 | 요청 | 응답 |
-|---|---|---|---|
-| POST | `/battles` | `{ opponentUid, domain, topicId, studySec, questions }` | `201 battle`. `403 not_friends` · `409 busy / opponent_busy` |
-| GET | `/battles/inbox` | | `200 { incoming: [battle], current: battle \| null }` (앱이 5초마다 부름) |
-| GET | `/battles/:id` | | `200 battle` (배틀 화면이 2초마다 부름) |
-| POST | `/battles/:id/accept` · `/decline` | | `200 battle` (받은 사람만, pending일 때) |
-| POST | `/battles/:id/cancel` | | `200 battle` (신청한 사람만, pending일 때) |
-| POST | `/battles/:id/result` | `{ score, total, xp }` | `200 battle`. 퀴즈 시작 전이면 `409 too_early`. 같은 사람이 두 번 내면 처음 것만 인정 |
-| POST | `/battles/:id/questions` | `{ batch, questions }` | `200 battle`. batch 0 = 본 문제 5개, 1부터 = 연장전 2문제씩. `batch`가 지금 묶음 수와 같을 때만 저장(먼저 올린 것만 인정) |
-| POST | `/battles/:id/overtime` | `{ round, correct }` | `200 battle`. 지금 연장전 문제 번호일 때 한 번만 |
+## 기록·보상·장애
 
-battle 모양
-```json
-{ "id": "UUID", "status": "pending | accepted | finished | declined | canceled | expired",
-  "from": { "uid": "PYJJLHNS", "nickname": "gongdae" }, "to": { "uid": "TESTBOT2", "nickname": "봇친구" },
-  "domain": "it", "studySec": 600, "quizSec": 300, "createdAt": "…", "startAt": "… | null",
-  "topicId": "pl-04 | null", "questions": [ … ] | null,
-  "results": { "PYJJLHNS": { "score": 5, "total": 7, "submittedAt": "…" } },
-  "outcome": { "winner": "PYJJLHNS | null", "xp": 45 } | null, "serverNow": "…",
-  "kind": "random", "quizCount": 5, "questionsReady": true, "quizStartAt": "… | null",
-  "overtime": null | { "round": 0, "question": { … } | null, "roundStartAt": "… | null", "roundSec": 45,
-                       "available": 2, "batches": 1, "answers": { "PYJJLHNS": [true], "TESTBOT2": [true] }, "past": [ … ] } }
-```
+- `studySkip: {count, required:2, myAgreed}`를 배틀 응답에 포함한다. 앱은 약 1초마다 갱신한다. `revision`으로 오래된 응답이 최신 동의/진행을 덮어쓰지 않게 한다.
+- 스킵 동의는 기존 상태 JSON에 보존한다. 재전송은 반전이 아닌 `{agree:true/false}`로 같은 결과를 유지한다. 학습 시작 전 동의는 거부하고, 퀴즈 시작 후 요청은 시각·단계를 바꾸지 않는다. 스킵 후 풀이 제한 시간 5분을 온전히 제공하며 기록에는 실제 학습 시간만 남긴다.
+- `battles`, `match_entries`는 매칭·진행 상태를 저장한다. 문항별 기록은 기존 `quiz_attempts`·`quiz_attempt_items`·`study_records`를 공통 사용한다.
+- `study_records.study_type`은 `study`/`battle`. 전체 문항 수는 5~10, 배틀은 본 문제 5 + 실제 출제된 연장전이다.
+- 패자의 시작 시점 회원 XP 5%(내림·최대 100)를 승자에게 이전한다. 정산 시 패자의 남은 XP가 더 적으면 그만큼만 이전한다. 무승부는 0. 별도 배틀 XP·일반 학습 XP 중복 지급은 없다.
+- `rank_score`는 본 문제 정답만 반영한다. 실제 답안을 낸 정상 완료는 학습일에 포함하되 포기자·무응답자는 제외한다. 일반 학습 퀘스트에는 배틀을 넣지 않는다.
+- 양측 기록·문항·XP·동기화 순번·대기 종료를 한 트랜잭션으로 확정한다. 완료 배틀 재요청으로 다시 지급하지 않는다. 배틀 기록 개별 삭제는 차단한다.
+- API 프로세스는 5초마다 진행을 정리한다. 출제·계정 문제 또는 퀴즈 시작 이후 처리 공백이 30초를 초과한 서버 장애 감지 시 무효·권 반환·XP 미반영한다. 개인 통신 장애와 구분한다.
+- 무료권은 한국 시각 월 2개, 구매권은 50 톱니바퀴/보유 5개까지 구매. 이전 달 무료권 반환은 새 달 한도를 늘리지 않는다. 반환된 구매권은 유실 방지를 위해 구매 한도를 일시 초과할 수 있다.
 
-- `questions`(본 문제)는 `quizStartAt`이 지나야 내려줌. 연장전 `question`은 그 문제가 시작됐을 때만.
-
-- 서버는 요청을 받을 때마다 시간을 확인해: 2분 지난 신청은 `expired`, 두 사람 결과가 다 오거나 `startAt + 공부 + 퀴즈 + 15초`가 지나면 `finished`로 채점합니다.
-- 한 사람은 동시에 배틀 하나만 (pending · accepted).
-
-## 실제 서버로 옮길 때 (서버 · DB 담당)
-
-1. 표: `friendships(user_a, user_b)`, `friend_requests(from, to)`, `match_queue(user_id, domain, study_sec, joined_at)`, `battles(...)`, `battle_results(battle_id, user_id, score, total)`, 사용자 표에 `friend_uid`(UNIQUE). 매칭은 대기열 잠금(SELECT … FOR UPDATE)으로 한 사람이 두 번 잡히지 않게
-2. **경험치 이동은 서버의 XP 원장에 기록**(이긴 사람 +, 진 사람 −, 배틀 id로 한 번만). 지금 앱은 기기에만 반영하므로, 서버 연결 뒤에는 원장 합계를 그대로 씀
-3. **배틀권 · 유료 버전도 서버가 관리**(지금은 기기 저장이라 조작 가능). 결제는 앱스토어 · 구글 플레이 인앱 결제 + 서버 영수증 검증
-4. 앱이 꺼져 있어도 매칭을 알리려면 푸시 알림(Expo 푸시 토큰 저장 + 매칭 시 발송)이 필요. 지금은 앱이 켜져 있을 때만 확인
-5. 점수는 지금 앱이 보낸 값을 믿음(`client_reported`). 정답을 서버가 갖고 채점하면 더 공정함
-
-## 시험해 보기
-
-```bash
-FAST=1 node api/mock-social/server.mjs        # FAST=1: 공부 20초 · 퀴즈 60초 (빠른 시험용)
-# app/.env.local 에 EXPO_PUBLIC_SOCIAL_URL=http://10.0.2.2:8790 (안드로이드 에뮬레이터)
-
-# 다른 사용자(봇)로 친구 신청 보내기
-curl -X POST localhost:8790/social/friends/requests -H "x-pg-uid: TESTBOT2" -H "content-type: application/json" -d '{"uid":"<내 UID>"}'
-```
+친구 지정 초대·푸시 알림·자동 상대 봇·AI 실연동은 미구현이다. 현재 구현의 검증은 로컬 임시 DB 기준이며 운영 EC2/RDS 적용과 실제 두 기기 시험은 별도다.

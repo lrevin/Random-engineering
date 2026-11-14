@@ -14,7 +14,8 @@ import { purgeExpiredAccounts } from './account-service.mjs';
 
 function clientModule(){
  const ts=createRequire(path.join(ROOT,'app/package.json'))('typescript');
- const file=path.join(ROOT,'api/mysql/app-integration/app/src/lib/auth-client.ts');
+ const active=path.join(ROOT,'app/src/lib/auth-client.ts');
+ const file=active;
  const code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
  const exports={};new Function('exports',code)(exports);return exports;
 }

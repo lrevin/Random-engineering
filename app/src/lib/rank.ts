@@ -47,9 +47,9 @@ export const totalRp = (records: StudyRecord[]) => records.reduce((a, r) => a + 
 export const TOPIC_TIER_MIN = [0, 10, 20, 30, 40, 50];
 
 export function topicMastery(topicId: string, records: StudyRecord[]) {
-  const rs = records.filter((r) => r.topicId === topicId);
-  const points = rs.reduce((a, r) => a + Math.min(r.score, r.total), 0);
-  const perfect = rs.some((r) => r.score === r.total && r.total > 0);
+  const rs = records.filter((r) => r.topicId === topicId && r.countsAsStudy !== false);
+  const points = rs.reduce((a, r) => a + Math.min(r.rankScore ?? r.score, r.studyType === "battle" ? 5 : r.total), 0);
+  const perfect = rs.some((r) => r.studyType === "battle" ? r.rankScore === 5 : r.score === r.total && r.total > 0);
   let i = -1; // -1 = 아직 안 풂
   if (rs.length) {
     i = 0;
@@ -62,7 +62,7 @@ export function topicMastery(topicId: string, records: StudyRecord[]) {
     tier: i >= 0 ? TIERS[i] : null,
     attempts: rs.length,
     points,
-    best: rs.reduce((a, r) => Math.max(a, r.score), 0),
+    best: rs.reduce((a, r) => Math.max(a, r.rankScore ?? r.score), 0),
     perfect,
     next,
   };
@@ -78,8 +78,8 @@ export const DOMAIN_TIER_MIN = [0, 30, 100, 250, 500, 1000];
 export const DOMAIN_ENGINEER_TOPICS = 30;
 
 export function domainMastery(domain: string, records: StudyRecord[]) {
-  const rs = records.filter((r) => r.domain === domain);
-  const points = rs.reduce((a, r) => a + Math.min(r.score, r.total), 0);
+  const rs = records.filter((r) => r.domain === domain && r.countsAsStudy !== false);
+  const points = rs.reduce((a, r) => a + Math.min(r.rankScore ?? r.score, r.studyType === "battle" ? 5 : r.total), 0);
   const topics = new Set(rs.map((r) => r.topicId)).size;
   let i = -1; // -1 = 아직 안 풂
   if (rs.length) {

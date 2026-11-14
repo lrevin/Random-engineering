@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { View } from "react-native";
 import { bestStreak } from "@/lib/achievements";
 import { useApp } from "@/lib/app-state";
+import { sfx } from "@/lib/sfx";
 import { MILESTONES, type Milestone } from "@/lib/milestones";
 import { addSkin, addTitle, markMilestone, skinById, titleById, useCosmetics } from "@/lib/skins";
 import { radius, raised, useColors } from "@/theme";
@@ -16,11 +17,12 @@ export function useMilestones() {
   const best = useMemo(() => bestStreak(records, keptDays), [records, keptDays]);
   const claimed = (m: Milestone) => milestones.includes(m.days);
   const ready = MILESTONES.filter((m) => best >= m.days && !claimed(m)).length;
-  const claim = (m: Milestone) => {
-    if (best < m.days || !markMilestone(m.days)) return false;
-    claimQuest(`streak-milestone:${m.days}`, m.gears);
+  const claim = async (m: Milestone) => {
+    if (best < m.days) return false;
+    if(!await claimQuest(`streak-milestone:${m.days}`, m.gears)||!markMilestone(m.days))return false;
     addSkin(m.skin, false);
     addTitle(m.title);
+    sfx("chest");
     return true;
   };
   return { best, claimed, ready, claim };
@@ -64,7 +66,7 @@ export function MilestoneCard({ onGot }: { onGot: (gears: number) => void }) {
               </View>
             ) : can ? (
               <View style={{ width: 64 }}>
-                <Btn title="열기" size="sm" variant="accent" onPress={() => { if (m.claim(x)) onGot(x.gears); }} />
+                <Btn title="열기" size="sm" variant="accent" onPress={async () => { if (await m.claim(x)) onGot(x.gears); }} />
               </View>
             ) : (
               <View style={{ width: 64, alignItems: "center", gap: 2, borderRadius: radius.md }}>

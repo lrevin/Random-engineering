@@ -7,7 +7,7 @@
   },
   "scripts": {
     "start": "node --env-file-if-exists=.env server.mjs",
-    "test": "node --test test.mjs",
+    "test": "node --test test.mjs kakao-test.mjs ad-reward-test.mjs ../mysql/migrate.test.mjs",
     "validate": "node export.mjs --check",
     "db:setup": "node --env-file-if-exists=.env setup-db.mjs",
     "db:import": "node --env-file-if-exists=.env import-bank.mjs",
@@ -16,7 +16,15 @@
     "export": "node --env-file-if-exists=.env import-bank.mjs",
     "account:test": "node --env-file-if-exists=.env --test ../mysql/account-test.mjs",
     "accounts:purge": "node --env-file-if-exists=.env ../mysql/purge-accounts.mjs",
-    "records:test": "node --env-file-if-exists=.env --test ../mysql/record-test.mjs"
+    "records:test": "node --env-file-if-exists=.env --test ../mysql/record-test.mjs",
+    "db:import-certificates": "node --env-file-if-exists=.env import-certificates.mjs",
+    "certificates:test": "node --env-file-if-exists=.env ../mysql/certificate-validate.mjs",
+    "db:migrate": "node --env-file-if-exists=.env ../mysql/migrate.mjs migrate",
+    "db:validate": "node --env-file-if-exists=.env ../mysql/migrate.mjs validate",
+    "db:info": "node --env-file-if-exists=.env ../mysql/migrate.mjs info",
+    "db:baseline": "node --env-file-if-exists=.env ../mysql/migrate.mjs baseline",
+    "speed:test": "node --env-file-if-exists=.env --test ../mysql/speed-test.mjs",
+    "test:integration": "node --env-file-if-exists=.env ../mysql/certificate-validate.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

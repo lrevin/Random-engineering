@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, Modal, Pressable, View } from "react-native";
 import { AD_DAILY_LIMIT, AD_REWARD, adsSimulated, showRewardedAd } from "@/lib/ads";
 import { useApp } from "@/lib/app-state";
+import { sfx } from "@/lib/sfx";
+import { mysqlAuth } from "@/lib/auth";
 import { radius, raised, shadow, useColors } from "@/theme";
 import { Icon } from "./Icon";
 import { T, tap } from "./ui";
@@ -40,15 +42,19 @@ function SimulatedAd({ onDone }: { onDone: (earned: boolean) => void }) {
 /** "광고 보고 톱니바퀴 AD_REWARD개 받기" 버튼 (하루 AD_DAILY_LIMIT번) */
 export function AdRewardButton() {
   const c = useColors();
-  const { adViewsToday, grantAdReward } = useApp();
+  const { mode, adViewsToday, grantAdReward } = useApp();
   const [loading, setLoading] = useState(false);
   const [sim, setSim] = useState(false);
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const left = Math.max(0, AD_DAILY_LIMIT - adViewsToday);
   const disabled = loading || left === 0;
 
-  const done = (earned: boolean) => {
-    if (earned && grantAdReward()) setMsg({ text: `톱니바퀴 ${AD_REWARD}개를 받았어요!`, ok: true });
+  const done = async (earned: boolean) => {
+    if (earned) setLoading(true);
+    const ok = earned && await grantAdReward();
+    setLoading(false);
+    if (ok) { sfx("gear"); setMsg({ text: `톱니바퀴 ${AD_REWARD}개를 받았어요!`, ok: true }); }
+    else if (earned) setMsg({ text: mode === "user" ? "보상 확인이 늦어지고 있어요. 잠시 뒤 톱니바퀴가 들어와요." : "오늘은 더 받을 수 없어요.", ok: false });
     else if (!earned) setMsg({ text: "광고를 끝까지 봐야 톱니바퀴를 받아요.", ok: false });
   };
 
@@ -56,9 +62,10 @@ export function AdRewardButton() {
     if (disabled) return;
     tap();
     setMsg(null);
-    if (adsSimulated) return setSim(true);
+    // 회원은 실제 광고(서버 확인)로만 지급 → 시험용 화면에서는 받을 수 없음
+    if (adsSimulated) return mode === "user" ? setMsg({ text: "광고 보상은 설치한 앱에서만 받을 수 있어요.", ok: false }) : setSim(true);
     setLoading(true);
-    const r = await showRewardedAd();
+    const r = await showRewardedAd(mode === "user" ? mysqlAuth.getUserId() : null);
     setLoading(false);
     if (r === "failed") setMsg({ text: "지금은 광고를 불러올 수 없어요. 잠시 뒤 다시 해 주세요.", ok: false });
     else done(r === "earned");

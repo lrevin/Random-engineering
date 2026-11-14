@@ -1,11 +1,15 @@
 /**
  * 친구 · 1:1 배틀 서버 호출 (약속: api/SOCIAL_API.md)
- * 지금은 시험용 서버(api/mock-social)로 동작하고, 실제 API 서버가 같은 주소 형식을 지원하면 주소만 바꿉니다.
+ * 자체 API의 로그인 토큰으로 회원을 확인합니다. 배틀 시간·출제·승패·XP는 서버에서 관리합니다.
  * 화면에서는 이 파일의 함수만 부릅니다.
  */
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Crypto from "expo-crypto";
+import { mysqlAuth } from "./auth";
+import { API_URL } from "./api";
 import type { QuizQuestion } from "./quiz";
 
-const BASE = (process.env.EXPO_PUBLIC_SOCIAL_URL || "").replace(/\/$/, "");
+const BASE = API_URL.replace(/\/$/, "");
 export const socialEnabled = !!BASE;
 
 export interface Me {
@@ -31,7 +35,7 @@ export interface FriendsState {
   outgoing: Friend[];
 }
 
-export type BattleStatus = "pending" | "accepted" | "finished" | "declined" | "canceled" | "expired";
+export type BattleStatus = "pending" | "accepted" | "finished" | "declined" | "canceled" | "expired" | "void";
 
 export interface BattleResult {
   score: number;
@@ -39,7 +43,7 @@ export interface BattleResult {
   submittedAt: string;
 }
 
-/** 연장전: 한 문제씩 같이 풀어 한 사람만 맞히면 승리. 문제는 AI가 2개씩 미리 만들어 둠 */
+/** 연장전: 한 문제씩 같이 풀어 한 사람만 맞히면 승리. 서버가 보존한 기본 문제에서 최대 5문항 출제 */
 export interface Overtime {
   /** 지금 푸는 문제 번호 (0부터) */
   round: number;
@@ -52,14 +56,23 @@ export interface Overtime {
   available: number;
   batches: number;
   /** 사람별 문제마다 맞혔는지 (안 냈으면 null) */
-  answers: Record<string, (boolean | null)[]>;
+  mySubmitted: boolean;
+  myAnswer: number | boolean | null;
   /** 이미 푼 연장전 문제 (결과 화면용) */
   past: QuizQuestion[];
 }
 
 export interface Battle {
+  revision?: number;
+  studySkip?: {count: number; required: 2; myAgreed: boolean};
+  phase: "countdown" | "study" | "quiz" | "submitted" | "overtime" | "finished" | "void";
+  myAnswers: (number | boolean | null)[];
+  mySubmitted: boolean;
+  quizEndAt: string;
+  reason?: string;
+  recordId?: string | null;
   id: string;
-  /** random = 랜덤 매칭 배틀 (문제를 공부하는 동안 AI가 만듦) */
+  /** random = 서버의 공통 관심 주제 랜덤 매칭 배틀 */
   kind?: "random";
   status: BattleStatus;
   from: { uid: string; nickname: string };
@@ -73,13 +86,13 @@ export interface Battle {
   startAt: string | null;
   /** 수락 뒤에만 받음 */
   topicId: string | null;
-  /** 본 문제 (퀴즈 시작 시각이 지나야 받음). 매칭 배틀은 공부하는 동안 AI가 만들어 올림 */
+  /** 본 문제 (퀴즈 시작 시각이 지나야 받음). 서버의 기본 문제 은행에서 공통 출제 */
   questions: QuizQuestion[] | null;
   /** 본 문제가 서버에 올라왔는지 (문제를 만드는 쪽이 확인용) */
   questionsReady?: boolean;
   /** 본 문제 수 (매칭 배틀 5) */
   quizCount?: number;
-  /** 퀴즈 시작 시각 = 공부 끝 (문제가 늦게 올라오면 올라온 시각) */
+  /** 퀴즈 시작 시각 = 고정된 공부 종료 시각 */
   quizStartAt?: string | null;
   /** 점수가 같으면 열리는 연장전 */
   overtime?: Overtime | null;
@@ -96,44 +109,26 @@ export class SocialError extends Error {
   }
 }
 
-let me: Me | null = null;
+
 /** 서버 시각 - 휴대폰 시각 (ms) */
 let clockOffset = 0;
 export const serverNow = () => Date.now() + clockOffset;
 
 /** 내 정보 (UID · 닉네임 · 레벨). 앱 상태가 바뀔 때마다 갱신 */
-export function setMe(next: Me) {
-  me = next;
+export function setMe(_next: Me) {
+  // Kept for existing screen callers; identity is server-authoritative.
 }
 
 async function call<T>(method: string, path: string, body?: unknown): Promise<T> {
   if (!BASE) throw new SocialError("not_configured", 0);
-  if (!me?.uid) throw new SocialError("no_identity", 0);
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 10000);
+  // The API derives identity from the authenticated session, never from local Me data.
   try {
-    const res = await fetch(BASE + path, {
-      method,
-      headers: {
-        "Content-Type": "application/json",
-        // 시험용 서버의 사용자 구분. 실제 서버에서는 로그인 토큰(Authorization: Bearer)으로 바뀜
-        "x-pg-uid": me.uid,
-        "x-pg-name": encodeURIComponent(me.nickname || "학습자"),
-        "x-pg-level": String(me.level),
-        "x-pg-xp": String(Math.max(0, Math.floor(me.xp))),
-      },
-      body: body === undefined ? undefined : JSON.stringify(body),
-      signal: ctrl.signal,
-    });
-    const data = res.status === 204 ? null : await res.json().catch(() => null);
+    const data = await mysqlAuth.apiRequest(path, body, method as "GET" | "POST" | "DELETE");
     if (data?.serverNow) clockOffset = new Date(data.serverNow).getTime() - Date.now();
-    if (!res.ok) throw new SocialError(data?.error ?? "server_error", res.status);
     return data as T;
-  } catch (e) {
-    if (e instanceof SocialError) throw e;
-    throw new SocialError("network", 0);
-  } finally {
-    clearTimeout(timer);
+  } catch (error) {
+    const e = error as {code?: string; status?: number};
+    throw new SocialError(e.code ?? "network", e.status ?? 0);
   }
 }
 
@@ -141,6 +136,15 @@ async function call<T>(method: string, path: string, body?: unknown): Promise<T>
 export function socialMessage(e: unknown) {
   const code = e instanceof SocialError ? e.code : "";
   return ({
+    rate_limited: "요청이 많아 잠시 대기 중이에요. 잠시 후 다시 확인해 주세요.",
+    network_error: "인터넷 연결을 확인해 주세요.",
+    database_unavailable: "서버 연결이 지연되고 있어요. 잠시 후 다시 확인해 주세요.",
+    no_tickets: "사용할 배틀권이 없어요.",
+    no_match_topics: "관심 분야에 배틀용 문제가 부족해요. 다른 관심 분야를 선택해 주세요.",
+    answer_conflict: "이미 저장된 답안이 있어요. 진행 상태를 새로 불러와 주세요.",
+    not_studying: "학습 중에만 스킵에 동의할 수 있어요.",
+    not_answering: "답안 제출 시간이 지났어요. 진행 상태를 확인해 주세요.",
+    unauthorized: "로그인 후 이용해 주세요.",
     not_configured: "친구 서버가 아직 연결되지 않았어요.",
     network: "인터넷 연결을 확인해 주세요.",
     not_found: "그 UID의 사용자를 찾지 못했어요.",
@@ -155,42 +159,34 @@ export function socialMessage(e: unknown) {
 }
 
 // ───────── 친구 ─────────
-export const registerMe = () => call<{ ok: true }>("POST", "/social/me", {});
+export const registerMe = () => call<{ ok: true; uid: string }>("POST", "/social/me", {});
 export const getFriends = () => call<FriendsState>("GET", "/social/friends");
 export const requestFriend = (uid: string) => call<FriendsState>("POST", "/social/friends/requests", { uid: uid.trim().toUpperCase() });
 export const respondFriend = (uid: string, accept: boolean) =>
   call<FriendsState>("POST", `/social/friends/requests/${uid}/${accept ? "accept" : "decline"}`);
 export const removeFriend = (uid: string) => call<FriendsState>("DELETE", `/social/friends/${uid}`);
 
-// ───────── 1:1 배틀 ─────────
-export const createBattle = (b: { opponentUid: string; domain: string; topicId: string; studySec: number; questions: QuizQuestion[] }) =>
-  call<Battle>("POST", "/battles", b);
-/** 나에게 온 신청(incoming)과 지금 내가 참여 중인 배틀(current) */
+// 배틀의 시간·답안·승패·XP는 서버가 결정합니다.
 export const getInbox = () => call<{ incoming: Battle[]; current: Battle | null }>("GET", "/battles/inbox");
 export const getBattle = (id: string) => call<Battle>("GET", `/battles/${id}`);
-export const acceptBattle = (id: string) => call<Battle>("POST", `/battles/${id}/accept`);
-export const declineBattle = (id: string) => call<Battle>("POST", `/battles/${id}/decline`);
-export const cancelBattle = (id: string) => call<Battle>("POST", `/battles/${id}/cancel`);
-/** 퀴즈 결과 제출. xp: 내 누적 경험치 (지면 이 값의 5%, 최대 100을 잃음) */
-export const submitBattle = (id: string, r: { score: number; total: number; xp: number }) =>
-  call<Battle>("POST", `/battles/${id}/result`, r);
-
-// ───────── 랜덤 매칭 ─────────
-export type MatchState =
-  | { status: "none" }
-  | { status: "waiting"; id: string; joinedAt: string }
-  | { status: "matched"; battle: Battle };
-
-/**
- * 매칭 대기열에 들어감. interests: 내 관심 분야(세부 분야 id), candidates: 관심 분야에서 고른 주제 후보 id들.
- * 서버는 서로의 관심 분야가 겹치는 상대와 맺고, 겹치는 분야의 후보 주제 하나로 배틀을 엶. 공부 시간은 10분 고정.
- */
-export const joinMatch = (m: { interests: string[]; candidates: string[] }) => call<MatchState>("POST", "/match", m);
-/** 배틀 문제 올리기. batch 0 = 본 문제 5개, 1부터 = 연장전 문제 2개씩. 먼저 올린 것만 인정 */
-export const uploadQuestions = (id: string, batch: number, questions: QuizQuestion[]) =>
-  call<Battle>("POST", `/battles/${id}/questions`, { batch, questions });
-/** 연장전 한 문제 답 제출 */
-export const submitOvertime = (id: string, round: number, correct: boolean) =>
-  call<Battle>("POST", `/battles/${id}/overtime`, { round, correct });
+export const getBattleHistory = () => call<{battles: Battle[]}>("GET", "/battles/history");
+export const setStudySkip = (id: string, agree: boolean) => call<Battle>("POST", `/battles/${id}/study-skip`, {agree});
+export const answerBattle = (id: string, position: number, answer: number | boolean) => call<Battle>("POST", `/battles/${id}/answers`, {position, answer});
+export const submitBattle = (id: string) => call<Battle>("POST", `/battles/${id}/result`, {});
+export const forfeitBattle = (id: string) => call<Battle>("POST", `/battles/${id}/forfeit`, {});
+export const submitOvertime = (id: string, round: number, answer: number | boolean) => call<Battle>("POST", `/battles/${id}/overtime`, {round, answer});
+export type MatchState = {status:"none"} | {status:"waiting";id:string;joinedAt:string;expiresAt:string} | {status:"matched";battle:Battle};
+// 미응답 요청은 같은 UUID로 재시도합니다. 앱 재실행 후에도 중복 차감되지 않습니다.
+export async function joinMatch() {
+  const owner = mysqlAuth.getUserId();
+  if (!owner) throw new SocialError("unauthorized",401);
+  const key="pg.match.request."+owner;
+  let requestId=await AsyncStorage.getItem(key);
+  if(!requestId){requestId=Crypto.randomUUID();await AsyncStorage.setItem(key,requestId);}
+  if(mysqlAuth.getUserId()!==owner)throw new SocialError("unauthorized",401);
+  const result=await call<MatchState>("POST","/match",{requestId});
+  await AsyncStorage.removeItem(key);
+  return result;
+}
 export const getMatch = () => call<MatchState>("GET", "/match");
-export const leaveMatch = () => call<MatchState>("DELETE", "/match");
+export const leaveMatch = (entryId:string) => call<MatchState>("DELETE", "/match", {entryId});

@@ -24,6 +24,15 @@ export async function connect(config = {}) {
   return connection;
 }
 
+// Public catalog/question reads need reusable connections that survive idle disconnects.
+export async function createReadPool() {
+  const pool = mysql.createPool({...options(), connectionLimit:10, maxIdle:2,
+    idleTimeout:60000, waitForConnections:true, queueLimit:100,
+    enableKeepAlive:true, keepAliveInitialDelay:0});
+  try { await pool.query('SELECT 1'); return pool; }
+  catch (error) { await pool.end(); throw error; }
+}
+
 export async function transaction(connection, action) {
   await connection.beginTransaction();
   try { const result = await action(connection); await connection.commit(); return result; }

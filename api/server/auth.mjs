@@ -81,6 +81,31 @@ export function createAuth({ secret=process.env.JWT_SECRET, connectionFactory=co
         });
       });
     },
+    /**
+     * 카카오 로그인: 카카오 회원번호(subject)로 계정을 찾고, 없으면 새로 만든다.
+     * 같은 이메일의 기존 이메일 계정과 자동으로 합치지 않는다 (남의 계정을 가로채는 일을 막기 위해).
+     * subject와 email은 서버가 카카오 API에서 직접 받은 값만 넘겨야 한다.
+     */
+    async kakaoLogin({subject,email=null}) {
+      if(typeof subject!=='string' || !/^[0-9]{1,20}$/.test(subject)) throw new AuthError('bad_request');
+      const mail=typeof email==='string' && email.length<=254 ? email.trim().toLowerCase() : null;
+      return withDb(db=>transaction(db,async()=>{
+        const [[identity]]=await db.execute("SELECT user_id FROM auth_identities WHERE provider='kakao' AND provider_subject=? FOR UPDATE",[subject]);
+        if(identity) {
+          const [[user]]=await db.execute('SELECT id,status,auth_version FROM users WHERE id=? FOR UPDATE',[identity.user_id]);
+          if(!user) throw new AuthError('invalid_credentials',401);
+          if(user.status==='deleting') throw new AuthError('account_deleting',401);
+          if(user.status!=='active') throw new AuthError('invalid_credentials',401);
+          if(mail) await db.execute("UPDATE auth_identities SET email=? WHERE provider='kakao' AND provider_subject=?",[mail,subject]);
+          return {...await newSession(db,user,mail),isNew:false};
+        }
+        const user={id:randomUUID(),auth_version:1};
+        await db.execute('INSERT INTO users(id) VALUES (?)',[user.id]);
+        await db.execute("INSERT INTO auth_identities(id,user_id,provider,provider_subject,email,password_hash) VALUES (?,?,'kakao',?,?,NULL)",[randomUUID(),user.id,subject,mail]);
+        await db.execute('INSERT INTO user_sync_states(user_id) VALUES (?)',[user.id]);
+        return {...await newSession(db,user,mail),isNew:true};
+      }));
+    },
     async refresh(body) {
       const hash=tokenHash(refreshToken(body.refreshToken));
       const result=await withDb(async db=>{
@@ -101,7 +126,8 @@ export function createAuth({ secret=process.env.JWT_SECRET, connectionFactory=co
           const next=randomBytes(48).toString('base64url');
           await db.execute('UPDATE refresh_tokens SET consumed_at=UTC_TIMESTAMP(3) WHERE token_hash=?',[hash]);
           await db.execute('INSERT INTO refresh_tokens(token_hash,session_id,expires_at) SELECT ?,id,expires_at FROM auth_sessions WHERE id=?',[tokenHash(next),session.id]);
-          const [[identity]]=await db.execute("SELECT email FROM auth_identities WHERE user_id=? AND provider='email'",[user.id]);
+          // 이메일 계정이면 그 이메일, 카카오 계정이면 카카오에서 받은 이메일(없으면 null)
+          const [[identity]]=await db.execute("SELECT email FROM auth_identities WHERE user_id=? ORDER BY provider='email' DESC LIMIT 1",[user.id]);
           return {accessToken:await access(user),refreshToken:next,expiresIn:accessSeconds,user:{id:user.id,email:identity?.email ?? null}};
         });
       });
@@ -124,7 +150,7 @@ export function createAuth({ secret=process.env.JWT_SECRET, connectionFactory=co
     async me(header) {
       const payload=await verifyAccess(header);
       return withDb(async db=>{
-        const [[user]]=await db.execute("SELECT u.id,u.status,u.auth_version,i.email FROM users u LEFT JOIN auth_identities i ON i.user_id=u.id AND i.provider='email' WHERE u.id=?",[payload.sub]);
+        const [[user]]=await db.execute("SELECT u.id,u.status,u.auth_version,(SELECT i.email FROM auth_identities i WHERE i.user_id=u.id ORDER BY i.provider='email' DESC LIMIT 1) AS email FROM users u WHERE u.id=?",[payload.sub]);
         if(!user || user.status!=='active' || user.auth_version!==payload.av) throw new AuthError('unauthorized',401);
         return {user:{id:user.id,email:user.email}};
       });

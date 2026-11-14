@@ -18,19 +18,19 @@ export const fmtClock = (sec: number) => {
 export const fmtStudyTime = (sec: number) => (sec < 60 ? `${sec}초` : `${Math.round(sec / 60)}분`);
 
 /** 배틀로 남은 기록인지 (메모가 "…님과 배틀") */
-export const isBattleRecord = (r: StudyRecord) => r.memo.includes("님과 배틀");
+export const isBattleRecord = (r: StudyRecord) => r.studyType === "battle" || (r.studyType === undefined && r.memo.includes("님과 배틀"));
 export const battleOpponentLabel = (r: StudyRecord) => r.memo.replace(/^\S+ (?=.+님과 배틀)/u, "");
 
 export const fmtDuration = (sec: number) => (sec ? `${Math.floor(sec / 60)}분 ${sec % 60}초` : "-");
 
 export function studiedToday(records: StudyRecord[], now = new Date()) {
   const k = dateKey(now);
-  return records.some((r) => dateKey(new Date(r.studiedAt)) === k);
+  return records.some((r) => r.countsAsStudy !== false && dateKey(new Date(r.studiedAt)) === k);
 }
 
 /** 공부한 날 (+ 보호권·톱니바퀴로 지킨 날) */
 export const studyDays = (records: StudyRecord[], kept: readonly string[] = []) =>
-  new Set([...records.map((r) => dateKey(new Date(r.studiedAt))), ...kept]);
+  new Set([...records.filter(r=>r.countsAsStudy !== false).map((r) => dateKey(new Date(r.studiedAt))), ...kept]);
 
 /**
  * 연속 공부 일수. 오늘 아직 안 했으면 어제까지의 연속 일수를 돌려줍니다.
@@ -63,7 +63,7 @@ export function lastWeek(records: StudyRecord[], now = new Date(), kept: readonl
 
 /** 평균 퀴즈 점수 (10점 만점 기준) */
 export function averageScore(records: StudyRecord[]) {
-  const rs = records.filter((r) => r.total > 0);
+  const rs = records.filter((r) => r.total > 0 && r.countsAsStudy !== false);
   if (!rs.length) return 0;
   return rs.reduce((a, r) => a + (r.score / r.total) * 10, 0) / rs.length;
 }

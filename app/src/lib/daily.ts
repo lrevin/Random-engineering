@@ -30,5 +30,5 @@ export const dailyKey = (now = new Date()) => `daily-topic:${dateKey(now)}`;
 export const dailyDone = (topic: Topic | null, records: StudyRecord[], now = new Date()) => {
   if (!topic) return false;
   const k = dateKey(now);
-  return records.some((r) => r.topicId === topic.id && dateKey(new Date(r.studiedAt)) === k && r.score >= DAILY_MIN_CORRECT);
+  return records.some((r) => r.studyType !== "battle" && r.topicId === topic.id && dateKey(new Date(r.studiedAt)) === k && r.score >= DAILY_MIN_CORRECT);
 };

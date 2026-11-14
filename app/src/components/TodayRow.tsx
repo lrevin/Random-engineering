@@ -15,12 +15,12 @@ import { DomainIcon, Icon } from "./Icon";
 import { Badge, Btn, levelTone, T, tap } from "./ui";
 import { TierBadge } from "./Rank";
 
-/** 홈의 두 칸: 오늘의 주제 · 오늘의 복습 */
+/** 홈의 세 칸: 퀘스트 · 오늘의 주제 · 오늘의 복습 */
 export function TodayRow() {
-  const { records, active, setActive, prefs, premium, questClaims, claimQuest, uid } = useApp();
+  const { catalogVersion, records, active, setActive, prefs, premium, questClaims, claimQuest, uid } = useApp();
   const c = useColors();
   const day = new Date().toDateString();
-  const topic = useMemo(() => dailyTopic(uid, prefs.interests), [uid, prefs.interests, day]); // eslint-disable-line react-hooks/exhaustive-deps
+  const topic = useMemo(() => dailyTopic(uid, prefs.interests), [catalogVersion, uid, prefs.interests, day]); // eslint-disable-line react-hooks/exhaustive-deps
   const done = dailyDone(topic, records);
   const claimed = questClaims.includes(dailyKey());
   const [log, setLog] = useState<RecallLog>({});

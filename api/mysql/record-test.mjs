@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createRequire} from 'node:module';
-const require=createRequire(import.meta.url),root=fileURLToPath(new URL('./app-integration/app/src/lib/',import.meta.url));
+const require=createRequire(import.meta.url),root=fileURLToPath(new URL('../../app/src/lib/',import.meta.url));
 const ts=createRequire(fileURLToPath(new URL('../../app/package.json',import.meta.url)))('typescript');
 function module(name,dependencies={}){const exports={};const code=ts.transpileModule(fs.readFileSync(path.join(root,name+'.ts'),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;new Function('exports','require',code)(exports,key=>dependencies[key]??require(key));return exports;}
 const clientModule=module('auth-client'),{syncMySqlRecords,enqueueRecordOperation}=module('record-sync',{'./auth-client':clientModule});
@@ -23,7 +23,7 @@ test('MySQL learning record integration',async t=>{
  const req=async(path,method='GET',body,token)=>{const r=await fetch(base+path,{method,headers:{'Content-Type':'application/json',...(token?{Authorization:`Bearer ${token}`}:{})},body:body===undefined?undefined:JSON.stringify(body)});return {status:r.status,data:r.status===204?null:await r.json()};};
  const signup=async()=>{const r=await req('/auth/signup','POST',{email:`records-${randomUUID()}@example.com`,password:'Records-Test-42!'});assert.equal(r.status,201);users.push(r.data.user.id);return r.data;};
  const a=await signup(),b=await signup();const token=a.accessToken,header=`Bearer ${token}`;
- const make=(patch={})=>({id:randomUUID(),topicId:'ds-01',memo:'메모',studySec:900,score:6,total:7,studiedAt:new Date().toISOString(),rp:999,items:Array.from({length:7},(_,i)=>({question:{type:'ox',q:`검증 문제 ${i+1}이다.`,answer:true,explain:'검증 해설입니다.',src:'bank'},answer:i===6?false:true})),...patch});
+ const make=(patch={})=>({id:randomUUID(),topicId:'ds-01',memo:'메모',studySec:900,score:6,total:7,studiedAt:new Date().toISOString(),rp:999,items:Array.from({length:7},(_,i)=>({question:{type:'ox',q:`검증 문제 ${i+1}이다.`,answer:true,explain:'검증 해설입니다.',src:'offline'},answer:i===6?false:true})),...patch});
  const upload=async record=>(await req('/me/records','PUT',{records:[record]},token)).data.results[0];
  const p=make();let saved;
  await t.test('ownership, snapshots, server-derived XP and wrong answers',async()=>{
@@ -104,13 +104,12 @@ test('MySQL learning record integration',async t=>{
   });
   assert.equal(local.length,1);assert.equal(local[0].memo,'동기화 중 새 초안');assert.equal(local[0].memoPending.version,'new');
  });
- await t.test('MySQL basic bank API and conditional cache',async()=>{
+ await t.test('partial-bundle MySQL basic bank API and conditional cache',async()=>{
   const r=await fetch(base+'/quiz-bank/ds-01');assert.equal(r.status,200);const data=await r.json();assert.ok(data.questions.length>=7);assert.equal((await fetch(base+'/quiz-bank/ds-01',{headers:{'If-None-Match':r.headers.get('etag')}})).status,304);assert.equal((await fetch(base+'/quiz-bank/unknown-topic')).status,404);
   let calls=0;const cache=new Map();
   const {bankQuestions}=module('quiz',{
    '@react-native-async-storage/async-storage':{__esModule:true,default:{getItem:async key=>cache.get(key)??null,setItem:async(key,value)=>{cache.set(key,value);}}},
-   '@/data':{TOPICS:[]},'@/data/quizbank':{BANK_BUNDLED_FULL:true,QUIZ_BANK:{'ds-01':[{type:'ox',q:'내장 캐시 테스트',answer:true,explain:'내장 설명'}]}},
-   './supabase':{supabase:new Proxy({},{get(){throw new Error('Supabase must not be called');}})},'./auth':{AUTH_PROVIDER:'mysql'},
+   '@/data':{TOPICS:[]},'@/data/quizbank':{BANK_BUNDLED_FULL:false,QUIZ_BANK:{'ds-01':[{type:'ox',q:'내장 캐시 테스트',answer:true,explain:'내장 설명'}]}},
    './api':{fetchBankQuestions:async id=>{calls++;return (await (await fetch(base+'/quiz-bank/'+id)).json()).questions;}},
   });
   assert.deepEqual(await bankQuestions('ds-01'),data.questions);assert.deepEqual(await bankQuestions('ds-01'),data.questions);assert.equal(calls,1);

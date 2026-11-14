@@ -4,10 +4,12 @@ import {
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { restoreCatalog, syncCatalog } from "@/lib/catalog-sync";
+import { useState, useEffect } from "react";
 import { BattleWatcher } from "@/components/BattleWatcher";
-import { DialogHost } from "@/components/Dialog";
+import { showDialog, DialogHost } from "@/components/Dialog";
 import { initAds } from "@/lib/ads";
+import { initSfx } from "@/lib/sfx";
 import { StreakSheet } from "@/components/StreakSheet";
 import { AppProvider, useApp } from "@/lib/app-state";
 import { useColors } from "@/theme";
@@ -17,12 +19,16 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 export const unstable_settings = { anchor: "index" };
 
 function RootNav() {
-  const { ready, mode, onboarded } = useApp();
+  const { ready, mode, onboarded, walletNotice } = useApp();
+  const [catalogReady,setCatalogReady]=useState(false);
+  const [,setCatalogRevision]=useState(0);
+  useEffect(()=>{let alive=true;restoreCatalog().finally(()=>{if(alive)setCatalogReady(true);syncCatalog().then(changed=>{if(alive&&changed)setCatalogRevision(x=>x+1);}).catch(()=>{});});return()=>{alive=false;};},[]);
   const c = useColors();
+  useEffect(()=>{if(walletNotice)showDialog({title:"재화 안내",message:walletNotice,buttons:[{text:"확인"}]});},[walletNotice]);
   const [fontsLoaded, fontError] = useFonts({
     IBMPlexSansKR_400Regular, IBMPlexSansKR_500Medium, IBMPlexSansKR_600SemiBold, IBMPlexSansKR_700Bold,
   });
-  const loaded = ready && (fontsLoaded || !!fontError);
+  const loaded = ready && catalogReady && (fontsLoaded || !!fontError);
 
   useEffect(() => {
     if (loaded) SplashScreen.hideAsync().catch(() => {});
@@ -82,6 +88,7 @@ function RootNav() {
 
 // 구글 광고 SDK 준비 (Expo Go에서는 아무것도 안 함)
 initAds();
+initSfx();
 
 export default function RootLayout() {
   return (

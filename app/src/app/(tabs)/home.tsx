@@ -21,7 +21,7 @@ import { DomainIcon, Icon, TierIcon } from "@/components/Icon";
 type LevelFilter = "0" | "1" | "2" | "3"; // 0 = 전체
 
 export default function Home() {
-  const { prefs, records, active, setActive, gears, updatePrefs, xp, keptDays, freezes, premium, uid } = useApp();
+  const { catalogVersion, prefs, records, active, setActive, gears, updatePrefs, xp, keptDays, freezes, premium, uid } = useApp();
   const lv = userLevel(xp);
   // 처음 설정을 마치고 홈에 처음 오면 사용법 안내
   const [introFirst, doneIntro] = useHomeIntroFirstTime();
@@ -56,8 +56,9 @@ export default function Home() {
 
   // 오늘의 주제는 홈 위 칸에서 따로 보여 주므로 슬롯머신 후보에서 뺌
   const today = new Date().toDateString();
-  const daily = useMemo(() => dailyTopic(uid, prefs.interests), [uid, prefs.interests, today]); // eslint-disable-line react-hooks/exhaustive-deps
+  const daily = useMemo(() => dailyTopic(uid, prefs.interests), [catalogVersion, uid, prefs.interests, today]); // eslint-disable-line react-hooks/exhaustive-deps
   const inScope = useMemo(() => {
+    void catalogVersion; // Invalidate selections when the shared catalog changes.
     const seen = new Set<string>();
     return TOPICS.filter((t) => {
       if (daily && (t.id === daily.id || t.ko === daily.ko)) return false;
@@ -66,7 +67,7 @@ export default function Home() {
       seen.add(t.ko);
       return true;
     });
-  }, [prefs.interests, level, daily]);
+  }, [catalogVersion, prefs.interests, level, daily]);
   const pool = useMemo(
     () => (includeMastered ? inScope : inScope.filter((t) => !mastered.has(t.id) && !mastered.has(t.ko))),
     [inScope, includeMastered, mastered],

@@ -11,7 +11,7 @@ export type IconName =
   | "flame" | "gear" | "shield" | "ticket" | "swords" | "trophy" | "star" | "crown" | "dice" | "book" | "globe"
   | "tree" | "doc" | "door" | "trash" | "offline" | "hourglass" | "bell" | "bolt" | "medal" | "target" | "robot"
   | "books" | "party" | "mail" | "check" | "close" | "slot" | "handshake" | "dizzy" | "nope" | "lock" | "user-plus"
-  | "share" | "clock" | "chart" | "warning" | "calendar" | "chest" | "chest-open" | "play";
+  | "share" | "clock" | "chart" | "warning" | "calendar" | "chest" | "chest-open" | "play" | "kakao";
 
 const NAVY = "#1d2742";
 const NAVY_D = "#0e1424";
@@ -59,6 +59,8 @@ function Gear({ cx = 16, cy = 16, r = 10, fill = GOLD, shade = GOLD_D, hole = PA
 }
 
 const ICONS: Record<IconName, () => ReactNode> = {
+  /** 카카오 로그인 버튼용 말풍선 (단색, color로 칠함) */
+  kakao: () => <Path d="M16 5C9.4 5 4 9.2 4 14.4c0 3.3 2.2 6.2 5.6 7.9l-1.2 4.4c-.1.4.3.7.7.5l5.2-3.4c.6.1 1.1.1 1.7.1 6.6 0 12-4.2 12-9.4S22.6 5 16 5z" fill="currentColor" />,
   play: () => <Path d="M10 6.5v19a1.5 1.5 0 0 0 2.3 1.3l15-9.5a1.5 1.5 0 0 0 0-2.6l-15-9.5A1.5 1.5 0 0 0 10 6.5z" fill="currentColor" />,
   chest: () => (
     <G>

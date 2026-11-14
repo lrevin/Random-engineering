@@ -6,8 +6,8 @@
 - 기준 자료: 첨부 SQL, GitHub `lrevin/Random-engineering`의 `feature/aws-backend` 브랜치 검토 결과
 - 다른 세션의 문서·계획은 참고하지 않음
 - 대상: AWS RDS for MySQL 8.4 LTS
-- 변경 관리: 다음 주 LLM 응답 구조 확정 및 DB 연결 완료까지 초기 SQL을 보완하고, 이후 Flyway 마이그레이션으로 변경 이력을 관리하며 실제 서비스 준비
-- 이 문서는 구조 명세이며, 실행 SQL은 api/mysql/schema-v2.sql, 실제 적용·검증 결과는 docs/JSON_BACKEND_VALIDATION.md와 docs/AUTH_MYSQL_VALIDATION.md에 별도로 기록
+- 변경 관리: Flyway V1(기존 22개 테이블)·V2(자격증 3개 추가)로 이력을 시작한다. 이후 변경은 V3부터 추가하고 공유·적용한 마이그레이션은 수정하지 않는다.
+- 이 문서는 구조 명세이며, 실행 SQL은 api/mysql/migrations/의 버전별 마이그레이션, 실제 적용·검증 결과는 docs/JSON_BACKEND_VALIDATION.md와 docs/AUTH_MYSQL_VALIDATION.md에 별도로 기록
 
 ## 1. 적용 범위와 전제
 
@@ -42,6 +42,10 @@ erDiagram
     auth_sessions ||--o{ refresh_tokens : rotates
     domains ||--o{ categories : contains
     categories ||--o{ topics : groups
+    certificates ||--o{ certificate_subjects : contains
+    certificate_subjects ||--o{ certificate_subject_items : maps
+    categories o|--o{ certificate_subject_items : category
+    topics o|--o{ certificate_subject_items : topic
     topics ||--o{ question_file_topics : indexes
     question_files ||--o{ question_file_topics : contains
     question_files ||--o{ question_file_items : projects
@@ -144,7 +148,7 @@ erDiagram
 |---|---|---|
 | user_id | UUID, PK/FK users | ON DELETE CASCADE |
 | nickname | VARCHAR(20) | 1~20자, 공백만 입력 금지 |
-| interests | JSON | 관심 category ID 배열, 초기에는 JSON 유지 |
+| interests | JSON | 관심 category ID와 certificate ID의 혼합 배열. 활성 ID를 서버가 검증하며 JSON 내부 FK는 없음 |
 | level | TINYINT UNSIGNED | 선호 난이도, 0~3 |
 | study_minutes | SMALLINT UNSIGNED | 1~120 |
 | reminder_enabled | BOOLEAN | CHECK 0 또는 1 |
@@ -198,6 +202,43 @@ erDiagram
 
 - INDEX `(category_id, is_active, difficulty)`. 참조된 주제는 물리 삭제하지 않고 비활성화한다. 초기 배포 전에 기존 앱 코드와 분류 코드를 대조하여 테이블 등록
 - 주제의 기준 학습 수준. 기존 앱의 Topic.lv 값을 저장하며, 1=기초·2=중급·3=심화이다. 해당 주제의 문제는 이 수준에 맞춰 작성·생성한다.
+
+### certificates — 자격증
+
+| 컬럼 | 타입 | NULL | 의미·제약 |
+|---|---|---|---|
+| id | VARCHAR(32), ascii_bin | X | PK. 기존 cert-* ID 유지 |
+| name_ko | VARCHAR(100) | X | 자격증명 |
+| organization | VARCHAR(150) | X | 시행 기관 |
+| description | TEXT | X | 안내 설명 |
+| display_order | SMALLINT UNSIGNED | X | 표시 순서 |
+| is_active | BOOLEAN | X | 기본 TRUE. 신규 선택 가능 여부 |
+| created_at | DATETIME(3) | X | 기본 CURRENT_TIMESTAMP(3) |
+| updated_at | DATETIME(3) | X | 수정 시 자동 갱신 |
+
+### certificate_subjects — 자격증 시험 과목
+
+| 컬럼 | 타입 | NULL | 의미·제약 |
+|---|---|---|---|
+| id | BIGINT UNSIGNED | X | PK, AUTO_INCREMENT |
+| certificate_id | VARCHAR(32), ascii_bin | X | FK → certificates.id, ON DELETE RESTRICT |
+| name_ko | VARCHAR(100) | X | 과목명 |
+| display_order | SMALLINT UNSIGNED | X | 자격증 내 순서, UQ(certificate_id, display_order) |
+
+### certificate_subject_items — 과목별 학습 범위
+
+| 컬럼 | 타입 | NULL | 의미·제약 |
+|---|---|---|---|
+| subject_id | BIGINT UNSIGNED | X | FK → certificate_subjects.id, RESTRICT |
+| position | SMALLINT UNSIGNED | X | 1 이상, PK(subject_id, position) |
+| category_id | VARCHAR(32), ascii_bin | O | FK → categories.id, RESTRICT. 해당 세부분야 전체 학습 |
+| topic_id | VARCHAR(32), ascii_bin | O | FK → topics.id, RESTRICT. 개별 주제 학습 |
+
+category_id와 topic_id는 정확히 하나만 지정한다(CHECK). 같은 과목 내 같은 대상은 UNIQUE로 중복을 막는다. 세부분야 전체 연결과 개별 주제 연결이 겹칠 때 출제 후보는 주제 ID로 중복 제거한다.
+
+기존 cert.ts의 자격증·과목·항목 순서와 ID를 유지한다. 분류와 자격증의 운영 기준은 DB이며, TS는 초기 이전 원본 및 현재 앱의 호환 데이터로만 유지한다. 아직 앱을 DB 카탈로그 조회·캐시 방식으로 전환한 것은 아니다. 자격증 ID는 주제 ID가 아니며 학습 기록의 topic_id에는 실제 학습 주제를 저장한다.
+
+profiles.interests의 JSON 구조는 유지한다. API는 categories 또는 certificates의 활성 ID만 허용하며 자격증 추가로 JSON 내부 FK가 생기는 것은 아니다. API는 세부분야 80개와 자격증 10개를 합쳐 최대 90개까지 허용하며 중복 ID는 거절한다. 비활성화된 기존 선택의 수정 정책은 후속 정리가 필요하다. DB 카탈로그 조회 API·앱 캐시 동기화와 연결 주제의 활성 상태 반영은 후속 구현 항목이다.
 
 ## 5. JSON 문제 원본과 MySQL 직접 적재
 
@@ -634,7 +675,7 @@ AI 작업의 최소 상태·중복 방지 키·사용량 집계는 상세 오류
 | 회원가입·로그인 | users, auth_identities, auth_sessions, refresh_tokens. 지갑 생성 연결 시 wallets를 같은 가입 트랜잭션에서 초기화 |
 | 톱니바퀴 | wallets·wallet_transactions·wallet_operations. 로컬 서버와 후보 앱에 잔액·보호권·복구·시간 연장 연결 |
 | refresh·logout | 세션 단위 잠금·회전·폐기 |
-| 프로필 | profiles, categories 코드 검증 |
+| 프로필 | profiles, categories·certificates 코드 검증 |
 | 문제 은행 조회 | 기본 JSON을 MySQL에 직접 적재하고 questions·question_details·공개 파일 연결로 조회, DB 미설정 시 JSON 모드 지원 |
 | 퀴즈 시작·제출 | quiz_attempts, quiz_attempt_items, study_records |
 | 기록 목록 | 커서 페이지네이션, 전체 조회 상한으로 통계 계산 금지 |
@@ -647,17 +688,15 @@ API JSON camelCase와 DB snake_case 변환은 서버에서 수행. 기존 total 
 
 ## 14. 구축과 마이그레이션
 
-1. MySQL 8.4 테스트 DB에 FK 의존 순서로 생성한다. question_details는 questions 생성 후 만들며 AI 생성 작업 테이블과 직접 FK로 연결하지 않는다.
-2. LLM 응답 구조 확정·DB 연결 완료까지는 초기 생성 SQL을 직접 보완하고, 폐기 가능한 테스트 DB를 재생성하여 검증한다. 2주차 작업 때부터 Flyway 관리를 시작할 계획이며, 전환 시 초기 SQL을 V1__initial_schema.sql로 확정한다. 이후 공유·적용한 파일은 수정하지 않고 V2·V3 등 새 마이그레이션을 추가하며 이력·체크섬으로 관리한다. IF NOT EXISTS는 초기 설치 편의 기능일 뿐 기존 테이블을 변경하는 수단이 아니다.
-3. domains → categories → topics 순서로 적재하고 기존 분야·관심 분야·주제 코드의 대응을 대조한다. categories.domain_id는 원본 분류의 상위 분야 코드에서 매핑하며 고아 참조를 검사한다.
-4. 기존 계정에서 users와 auth_identities 분리. 이메일 정규화 충돌은 자동 병합하지 않고 별도 처리한다.
-5. 기존 기본 문제 JSON 전체를 검증하고, 분류 마스터·question_files·주제 색인·questions/question_details·원본 위치 연결을 MySQL에 직접 적재한다. JSON 원본은 보존하며 중간 변환 JSON은 만들지 않는다. AI 문제 직접 적재는 LLM 전달 구조 확정 후 연결하며, 검수 근거가 없는 문제를 검수 통과로 간주하지 않는다.
-6. 기존 DB 학습 기록이 있으면 현재 구조로 통일시키고 학습 이관·오답 호환 컬럼은 만들지 않는다. 신규 온라인·오프라인 제출을 모두 attempt/items와 연결한다.
-7. 사용자 생성 시 동기화 상태를 초기화하고 각 완료 기록과 award를 원자적으로 생성한다. 같은 요청 재전송으로 중복 지급되지 않는지 검증한다.
-8. 전환 중에는 쓰기 중지 또는 별도로 설계한 이중 쓰기·검증 절차를 사용한다. 구 테이블 제거는 호환 종료 후 수행한다.
-9. 소유권 충돌, 동일 제출 재전송, refresh 동시 요청, 오프라인 메모 보존·재연결 반영·순번 충돌·응답 유실 재시도·전송 중 추가 수정·서버 삭제와의 충돌, AI JSON 중복 수신·저장, 삭제 동기화, 탈퇴, 백업 복구를 검증한다. XP 중복 지급·취소, 표식 만료 후 재전송, 5분·30일·90일 경계, 한국 시각 자정 경계, GitHub RP 공식 예시도 검증한다.
-
-RDS 설정 기준: 퍼블릭 접근 끔, API 보안 그룹만 접속 허용, TLS 강제·인증서 검증, 저장 암호화, 자동 백업, 연결 풀 상한. API·AI 작업자·마이그레이션 계정의 테이블별 권한을 분리한다. API에 ppobgong.* 전체 CRUD를 일괄 부여하지 않는다.
+- 이번부터 Flyway로 변경 이력을 관리한다. V1은 변경 전 22개 테이블, V2는 자격증 3개 테이블 추가다. 이후 변경은 V3__설명.sql부터 추가한다. 공유·적용한 마이그레이션은 덮어쓰지 않는다.
+- 단일 초기 SQL 스냅샷은 사용하지 않는다. 신규 설치와 변경 모두 migrations/를 Flyway로 적용한다.
+- 기존 22개 테이블 DB는 구조가 V1과 일치하는지 확인한 후 baselineVersion=1로 명시적으로 baseline하고 migrate한다. baseline은 구조 차이를 고쳐주지 않는다. 일부 지갑 테이블 등이 없는 DB는 먼저 차이를 조정해야 한다.
+- 신규 빈 DB는 Flyway migrate로 V1→V2를 적용한다. baselineOnMigrate=false를 유지한다.
+- api/mysql에서 Flyway CLI를 실행한다. FLYWAY_URL(jdbc:mysql://호스트:3306/DB), FLYWAY_USER, FLYWAY_PASSWORD는 환경별로 지정한다. Node 서버의 MYSQL_* 환경변수를 Flyway가 자동으로 읽지는 않는다. RDS TLS 설정도 별도로 맞춘다.
+- 기존 DB: flyway baseline → flyway info → flyway migrate → flyway validate. 신규 빈 DB: flyway migrate → flyway validate. 서버 시작만으로 자동 실행되지 않는다.
+- 테이블 준비 후 api/server에서 npm run db:import로 분류·기본 문제를 적재한 다음, node --env-file-if-exists=.env import-certificates.mjs를 실행한다. 자격증 초기 데이터는 seeds/certificates.json에 고정하며 TS를 런타임 검증 기준으로 사용하지 않는다.
+- 자격증 적재는 전체 참조 검증 후 트랜잭션으로 저장한다. 같은 내용은 재사용하고 DB 내용이 달라졌다면 실패한다. 향후 운영 데이터 변경은 새 마이그레이션으로 명시하며 초기 seed를 덮어쓰는 동기화로 처리하지 않는다.
+- MySQL DDL은 전체 트랜잭션 롤백을 기대할 수 없으므로 적용 전 백업·테스트 DB 검증이 필요하다. Flyway 실행은 이번 작업에서 수행하지 않았다.
 
 ## 15. 별도 확정해야 할 정책
 
@@ -693,9 +732,12 @@ RDS 설정 기준: 퍼블릭 접근 끔, API 보안 그룹만 접속 허용, TLS
 
 - 메모 오프라인 동기화: 7장의 로컬 영구 저장·대기 전송·기준 순번 검사·충돌 선택은 이번에 변경한 설계 정책이다. 앱·API 코드는 아직 이 정책에 맞게 수정하지 않았으며 기존 테스트 결과는 이 기능의 검증을 포함하지 않는다.
 
-- 구현·실행 가능: 전체 22개 테이블 초기 SQL(톱니바퀴 3개 포함), 기본 JSON 검증·MySQL 직접 적재·파일 버전 공개 전환, MySQL 문제 조회 API(JSON 모드도 지원), AI 파일 원자적 저장·상한 처리, 앱의 문제 API 연결.
+- 구현·실행 가능: 전체 25개 테이블 초기 SQL(톱니바퀴 3개 포함), 기본 JSON 검증·MySQL 직접 적재·파일 버전 공개 전환, MySQL 문제 조회 API(JSON 모드도 지원), AI 파일 원자적 저장·상한 처리, 앱의 문제 API 연결.
 - 인증 API 구현: users·auth_identities·auth_sessions·refresh_tokens로 이메일 가입·로그인·세션 확인·회전·로그아웃을 처리한다. 비밀번호는 BCrypt 비용 12, Access Token은 HS256 JWT 15분, 세션은 연장 없는 30일이며 Refresh Token 원문은 DB에 저장하지 않는다. 가입 시 user_sync_states도 초기화한다.
 - 후속 업무 API: 프로필·회원 탈퇴·퀴즈 시도·답안·학습 기록·XP 계산·동기화·정리 작업. 해당 테이블 생성과 SQL 테스트 통과를 API 완성으로 간주하지 않는다.
-- 앱 연결: EXPO_PUBLIC_API_URL이 있으면 이메일 인증·로그인 유지·문제 조회는 MySQL API를 사용한다. 이 모드의 프로필·기록은 기기에만 보관하고 Supabase로 전송하지 않는다. 로그아웃 시 기기 내 계정별 보관본을 남기며 동일 계정 재로그인 시 복원한다. 기존 Supabase 계정·기록의 자동 이전은 하지 않는다. API URL이 없으면 기존 Supabase 경로를 유지한다.
-- DDL: api/mysql/schema-v2.sql이 현재 전체 초기 스키마다. 기존 schema.sql·question-files.sql은 이전 초안으로 함께 실행하지 않는다. 사용자 생성 DB ppobgong의 MySQL 8.0.46에서 19개 테이블 생성·기본 문제 5,520개 적재·통합 테스트를 수행했다. MySQL 8.4·RDS 적용은 별도 검증 대상이며 Flyway 전환 전까지 초기 SQL을 보완한다.
+- 앱 연결: EXPO_PUBLIC_API_URL은 필수이며 실제 앱은 MySQL API 전용이다. 인증·프로필·학습 기록 동기화를 지원한다. 기존 외부 인증 계정·기록을 자동 이전하지 않는다.
+- DDL: migrations/V1__initial_schema.sql과 V2__add_certificates.sql이 실행 기준이다. db:setup은 새 DB 생성 후 Flyway migrate·validate를 수행한다. 후속 변경은 새 버전으로 추가하며 운영 DB는 별도 검증 후 적용한다.
 - 모든 정책을 구현 완료로 간주하지 않는다. 다른 프로젝트 세션은 조회하지 않았다.
+### 자격증 추가의 로컬 재검증 (2026-11-12)
+
+Flyway OSS 13.12.1 신규 migrate 및 V1 baseline 후 V2 migrate·validate를 임시 MySQL에서 실행했다. 최신 SQL 직접 생성과 25개 업무 테이블 정의가 일치하며 자격증 10개·과목 42개·연결 538건과 회귀 테스트 63개를 확인했다. 실제 설정 DB는 21개 테이블(wallet_operations 없음)이므로 V1과 구조를 맞추기 전 baseline하지 않는다. 서비스 DB는 변경하지 않았다. 상세 결과는 docs/mysql-validation/CERTIFICATE_DB_VALIDATION.md를 참고한다. 앱의 DB 자격증 목록 조회·캐시 전환은 후속 작업이다.

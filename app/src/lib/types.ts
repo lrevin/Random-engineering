@@ -9,6 +9,21 @@ export interface WrongAnswer {
 }
 
 export interface StudyRecord {
+  studyType?: "study" | "battle";
+  battleId?: string | null;
+  rankScore?: number | null;
+  countsAsStudy?: boolean;
+  devOnly?: boolean;
+  attemptId?: string;
+  items?: {question: QuizQuestion; answer: number | boolean | null; stage?: "main" | "overtime"}[];
+  changeSeq?: string;
+  verificationStatus?: "client_reported" | "server_verified";
+  xpParts?: RpPart[];
+  streak?: number;
+  syncError?: string;
+  memoPending?: {version: string; baseChangeSeq?: string};
+  memoConflict?: {memo: string; changeSeq: string};
+
   id: string;
   topicId: string;
   topicKo: string;

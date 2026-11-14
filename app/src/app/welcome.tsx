@@ -1,4 +1,6 @@
 import { router } from "expo-router";
+import { useState } from "react";
+import { KakaoButton } from "@/components/KakaoButton";
 import { Image, useColorScheme, useWindowDimensions, View } from "react-native";
 import { Btn, Card, Screen, T } from "@/components/ui";
 import { APP_NAME, APP_SUBTITLE, APP_TAGLINE } from "@/config";
@@ -17,6 +19,7 @@ export default function Welcome() {
   const { startGuest } = useApp();
   const c = useColors();
   const dark = useColorScheme() === "dark";
+  const [err, setErr] = useState("");
   return (
     <Screen contentStyle={{ justifyContent: "space-between" }}>
       <View style={{ gap: 10, marginTop: 40 }}>
@@ -50,9 +53,14 @@ export default function Welcome() {
       </Card>
 
       <View style={{ gap: 10 }}>
+        <KakaoButton label="카카오로 시작하기" onError={setErr} />
+        {err ? <T color="accent" center>{err}</T> : null}
         <Btn title="이메일로 시작하기" variant="accent" size="lg" onPress={() => router.push("/signup")} />
         <Btn title="이미 계정이 있어요" size="lg" onPress={() => router.push("/login")} />
         <Btn title="로그인 없이 둘러보기" variant="ghost" onPress={startGuest} />
+        <T size={11} color="muted" center>
+          카카오로 시작하면 만 14세 이상이며 이용약관과 개인정보 수집·이용에 동의한 것으로 봐요.
+        </T>
       </View>
     </Screen>
   );

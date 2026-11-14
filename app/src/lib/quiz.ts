@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { TOPICS, type Topic } from "@/data";
 import { BANK_BUNDLED_FULL, QUIZ_BANK } from "@/data/quizbank";
-import { supabase } from "./supabase";
+import { fetchBankQuestions } from "./api";
 
 /** 문제마다 어디서 왔는지: bank = 우리가 미리 만든 문제 · ai = 퀴즈 AI가 새로 만든 문제 · offline = 앱 데이터로 만든 연습 문제 */
 export type QuestionSource = "bank" | "ai" | "offline";
@@ -24,7 +24,7 @@ export interface QuizSet {
 export const QUIZ_LENGTH = 7;
 export const AI_COUNT = 4;
 
-/** 퀴즈 AI 서버 (api/quiz-server). 개인 PC 등에서 계속 켜 두는 출제 AI. 없으면 Supabase 함수 → 오프라인 문제 */
+/** 퀴즈 AI 서버 (api/quiz-server). 개인 PC 등에서 계속 켜 두는 출제 AI. 실패하면 저장된 AI 문제·기본 문제·대체 연습 문제 사용 */
 const QUIZ_SERVER_URL = (process.env.EXPO_PUBLIC_QUIZ_SERVER_URL ?? "").replace(/\/+$/, "");
 const QUIZ_SERVER_TOKEN = process.env.EXPO_PUBLIC_QUIZ_SERVER_TOKEN ?? "";
 // 새로 만들기 + 검수 2번까지 기다리는 시간 (공부 시작을 누른 즉시 시작하므로 보통 공부하는 동안 끝남)
@@ -194,7 +194,7 @@ async function postJson(url: string, body: unknown): Promise<unknown> {
 /**
  * 퀴즈 AI에게 새 문제를 받아 옴. 미리 만든 문제(avoid)를 함께 보내서 비슷하지 않은 새 유형으로 만들게 함.
  * fresh면 그 자리에서 새로 만들고 2번 검수한 문제를 받음 (공부 시작을 누른 즉시). 서버는 검수를 통과한 문제만 줌.
- * 1) 퀴즈 AI 서버 → 2) Supabase 함수 → 실패하면 빈 배열
+ * 별도 퀴즈 AI 서버를 호출하며 실패하면 빈 배열을 반환해 캐시·기본 문제로 보충
  */
 async function fetchAiQuestions(topic: Topic, avoid: QuizQuestion[], fresh: boolean, count = AI_COUNT): Promise<QuizQuestion[]> {
   const body = { topicId: topic.id, count, avoid: avoid.map((q) => q.q).slice(0, 40), fresh };
@@ -205,15 +205,6 @@ async function fetchAiQuestions(topic: Topic, avoid: QuizQuestion[], fresh: bool
       if (qs.length) return qs;
     } catch {
       // 서버가 꺼져 있으면 다음 방법으로
-    }
-  }
-  if (supabase) {
-    try {
-      const { data, error } = await supabase.functions.invoke("generate-quiz", { body });
-      const qs = validQuestions((data as { questions?: unknown } | null)?.questions);
-      if (!error && qs.length) return qs;
-    } catch {
-      // 네트워크 오류
     }
   }
   return [];
@@ -234,15 +225,12 @@ async function saveAiCache(topicId: string, qs: QuizQuestion[]) {
   AsyncStorage.setItem(aiCacheKey(topicId), JSON.stringify(merged)).catch(() => {});
 }
 
-// ───────── 미리 만든 문제 은행: 앱에 든 것 + 서버 quiz_bank 표 ─────────
-const bankCacheKey = (id: string) => `pg.bank.${id}`;
-const BANK_CACHE_MS = 7 * 24 * 60 * 60 * 1000; // 문제 은행이 늘어나면 1주일 뒤 다시 받음
+// ───────── MySQL 기본 문제 조회 및 기기 캐시 ─────────
+const bankCacheKey = (id: string) => `pg.mysql.bank.${id}`;
+const BANK_CACHE_MS = 7 * 24 * 60 * 60 * 1000;
 
-/**
- * 이 주제의 미리 만든 문제. 앱에 일부만 들어 있으면(BANK_BUNDLED_FULL=false) 서버에서 그 주제 한 줄만 받아
- * 휴대폰에 저장해 두고, 서버에 못 닿으면 저장해 둔 것이나 앱에 든 문제만 씀.
- */
-async function bankQuestions(topicId: string): Promise<QuizQuestion[]> {
+/** 기본 문제 은행 전체를 앱에 포함한다. 부분 내장 빌드에서만 서버·캐시로 보완한다. */
+export async function bankQuestions(topicId: string): Promise<QuizQuestion[]> {
   const bundled = validQuestions(QUIZ_BANK[topicId]);
   if (BANK_BUNDLED_FULL) return bundled;
   let cached: QuizQuestion[] = [];
@@ -250,23 +238,13 @@ async function bankQuestions(topicId: string): Promise<QuizQuestion[]> {
     const raw = await AsyncStorage.getItem(bankCacheKey(topicId));
     const c = raw ? (JSON.parse(raw) as { at?: number; qs?: unknown }) : null;
     cached = validQuestions(c?.qs);
-    if (cached.length && Date.now() - (c?.at ?? 0) < BANK_CACHE_MS) return [...cached, ...bundled];
-  } catch {
-    // 저장된 게 깨졌으면 새로 받음
-  }
-  if (supabase) {
-    try {
-      const { data, error } = await supabase.from("quiz_bank").select("questions").eq("topic_id", topicId).maybeSingle();
-      const qs = validQuestions((data as { questions?: unknown } | null)?.questions);
-      if (!error && qs.length) {
-        AsyncStorage.setItem(bankCacheKey(topicId), JSON.stringify({ at: Date.now(), qs })).catch(() => {});
-        return [...qs, ...bundled];
-      }
-    } catch {
-      // 오프라인
-    }
-  }
-  return [...cached, ...bundled];
+    if (cached.length && Date.now() - (c?.at ?? 0) < BANK_CACHE_MS) return cached;
+  } catch { /* 손상된 캐시는 서버에서 다시 받음 */ }
+  try {
+    const qs = validQuestions(await fetchBankQuestions(topicId));
+    await AsyncStorage.setItem(bankCacheKey(topicId), JSON.stringify({ at: Date.now(), qs }));
+    return qs;
+  } catch { return cached.length ? cached : bundled; }
 }
 
 // ───────── 한 번 풀 퀴즈 만들기 ─────────

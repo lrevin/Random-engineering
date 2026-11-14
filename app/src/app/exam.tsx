@@ -50,7 +50,7 @@ export default function Exam() {
   const canStart = premium || left > 0 || tickets > 0;
 
   const buyTicket = async () => {
-    if (tickets >= MAX_EXAM_TICKETS || !spendGears(EXAM_TICKET_COST)) return;
+    if (tickets >= MAX_EXAM_TICKETS || !await spendGears(EXAM_TICKET_COST)) return;
     setStore(await addExamTicket());
     setNotice("");
   };

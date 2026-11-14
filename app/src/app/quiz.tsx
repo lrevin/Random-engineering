@@ -10,6 +10,7 @@ import { confirmQuit } from "@/lib/confirm";
 import { loadQuiz, type QuizQuestion } from "@/lib/quiz";
 import { boostActive } from "@/lib/booster";
 import { calcRp, domainMastery, userLevel } from "@/lib/rank";
+import { sfx } from "@/lib/sfx";
 import { calcStreak } from "@/lib/stats";
 import type { WrongAnswer } from "@/lib/types";
 import { radius, raised, shadow, useColors } from "@/theme";
@@ -91,14 +92,15 @@ function QuizInner() {
     const topicBefore = domainMastery(topic.domain, records);
     const rec = await addRecord({
       topicId: topic.id, topicKo: topic.ko, domain: topic.domain, category: topic.category, level: topic.level,
+      items: quiz.questions.map((question,i)=>({question,answer:answers[i]??null})),
       memo: a.memo, score, total, rp: rp.total, wrong, studySec: a.quizOnly ? 0 : a.studyUsed, quizSource: quiz.source,
     });
     const topicAfter = domainMastery(topic.domain, [...records, rec]);
     setActive((x) => x ? {
       ...x, stage: "result", quiz: { ...quiz, answers },
       result: {
-        recordId: rec.id, score, total, rp: rp.total, parts: rp.parts, streak,
-        userLevelBefore: userLevel(rpBefore).level, userLevelAfter: userLevel(rpBefore + rp.total).level,
+        recordId: rec.id, score, total, rp: rec.rp, parts: rec.xpParts ?? rp.parts, streak: rec.streak ?? streak,
+        userLevelBefore: userLevel(rpBefore).level, userLevelAfter: userLevel(rpBefore + rec.rp).level,
         topicTierBefore: topicBefore.index, topicTierAfter: topicAfter.index,
       },
     } : x);
@@ -135,6 +137,7 @@ export function QuestionView({ q, index, count, topicName, badges, saving, onQui
   const choose = (v: number | boolean) => {
     if (answered) return;
     setPicked(v);
+    sfx(v === q.answer ? "correct" : "wrong");
     if (Platform.OS !== "web") {
       Haptics.notificationAsync(v === q.answer ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Error).catch(() => {});
     }

@@ -9,12 +9,13 @@ import { inInterests, interestName, TOPICS } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { FREE_MAX_STUDY_MIN, PREMIUM_MAX_STUDY_MIN, studyMinutesFor } from "@/lib/economy";
 import { notificationsSupported, requestNotificationPermission } from "@/lib/notify";
-import { authErrorMessage } from "@/lib/supabase";
+import { authErrorMessage } from "@/lib/auth";
 import { radius, raised, shadow, useColors } from "@/theme";
 import { Icon, type IconName } from "@/components/Icon";
 import { RankUp, type RankUpScene } from "@/components/RankUp";
 import { HomeIntro } from "@/components/HomeIntro";
 import { userLevel } from "@/lib/rank";
+import { setSfxEnabled, sfx, sfxEnabled } from "@/lib/sfx";
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -111,6 +112,7 @@ export default function Settings() {
   const c = useColors();
   const [nick, setNick] = useState(prefs.nickname);
   const [notice, setNotice] = useState("");
+  const [sound, setSound] = useState(sfxEnabled());
   const [rankUpPreview, setRankUpPreview] = useState<RankUpScene[]>([]);
   const [intro, setIntro] = useState(false);
 
@@ -213,6 +215,15 @@ export default function Settings() {
         <Item icon="hourglass" label="공부 시간" sub={premium ? `최대 ${PREMIUM_MAX_STUDY_MIN}분` : `무료는 최대 ${FREE_MAX_STUDY_MIN}분`} right={<Minutes value={studyMinutesFor(prefs.studyMinutes, premium)} min={1} max={premium ? PREMIUM_MAX_STUDY_MIN : FREE_MAX_STUDY_MIN} onChange={(v) => updatePrefs({ studyMinutes: v })} />} last />
       </Section>
 
+      <Section title="소리">
+        <Item
+          label="효과음"
+          sub="슬롯머신 · 퀴즈 · 배틀 · 보상 (무음 모드에서는 나지 않아요)"
+          right={<Switch value={sound} onValueChange={(on) => { setSound(on); setSfxEnabled(on); if (on) sfx("correct"); }} trackColor={{ true: c.accent, false: c.line2 }} thumbColor={c.paper} />}
+          last
+        />
+      </Section>
+
       <Section title="매일 알림">
         <Item
           icon="bell"
@@ -234,6 +245,7 @@ export default function Settings() {
         <Section title="개발용 (출시 빌드에서는 안 보임)">
           <Item label="연속 기록 복구 창 미리 보기" sub="어제·그제를 빠진 날로 보고 창을 띄워요" onPress={devPreviewRescue} />
           <Item label="시험 기록 넣기" sub="어제까지 7일 연속 공부한 기록 7개 (관심 분야 주제)" onPress={() => {
+            if(mode!=="guest"){setNotice("시험 기록은 게스트 모드에서만 만들 수 있어요.");return;}
             const ids = TOPICS.filter((t) => inInterests(t, prefs.interests)).slice(0, 7).map((t) => t.id);
             devSeedRecords(ids);
             setNotice(`시험 기록 ${ids.length}개를 넣었어요`);
@@ -262,7 +274,7 @@ export default function Settings() {
           onPress={() =>
             confirm(
               mode === "user" ? "회원 탈퇴" : "데이터 지우기",
-              mode === "user" ? "계정과 모든 공부 기록이 영구 삭제되고 되돌릴 수 없어요." : "이 휴대폰의 기록과 설정이 모두 지워져요.",
+              mode === "user" ? "즉시 이용이 중지되고 7일 후 서버 데이터가 삭제돼요. 7일 이내 로그인 화면에서 취소할 수 있어요. 이 기기의 데이터는 신청 후 지워져요." : "이 휴대폰의 기록과 설정이 모두 지워져요.",
               mode === "user" ? "탈퇴하기" : "지우기",
               () => deleteAccount().catch((e) => setNotice(authErrorMessage(e))),
             )

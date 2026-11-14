@@ -67,8 +67,8 @@ export default function Skins() {
   useEffect(() => { readExamStore().then((s) => setExtra({ exams: s.results })); }, []);
   const ach = useMemo(() => achievements(records, xp, keptDays, extra), [records, xp, keptDays, extra]);
 
-  const buy = (s: SlotSkin) => {
-    if (owned.includes(s.id) || !inSeason(s) || !spendGears(s.price)) return;
+  const buy = async (s: SlotSkin) => {
+    if (owned.includes(s.id) || !inSeason(s) || !await spendGears(s.price)) return;
     addSkin(s.id);
     setNotice(`${s.name} 스킨을 사서 바로 적용했어요`);
   };
@@ -83,8 +83,8 @@ export default function Skins() {
     const src = t.source;
     return src.kind === "achievement" && (ach.find((a) => a.id === src.id)?.stage ?? 0) >= src.stage;
   };
-  const buyTitle = (t: TitleDef) => {
-    if (t.source.kind !== "season" || !titleInSeason(t) || !spendGears(t.source.price)) return;
+  const buyTitle = async (t: TitleDef) => {
+    if (t.source.kind !== "season" || !titleInSeason(t) || !await spendGears(t.source.price)) return;
     addTitle(t.id);
     applyTitle(t.id);
     setNotice(`칭호 "${t.name}"을 사서 바로 달았어요`);
