@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Animated, Easing, PanResponder, Text, View } from "react-native";
-import { scheduleReelTicks, sfx } from "@/lib/sfx";
+import { sfx } from "@/lib/sfx";
 import { useSkins } from "@/lib/skins";
 import { radius, shadow, useColors } from "@/theme";
 import { FONT, tap } from "./ui";
@@ -175,19 +175,18 @@ export function SlotReel({ names, duration = 2300, onDone }: { names: string[]; 
     if (!h) return;
     y.setValue(startY);
     const ease = Easing.bezier(0.12, 0.7, 0.3, 1);
-    // 이름 한 칸 지날 때마다 딸깍 (애니메이션과 같은 곡선)
-    const stopTicks = scheduleReelTicks(names.length - 1, duration, ease);
+    // 진짜 슬롯머신처럼 릴이 드르르르 돌다가 철컥 멈추는 소리 (애니메이션과 같은 2.3초 감속 곡선으로 만든 파일)
+    sfx("slot_spin");
     const anim = Animated.sequence([
       Animated.timing(y, { toValue: center + 16, duration, easing: ease, useNativeDriver: true }),
       Animated.spring(y, { toValue: center, friction: 5, tension: 160, useNativeDriver: true }),
     ]);
-    const stop = setTimeout(() => sfx("reel_stop"), duration);
     anim.start(({ finished }) => {
       if (!finished) return;
       sfx("slot_win");
       onDone();
     });
-    return () => { anim.stop(); stopTicks(); clearTimeout(stop); };
+    return () => { anim.stop(); };
     // 한 번만 돌림 (돌 때마다 부모가 key를 바꿔 새로 만듦)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [h]);

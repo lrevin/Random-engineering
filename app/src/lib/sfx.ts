@@ -11,6 +11,8 @@ const FILES = {
   lever: require("../../assets/sfx/lever.wav"),
   reel: require("../../assets/sfx/reel.wav"),
   reel_stop: require("../../assets/sfx/reel_stop.wav"),
+  /** 릴 회전 한 판 (2.3초 감속 + 철컥): 슬롯 애니메이션과 같은 곡선으로 만든 소리 */
+  slot_spin: require("../../assets/sfx/slot_spin.wav"),
   slot_win: require("../../assets/sfx/slot_win.wav"),
   match: require("../../assets/sfx/match.wav"),
   count: require("../../assets/sfx/count.wav"),
@@ -52,7 +54,7 @@ export async function initSfx() {
   ready = true;
   try { enabled = (await AsyncStorage.getItem(KEY)) !== "off"; } catch { /* 기본 켬 */ }
   try { await setAudioModeAsync({ playsInSilentMode: false, interruptionMode: "mixWithOthers" }); } catch { /* 기본 모드 */ }
-  for (const n of ["lever", "reel", "reel_stop", "correct", "wrong"] as SfxName[]) { try { player(n); } catch { /* 나중에 */ } }
+  for (const n of ["lever", "slot_spin", "slot_win", "correct", "wrong"] as SfxName[]) { try { player(n); } catch { /* 나중에 */ } }
 }
 
 export function sfx(name: SfxName, volume = 1) {
