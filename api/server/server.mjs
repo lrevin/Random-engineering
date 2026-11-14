@@ -12,17 +12,20 @@ import { createReadPool, safeError } from './db.mjs';
 import { databaseStore } from './db-store.mjs';
 import { createAuth } from './auth.mjs';
 import { authRoutes } from './auth-http.mjs';
+import { kakaoRoutes } from './kakao.mjs';
 import { createAccountService } from '../mysql/account-service.mjs';
 import { accountRoutes } from '../mysql/account-http.mjs';
 import { createRecordService } from '../mysql/record-service.mjs';
 import { recordRoutes } from '../mysql/record-http.mjs';
 
-export function createServer({ topics = loadTopics(), bank, store, auth, authLimits, battleService, battleSweep=true } = {}) {
+export function createServer({ topics = loadTopics(), bank, store, auth, authLimits, battleService, battleSweep=true, kakao } = {}) {
   const battles=auth?(battleService??createBattleService({auth})):null;
   const handleBattle=battles?battleRoutes(battles):null;
   const handleSpeed=auth ? speedRoutes(createSpeedService({auth})) : null;
   const handleMember=auth ? memberRoutes(createMemberService({auth})) : null;
   const handleAuth=auth ? authRoutes(auth,{limits:authLimits}) : null;
+  // 카카오 로그인: KAKAO_REST_API_KEY, KAKAO_REDIRECT_URI 환경변수가 있을 때만 켜짐
+  const handleKakao=auth ? kakaoRoutes(auth,kakao) : null;
   const handleAccount=auth ? accountRoutes(createAccountService({auth})) : null;
   const handleRecords=auth ? recordRoutes(createRecordService({auth})) : null;
   if (!store) {
@@ -49,10 +52,11 @@ export function createServer({ topics = loadTopics(), bank, store, auth, authLim
     if(handleBattle && await handleBattle(req,pathname,send)) return;
     if(handleSpeed && await handleSpeed(req,pathname,send)) return;
     if(handleMember && await handleMember(req,pathname,send)) return;
+    if(handleKakao && await handleKakao(req,pathname,send)) return;
     if(handleAuth && await handleAuth(req,pathname,send)) return;
     if(handleAccount && await handleAccount(req,pathname,send)) return;
     if(handleRecords && await handleRecords(req,pathname,send)) return;
-    if (req.method === 'GET' && pathname === '/health') return send(200, {...await store.health(),auth:auth?'mysql':'not_implemented',profile:auth?'mysql':'not_implemented',accountDeletion:auth?'mysql':'not_implemented',records:auth?'mysql':'not_implemented'});
+    if (req.method === 'GET' && pathname === '/health') return send(200, {...await store.health(),auth:auth?'mysql':'not_implemented',profile:auth?'mysql':'not_implemented',accountDeletion:auth?'mysql':'not_implemented',records:auth?'mysql':'not_implemented',kakao:!!handleKakao});
     if(req.method==='GET' && pathname==='/catalog' && store.catalog){const data=await store.catalog();const etag=`"${hash(data)}"`;if(req.headers['if-none-match']===etag)return send(304,undefined,{ETag:etag});return send(200,{...data,version:hash(data)},{ETag:etag});}
     const match = /^\/quiz-bank\/([a-z0-9-]{1,32})$/.exec(pathname);
     if (req.method !== 'GET' || !match) return send(404, { error: 'not_found' });

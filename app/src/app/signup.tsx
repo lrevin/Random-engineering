@@ -6,6 +6,7 @@ import { useApp } from "@/lib/app-state";
 import { authErrorMessage } from "@/lib/auth";
 import { radius, shadow, useColors } from "@/theme";
 import { Icon } from "@/components/Icon";
+import { KakaoButton } from "@/components/KakaoButton";
 
 function Check({ checked, onToggle, label, onOpen }: { checked: boolean; onToggle: () => void; label: string; onOpen?: () => void }) {
   const c = useColors();
@@ -94,6 +95,12 @@ export default function Signup() {
 
         {err ? <T color="accent">{err}</T> : null}
         <Btn title="가입하기" variant="accent" size="lg" onPress={submit} loading={busy} />
+        <T size={13} color="muted" center>또는</T>
+        <KakaoButton
+          label="카카오로 가입하기"
+          onError={setErr}
+          guard={() => { if (allAgreed) return true; setErr("필수 항목에 모두 동의해 주세요."); return false; }}
+        />
         <View style={{ alignItems: "center" }}>
           <Btn title="이미 계정이 있어요 → 로그인" variant="ghost" onPress={() => router.replace("/login")} />
         </View>

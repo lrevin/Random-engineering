@@ -11,6 +11,7 @@ import { resetSkins } from "./skins";
 import { dateKey } from "./stats";
 import { cancelAllNotifications, rescheduleReminders } from "./notify";
 import { mysqlAuth } from "./auth";
+import { kakaoSignIn } from "./kakao-login";
 import { AuthApiError, type AuthSession, type WalletState } from "./auth-client";
 import { enqueueRecordOperation, syncMySqlRecords } from "./record-sync";
 import { DEFAULT_PREFS, type ActiveSession, type Prefs, type StudyRecord } from "./types";
@@ -113,6 +114,7 @@ interface AppStateValue {
   startGuest(): Promise<void>;
   signUp(email: string, password: string): Promise<{ needsConfirm: boolean }>;
   signIn(email: string, password: string): Promise<void>;
+  signInKakao(): Promise<boolean>;
   signOut(): Promise<void>;
   cancelDeletion(email: string, password: string): Promise<void>;
   refreshRecords(): Promise<void>;
@@ -519,6 +521,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await loadApiAccount(await mysqlAuth.signIn(email, password));
   }, [loadApiAccount]);
 
+  /** 카카오 로그인 (처음이면 계정이 새로 생기고 처음 설정 화면으로). 취소하면 false */
+  const signInKakao = useCallback(async () => {
+    const s = await kakaoSignIn();
+    if (!s) return false;
+    await loadApiAccount(s);
+    return true;
+  }, [loadApiAccount]);
+
   const signOut = useCallback(async () => {
     await archiveApiAccount();
     try { await mysqlAuth.signOut(); } catch { /* Clear local login even when offline. */ }
@@ -781,11 +791,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     catalogVersion, prefs, onboarded, records, active, gears, spendGears, walletNotice,
     xp, freezes, keptDays, buyFreeze, rescue, restoreStreak, dismissRescue, devPreviewRescue, devSeedRecords,
     premium, setPremium, purchasePremium, battleTickets: premium ? Infinity : (mode === "user" ? tickets : refillTickets(tickets)).n + ((mode === "user" ? tickets : refillTickets(tickets)).bought ?? 0), freeTickets: (mode === "user" ? tickets : refillTickets(tickets)).n, boughtTickets: (mode === "user" ? tickets : refillTickets(tickets)).bought ?? 0, buyBattleTicket, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid, questClaims, claimQuest, adViewsToday: adViews.day === dateKey(new Date()) ? adViews.n : 0, grantAdReward,
-    startGuest, signUp, signIn, signOut, cancelDeletion, refreshRecords, refreshWallet, refreshSpeedXp, updateRecordMemo, deleteAccount, updatePrefs, setActive, addRecord, removeRecord,
+    startGuest, signUp, signIn, signInKakao, signOut, cancelDeletion, refreshRecords, refreshWallet, refreshSpeedXp, updateRecordMemo, deleteAccount, updatePrefs, setActive, addRecord, removeRecord,
   }), [catalogVersion, ready, mode, apiSession, prefs, onboarded, records, active, gears, spendGears, walletNotice,
     xp, freezes, keptDays, buyFreeze, rescue, restoreStreak, dismissRescue, devPreviewRescue, devSeedRecords,
     premium, setPremium, purchasePremium, tickets, buyBattleTicket, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid, questClaims, claimQuest, adViews, grantAdReward,
-    startGuest, signUp, signIn, signOut, cancelDeletion, refreshRecords, refreshWallet, refreshSpeedXp, updateRecordMemo, deleteAccount, updatePrefs, setActive, addRecord, removeRecord]);
+    startGuest, signUp, signIn, signInKakao, signOut, cancelDeletion, refreshRecords, refreshWallet, refreshSpeedXp, updateRecordMemo, deleteAccount, updatePrefs, setActive, addRecord, removeRecord]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

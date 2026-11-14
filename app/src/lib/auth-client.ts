@@ -132,6 +132,11 @@ export function createAuthClient(url: string, storage: SessionStorage, fetcher: 
       const version = ++epoch, next = parse(await request("/auth/login", { email, password }));
       await commit(next, version); return next;
     },
+    /** 카카오 로그인: 서버가 돌려준 일회용 코드 + 앱이 만든 verifier로 세션을 받음 */
+    async kakaoExchange(code: string, verifier: string) {
+      const version = ++epoch, next = parse(await request("/auth/kakao/exchange", { code, verifier }));
+      await commit(next, version); return next;
+    },
     async signUp(email: string, password: string) {
       const version = ++epoch, next = parse(await request("/auth/signup", { email, password }));
       await commit(next, version); return next;

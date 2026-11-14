@@ -23,6 +23,9 @@ export function authErrorMessage(error: unknown) {
     invalid_interests: "존재하는 관심 분야를 선택해 주세요.",
     account_deleting: "탈퇴 신청 중인 계정이에요. 7일 이내에는 아래에서 취소할 수 있어요.",
     deletion_period_expired: "탈퇴 신청 후 7일이 지나 취소할 수 없어요.",
+    kakao_failed: "카카오 로그인에 실패했어요. 잠시 후 다시 시도해 주세요.",
+    kakao_unavailable: "카카오 로그인이 아직 준비되지 않았어요.",
+    expired: "로그인 시간이 지났어요. 다시 시도해 주세요.",
     feature_not_migrated: "이 계정의 회원 탈퇴 기능은 아직 연결되지 않았어요.",
   };
   return messages[error.code] ?? "처리하지 못했어요. 잠시 후 다시 시도해 주세요.";

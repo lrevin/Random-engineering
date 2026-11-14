@@ -2,6 +2,7 @@ import { AuthApiError } from "@/lib/auth-client";
 import { router } from "expo-router";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, View } from "react-native";
+import { KakaoButton } from "@/components/KakaoButton";
 import { Btn, Field, Screen, T } from "@/components/ui";
 import { useApp } from "@/lib/app-state";
 import { authErrorMessage } from "@/lib/auth";
@@ -38,6 +39,8 @@ export default function Login() {
         {err ? <T color="accent">{err}</T> : null}
         <Btn title="로그인" variant="primary" size="lg" onPress={() => submit()} loading={busy} />
         {pendingDeletion && <Btn title="탈퇴 신청 취소 후 로그인" variant="ghost" onPress={() => submit(true)} loading={busy} />}
+        <T size={13} color="muted" center>또는</T>
+        <KakaoButton onError={setErr} />
         <View style={{ alignItems: "center", gap: 4 }}>
           <Btn title="처음이에요 → 회원가입" variant="ghost" onPress={() => router.replace("/signup")} />
           <Btn title="닫기" variant="ghost" size="sm" onPress={() => router.back()} />

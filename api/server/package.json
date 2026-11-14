@@ -7,7 +7,7 @@
   },
   "scripts": {
     "start": "node --env-file-if-exists=.env server.mjs",
-    "test": "node --test test.mjs ../mysql/migrate.test.mjs",
+    "test": "node --test test.mjs kakao-test.mjs ../mysql/migrate.test.mjs",
     "validate": "node export.mjs --check",
     "db:setup": "node --env-file-if-exists=.env setup-db.mjs",
     "db:import": "node --env-file-if-exists=.env import-bank.mjs",
