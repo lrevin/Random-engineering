@@ -65,7 +65,7 @@ test('MySQL authentication HTTP and app login persistence',async t=>{
   });
   await t.test('duplicate signup, invalid fields, 72-byte bcrypt boundary',async()=>{
     assert.equal((await post('signup',{email:original.user.email,password:pass})).status,409);
-    for(const password of ['abcdefgh','Abcdefgh','Short1!',`Aa1!${'한'.repeat(24)}`]) {
+    for(const password of ['Short1!','abcdefg',`${'한'.repeat(25)}`]) { // 8자 미만, 72바이트 초과
       const r=await post('signup',{email:`${prefix}-weak@example.com`,password});assert.equal(r.status,400);assert.equal(r.data.error,'weak_password');
     }
     assert.equal((await post('signup',{email:'bad address',password:pass})).status,400);

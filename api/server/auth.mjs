@@ -19,7 +19,8 @@ export function normalizeEmail(value) {
 }
 function password(value, signup=false) {
   if (typeof value!=='string' || Buffer.byteLength(value,'utf8')>72 || !value) throw new AuthError(signup?'weak_password':'invalid_credentials',signup?400:401);
-  if (signup && (value.length<8 || !/[A-Z]/.test(value) || !/[a-z]/.test(value) || !/[0-9]/.test(value) || !/[^a-zA-Z0-9\s]/.test(value))) throw new AuthError('weak_password');
+  // 가입 규칙: 8자 이상이면 됨 (대문자·특수문자 강제 없음). 72바이트 상한은 bcrypt 제한이라 위에서 유지
+  if (signup && [...value].length<8) throw new AuthError('weak_password');
   return value;
 }
 function refreshToken(value) {

@@ -109,7 +109,7 @@ erDiagram
 - UNIQUE `(provider, provider_subject)`와 `(user_id, provider)`: 제공자 계정의 중복 연결을 막고 사용자당 제공자별 로그인 수단을 하나만 허용한다.
 - CHECK: provider는 email / kakao / apple만 허용하며 email은 email·password_hash 필수, kakao/apple은 password_hash=NULL이다. email의 provider_subject와 email 일치는 서버에서 검사한다.
 - 이메일 정규화는 앞뒤 공백 제거·전체 소문자 변환으로 통일하고 내부 공백·잘못된 형식은 거절한다. 점·+tag는 제거하지 않으며 가입·로그인·재설정에서 같은 함수를 사용한다. 소셜 고유 ID에는 적용하지 않는다.
-- 비밀번호는 영문 대문자·소문자·숫자·특수문자를 모두 포함하여 8자 이상이며 BCrypt 입력 제한에 맞춰 UTF-8 기준 72바이트 이하로 제한한다. 원문은 저장·로그 출력하지 않는다.
+- 비밀번호는 8자 이상(글자 종류 제한 없음)이며 BCrypt 입력 제한에 맞춰 UTF-8 기준 72바이트 이하로 제한한다. 원문은 저장·로그 출력하지 않는다.
 - 소셜 이메일에는 전역 UNIQUE를 걸지 않고 이메일 일치만으로 계정을 합치지 않는다. 로그인 수단 연결·해제는 본인 인증을 거치며 마지막 수단은 해제할 수 없다. 카카오 계정에 비밀번호를 추가하려면 같은 사용자에 email 로그인 수단을 연결한다.
 
 ### auth_sessions — 로그인 세션

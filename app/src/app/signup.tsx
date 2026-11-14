@@ -44,8 +44,8 @@ export default function Signup() {
 
   const submit = async () => {
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) return setErr("이메일 형식을 확인해 주세요.");
-    // 서버 규칙과 같음: 8자 이상 + 대문자·소문자·숫자·특수문자 각각 하나 이상
-    if (pw.length < 8 || !/[A-Z]/.test(pw) || !/[a-z]/.test(pw) || !/[0-9]/.test(pw) || !/[^a-zA-Z0-9\s]/.test(pw)) return setErr("비밀번호는 8자 이상으로, 영어 대문자·소문자·숫자·특수문자(!@# 등)를 하나씩 꼭 넣어 주세요.");
+    // 서버 규칙과 같음: 8자 이상 (글자 종류 제한 없음)
+    if ([...pw].length < 8) return setErr("비밀번호는 8자 이상으로 정해 주세요.");
     if (pw !== pw2) return setErr("비밀번호 확인이 일치하지 않아요.");
     if (!allAgreed) return setErr("필수 항목에 모두 동의해 주세요.");
     setBusy(true);
@@ -79,7 +79,7 @@ export default function Signup() {
         <T size={28} weight="bold" style={{ marginTop: 12 }}>회원가입</T>
         {mode === "guest" && <T color="ink2">가입하면 지금까지의 둘러보기 기록과 관심 분야가 계정으로 옮겨져요.</T>}
         <Field label="이메일" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" textContentType="emailAddress" placeholder="you@example.com" />
-        <Field label="비밀번호 (8자 이상 · 대문자·소문자·숫자·특수문자)" value={pw} onChangeText={setPw} secureTextEntry autoComplete="new-password" textContentType="newPassword" />
+        <Field label="비밀번호 (8자 이상)" value={pw} onChangeText={setPw} secureTextEntry autoComplete="new-password" textContentType="newPassword" />
         <Field label="비밀번호 확인" value={pw2} onChangeText={setPw2} secureTextEntry autoComplete="new-password" textContentType="newPassword" />
 
         <View style={{ borderWidth: 1, borderColor: c.line, borderBottomWidth: 3, borderBottomColor: c.paperEdge, borderRadius: radius.md, padding: 14, gap: 12, backgroundColor: c.paper, ...shadow(c, 1) }}>
