@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from "expo-audio";
 
 /**
- * 효과음 (assets/sfx: 직접 합성한 짧은 wav, 저작권 문제 없음 → scripts 없이 다시 만들려면 docs/SFX.md)
+ * 효과음 (assets/sfx: 직접 합성한 짧은 wav, 저작권 문제 없음. 다시 만들기: python scripts/make_sfx.py app/assets/sfx)
  * - 설정 > 효과음 으로 끄고 켤 수 있음 (기본 켬)
  * - 무음 모드(아이폰 벨소리 스위치)에서는 소리 안 남
  * - 소리가 실패해도 앱 동작에는 영향 없음
