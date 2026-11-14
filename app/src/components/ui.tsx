@@ -1,11 +1,12 @@
 import * as Haptics from "expo-haptics";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
   ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
   type StyleProp, type TextInputProps, type TextProps, type TextStyle, type ViewStyle,
 } from "react-native";
 import { SafeAreaView, type Edge } from "react-native-safe-area-context";
 import { inset, radius, raised, shadow, useColors } from "@/theme";
+import { Icon } from "./Icon";
 
 export const FONT = {
   regular: "IBMPlexSansKR_400Regular",
@@ -175,20 +176,38 @@ export const levelTone = (lv: string) => (lv === "심화" ? "accent" : lv === "�
 
 export function Field({ label, error, ...props }: TextInputProps & { label: string; error?: string }) {
   const c = useColors();
+  // 비밀번호 칸이면 오른쪽에 눈 버튼: 누르면 입력한 글자를 보여 주고 다시 누르면 가림
+  const secret = !!props.secureTextEntry;
+  const [shown, setShown] = useState(false);
   return (
     <View style={{ gap: 6 }}>
       <T size={14} weight="semibold" color="ink2">{label}</T>
-      <TextInput
-        placeholderTextColor={c.muted}
-        {...props}
-        style={[
-          {
-            borderWidth: 1.5, borderColor: error ? c.accent : c.line2, backgroundColor: c.paper, borderRadius: radius.md, ...inset(c),
-            paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, color: c.ink, fontFamily: FONT.regular,
-          },
-          props.style as StyleProp<TextStyle>,
-        ]}
-      />
+      <View style={{ justifyContent: "center" }}>
+        <TextInput
+          placeholderTextColor={c.muted}
+          {...props}
+          secureTextEntry={secret && !shown}
+          style={[
+            {
+              borderWidth: 1.5, borderColor: error ? c.accent : c.line2, backgroundColor: c.paper, borderRadius: radius.md, ...inset(c),
+              paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, color: c.ink, fontFamily: FONT.regular,
+            },
+            secret ? { paddingRight: 52 } : null,
+            props.style as StyleProp<TextStyle>,
+          ]}
+        />
+        {secret && (
+          <Pressable
+            onPress={() => setShown((v) => !v)}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={shown ? "비밀번호 숨기기" : "비밀번호 보기"}
+            style={{ position: "absolute", right: 6, width: 40, height: 40, alignItems: "center", justifyContent: "center" }}
+          >
+            <Icon name={shown ? "eye-off" : "eye"} size={22} color={c.muted} />
+          </Pressable>
+        )}
+      </View>
       {error ? <T size={13} color="accent">{error}</T> : null}
     </View>
   );
