@@ -170,6 +170,24 @@ export default function Profile() {
             </>
           )}
 
+          {/* 약점 분석 · 분야 랭킹 */}
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <Pressable onPress={() => router.push("/weakness")} accessibilityRole="button" style={{ flex: 1 }}>
+              <Card style={{ gap: 6, alignItems: "center" }}>
+                <Icon name="chart" size={30} />
+                <T size={14} weight="bold">약점 분석</T>
+                <T size={12} color="muted" center>분야 · 주제별 정답률</T>
+              </Card>
+            </Pressable>
+            <Pressable onPress={() => router.push("/leaderboard")} accessibilityRole="button" style={{ flex: 1 }}>
+              <Card style={{ gap: 6, alignItems: "center" }}>
+                <Icon name="trophy" size={30} />
+                <T size={14} weight="bold">분야별 랭킹</T>
+                <T size={12} color="muted" center>전체 유저 순위</T>
+              </Card>
+            </Pressable>
+          </View>
+
           {/* 업적 */}
           <SectionTitle title="업적" right={<T size={13} color="muted">{earned} / {list.length}개 획득</T>} />
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 2 }}>

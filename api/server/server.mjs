@@ -18,6 +18,8 @@ import { createAccountService } from '../mysql/account-service.mjs';
 import { accountRoutes } from '../mysql/account-http.mjs';
 import { createRecordService } from '../mysql/record-service.mjs';
 import { recordRoutes } from '../mysql/record-http.mjs';
+import { createLeaderboardService } from '../mysql/leaderboard-service.mjs';
+import { leaderboardRoutes } from '../mysql/leaderboard-http.mjs';
 
 export function createServer({ topics = loadTopics(), bank, store, auth, authLimits, battleService, battleSweep=true, kakao } = {}) {
   const battles=auth?(battleService??createBattleService({auth})):null;
@@ -31,6 +33,8 @@ export function createServer({ topics = loadTopics(), bank, store, auth, authLim
   const handleAds=auth ? adRewardRoutes(createAdRewardService()) : null;
   const handleAccount=auth ? accountRoutes(createAccountService({auth})) : null;
   const handleRecords=auth ? recordRoutes(createRecordService({auth})) : null;
+  // 분야별 전체 유저 랭킹
+  const handleLeaderboard=auth ? leaderboardRoutes(createLeaderboardService({auth})) : null;
   if (!store) {
     bank ??= loadBank(undefined, topics);
     store = {
@@ -60,6 +64,7 @@ export function createServer({ topics = loadTopics(), bank, store, auth, authLim
     if(handleAuth && await handleAuth(req,pathname,send)) return;
     if(handleAccount && await handleAccount(req,pathname,send)) return;
     if(handleRecords && await handleRecords(req,pathname,send)) return;
+    if(handleLeaderboard && await handleLeaderboard(req,pathname,send)) return;
     if (req.method === 'GET' && pathname === '/health') return send(200, {...await store.health(),auth:auth?'mysql':'not_implemented',profile:auth?'mysql':'not_implemented',accountDeletion:auth?'mysql':'not_implemented',records:auth?'mysql':'not_implemented',kakao:!!handleKakao});
     if(req.method==='GET' && pathname==='/catalog' && store.catalog){const data=await store.catalog();const etag=`"${hash(data)}"`;if(req.headers['if-none-match']===etag)return send(304,undefined,{ETag:etag});return send(200,{...data,version:hash(data)},{ETag:etag});}
     const match = /^\/quiz-bank\/([a-z0-9-]{1,32})$/.exec(pathname);
