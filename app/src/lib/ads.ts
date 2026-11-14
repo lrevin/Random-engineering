@@ -51,11 +51,15 @@ const unitId = () => {
 export type AdResult = "earned" | "closed" | "failed";
 
 /** 보상형 광고를 불러와 보여 줌. 끝까지 봤으면 "earned" */
-export function showRewardedAd(): Promise<AdResult> {
+/** userId: 회원이면 우리 회원 id → 구글이 서버로 보내는 확인(SSV)에 실려 서버가 지급함 */
+export function showRewardedAd(userId?: string | null): Promise<AdResult> {
   const m = ads();
   if (!m) return Promise.resolve("failed");
   return new Promise((resolve) => {
-    const ad = m.RewardedAd.createForAdRequest(unitId(), { requestNonPersonalizedAdsOnly: true });
+    const ad = m.RewardedAd.createForAdRequest(unitId(), {
+      requestNonPersonalizedAdsOnly: true,
+      ...(userId ? { serverSideVerificationOptions: { userId } } : {}),
+    });
     let earned = false;
     let done = false;
     const unsubs: (() => void)[] = [];

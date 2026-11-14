@@ -4,4 +4,4 @@ export const AD_DAILY_LIMIT = 3;
 export const adsSimulated = true;
 export type AdResult = "earned" | "closed" | "failed";
 export function initAds(): void {}
-export async function showRewardedAd(): Promise<AdResult> {return "failed";}
+export async function showRewardedAd(_userId?: string | null): Promise<AdResult> {return "failed";}

@@ -13,6 +13,7 @@ import { databaseStore } from './db-store.mjs';
 import { createAuth } from './auth.mjs';
 import { authRoutes } from './auth-http.mjs';
 import { kakaoRoutes } from './kakao.mjs';
+import { adRewardRoutes, createAdRewardService } from '../mysql/ad-reward.mjs';
 import { createAccountService } from '../mysql/account-service.mjs';
 import { accountRoutes } from '../mysql/account-http.mjs';
 import { createRecordService } from '../mysql/record-service.mjs';
@@ -26,6 +27,8 @@ export function createServer({ topics = loadTopics(), bank, store, auth, authLim
   const handleAuth=auth ? authRoutes(auth,{limits:authLimits}) : null;
   // 카카오 로그인: KAKAO_REST_API_KEY, KAKAO_REDIRECT_URI 환경변수가 있을 때만 켜짐
   const handleKakao=auth ? kakaoRoutes(auth,kakao) : null;
+  // AdMob 보상형 광고 서버 측 확인 (구글이 직접 호출)
+  const handleAds=auth ? adRewardRoutes(createAdRewardService()) : null;
   const handleAccount=auth ? accountRoutes(createAccountService({auth})) : null;
   const handleRecords=auth ? recordRoutes(createRecordService({auth})) : null;
   if (!store) {
@@ -53,6 +56,7 @@ export function createServer({ topics = loadTopics(), bank, store, auth, authLim
     if(handleSpeed && await handleSpeed(req,pathname,send)) return;
     if(handleMember && await handleMember(req,pathname,send)) return;
     if(handleKakao && await handleKakao(req,pathname,send)) return;
+    if(handleAds && await handleAds(req,pathname,send)) return;
     if(handleAuth && await handleAuth(req,pathname,send)) return;
     if(handleAccount && await handleAccount(req,pathname,send)) return;
     if(handleRecords && await handleRecords(req,pathname,send)) return;

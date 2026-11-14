@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, Modal, Pressable, View } from "react-native";
 import { AD_DAILY_LIMIT, AD_REWARD, adsSimulated, showRewardedAd } from "@/lib/ads";
 import { useApp } from "@/lib/app-state";
+import { mysqlAuth } from "@/lib/auth";
 import { radius, raised, shadow, useColors } from "@/theme";
 import { Icon } from "./Icon";
 import { T, tap } from "./ui";
@@ -45,11 +46,14 @@ export function AdRewardButton() {
   const [sim, setSim] = useState(false);
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const left = Math.max(0, AD_DAILY_LIMIT - adViewsToday);
-  const disabled = mode === "user" || loading || left === 0;
+  const disabled = loading || left === 0;
 
   const done = async (earned: boolean) => {
-    if (earned && await grantAdReward()) setMsg({ text: `톱니바퀴 ${AD_REWARD}개를 받았어요!`, ok: true });
-    else if (earned) setMsg({text:"보상 지급을 확인하지 못했어요. 상점의 안내를 확인해 주세요.",ok:false});
+    if (earned) setLoading(true);
+    const ok = earned && await grantAdReward();
+    setLoading(false);
+    if (ok) setMsg({ text: `톱니바퀴 ${AD_REWARD}개를 받았어요!`, ok: true });
+    else if (earned) setMsg({ text: mode === "user" ? "보상 확인이 늦어지고 있어요. 잠시 뒤 톱니바퀴가 들어와요." : "오늘은 더 받을 수 없어요.", ok: false });
     else if (!earned) setMsg({ text: "광고를 끝까지 봐야 톱니바퀴를 받아요.", ok: false });
   };
 
@@ -57,15 +61,15 @@ export function AdRewardButton() {
     if (disabled) return;
     tap();
     setMsg(null);
-    if (adsSimulated) return setSim(true);
+    // 회원은 실제 광고(서버 확인)로만 지급 → 시험용 화면에서는 받을 수 없음
+    if (adsSimulated) return mode === "user" ? setMsg({ text: "광고 보상은 설치한 앱에서만 받을 수 있어요.", ok: false }) : setSim(true);
     setLoading(true);
-    const r = await showRewardedAd();
+    const r = await showRewardedAd(mode === "user" ? mysqlAuth.getUserId() : null);
     setLoading(false);
     if (r === "failed") setMsg({ text: "지금은 광고를 불러올 수 없어요. 잠시 뒤 다시 해 주세요.", ok: false });
     else done(r === "earned");
   };
 
-  if(mode === "user")return <T size={13} color="muted">광고 보상은 서버 지급 확인 연결 후 이용할 수 있어요.</T>;
   return (
     <View style={{ gap: 6 }}>
       <Pressable

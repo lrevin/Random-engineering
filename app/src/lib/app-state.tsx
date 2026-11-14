@@ -212,6 +212,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setPremiumState(value.state.premium);writeJSON(K.premium,value.state.premium);
     keptRef.current=value.state.keptDays;setKeptDays(value.state.keptDays);writeJSON(K.kept,value.state.keptDays);
     questRef.current=value.claims;setQuestClaims(value.claims);writeJSON(K.questClaims,value.claims);
+    if(typeof value.adsToday==="number"){adRef.current={day:dateKey(new Date()),n:value.adsToday};setAdViews(adRef.current);writeJSON(K.adViews,adRef.current);}
   }, []);
   const refreshWallet = useCallback(async () => {
     const owner=ownerRef.current;
@@ -735,7 +736,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // ───────── 보상형 광고: 끝까지 보면 톱니바퀴 (하루 AD_DAILY_LIMIT번) ─────────
   const grantAdReward = useCallback(async () => {
-    if(mode==="user")return remoteWallet("ad_reward");
+    if(mode==="user"){
+      // 회원: 구글이 서버로 직접 알려 준 뒤(SSV) 서버가 지급함 → 지갑을 몇 번 다시 읽어 지급됐는지 확인
+      const owner=ownerRef.current;
+      const before=adRef.current.day===dateKey(new Date())?adRef.current.n:0;
+      for(let i=0;i<8;i++){
+        await new Promise(r=>setTimeout(r,1500));
+        if(ownerRef.current!==owner)return false;
+        try{const v=await mysqlAuth.getWallet();applyWallet(v);if((v.adsToday??0)>before)return true;}catch{/* 다음 시도 */}
+      }
+      return false;
+    }
     const day = dateKey(new Date());
     const cur = adRef.current.day === day ? adRef.current : { day, n: 0 };
     if (cur.n >= AD_DAILY_LIMIT) return false;
@@ -746,7 +757,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setGears(gearsRef.current);
     writeJSON(K.gears, gearsRef.current);
     return true;
-  }, [mode, remoteWallet]);
+  }, [mode, applyWallet]);
 
   // ───────── 오늘의 퀘스트 보상 ─────────
   const claimQuest = useCallback(async (key: string, reward: number) => {

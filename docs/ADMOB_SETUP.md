@@ -20,6 +20,25 @@
 
 실제 광고를 붙이려면 아래 순서대로 AdMob 계정 작업을 하고, 받은 ID를 환경변수에 넣으면 됩니다. 코드를 고칠 필요는 없습니다.
 
+## 광고 보상 서버 확인 (SSV)
+
+회원의 톱니바퀴 지급은 **구글이 우리 서버로 직접 알려 줄 때만** 일어나요. 앱이 "봤다"고 보내는 값은 믿지 않아요.
+
+1. 앱이 광고를 요청할 때 `serverSideVerificationOptions.userId`에 회원 id를 넣어요.
+2. 광고를 끝까지 보면 구글이 `GET https://ppobgong.o-r.kr/ads/admob/ssv?...&signature=...&key_id=...`를 보내요.
+3. 서버(`api/mysql/ad-reward.mjs`)가 하는 일:
+   - 구글 공개키로 서명을 확인해요.
+   - `transaction_id`로 같은 광고가 두 번 지급되지 않게 막아요.
+   - 하루 3번까지만 `wallet_transactions(reason='ad_reward')`에 +10을 기록해요.
+4. 앱은 지갑을 몇 번 다시 읽어 `adsToday`가 늘었는지 보고 "받았어요"를 띄워요.
+
+비회원(둘러보기)은 지금처럼 기기 안에서만 지급해요. 표는 새로 만들지 않았어요.
+
+**서버를 배포한 뒤 할 일:**
+- AdMob > 앱 > 광고 단위 "톱니바퀴 보상"(Android, iOS 각각) > 고급 설정 > **서버 측 확인**에 콜백 URL `https://ppobgong.o-r.kr/ads/admob/ssv`를 넣고 "확인"을 눌러요.
+  - 이 확인 요청은 user_id 없이 오고, 서명만 맞으면 200을 돌려줘요.
+- (선택) 서버 `.env`의 `ADMOB_REWARDED_UNITS`에 우리 광고 단위 ID 두 개를 쉼표로 넣으면, 다른 광고 단위로 온 요청은 무시해요.
+
 ## 1. 계정 만들기 (팀장 구글 계정)
 
 1. <https://admob.google.com> 에서 시작합니다. 나라는 대한민국, 시간대는 서울로 합니다.
