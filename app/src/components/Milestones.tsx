@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { View } from "react-native";
 import { bestStreak } from "@/lib/achievements";
 import { useApp } from "@/lib/app-state";
+import { sfx } from "@/lib/sfx";
 import { MILESTONES, type Milestone } from "@/lib/milestones";
 import { addSkin, addTitle, markMilestone, skinById, titleById, useCosmetics } from "@/lib/skins";
 import { radius, raised, useColors } from "@/theme";
@@ -21,6 +22,7 @@ export function useMilestones() {
     if(!await claimQuest(`streak-milestone:${m.days}`, m.gears)||!markMilestone(m.days))return false;
     addSkin(m.skin, false);
     addTitle(m.title);
+    sfx("chest");
     return true;
   };
   return { best, claimed, ready, claim };

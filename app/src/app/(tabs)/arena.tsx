@@ -1,8 +1,9 @@
 import {router,useFocusEffect} from "expo-router";
-import {useCallback,useRef,useState} from "react";
+import {useCallback,useEffect,useRef,useState} from "react";
 import {BattleIntro} from "@/components/BattleIntro";
 import {Btn,Card,Screen,T} from "@/components/ui";
 import {useApp} from "@/lib/app-state";
+import {sfx} from "@/lib/sfx";
 import {getBattleHistory,getMatch,joinMatch,leaveMatch,socialMessage,type Battle,type MatchState} from "@/lib/social";
 
 export default function Arena(){
@@ -10,6 +11,9 @@ export default function Arena(){
  const [match,setMatch]=useState<MatchState>({status:"none"}),[history,setHistory]=useState<Battle[]>([]),[busy,setBusy]=useState(false),[notice,setNotice]=useState("");
  const [intro,setIntro]=useState(false);
  const running=useRef(false);
+ // 기다리던 매칭이 잡히면 효과음 (처음 화면을 열 때 이미 잡혀 있던 건 제외)
+ const prevStatus=useRef("");
+ useEffect(()=>{if(prevStatus.current==="waiting"&&match.status==="matched")sfx("match");prevStatus.current=match.status;},[match.status]);
  const refresh=useCallback(async()=>{if(mode!=="user"||running.current)return;running.current=true;try{setMatch(await getMatch());const h=await getBattleHistory();setHistory(h.battles);await refreshWallet();setNotice("");}catch(e){setNotice(socialMessage(e));}finally{running.current=false;}},[mode,refreshWallet]);
  useFocusEffect(useCallback(()=>{void refresh();const timer=setInterval(()=>void refresh(),2500);return()=>clearInterval(timer);},[refresh]));
  async function join(){if(busy)return;setBusy(true);try{setMatch(await joinMatch());await refreshWallet();setNotice("");}catch(e){setNotice(socialMessage(e));}finally{setBusy(false);}}

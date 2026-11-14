@@ -10,6 +10,7 @@ import { confirmQuit } from "@/lib/confirm";
 import { loadQuiz, type QuizQuestion } from "@/lib/quiz";
 import { boostActive } from "@/lib/booster";
 import { calcRp, domainMastery, userLevel } from "@/lib/rank";
+import { sfx } from "@/lib/sfx";
 import { calcStreak } from "@/lib/stats";
 import type { WrongAnswer } from "@/lib/types";
 import { radius, raised, shadow, useColors } from "@/theme";
@@ -136,6 +137,7 @@ export function QuestionView({ q, index, count, topicName, badges, saving, onQui
   const choose = (v: number | boolean) => {
     if (answered) return;
     setPicked(v);
+    sfx(v === q.answer ? "correct" : "wrong");
     if (Platform.OS !== "web") {
       Haptics.notificationAsync(v === q.answer ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Error).catch(() => {});
     }

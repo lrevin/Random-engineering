@@ -10,6 +10,7 @@ import { topicById, type Topic } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { speedQuestions, type ExamItem } from "@/lib/quiz";
 import { speedNow, finishPractice, finishSpeed, readSpeed, startSpeed, answerSpeed, speedItem, speedMessage, type SpeedQuestion, SPEED_DAILY_XP_CAP, SPEED_SEC, SPEED_XP_PER_CORRECT, type SpeedStore } from "@/lib/speed";
+import { sfx } from "@/lib/sfx";
 import { radius, raised, shadow, useColors } from "@/theme";
 import { answerText } from "./quiz";
 
@@ -55,10 +56,14 @@ export default function Speed() {
   // 1분 타이머
   useEffect(() => {
     if (phase !== "play") return;
+    let lastTick = -1;
     const t = setInterval(() => {
       const s = Math.max(0, Math.ceil((endAt.current - speedNow()) / 1000));
       setLeft(s);
-      if (s <= 0) setPhase("done");
+      // 마지막 5초는 째깍, 끝나면 종료음
+      if (s !== lastTick && s > 0 && s <= 5) sfx("tick");
+      lastTick = s;
+      if (s <= 0) { sfx("go"); setPhase("done"); }
     }, 200);
     return () => clearInterval(t);
   }, [phase]);
@@ -90,7 +95,7 @@ export default function Speed() {
         position.current=run.question.position;setPool([speedItem(run.question)]);
         endAt.current=sentAt+Math.max(0,Date.parse(run.deadlineAt)-Date.parse(run.serverNow));
       }
-      setLeft(Math.max(0,Math.ceil((endAt.current-speedNow())/1000)));setPhase("play");
+      setLeft(Math.max(0,Math.ceil((endAt.current-speedNow())/1000)));setPhase("play");sfx("go");
     }catch(e){setNotice(speedMessage(e));setPhase("ready");}
   };
 
@@ -107,7 +112,7 @@ export default function Speed() {
         ok=value.correct;next=value.next;if(item.q.type!=="mc")throw new Error("invalid_question");answered={...item,q:{...item.q,answer:value.answer,explain:value.explain}};
         setPool(xs=>xs.map((x,i)=>i===idx?answered:x));
       }
-      setPicked(v);
+      setPicked(v);sfx(ok?"correct":"wrong",0.8);
       if(Platform.OS!=="web")Haptics.notificationAsync(ok?Haptics.NotificationFeedbackType.Success:Haptics.NotificationFeedbackType.Error).catch(()=>{});
       if(!ok)Animated.sequence([Animated.timing(shake,{toValue:1,duration:50,useNativeDriver:true}),Animated.timing(shake,{toValue:-1,duration:50,useNativeDriver:true}),Animated.timing(shake,{toValue:0,duration:50,useNativeDriver:true})]).start();
       setFlash(ok);setLog(l=>[...l,{item:answered,ok}]);setCombo(k=>ok?k+1:0);

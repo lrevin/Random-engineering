@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Animated, Easing, PanResponder, Text, View } from "react-native";
+import { scheduleReelTicks, sfx } from "@/lib/sfx";
 import { useSkins } from "@/lib/skins";
 import { radius, shadow, useColors } from "@/theme";
 import { FONT, tap } from "./ui";
@@ -48,6 +49,7 @@ export function Slot({ children, spinning, onPull, disabled }: {
       Animated.timing(rod, { toValue: ROD_MIN, duration: from === undefined ? 150 : 70, easing: Easing.in(Easing.quad), useNativeDriver: false }),
       Animated.spring(rod, { toValue: ROD, friction: 3.5, tension: 120, useNativeDriver: false }),
     ]).start();
+    sfx("lever");
     setTimeout(() => onPull?.(), from === undefined ? 150 : Math.max(0, 70 * (1 - from / travel)));
   };
   const pull = () => {
@@ -172,12 +174,20 @@ export function SlotReel({ names, duration = 2300, onDone }: { names: string[]; 
   useEffect(() => {
     if (!h) return;
     y.setValue(startY);
+    const ease = Easing.bezier(0.12, 0.7, 0.3, 1);
+    // 이름 한 칸 지날 때마다 딸깍 (애니메이션과 같은 곡선)
+    const stopTicks = scheduleReelTicks(names.length - 1, duration, ease);
     const anim = Animated.sequence([
-      Animated.timing(y, { toValue: center + 16, duration, easing: Easing.bezier(0.12, 0.7, 0.3, 1), useNativeDriver: true }),
+      Animated.timing(y, { toValue: center + 16, duration, easing: ease, useNativeDriver: true }),
       Animated.spring(y, { toValue: center, friction: 5, tension: 160, useNativeDriver: true }),
     ]);
-    anim.start(({ finished }) => { if (finished) onDone(); });
-    return () => anim.stop();
+    const stop = setTimeout(() => sfx("reel_stop"), duration);
+    anim.start(({ finished }) => {
+      if (!finished) return;
+      sfx("slot_win");
+      onDone();
+    });
+    return () => { anim.stop(); stopTicks(); clearTimeout(stop); };
     // 한 번만 돌림 (돌 때마다 부모가 key를 바꿔 새로 만듦)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [h]);

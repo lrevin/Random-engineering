@@ -14,6 +14,7 @@ import { radius, raised, shadow, useColors } from "@/theme";
 import { Icon } from "@/components/Icon";
 import { RankUp, type RankUpScene } from "@/components/RankUp";
 import { userLevel } from "@/lib/rank";
+import { setSfxEnabled, sfx, sfxEnabled } from "@/lib/sfx";
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -75,6 +76,7 @@ export default function Settings() {
   const c = useColors();
   const [nick, setNick] = useState(prefs.nickname);
   const [notice, setNotice] = useState("");
+  const [sound, setSound] = useState(sfxEnabled());
   const [rankUpPreview, setRankUpPreview] = useState<RankUpScene[]>([]);
 
   const saveNick = () => {
@@ -170,6 +172,15 @@ export default function Settings() {
           />
         </View>
         <Item label="공부 시간" sub={premium ? `최대 ${PREMIUM_MAX_STUDY_MIN}분 · 끝나면 퀴즈 7문제` : `무료는 최대 ${FREE_MAX_STUDY_MIN}분 · 끝나면 퀴즈 7문제`} right={<Minutes value={studyMinutesFor(prefs.studyMinutes, premium)} min={1} max={premium ? PREMIUM_MAX_STUDY_MIN : FREE_MAX_STUDY_MIN} onChange={(v) => updatePrefs({ studyMinutes: v })} />} last />
+      </Section>
+
+      <Section title="소리">
+        <Item
+          label="효과음"
+          sub="슬롯머신 · 퀴즈 · 배틀 · 보상 (무음 모드에서는 나지 않아요)"
+          right={<Switch value={sound} onValueChange={(on) => { setSound(on); setSfxEnabled(on); if (on) sfx("correct"); }} trackColor={{ true: c.accent, false: c.line2 }} thumbColor={c.paper} />}
+          last
+        />
       </Section>
 
       <Section title="매일 알림">

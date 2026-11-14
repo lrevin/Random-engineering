@@ -1,5 +1,6 @@
 import * as Haptics from "expo-haptics";
 import { useEffect, useState } from "react";
+import { sfx } from "@/lib/sfx";
 import { Animated, Easing, Modal, Platform, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { TIERS } from "@/lib/rank";
@@ -64,6 +65,8 @@ function Scene({ scene, last, onNext }: { scene: RankUpScene; last: boolean; onN
 
   useEffect(() => {
     const ease = Easing.out(Easing.cubic);
+    // 새 메달이 튀어나오는 순간에 맞춰 승급음
+    const sound = setTimeout(() => sfx("levelup"), 450);
     const spin = Animated.loop(Animated.timing(v.spin, { toValue: 1, duration: 9000, easing: Easing.linear, useNativeDriver: true }));
     spin.start();
     Animated.sequence([
@@ -80,7 +83,7 @@ function Scene({ scene, last, onNext }: { scene: RankUpScene; last: boolean; onN
         Animated.timing(v.fall, { toValue: 1, duration: 2600, easing: Easing.out(Easing.quad), useNativeDriver: true }),
       ]).start();
     }, 650);
-    return () => { spin.stop(); clearTimeout(t); };
+    return () => { spin.stop(); clearTimeout(t); clearTimeout(sound); };
   }, [v]);
 
   const rotate = v.spin.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "360deg"] });

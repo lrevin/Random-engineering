@@ -9,6 +9,7 @@ import {topicById} from "@/data";
 import {useApp} from "@/lib/app-state";
 import {answerBattle, forfeitBattle, getBattle, serverNow, setStudySkip, socialMessage, submitBattle, submitOvertime, type Battle} from "@/lib/social";
 import {fmtClock} from "@/lib/stats";
+import {sfx} from "@/lib/sfx";
 import {useKeepScreenOn} from "@/lib/useKeepScreenOn";
 
 export default function BattleScreen(){
@@ -53,6 +54,16 @@ export default function BattleScreen(){
  const end=b?.phase==="countdown"?b.startAt:b?.phase==="study"?b.quizStartAt:b?.phase==="overtime"&&ot?.roundStartAt?new Date(Date.parse(ot.roundStartAt)+ot.roundSec*1000).toISOString():b?.quizEndAt;
  const left=Math.max(0,Math.ceil(((end?Date.parse(end):now)-now)/1000));
  const finished=b?.status==="finished"||b?.status==="void",mine=b?.results[uid],other=b?(b.from.uid===uid?b.to:b.from):null;
+ // 효과음: 시작 전 3·2·1, 문제 시작, 연장 라운드, 결과 (같은 소리는 한 번만)
+ const heard=useRef({phase:"",left:-1,result:""});
+ const phase=b?.phase??"",resultKey=finished&&b?b.id+":"+b.status:"";
+ useEffect(()=>{
+  const h=heard.current;
+  if(!b)return;
+  if(phase!==h.phase){if(h.phase&&(phase==="quiz"||phase==="overtime"))sfx("go");h.phase=phase;h.left=-1;}
+  if((phase==="countdown"||phase==="study")&&left>0&&left<=3&&left!==h.left){h.left=left;sfx("count");}
+  if(resultKey&&h.result!==resultKey){h.result=resultKey;if(b.status==="finished"&&b.outcome?.winner)sfx(b.outcome.winner===uid?"victory":"defeat");}
+ },[b,phase,left,resultKey,uid]);
  return <Screen>
   {!!error&&<Card><T color="accent">{error}</T><Btn title="진행 상태 다시 확인" onPress={()=>void refresh()}/></Card>}
   {!b?<T>배틀을 불러오고 있어요.</T>:<>

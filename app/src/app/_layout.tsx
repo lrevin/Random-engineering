@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import { BattleWatcher } from "@/components/BattleWatcher";
 import { showDialog, DialogHost } from "@/components/Dialog";
 import { initAds } from "@/lib/ads";
+import { initSfx } from "@/lib/sfx";
 import { StreakSheet } from "@/components/StreakSheet";
 import { AppProvider, useApp } from "@/lib/app-state";
 import { useColors } from "@/theme";
@@ -84,6 +85,7 @@ function RootNav() {
 
 // 구글 광고 SDK 준비 (Expo Go에서는 아무것도 안 함)
 initAds();
+initSfx();
 
 export default function RootLayout() {
   return (

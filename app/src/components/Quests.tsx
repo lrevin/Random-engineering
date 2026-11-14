@@ -2,6 +2,7 @@ import { router, useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { Pressable, View } from "react-native";
 import { useApp } from "@/lib/app-state";
+import { sfx } from "@/lib/sfx";
 import { readExamStore } from "@/lib/exam";
 import { useMilestones } from "./Milestones";
 import { ATTENDANCE, NO_EXTRA, PERIODS, questKey, questsFor, type Period, type Quest, type QuestExtra } from "@/lib/quests";
@@ -37,8 +38,16 @@ export function useQuests(period: Period) {
   const bonus = PERIODS[period].bonus;
   return {
     quests, claimed, doneCount, allDone, bonusClaimed, ready, bonus, attendance, locked,
-    claim: (q: Quest) => !locked && q.done && claimQuest(questKey(period, q.id), q.reward),
-    claimBonus: () => !locked && allDone && claimQuest(questKey(period, "bonus"), bonus),
+    claim: async (q: Quest) => {
+      const ok = !locked && q.done && await claimQuest(questKey(period, q.id), q.reward);
+      if (ok) sfx("gear");
+      return ok;
+    },
+    claimBonus: async () => {
+      const ok = !locked && allDone && await claimQuest(questKey(period, "bonus"), bonus);
+      if (ok) sfx("chest");
+      return ok;
+    },
   };
 }
 
