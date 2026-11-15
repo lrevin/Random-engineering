@@ -323,15 +323,26 @@ export async function battleQuestions(topic: Topic, count: number, avoid: QuizQu
 // ───────── 자격증 모의고사 ─────────
 export interface ExamItem { q: QuizQuestion; topic: Topic }
 
+/** 최근에 낸 모의고사 문제 · 주제 (반복 체감을 줄이기 위해 뒤로 미룸, 완전히 빼지는 않음) */
+export interface ExamAvoid { questions?: string[]; topicIds?: string[] }
+
 /**
  * 모의고사 한 과목 문제: 과목에 든 주제들에서 골고루 n문제.
  * 미리 만든 문제 은행에서 뽑고, 은행에 없는 주제는 연습 문제로 채웁니다. (AI는 쓰지 않아 바로 시작됨)
+ * avoid를 주면 최근에 낸 주제·문제는 뒤로 미뤄서 같은 문제가 자꾸 반복되는 걸 줄입니다.
  */
-export async function examQuestions(topics: Topic[], n: number): Promise<ExamItem[]> {
-  const chosen = shuffle(topics).slice(0, n);
+export async function examQuestions(topics: Topic[], n: number, avoid: ExamAvoid = {}): Promise<ExamItem[]> {
+  const avoidTopics = new Set(avoid.topicIds ?? []);
+  const avoidQ = avoid.questions ?? [];
+  const fresh = shuffle(topics.filter((t) => !avoidTopics.has(t.id)));
+  const seen = shuffle(topics.filter((t) => avoidTopics.has(t.id)));
+  const chosen = [...fresh, ...seen].slice(0, n);
   const pools = await Promise.all(chosen.map(async (topic) => {
     const bank = distinct((await bankQuestions(topic.id)).map((q) => ({ ...q, src: "bank" as const })));
-    return { topic, qs: shuffle(bank.length ? bank : offlineQuestions(topic)) };
+    const all = shuffle(bank.length ? bank : offlineQuestions(topic));
+    const notRecent = all.filter((q) => !avoidQ.some((t) => similarity(q.q, t) >= SIMILAR));
+    const recent = all.filter((q) => !notRecent.includes(q));
+    return { topic, qs: [...notRecent, ...recent] };
   }));
   // 주제마다 한 문제씩 돌아가며 뽑음 (주제 수가 n보다 적으면 두 번째 바퀴에서 더 뽑음)
   const out: ExamItem[] = [];

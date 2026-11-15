@@ -10,6 +10,9 @@ export const EXAM_PER_SUBJECT = 10;
 /** 합격 기준: 과목마다 40% 이상(과락) · 전체 평균 60% 이상 */
 export const EXAM_SUBJECT_MIN = 0.4;
 export const EXAM_TOTAL_MIN = 0.6;
+/** 반복 체감을 줄이려고 기억해 두는 최근 문제 · 주제 수 (완전히 빼지는 않고 뒤로 미루기만 함) */
+const RECENT_Q_MAX = 300;
+const RECENT_TOPIC_MAX = 120;
 
 export interface ExamPaperItem extends ExamItem { subject: number }
 export interface ExamPaper { certId: string; subjects: string[]; items: ExamPaperItem[] }
@@ -32,14 +35,14 @@ export const subjectTopics = (items: string[]): Topic[] => [
   }).map((t) => [t.id, t])).values(),
 ];
 
-/** 모의고사 한 회분 만들기: 과목 순서대로, 과목마다 EXAM_PER_SUBJECT문제 */
+/** 모의고사 한 회분 만들기: 과목 순서대로, 과목마다 EXAM_PER_SUBJECT문제. 최근에 냈던 문제 · 주제는 뒤로 미룸 */
 export async function buildExam(cert: CertDef): Promise<ExamPaper> {
-  const parts = await Promise.all(cert.subjects.map((s) => examQuestions(subjectTopics(s.items), EXAM_PER_SUBJECT)));
-  return {
-    certId: cert.id,
-    subjects: cert.subjects.map((s) => s.name),
-    items: parts.flatMap((qs, subject) => qs.map((x) => ({ ...x, subject }))),
-  };
+  const store = await readExamStore();
+  const avoid = { questions: store.recentQ, topicIds: store.recentTopics };
+  const parts = await Promise.all(cert.subjects.map((s) => examQuestions(subjectTopics(s.items), EXAM_PER_SUBJECT, avoid)));
+  const items = parts.flatMap((qs, subject) => qs.map((x) => ({ ...x, subject })));
+  await rememberExam(items);
+  return { certId: cert.id, subjects: cert.subjects.map((s) => s.name), items };
 }
 
 /** 채점: 과목별 점수와 합격 여부 */
@@ -60,19 +63,35 @@ export const subjectFailed = (s: ExamSubjectScore) => s.total > 0 && s.score / s
 const KEY = LOCAL_KEYS.exam.key;
 /** 모의고사에서 틀린 문제 (오답 다시 풀기에서 씀) */
 export interface ExamWrong { topicId: string; q: string; answer: string; explain: string; at: string }
-interface ExamStore { day: string; n: number; results: ExamResult[]; wrongs: ExamWrong[]; /** 톱니바퀴로 산 모의고사 1회권 */ tickets: number }
-const EMPTY: ExamStore = { day: "", n: 0, results: [], wrongs: [], tickets: 0 };
+interface ExamStore {
+  day: string; n: number; results: ExamResult[]; wrongs: ExamWrong[]; /** 톱니바퀴로 산 모의고사 1회권 */ tickets: number;
+  /** 최근에 낸 문제(문장) · 주제 id — 다음 모의고사에서 뒤로 미루는 데 씀 */
+  recentQ: string[]; recentTopics: string[];
+}
+const EMPTY: ExamStore = { day: "", n: 0, results: [], wrongs: [], tickets: 0, recentQ: [], recentTopics: [] };
 
 export async function readExamStore(): Promise<ExamStore> {
   try {
     const raw = await AsyncStorage.getItem(KEY);
     const s = raw ? (JSON.parse(raw) as Partial<ExamStore>) : null;
-    return { day: s?.day ?? "", n: s?.n ?? 0, results: Array.isArray(s?.results) ? s.results.filter((r) => certById(r.certId)) : [], wrongs: Array.isArray(s?.wrongs) ? s.wrongs : [], tickets: Math.max(0, Number(s?.tickets) || 0) };
+    return {
+      day: s?.day ?? "", n: s?.n ?? 0, results: Array.isArray(s?.results) ? s.results.filter((r) => certById(r.certId)) : [], wrongs: Array.isArray(s?.wrongs) ? s.wrongs : [], tickets: Math.max(0, Number(s?.tickets) || 0),
+      recentQ: Array.isArray(s?.recentQ) ? s.recentQ.filter((x) => typeof x === "string") : [],
+      recentTopics: Array.isArray(s?.recentTopics) ? s.recentTopics.filter((x) => typeof x === "string") : [],
+    };
   } catch {
     return EMPTY;
   }
 }
 const save = (s: ExamStore) => AsyncStorage.setItem(KEY, JSON.stringify(s)).catch(() => {});
+
+/** 방금 낸 문제 · 주제를 기억해 둠 (다음 모의고사에서 뒤로 미루는 데 씀) */
+async function rememberExam(items: ExamPaperItem[]): Promise<void> {
+  const s = await readExamStore();
+  const recentQ = [...items.map((x) => x.q.q), ...s.recentQ].slice(0, RECENT_Q_MAX);
+  const recentTopics = [...new Set([...items.map((x) => x.topic.id), ...s.recentTopics])].slice(0, RECENT_TOPIC_MAX);
+  await save({ ...s, recentQ, recentTopics });
+}
 
 /** 오늘 본 횟수 */
 export const examsToday = (s: ExamStore, now = new Date()) => (s.day === dateKey(now) ? s.n : 0);
