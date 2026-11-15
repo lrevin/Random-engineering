@@ -58,7 +58,7 @@ export function TitleBadge({ t, size = 13 }: { t: TitleDef; size?: number }) {
 
 /** 꾸미기: 슬롯머신 스킨(일반 · 시즌 한정 · 연속 기록 보상) + 칭호 */
 export default function Skins() {
-  const { gears, spendGears, records, xp, keptDays } = useApp();
+  const { mode, walletNotice, refreshWallet, purchaseItem, equipCosmetic, gears, spendGears, records, xp, keptDays } = useApp();
   const c = useColors();
   const { owned, active } = useSkins();
   const cos = useCosmetics();
@@ -67,29 +67,33 @@ export default function Skins() {
   useEffect(() => { readExamStore().then((s) => setExtra({ exams: s.results })); }, []);
   const ach = useMemo(() => achievements(records, xp, keptDays, extra), [records, xp, keptDays, extra]);
 
+  useEffect(()=>{if(mode==='user')void refreshWallet().catch(()=>{});},[mode,refreshWallet]);
   const buy = async (s: SlotSkin) => {
-    if (owned.includes(s.id) || !inSeason(s) || !await spendGears(s.price)) return;
-    addSkin(s.id);
+    if(owned.includes(s.id)||!inSeason(s))return;
+    if(mode==='user'){if(!await purchaseItem('skin:'+s.id))return;}
+    else {if(!await spendGears(s.price))return;addSkin(s.id);}
     setNotice(`${s.name} 스킨을 사서 바로 적용했어요`);
   };
-  const use = (s: SlotSkin) => {
-    applySkin(s.id);
+  const use = async (s: SlotSkin) => {
+    if(mode==='user'){if(!await equipCosmetic('skin',s.id))return;}else applySkin(s.id);
     setNotice(`${s.name} 스킨으로 바꿨어요`);
   };
 
   /** 칭호를 쓸 수 있는지: 받았거나(보상·구매) 업적을 깼거나 */
   const hasTitle = (t: TitleDef) => {
     if (cos.titles.includes(t.id)) return true;
+    if(mode==='user')return false;
     const src = t.source;
     return src.kind === "achievement" && (ach.find((a) => a.id === src.id)?.stage ?? 0) >= src.stage;
   };
   const buyTitle = async (t: TitleDef) => {
-    if (t.source.kind !== "season" || !titleInSeason(t) || !await spendGears(t.source.price)) return;
-    addTitle(t.id);
-    applyTitle(t.id);
+    if(t.source.kind!=='season'||!titleInSeason(t))return;
+    if(mode==='user'){if(!await purchaseItem('title:'+t.id))return;}
+    else {if(!await spendGears(t.source.price))return;addTitle(t.id);applyTitle(t.id);}
     setNotice(`칭호 "${t.name}"을 사서 바로 달았어요`);
   };
 
+  const wearTitle=async(id:string|null)=>{if(mode==='user'){if(!await equipCosmetic('title',id))return;}else applyTitle(id);setNotice(id?'칭호를 달았어요':'칭호를 뗐어요');};
   const card = (s: SlotSkin) => {
     const has = owned.includes(s.id);
     const on = active.id === s.id;
@@ -142,7 +146,7 @@ export default function Skins() {
         <T size={15} color="ink2">내 톱니바퀴</T>
         <GearCount n={gears} size={18} />
       </View>
-      {notice ? <T size={14} color="success" weight="semibold" center>{notice}</T> : null}
+      {(walletNotice || notice) ? <T size={14} color="success" weight="semibold" center>{walletNotice || notice}</T> : null}
 
       <SectionTitle title="시즌 한정 스킨" right={<T size={12} color="muted">기간이 지나면 못 사요</T>} />
       {[...season].sort((a, b) => Number(inSeason(b)) - Number(inSeason(a))).map(card)}
@@ -156,7 +160,7 @@ export default function Skins() {
       <SectionTitle
         title="칭호"
         right={cos.title ? (
-          <Pressable onPress={() => { applyTitle(null); setNotice("칭호를 뗐어요"); }} hitSlop={8}>
+          <Pressable onPress={() => {void wearTitle(null);}} hitSlop={8}>
             <T size={13} color="accent" weight="semibold">칭호 떼기</T>
           </Pressable>
         ) : undefined}
@@ -175,7 +179,7 @@ export default function Skins() {
               {on ? (
                 <Badge label="사용 중" tone="accent" />
               ) : has ? (
-                <Btn title="달기" size="sm" variant="primary" onPress={() => { applyTitle(t.id); setNotice(`칭호 "${t.name}"을 달았어요`); }} />
+                <Btn title="달기" size="sm" variant="primary" onPress={() => {void wearTitle(t.id);}} />
               ) : src.kind === "season" && titleInSeason(t) ? (
                 <Btn title={`${src.price}개`} size="sm" variant="accent" icon={<Icon name="gear" size={16} />} onPress={() => buyTitle(t)} disabled={gears < src.price} />
               ) : src.kind === "season" ? (

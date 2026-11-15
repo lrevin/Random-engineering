@@ -1,5 +1,10 @@
 import type { StudyRecord } from "./types";
+export interface MemberAssets {
+ examTickets:number; examUsageDate:string|null; examFreeUsed:number; boostUntil:string|null;
+ ownedSkins:string[]; ownedTitles:string[]; activeSkin:string; activeTitle:string|null;
+}
 export interface WalletState {
+ assets?: MemberAssets;
  balance: number; revision: string; claims: string[];
  /** 오늘 서버가 확인해 지급한 광고 보상 횟수 (AdMob SSV) */
  adsToday?: number;
