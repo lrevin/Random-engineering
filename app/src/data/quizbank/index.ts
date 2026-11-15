@@ -20,6 +20,9 @@ import b_net_1 from "./net-1.json";
 import b_net_2 from "./net-2.json";
 import b_net_3 from "./net-3.json";
 import b_os_1 from "./os-1.json";
+import b_os_2 from "./os-2.json";
+import b_os_3 from "./os-3.json";
+import b_pl_1 from "./pl-1.json";
 import b_pl_2 from "./pl-2.json";
 import b_pl_3 from "./pl-3.json";
 import b_sec_1 from "./sec-1.json";
@@ -45,6 +48,9 @@ const FILES = [
   b_net_2,
   b_net_3,
   b_os_1,
+  b_os_2,
+  b_os_3,
+  b_pl_1,
   b_pl_2,
   b_pl_3,
   b_sec_1,
