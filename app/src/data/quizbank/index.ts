@@ -2,6 +2,7 @@
 // 앱에 내장된 퀴즈 문제 은행. 문제 파일을 추가한 뒤 위 명령으로 다시 만드세요.
 
 import type { QuizQuestion } from "@/lib/quiz";
+import b_ae_aero_1 from "./ae-aero-1.json";
 import b_ai_1 from "./ai-1.json";
 import b_ai_2 from "./ai-2.json";
 import b_ai_3 from "./ai-3.json";
@@ -43,6 +44,7 @@ import b_web_2 from "./web-2.json";
 import b_web_3 from "./web-3.json";
 
 const FILES = [
+  b_ae_aero_1,
   b_ai_1,
   b_ai_2,
   b_ai_3,
