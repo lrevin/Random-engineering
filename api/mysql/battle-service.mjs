@@ -62,16 +62,16 @@ export function createBattleService({auth,connectionFactory=connect,now=()=>new 
   let totalCorrect=base;
   const details={parts:[{label:'배틀 XP 정산',value:delta}],streak:0,battleId:b.id,baseScore:base,reason:b.reason};
   await db.execute('UPDATE user_sync_states SET last_change_seq=? WHERE user_id=?',[seq,id]);
-  await db.execute("INSERT INTO quiz_attempts(id,user_id,topic_id,status,verification_status,started_at,completed_at) VALUES (?,?,?,'completed','server_verified',?,?)",[attempt,id,b.topicId,date(b.startAt),at]);
+  await db.execute("INSERT INTO quiz_attempts(id,user_id,topic_id,status,verification_status,started_at,completed_at,purpose) VALUES (?,?,?,'completed','server_verified',?,?,'battle')",[attempt,id,b.topicId,date(b.startAt),at]);
   for(let i=0;i<count;i++){
    const q=b.questions[i],value=i<5?(b.answers[id][i]??null):(b.rounds[i-5].answers[id]??null),correct=right(q,value);
    if(i>=5&&correct)totalCorrect++;
    const {questionId,...snapshot}=q;
-   await db.execute('INSERT INTO quiz_attempt_items(attempt_id,position,question_id,question_snapshot,submitted_answer,is_correct,answered_at) VALUES (?,?,?,?,?,?,?)',[attempt,i+1,questionId,JSON.stringify({...snapshot,stage:i<5?'main':'overtime',topicId:b.topicId}),value===null?null:JSON.stringify(value),correct,at]);
+   await db.execute('INSERT INTO quiz_attempt_items(attempt_id,position,question_id,question_snapshot,submitted_answer,is_correct,answered_at,topic_id) VALUES (?,?,?,?,?,?,?,?)',[attempt,i+1,questionId,JSON.stringify({...snapshot,stage:i<5?'main':'overtime',topicId:b.topicId}),value===null?null:JSON.stringify(value),correct,at,b.topicId]);
   }
   const opponent=b.from.id===id?b.to:b.from;
-  await db.execute(`INSERT INTO study_records(id,user_id,attempt_id,topic_id,topic_ko,domain,category,difficulty,memo,score,quiz_total,rp,study_sec,studied_at,study_date,time_validation_status,submission_hash,change_seq,received_at,study_type,battle_id,rank_score)
-   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'battle',?,?)`,[recordId,id,attempt,b.topicId,t.name_ko,t.domain_id,t.category_id,t.difficulty,opponent.nickname+'님과 배틀',totalCorrect,count,delta,Math.min(b.studySec,Math.max(0,Math.floor((Math.min(at.getTime(),Date.parse(b.quizStartAt))-Date.parse(b.startAt))/1000))),at,isStudy?kday(at):null,'accepted',Buffer.from(hash({battleId:b.id,id}),'hex'),seq,at,b.id,isStudy?base:0]);
+  await db.execute(`INSERT INTO study_records(id,user_id,attempt_id,topic_id,topic_ko,domain,category,difficulty,memo,score,quiz_total,rp,study_sec,studied_at,study_date,time_validation_status,submission_hash,change_seq,received_at,study_type,battle_id,rank_score,reward_status,reward_reason,reward_processed_at)
+   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'battle',?,?,'eligible',NULL,?)`,[recordId,id,attempt,b.topicId,t.name_ko,t.domain_id,t.category_id,t.difficulty,opponent.nickname+'님과 배틀',totalCorrect,count,delta,Math.min(b.studySec,Math.max(0,Math.floor((Math.min(at.getTime(),Date.parse(b.quizStartAt))-Date.parse(b.startAt))/1000))),at,isStudy?kday(at):null,'accepted',Buffer.from(hash({battleId:b.id,id}),'hex'),seq,at,b.id,isStudy?base:0,at]);
   await db.execute("INSERT INTO xp_ledger(id,user_id,source_record_id,topic_id,event_type,amount,rule_version,verification_status,calculation_details,idempotency_key,source_type) VALUES (?,?,?,?,'award',?,'battle-v1','server_verified',?,?,'battle')",[randomUUID(),id,recordId,b.topicId,delta,JSON.stringify(details),'battle:'+b.id+':'+id]);
   return recordId;
  }

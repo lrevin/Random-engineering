@@ -1,7 +1,8 @@
+import {questDateKey} from "./quest-time";
 import type { StudyRecord } from "./types";
 
 const pad = (n: number) => String(n).padStart(2, "0");
-export const dateKey = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+export const dateKey = questDateKey;
 
 const DOW = ["일", "월", "화", "수", "목", "금", "토"];
 export const fmtDate = (iso: string) => {
@@ -23,14 +24,17 @@ export const battleOpponentLabel = (r: StudyRecord) => r.memo.replace(/^\S+ (?=.
 
 export const fmtDuration = (sec: number) => (sec ? `${Math.floor(sec / 60)}분 ${sec % 60}초` : "-");
 
+// 회원은 서버 판정을 사용하고, 게스트 기록은 기존 기기 규칙을 유지한다.
+export const isRecognizedStudy = (r: StudyRecord) => r.eligibility ? r.eligibility.studyDayEligible : r.rewardStatus === undefined && r.synced !== true && r.countsAsStudy !== false;
+export const recordDay = (r: StudyRecord) => r.studyDate ?? dateKey(new Date(r.studiedAt));
 export function studiedToday(records: StudyRecord[], now = new Date()) {
   const k = dateKey(now);
-  return records.some((r) => r.countsAsStudy !== false && dateKey(new Date(r.studiedAt)) === k);
+  return records.some((r) => isRecognizedStudy(r) && recordDay(r) === k);
 }
 
 /** 공부한 날 (+ 보호권·톱니바퀴로 지킨 날) */
 export const studyDays = (records: StudyRecord[], kept: readonly string[] = []) =>
-  new Set([...records.filter(r=>r.countsAsStudy !== false).map((r) => dateKey(new Date(r.studiedAt))), ...kept]);
+  new Set([...records.filter(isRecognizedStudy).map(recordDay), ...kept]);
 
 /**
  * 연속 공부 일수. 오늘 아직 안 했으면 어제까지의 연속 일수를 돌려줍니다.
@@ -38,13 +42,13 @@ export const studyDays = (records: StudyRecord[], kept: readonly string[] = []) 
  */
 export function calcStreak(records: StudyRecord[], now = new Date(), kept: readonly string[] = []) {
   const days = studyDays(records, kept);
-  const d = new Date(now);
+  const d = new Date(dateKey(now)+"T00:00:00+09:00");
   const today = days.has(dateKey(d));
-  if (!today) d.setDate(d.getDate() - 1);
+  if (!today) d.setUTCDate(d.getUTCDate() - 1);
   let n = 0;
   while (days.has(dateKey(d))) {
     n++;
-    d.setDate(d.getDate() - 1);
+    d.setUTCDate(d.getUTCDate() - 1);
   }
   return { streak: n, today };
 }
@@ -54,16 +58,16 @@ export function lastWeek(records: StudyRecord[], now = new Date(), kept: readonl
   const days = studyDays(records);
   const keptSet = new Set(kept);
   return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(now);
-    d.setDate(d.getDate() - (6 - i));
+    const d = new Date(dateKey(now)+"T00:00:00+09:00");
+    d.setUTCDate(d.getUTCDate() - (6 - i));
     const k = dateKey(d);
-    return { label: DOW[d.getDay()], done: days.has(k), kept: !days.has(k) && keptSet.has(k), isToday: i === 6 };
+    return { label: DOW[new Date(k+"T00:00:00Z").getUTCDay()], done: days.has(k), kept: !days.has(k) && keptSet.has(k), isToday: i === 6 };
   });
 }
 
 /** 평균 퀴즈 점수 (10점 만점 기준) */
 export function averageScore(records: StudyRecord[]) {
-  const rs = records.filter((r) => r.total > 0 && r.countsAsStudy !== false);
+  const rs = records.filter((r) => r.total > 0 && isRecognizedStudy(r));
   if (!rs.length) return 0;
   return rs.reduce((a, r) => a + (r.score / r.total) * 10, 0) / rs.length;
 }

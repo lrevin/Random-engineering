@@ -1,3 +1,4 @@
+import {rewardSql} from './reward-eligibility.mjs';
 import {purchase,equip,startExam,assetsState} from './purchase-service.mjs';
 import {walletState} from './wallet-state.mjs';
 import {randomBytes} from 'node:crypto';
@@ -64,7 +65,7 @@ export function createMemberService({auth,connectionFactory=connect,now=()=>new 
    if(action==='buy_freeze'){if(s.freezes>=2)throw new AuthError('inventory_full',409);amount=-30;s.freezes++;}
    else if(action==='buy_battle_ticket'){if(s.boughtTickets>=5)throw new AuthError('inventory_full',409);amount=-50;s.boughtTickets++;}
    else if(action==='check_streak'||action==='restore_streak'){
-    const [rows]=await db.execute("SELECT studied_at AS studiedAt,memo FROM study_records WHERE user_id=? AND time_validation_status='accepted'",[id]);
+    const [rows]=await db.execute(`SELECT r.studied_at AS studiedAt,r.memo FROM study_records r JOIN quiz_attempts a ON a.id=r.attempt_id WHERE r.user_id=? AND ${rewardSql('day')}`,[id]);
     const records=rows.map(r=>({...r,studiedAt:r.studiedAt.replace(' ','T')+'Z'}));
     const plan=planStreakRescue(records,s.keptDays,s.freezes,now());
     if(plan&&!plan.tooLate){

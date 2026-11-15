@@ -21,7 +21,7 @@ export default function Welcome() {
   const dark = useColorScheme() === "dark";
   const [err, setErr] = useState("");
   return (
-    <Screen contentStyle={{ justifyContent: "space-between" }}>
+    <Screen scroll contentStyle={{ flexGrow: 1, justifyContent: "space-between" }}>
       <View style={{ gap: 10, marginTop: 40 }}>
         {/* 슬롯머신 아이콘만 두고, 그 왼쪽 끝에 이름 줄을 맞춤 */}
         <Image
@@ -41,10 +41,10 @@ export default function Welcome() {
       <Card accent style={{ gap: 14 }}>
         {STEPS.map((s) => (
           <View key={s.n} style={{ flexDirection: "row", gap: 14, alignItems: "center" }}>
-            <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: c.navy, alignItems: "center", justifyContent: "center" }}>
+            <View style={{ flexShrink: 0, width: 34, height: 34, borderRadius: 17, backgroundColor: c.navy, alignItems: "center", justifyContent: "center" }}>
               <T weight="bold" color="navyInk">{s.n}</T>
             </View>
-            <View>
+            <View style={{ flex: 1, minWidth: 0 }}>
               <T size={17} weight="semibold">{s.title}</T>
               <T size={14} color="muted">{s.body}</T>
             </View>

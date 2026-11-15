@@ -1,5 +1,5 @@
 import { domainById } from "@/data";
-import { dateKey, isBattleRecord } from "./stats";
+import { dateKey, isBattleRecord, isRecognizedStudy, recordDay } from "./stats";
 import type { StudyRecord } from "./types";
 
 /** 이 달 달력 칸: 그날 공부 횟수 (0이면 안 함, 보호권으로 지킨 날은 kept) */
@@ -8,19 +8,18 @@ export interface CalendarDay { key: string; day: number; count: number; kept: bo
 /** 달력: 일요일부터 시작하는 주 단위 칸 (앞뒤 빈칸은 null) */
 export function monthCalendar(records: StudyRecord[], kept: readonly string[], year: number, month: number, now = new Date()) {
   const counts = new Map<string, number>();
-  for (const r of records) {
-    const k = dateKey(new Date(r.studiedAt));
+  for (const r of records.filter(isRecognizedStudy)) {
+    const k = recordDay(r);
     counts.set(k, (counts.get(k) ?? 0) + 1);
   }
   const keptSet = new Set(kept);
-  const first = new Date(year, month, 1);
-  const days = new Date(year, month + 1, 0).getDate();
+  const first = new Date(Date.UTC(year, month, 1));
+  const days = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
   const todayKey = dateKey(now);
-  const cells: (CalendarDay | null)[] = Array.from({ length: first.getDay() }, () => null);
+  const cells: (CalendarDay | null)[] = Array.from({ length: first.getUTCDay() }, () => null);
   for (let d = 1; d <= days; d++) {
-    const date = new Date(year, month, d);
-    const key = dateKey(date);
-    cells.push({ key, day: d, count: counts.get(key) ?? 0, kept: keptSet.has(key), today: key === todayKey, future: date > now && key !== todayKey });
+    const key = `${year}-${String(month+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    cells.push({ key, day: d, count: counts.get(key) ?? 0, kept: keptSet.has(key), today: key === todayKey, future: key > todayKey });
   }
   while (cells.length % 7) cells.push(null);
   const studied = cells.filter((c) => c && c.count > 0).length;
@@ -45,22 +44,22 @@ export interface WeekReport {
 }
 
 export function weekStart(now = new Date(), offsetWeeks = 0) {
-  const d = new Date(now);
-  d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() - ((d.getDay() + 6) % 7) - offsetWeeks * 7);
+  const key=dateKey(now),weekday=new Date(key+"T00:00:00Z").getUTCDay();
+  const d=new Date(key+"T00:00:00+09:00");
+  d.setUTCDate(d.getUTCDate()-((weekday+6)%7)-offsetWeeks*7);
   return d;
 }
 
 export function weekReport(records: StudyRecord[], now = new Date(), offsetWeeks = 0): WeekReport {
   const start = weekStart(now, offsetWeeks);
   const end = new Date(start);
-  end.setDate(end.getDate() + 7);
+  end.setUTCDate(end.getUTCDate() + 7);
   const rs = records.filter((r) => {
-    const t = new Date(r.studiedAt);
-    return t >= start && t < end && !isBattleRecord(r);
+    const t = new Date(recordDay(r)+"T00:00:00+09:00");
+    return isRecognizedStudy(r) && t >= start && t < end && !isBattleRecord(r);
   });
   const perDay = [0, 0, 0, 0, 0, 0, 0];
-  for (const r of rs) perDay[(new Date(r.studiedAt).getDay() + 6) % 7]++;
+  for (const r of rs) perDay[(new Date(recordDay(r)+"T00:00:00Z").getUTCDay() + 6) % 7]++;
 
   const byDomain = new Map<string, { n: number; c: number; t: number }>();
   for (const r of rs) {
@@ -79,7 +78,7 @@ export function weekReport(records: StudyRecord[], now = new Date(), offsetWeeks
     start,
     days: perDay.filter((n) => n > 0).length,
     sessions: rs.length,
-    minutes: Math.round(rs.reduce((a, r) => a + (r.studySec || 0), 0) / 60),
+    minutes: Math.round(rs.reduce((a, r) => a + (r.eligibility && !r.eligibility.timeQuestEligible ? 0 : r.studySec || 0), 0) / 60),
     correct: rs.reduce((a, r) => a + r.score, 0),
     total: rs.reduce((a, r) => a + r.total, 0),
     xp: rs.reduce((a, r) => a + Math.max(0, r.rp || 0), 0),

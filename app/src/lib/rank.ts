@@ -47,7 +47,7 @@ export const totalRp = (records: StudyRecord[]) => records.reduce((a, r) => a + 
 export const TOPIC_TIER_MIN = [0, 10, 20, 30, 40, 50];
 
 export function topicMastery(topicId: string, records: StudyRecord[]) {
-  const rs = records.filter((r) => r.topicId === topicId && r.countsAsStudy !== false);
+  const rs = records.filter((r) => r.topicId === topicId && (r.eligibility ? r.eligibility.rankEligible : r.rewardStatus === undefined && r.synced !== true && r.countsAsStudy !== false));
   const points = rs.reduce((a, r) => a + Math.min(r.rankScore ?? r.score, r.studyType === "battle" ? 5 : r.total), 0);
   const perfect = rs.some((r) => r.studyType === "battle" ? r.rankScore === 5 : r.score === r.total && r.total > 0);
   let i = -1; // -1 = 아직 안 풂
@@ -78,7 +78,7 @@ export const DOMAIN_TIER_MIN = [0, 30, 100, 250, 500, 1000];
 export const DOMAIN_ENGINEER_TOPICS = 30;
 
 export function domainMastery(domain: string, records: StudyRecord[]) {
-  const rs = records.filter((r) => r.domain === domain && r.countsAsStudy !== false);
+  const rs = records.filter((r) => r.domain === domain && (r.eligibility ? r.eligibility.rankEligible : r.rewardStatus === undefined && r.synced !== true && r.countsAsStudy !== false));
   const points = rs.reduce((a, r) => a + Math.min(r.rankScore ?? r.score, r.studyType === "battle" ? 5 : r.total), 0);
   const topics = new Set(rs.map((r) => r.topicId)).size;
   let i = -1; // -1 = 아직 안 풂

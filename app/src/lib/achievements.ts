@@ -72,7 +72,7 @@ function make(id: string, group: AchievementGroup, title: string, desc: string, 
 const count = <T,>(xs: T[], f: (x: T) => boolean) => xs.filter(f).length;
 
 export function achievements(records: StudyRecord[], xp: number, kept: readonly string[] = [], extra: AchievementExtra = {}): Achievement[] {
-  records = records.filter(r=>r.countsAsStudy !== false);
+  records = records.filter(r=>r.eligibility ? r.eligibility.studyDayEligible : r.rewardStatus === undefined && r.synced !== true && r.countsAsStudy !== false);
   const topicIds = [...new Set(records.map((r) => r.topicId))];
   const tiers = domainRanks(records).map((d) => d.index);
   const isPerfect = (r: StudyRecord) => r.total > 0 && r.score === r.total;

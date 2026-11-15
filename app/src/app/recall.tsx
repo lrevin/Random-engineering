@@ -1,3 +1,4 @@
+import {ServerPractice} from "@/components/ServerPractice";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
@@ -18,7 +19,8 @@ import { answerText, isCorrect, QuestionView } from "./quiz";
 const RECALL_GEARS = 5;
 
 /** 복습: 마지막으로 본 지 2일이 지난 주제를 주제마다 3문제씩 다시 풀어 봄 */
-export default function Recall() {
+export default function Recall(){const {mode}=useApp();return mode==='user'?<ServerPractice purpose="recall"/>:<GuestRecall/>;}
+function GuestRecall() {
   const { records, claimQuest } = useApp();
   const c = useColors();
   const [log, setLog] = useState<RecallLog | null>(null);
