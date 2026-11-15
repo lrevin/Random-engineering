@@ -13,6 +13,7 @@ import { dateKey } from "./stats";
 import { cancelAllNotifications, rescheduleReminders } from "./notify";
 import { mysqlAuth } from "./auth";
 import { kakaoSignIn } from "./kakao-login";
+import { syncProgress } from "./progress-sync";
 import { AuthApiError, type AuthSession, type WalletState } from "./auth-client";
 import { enqueueRecordOperation, syncMySqlRecords } from "./record-sync";
 import { DEFAULT_PREFS, type ActiveSession, type Prefs, type StudyRecord } from "./types";
@@ -391,6 +392,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try { const value=await mysqlAuth.getWallet();if(ownerRef.current===s.user.id)applyWallet(value); }catch {setWalletNotice('재화 정보를 갱신하지 못했어요. 인터넷 연결 후 다시 열어 주세요.');}
     try { const social=await mysqlAuth.apiRequest('/social/me',{},'POST');if(ownerRef.current===s.user.id){setUid(social.uid);await writeJSON(K.uid,social.uid);} }catch { /* Friends retry on the next account load. */ }
     await syncPending(s.user.id).catch(() => {});
+    await syncProgress(s.user.id, () => ownerRef.current === s.user.id).catch(() => {});
   }, [applyWallet, archiveApiAccount, clearLocal, refreshSpeedXp, refreshApiProfile, restoreAccountExtras, saveRecordsLocal, setModePersist, syncPending]);
 
   const cancelDeletion = useCallback(async (email: string, password: string) => {
@@ -536,6 +538,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [loadApiAccount]);
 
   const signOut = useCallback(async () => {
+    // 로그아웃하면 기기의 학습 진행을 지우므로, 그 전에 계정에 올려 둠
+    const id = ownerRef.current;
+    if (id) await syncProgress(id, () => ownerRef.current === id).catch(() => {});
     await archiveApiAccount();
     try { await mysqlAuth.signOut(); } catch { /* Clear local login even when offline. */ }
     await clearLocal();
@@ -653,6 +658,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
     saveRecordsLocal(sortRecords([...recordsRef.current, ...seeded]));
   }, [mode, saveRecordsLocal]);
+
+  // 학습 진행(모의고사 · 오답 해결 · 복습 · 자격증 시험일) 계정 보관: 앱으로 돌아올 때 받고, 앱을 떠날 때 올림
+  useEffect(() => {
+    if (mode !== "user") return;
+    const sub = RNAppState.addEventListener("change", (st) => {
+      const id = ownerRef.current;
+      if (id && (st === "active" || st === "background")) syncProgress(id, () => ownerRef.current === id).catch(() => {});
+    });
+    return () => sub.remove();
+  }, [mode]);
 
   // 연속 기록 확인: 앱을 열 때와 앱으로 돌아올 때
   useEffect(() => {

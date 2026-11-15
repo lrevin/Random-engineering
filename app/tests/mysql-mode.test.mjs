@@ -176,6 +176,7 @@ function stateHarness() {
   // 저장 키 목록은 실제 모듈을 그대로 씀 (지우기도 같은 가짜 저장소에서)
   './local-data':load('local-data',{'@react-native-async-storage/async-storage':{__esModule:true,default:storage}}),
   './kakao-login':{kakaoSignIn:async()=>null},
+  './progress-sync':{syncProgress:async()=>{}},
   './stats':{dateKey:()=> '2026-11-13'},'./notify':{cancelAllNotifications:async()=>{},rescheduleReminders:async()=>{}},
   './auth':{mysqlAuth:auth},'./auth-client':authClient,'./record-sync':{syncMySqlRecords,enqueueRecordOperation},
   './types':{DEFAULT_PREFS:{nickname:'',interests:[],level:0,studyMinutes:15,reminderEnabled:true,reminderTime:'21:00'}},

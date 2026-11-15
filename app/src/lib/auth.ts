@@ -20,6 +20,7 @@ export function authErrorMessage(error: unknown) {
     network_error: "서버에 연결할 수 없어요. 인터넷 연결을 확인해 주세요.",
     database_unavailable: "서버에 잠시 연결할 수 없어요. 잠시 후 다시 시도해 주세요.",
     invalid_profile: "프로필 입력값을 확인해 주세요.",
+    nickname_not_allowed: "사용할 수 없는 단어가 들어 있는 닉네임이에요. 다른 닉네임을 정해 주세요.",
     invalid_interests: "존재하는 관심 분야를 선택해 주세요.",
     account_deleting: "탈퇴 신청 중인 계정이에요. 7일 이내에는 아래에서 취소할 수 있어요.",
     deletion_period_expired: "탈퇴 신청 후 7일이 지나 취소할 수 없어요.",
