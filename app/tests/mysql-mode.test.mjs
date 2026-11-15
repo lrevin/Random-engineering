@@ -172,7 +172,7 @@ function stateHarness() {
   './catalog-sync':{subscribeCatalog:()=>()=>{},catalogRevision:()=>0},
   react:{...hooks,useSyncExternalStore:(_subscribe,snapshot)=>snapshot()},'react/jsx-runtime':{jsx:(_type,props)=>props},'react-native':{AppState:{}},
   './economy':{refillTickets:()=>({n:3,bought:0}),MAX_FREEZES:3,monthKey:()=> '2026-11'},
-  './ads':{AD_DAILY_LIMIT:3,AD_REWARD:10},'./booster':{resetBoost:()=>{}},'./skins':{resetSkins:()=>{}},
+  './ads':{AD_DAILY_LIMIT:3,AD_REWARD:10},'./booster':{resetBoost:()=>{},applyServerBoost:()=>{}},'./skins':{resetSkins:()=>{},applyServerCosmetics:()=>{}},
   // 저장 키 목록은 실제 모듈을 그대로 씀 (지우기도 같은 가짜 저장소에서)
   './local-data':load('local-data',{'@react-native-async-storage/async-storage':{__esModule:true,default:storage}}),
   './kakao-login':{kakaoSignIn:async()=>null},
@@ -239,4 +239,36 @@ test('speed client retries the same start UUID and never grants local practice X
  const practiced=await speed.finishPractice(7);assert.equal(practiced.xp,0);assert.equal((await speed.readSpeed(false)).best,7);assert.equal((await speed.readSpeed(false)).totalXp,0);
  await assert.rejects(speed.startSpeed(),{code:'network_error'});fail=false;await speed.startSpeed();assert.equal(calls[0].body.requestId,calls[1].body.requestId);assert.equal(uuids,1);
  id=null;await assert.rejects(speed.startSpeed(),{code:'unauthorized'});assert.equal(calls.length,2);
+});
+
+
+test('회원 상품 구매는 상품 ID·동일 UUID를 재전송하고 서버 자산만 반영',async()=>{
+ const h=stateHarness();let fail=true;const calls=[];
+ const assets={examTickets:2,examUsageDate:null,examFreeUsed:0,boostUntil:null,ownedSkins:['classic','cherry'],ownedTitles:[],activeSkin:'cherry',activeTitle:null};
+ const w={balance:100,revision:'1',claims:[],state:{freezes:0,boughtTickets:0,freeTickets:2,month:'2026-11',premium:false,keptDays:[]},assets};
+ h.auth.getWallet=async()=>w;
+ h.auth.walletOperation=async(id,action,payload)=>{calls.push({id,action,payload});if(fail)throw new AuthApiError('network_error');return {...w,balance:60,revision:'2',assets:{...assets,examTickets:3}};};
+ let app=h.render();await app.signIn('buyer','password');app=h.render();assert.equal(app.memberAssets.examTickets,2);
+ assert.equal(await app.purchaseItem('exam_ticket'),false);app=h.render();assert.equal(app.memberAssets.examTickets,2);
+ fail=false;assert.equal(await app.purchaseItem('exam_ticket'),true);app=h.render();assert.equal(app.memberAssets.examTickets,3);assert.equal(app.gears,60);assert.equal(calls[0].id,calls[1].id);assert.deepEqual(calls[0].payload,{product:'exam_ticket'});
+ await app.equipCosmetic('skin','classic');assert.equal(calls.at(-1).action,'equip_cosmetic');
+ await app.startMemberExam('stable-start-id','cert');assert.equal(calls.at(-1).id,'stable-start-id');
+ await app.signOut();app=h.render();assert.equal(app.memberAssets,null);
+});
+
+
+test('회원 구매 중 연속 탭은 새 구매 요청을 만들지 않음',async()=>{
+ const h=stateHarness();const w={balance:100,revision:'0',claims:[],state:{freezes:0,boughtTickets:0,freeTickets:2,month:'2026-11',premium:false,keptDays:[]}};
+ h.auth.getWallet=async()=>w;let resolve,calls=0;h.auth.walletOperation=()=>{calls++;return new Promise(r=>{resolve=r;});};
+ let app=h.render();await app.signIn('busy-user','password');app=h.render();const first=app.purchaseItem('xp_boost');assert.equal(await app.purchaseItem('xp_boost'),false);
+ await new Promise(r=>setImmediate(r));assert.equal(calls,1);resolve({...w,revision:'1'});assert.equal(await first,true);assert.equal(h.render().walletBusy,false);
+});
+
+test('모의고사 준비·승인·답안은 같은 기기의 저장에서 복원하며 저장 실패를 숨기지 않음',async()=>{
+ const cache=new Map();let fail=false;
+ const storage={getItem:async k=>cache.get(k)??null,setItem:async(k,v)=>{if(fail)throw Error('disk full');cache.set(k,v);},removeItem:async k=>cache.delete(k)};
+ const exam=load('exam',{'@react-native-async-storage/async-storage':{__esModule:true,default:storage},'./local-data':{LOCAL_KEYS:{exam:{key:'pg.exam'},examActive:{key:'pg.exam.active'}}},'@/data':{certById:id=>({id})},'./economy':{FREE_EXAMS_PER_DAY:1},'./quiz':{},'./stats':{dateKey:()=> '2026-11-15'}});
+ const a={paper:{certId:'cert',subjects:['과목'],items:[{q:{},subject:0},{q:{},subject:0}]},answers:[],owner:'member-a',startId:'stable-id',approved:false};
+ await exam.saveActiveExam(a);assert.deepEqual(await exam.readActiveExam(),a);await exam.saveActiveExam({...a,approved:true,answers:[true]});assert.equal((await exam.readActiveExam()).approved,true);assert.equal((await exam.readActiveExam()).startId,'stable-id');
+ fail=true;await assert.rejects(exam.saveActiveExam(a),/disk full/);assert.equal((await exam.readActiveExam()).answers.length,1);
 });

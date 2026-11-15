@@ -67,7 +67,7 @@ function PlanCard({ ribbon, title, art, children, footer, highlight }: {
 
 /** 톱니바퀴 쓰는 곳 + 무료/유료 버전 */
 export default function Shop() {
-  const { mode, walletNotice, gears, freezes, buyFreeze, premium, setPremium, purchasePremium, spendGears, battleTickets, freeTickets, boughtTickets, buyBattleTicket } = useApp();
+  const { mode, walletBusy, walletNotice, gears, freezes, buyFreeze, premium, setPremium, purchasePremium, spendGears, memberAssets, purchaseItem, refreshWallet, battleTickets, freeTickets, boughtTickets, buyBattleTicket } = useApp();
   const c = useColors();
   const [askUpgrade, setAskUpgrade] = useState(false);
   const [notice, setNotice] = useState("");
@@ -75,13 +75,15 @@ export default function Shop() {
   const [ticketNotice, setTicketNotice] = useState("");
   const [bonusNotice, setBonusNotice] = useState("");
   // 모의고사 1회권 (모의고사 화면에서 쓰고 오면 다시 읽음)
-  const [examTickets, setExamTickets] = useState(0);
+  const [guestExamTickets, setExamTickets] = useState(0);
+  const examTickets=mode==='user'?(memberAssets?.examTickets??0):guestExamTickets;
   const [examNotice, setExamNotice] = useState("");
-  useFocusEffect(useCallback(() => { readExamStore().then((s) => setExamTickets(s.tickets)); }, []));
+  useFocusEffect(useCallback(() => { if(mode==='user')void refreshWallet().catch(()=>{});else void readExamStore().then(s=>setExamTickets(s.tickets)); }, [mode,refreshWallet]));
   const examFull = examTickets >= MAX_EXAM_TICKETS;
   const buyExamTicket = async () => {
-    if (examFull || !await spendGears(EXAM_TICKET_COST)) return;
-    setExamTickets((await addExamTicket()).tickets);
+    if(examFull)return;
+    if(mode==='user'){if(!await purchaseItem('exam_ticket'))return;}
+    else {if(!await spendGears(EXAM_TICKET_COST))return;setExamTickets((await addExamTicket()).tickets);}
     setExamNotice("모의고사 1회권을 1개 샀어요");
   };
   const skins = useSkins();
@@ -89,8 +91,9 @@ export default function Shop() {
   const [boostNotice, setBoostNotice] = useState("");
   const boostFull = !canStackBoost();
   const buyBoost = async () => {
-    if (boostFull || !await spendGears(BOOST_COST)) return;
-    addBoost();
+    if(boostFull)return;
+    if(mode==='user'){if(!await purchaseItem('xp_boost'))return;}
+    else {if(!await spendGears(BOOST_COST))return;addBoost();}
     setBoostNotice(`부스터를 켰어요. ${BOOST_MIN}분 동안 퀴즈 경험치가 2배예요`);
   };
   const ticketsFull = boughtTickets >= MAX_BOUGHT_TICKETS;
@@ -103,7 +106,7 @@ export default function Shop() {
     <Screen scroll edges={["top"]}>
       <T size={26} weight="bold">상점</T>
       {walletNotice ? <T color="accent">{walletNotice}</T> : null}
-      {mode === "user" ? <T size={13} color="muted">회원 재화는 서버에 저장해요. 보호권·배틀권 구매와 일반 퀘스트 보상을 연결했으며, 모의고사권·꾸미기·부스터·결제는 계정 연결을 준비하고 있어요. 배틀권 사용은 배틀 서버 연결 후 가능해요.</T> : null}
+      {mode === "user" ? <T size={13} color="muted">구매한 이용권·꾸미기·부스터는 회원 계정에 저장돼요. 실제 결제 기능은 아직 준비 중이에요.</T> : null}
 
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: c.chip, borderRadius: radius.md, paddingHorizontal: 16, paddingVertical: 12, ...inset(c) }}>
         <T size={15} color="ink2">내 톱니바퀴</T>
@@ -187,7 +190,7 @@ export default function Shop() {
                 variant="accent"
                 icon={examFull ? undefined : <Icon name="gear" size={22} />}
                 onPress={buyExamTicket}
-                disabled={examFull || gears < EXAM_TICKET_COST}
+                disabled={walletBusy || examFull || gears < EXAM_TICKET_COST}
               />
               {!examFull && gears < EXAM_TICKET_COST && <T size={13} color="accent" center>톱니바퀴가 {EXAM_TICKET_COST - gears}개 부족해요</T>}
               {examNotice ? <T size={13} color="success" center>{examNotice}</T> : null}
@@ -214,7 +217,7 @@ export default function Shop() {
               variant="accent"
               icon={boostFull ? undefined : <Icon name="gear" size={22} />}
               onPress={buyBoost}
-              disabled={boostFull || gears < BOOST_COST}
+              disabled={walletBusy || boostFull || gears < BOOST_COST}
             />
             {!boostFull && gears < BOOST_COST && <T size={13} color="accent" center>톱니바퀴가 {BOOST_COST - gears}개 부족해요</T>}
             {boostNotice ? <T size={13} color="success" center>{boostNotice}</T> : null}

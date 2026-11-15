@@ -1,3 +1,4 @@
+import {assetsState} from './purchase-service.mjs';
 const json=v=>typeof v==='string'?JSON.parse(v):v;
 import {kstDayStartUtc} from './ad-reward.mjs';
 export async function walletState(db,id,now=new Date()){
@@ -10,5 +11,5 @@ export async function walletState(db,id,now=new Date()){
  const [claims]=await db.execute("SELECT request_id FROM wallet_transactions WHERE user_id=? AND reason='quest'",[id]);
  // 오늘(한국 시간) 서버가 확인해 지급한 광고 보상 횟수 (AdMob SSV)
  const [[ads]]=await db.execute("SELECT COUNT(*) AS n FROM wallet_transactions WHERE user_id=? AND reason='ad_reward' AND created_at>=?",[id,kstDayStartUtc(now)]);
- return {balance:Number(w.balance),revision:String(last?.id??0),state,claims:claims.map(x=>x.request_id),adsToday:Number(ads.n)};
+ return {balance:Number(w.balance),revision:String(last?.id??0),state,claims:claims.map(x=>x.request_id),adsToday:Number(ads.n),assets:await assetsState(db,id)};
 }

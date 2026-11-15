@@ -83,7 +83,7 @@ export const SKINS: SlotSkin[] = [
 export const skinById = (id: string) => SKINS.find((s) => s.id === id) ?? SKINS[0];
 
 /** 시즌 스킨이 지금 상점에 나와 있는지 */
-export const inSeason = (s: SlotSkin, now = new Date()) => s.source.kind !== "season" || s.source.months.includes(now.getMonth() + 1);
+export const inSeason = (s: SlotSkin, now = new Date()) => s.source.kind !== "season" || s.source.months.includes(Number(new Intl.DateTimeFormat("en",{timeZone:"Asia/Seoul",month:"numeric"}).format(now)));
 
 // ───────── 칭호: 닉네임 옆에 붙는 짧은 이름 ─────────
 export type TitleSource =
@@ -108,7 +108,7 @@ export const TITLES: TitleDef[] = [
 ];
 
 export const titleById = (id: string | null | undefined) => TITLES.find((t) => t.id === id);
-export const titleInSeason = (t: TitleDef, now = new Date()) => t.source.kind !== "season" || t.source.months.includes(now.getMonth() + 1);
+export const titleInSeason = (t: TitleDef, now = new Date()) => t.source.kind !== "season" || t.source.months.includes(Number(new Intl.DateTimeFormat("en",{timeZone:"Asia/Seoul",month:"numeric"}).format(now)));
 
 // ───────── 저장 ─────────
 interface CosmeticState {
@@ -193,6 +193,12 @@ export function addTitle(id: string) {
 /** 쓰는 칭호 바꾸기 (null = 칭호 안 씀) */
 export function applyTitle(id: string | null) {
   set({ ...state, title: id });
+}
+
+/** 회원 소유권은 서버 응답만 적용한다. 기기 해금 데이터를 업로드하지 않는다. */
+export function applyServerCosmetics(a:{ownedSkins:string[];ownedTitles:string[];activeSkin:string;activeTitle:string|null}) {
+ loaded=true;
+ set({owned:a.ownedSkins,active:a.activeSkin,titles:a.ownedTitles,title:a.activeTitle,milestones:[]},false);
 }
 
 /** 개발·시연용: 모든 스킨과 칭호를 가진 상태로 (쓰는 스킨·칭호는 그대로) */

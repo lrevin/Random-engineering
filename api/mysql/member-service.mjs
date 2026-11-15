@@ -1,3 +1,4 @@
+import {purchase,equip,startExam,assetsState} from './purchase-service.mjs';
 import {walletState} from './wallet-state.mjs';
 import {randomBytes} from 'node:crypto';
 import {connect,transaction} from '../server/db.mjs';
@@ -77,10 +78,10 @@ export function createMemberService({auth,connectionFactory=connect,now=()=>new 
     const [[claimed]]=await db.execute("SELECT id FROM wallet_transactions WHERE user_id=? AND request_id=?",[id,payload.key]);
     if(claimed)throw new AuthError('already_claimed',409);
    }
+   else if(action==='equip_cosmetic'){await equip(db,id,payload.type,payload.itemId);}
+   else if(action==='exam_start'){await startExam(db,id,payload,value,now());}
    else if(action==='spend'){
-    // Benefits without server inventory are deliberately unavailable until their persistence is connected.
-    const prices={study_extend:10};amount=-prices[payload.product];
-    if(!Number.isInteger(amount))throw new AuthError('product_not_available',409);
+    amount=payload.product==='study_extend'?-10:await purchase(db,id,payload.product,value,now());
    }
    else if(action==='ad_reward'||action==='premium')throw new AuthError('verification_required',409);
    else throw new AuthError('operation_not_available',409);
@@ -88,7 +89,7 @@ export function createMemberService({auth,connectionFactory=connect,now=()=>new 
    value.balance+=amount;
    await db.execute('UPDATE wallets SET balance=? WHERE user_id=?',[value.balance,id]);
    if(amount)await db.execute('INSERT INTO wallet_transactions(user_id,amount,reason,request_id) VALUES (?,?,?,?)',[id,amount,action,action==='quest'?payload.key:'op:'+requestId]);
-   const result={balance:value.balance,state:s};
+   const result={balance:value.balance,state:s,assets:await assetsState(db,id)};
    await db.execute('INSERT INTO wallet_operations(user_id,request_id,request_hash,action,payload,result_json) VALUES (?,?,?,?,?,?)',[id,requestId,digest,action,JSON.stringify(payload),JSON.stringify(result)]);
    return {...await wallet(db,id),replayed:false};
   })

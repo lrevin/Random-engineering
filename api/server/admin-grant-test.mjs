@@ -18,6 +18,8 @@ test('admin-grant: 잔액 맞추기 + 원장 기록 + 프리미엄 상태 저장
       if (sql.includes('FROM social_members')) return [[{ user_id: 'u1' }]];
       if (sql.includes('SELECT balance FROM wallets')) return [[{ balance: 30 }]];
       if (sql.includes('FROM wallet_operations')) return [[]];
+      if (sql.includes('SELECT * FROM member_assets')) return [[{exam_tickets:0,exam_usage_date:null,exam_free_used:0,boost_until:null}]];
+      if (sql.includes('FROM member_cosmetics')) return [[{item_type:'skin',item_id:'classic',is_equipped:1}]];
       if (sql.includes("reason='quest'") || sql.includes("reason='ad_reward'")) return [sql.includes('COUNT') ? [{ n: 0 }] : []];
       return [[]];
     },
