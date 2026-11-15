@@ -4,6 +4,7 @@
 import type { QuizQuestion } from "@/lib/quiz";
 import b_ae_aero_1 from "./ae-aero-1.json";
 import b_ae_flight_1 from "./ae-flight-1.json";
+import b_ae_prop_1 from "./ae-prop-1.json";
 import b_ai_1 from "./ai-1.json";
 import b_ai_2 from "./ai-2.json";
 import b_ai_3 from "./ai-3.json";
@@ -47,6 +48,7 @@ import b_web_3 from "./web-3.json";
 const FILES = [
   b_ae_aero_1,
   b_ae_flight_1,
+  b_ae_prop_1,
   b_ai_1,
   b_ai_2,
   b_ai_3,
