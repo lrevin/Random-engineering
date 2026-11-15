@@ -36,6 +36,7 @@ import b_sec_3 from "./sec-3.json";
 import b_sec_4 from "./sec-4.json";
 import b_sec_5 from "./sec-5.json";
 import b_theory_1 from "./theory-1.json";
+import b_theory_2 from "./theory-2.json";
 
 const FILES = [
   b_ai_1,
@@ -72,6 +73,7 @@ const FILES = [
   b_sec_4,
   b_sec_5,
   b_theory_1,
+  b_theory_2,
 ] as Record<string, QuizQuestion[]>[];
 
 /** 문제 은행 전체가 앱에 들어 있음 (서버에서 받을 필요 없음) */
