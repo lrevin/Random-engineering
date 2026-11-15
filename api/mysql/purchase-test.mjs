@@ -74,7 +74,8 @@ test('회원 구매·사용과 보상은 실제 MySQL 트랜잭션으로 처리'
   const bank=await databaseStore(db).questions('ds-01'),items=bank.slice(0,7).map(q=>({question:{...q,src:'bank'},answer:q.answer}));
   const records=createRecordService({auth,now:()=>new Date(Date.now()+1000)});const p={id:randomUUID(),topicId:'ds-01',memo:'검사',studySec:900,score:7,total:7,studiedAt:new Date().toISOString(),items};
   const result=await records.upload(h,{records:[p]});assert.equal(result.saved,1);const xp=result.results[0].record;assert(xp.xpParts.some(p=>p.label==='부스터 2배'));assert.equal((await records.upload(h,{records:[p]})).results[0].record.rp,xp.rp);
-  const unverified={...p,id:randomUUID(),studiedAt:new Date().toISOString(),items:items.map(i=>({...i,question:{...i.question,src:'offline'}}))};const res=await records.upload(h,{records:[unverified]});assert(!res.results[0].record.xpParts.some(p=>p.label==='부스터 2배'));
+  const unverified={...p,id:randomUUID(),studiedAt:new Date().toISOString(),items:items.map(i=>({...i,question:{...i.question,src:'offline'}}))};const res=await records.upload(h,{records:[unverified]});assert(!res.results[0].record.xpParts.some(p=>p.label==='부스터 2배'));assert.equal(res.results[0].record.rp,0);
+  const ai={...unverified,id:randomUUID(),items:items.map(i=>({...i,question:{...i.question,src:'ai'}}))};const ar=await records.upload(h,{records:[ai]});assert.equal(ar.results[0].record.rp,0);assert.equal(ar.results[0].record.rewardStatus,'ineligible');
  });
  await t.test('스피드도 2배·150 상한·결과 재요청 중복 없음',async()=>{
   const speed=createSpeedService({auth});const run=await speed.start(h,{requestId:randomUUID()});const [[row]]=await db.execute('SELECT questions FROM speed_runs WHERE id=?',[run.runId]);const qs=json(row.questions);

@@ -34,8 +34,8 @@
 
 ### 값의 형식
 - 시각: ISO 8601 UTC 문자열 (`2026-11-02T12:34:56.000Z`), DB 열은 `DATETIME(3)` (UTC로 저장)
-- 날짜만 필요할 때(연속 일수 계산 등)는 **앱에서 사용자 기기 시간대로** 계산합니다.
-- id: 공부 기록처럼 오프라인에서 먼저 만드는 데이터는 **앱이 UUID를 만들어** 보내고, 같은 id로 다시 보내면 덮어씁니다(중복 없음).
+- 날짜·주간·연속일·특수 보상은 **Asia/Seoul**로 계산합니다. 특수 활동은 서버 최초 완료 확인 시점을 기간 기준으로 사용합니다.
+- id: 공부 기록처럼 오프라인에서 먼저 만드는 데이터는 **앱이 UUID를 만들어** 보내고, 같은 id·같은 내용의 재전송은 기존 결과를 반환하며, 다른 내용은 충돌로 거절합니다.
 - 글자 수·값 범위는 DB `CHECK`로도 막고, API 서버도 먼저 검사해 400으로 돌려보냅니다.
 
 ### 오류 응답
@@ -86,9 +86,11 @@
 |---|---|---|---|
 | GET | `/me/profile` | | `200 { profile }` · 아직 없으면 `404 not_found` |
 | PUT | `/me/profile` | `{ nickname, interests, level, studyMinutes, reminderEnabled, reminderTime }` | `200 { profile }` (있으면 바꾸고 없으면 만듦) |
-| GET | `/me/records` | | `200 { records: [...] }` (공부한 시각 오름차순, 최대 5,000개) |
-| PUT | `/me/records` | `{ records: [...] }` (최대 100개) | `200 { saved: n }` (id가 같으면 덮어씀) |
-| DELETE | `/me/records/:id` | | `204` · 내 기록이 아니면 `404` |
+| GET | `/me/records` | | `200 { records, nextCursor }` · 숨김 제외, limit 1~100 |
+| PUT | `/me/records` | `{ records: [...] }` (최대 100개) | `200 { saved, results }` · 재전송 중복 방지, 신규 서버 발급 풀이는 서버 채점 |
+| DELETE | `/me/records/:id` | | `204` · 삭제 대신 숨김, 내 기록이 아니면 `404` |
+| PUT | `/me/records/:id/visibility` | `{ hidden: boolean }` | `200 { record }` · 숨김/복원 |
+| GET | `/me/records/snapshot` | | 숨김 포함 전체 기록·동기화 cursor |
 | DELETE | `/me` | | `204` 회원 탈퇴 |
 
 기록 한 개의 모양 (앱 `StudyRecord`에서 `synced`만 뺀 것)
@@ -97,6 +99,29 @@
   "memo": "…", "score": 7, "total": 7, "rp": 53, "wrong": [], "studySec": 900, "quizSource": "ai",
   "studiedAt": "2026-11-02T12:34:56.000Z" }
 ```
+
+### 특수 보상·서버 풀이 (로그인 필요, V8 이후)
+
+| 메서드 | 주소 | 요청·역할 |
+|---|---|---|
+| GET | `/me/rewards` | 오늘의 배정·달성, 복습 대상, 최고 연속일, 프리미엄 주간 실적, 현재 지갑 |
+| POST | `/me/activities` | `{ requestId, purpose, topicId?, certId?, studySec? }` · `study/recall/exam/review` 발급. 시작 UUID 재사용 |
+| GET | `/me/activities/:id` | 소유한 발급 문제·현재 상태·저장 답안. 자동 다른 기기 이어하기 목록은 제공하지 않음 |
+| POST | `/me/activities/:id/events` | `{ requestId, event }` · `pause/resume/quiz/extend`. 시간 추가 120초·10개, 같은 이벤트 UUID 중복 차감 없음 |
+| POST | `/me/activities/:id/answers` | `{ position, answer }` · 오답 풀이 문항별 승인·최초 해결 저장 |
+| POST | `/me/activities/:id/complete` | `{ answers }` · 복습·시험·오답 전체 채점. 일반 학습은 기존 `/me/records`로 제출 |
+| POST | `/me/activities/:id/abandon` | `{}` · 명시적 포기, 시험 소비 환급 없음 |
+
+- 공통 응답은 발급 ID·문항·상태·서버 점수·지갑이다. 발급 문제와 답안을 서버에서 대조하며 미응답·없는 보기·종료 후 다른 답안은 거절한다. 점수만 다른 경우 서버 점수로 정정한다.
+- 오늘의 주제는 최초 배정을 당일 유지하고 일반 학습 4개 이상 정답이면 10개. 설정 변경으로 재추첨하지 않는다. 비활성화 전에 시작한 배정은 보존한다.
+- 복습은 마지막 유효 학습/완료 복습에서 한국 달력 이틀, 오래된 최대 5주제×3문항이다. 완료와 당일 최초 5개 자동 지급은 한 트랜잭션이다.
+- 마일스톤은 최고 연속 7/30/100일에 30/100/300개와 지정 스킨·칭호를 최초 1회 함께 지급한다. 자동 장착하지 않는다.
+- 수동 특수 보상은 기존 `POST /me/wallet/operations`의 `quest`로 처리한다. 키는 `daily-topic:YYYY-MM-DD`, `streak-milestone:7/30/100`, 기존 프리미엄 `quest:p<주 시작 날짜>:<id>`다. 완료 증거 없는 `recall:*` 수동 요청은 거절한다.
+- 프리미엄 주간 실적은 검증된 시험 채점·오답 해결·서버 학습 30분·정상 배틀 완료만 사용한다. 수령 시 프리미엄을 확인하고 같은 주 가입 전 실적도 인정한다. V6 진행 JSON은 증거가 아니다.
+- 기본 은행 부족분은 서버 기준 재료·시드·생성 버전으로 재현하고 발급 스냅샷만 남긴다. AI 원본 연계·LLM 검수는 보류이며 새 회원 서버 출제는 기본/대체 문제를 사용한다.
+- 학습 인정 시간은 정지 구간 제외·승인 시간 상한의 서버 값과 앱 보고의 작은 값이며, 퀴즈 시간은 앱 종료/백그라운드를 포함한 전체 경과다. 퀴즈 시간으로 보상을 판정하지 않는다.
+- 구버전 APK는 숨김 필터가 없어 숨김 기록을 다시 표시할 수 있으므로 새 앱과 함께 배포한다. 기록 숨김은 답안·XP·통계·랭크·연속일·보상 증거를 유지한다. 스냅샷/변경 피드는 숨김을 포함하며 기본 목록과 최근 화면에서만 제외한다. 탈퇴 후 실제 삭제와 구분한다.
+- 일일/주간 미수령은 기간 종료 시 닫히며 마일스톤은 기한이 없다. 서버 성공 후 응답만 유실된 완료 요청은 원래 완료 시각·결과를 재전송으로 반환한다. 장기 오프라인 특수 보상은 별도 보류한다.
 
 ### 문제 은행 (로그인 불필요)
 | 메서드 | 주소 | 응답 |
@@ -206,3 +231,15 @@ adb reverse tcp:8788 tcp:8788                    # 안드로이드 에뮬레이�
 - 추가 오류: inventory_full / already_owned / not_owned / not_in_season / premium_unlimited / exam_ticket_required / exam_already_started / unknown_certificate. 인증·잔액·요청 충돌은 기존 오류 유지.
 - 부스터는 일반 학습·스피드 2배, 스피드 하루 상한 150 XP 유지. 일반 풀이의 장기 지연·오프라인 배율 승인은 별도 정책이다.
 - /me/progress의 모의고사 보관 값은 학습 이력 캐시이며 이용권·무료 횟수·보상 권한의 기준이 아니다. 회원 이용권과 부스터는 V7 서버 자산으로만 판정한다.
+
+### 일반 보상 자격 (2026-11-15 운영 V8 적용, general-v1)
+
+- 기존 기록 API의 record 응답에 `rewardStatus`, `rewardReason`, `rewardPolicyVersion`, `timeValidationStatus`, `eligibility`를 추가한다. 새 공개 경로는 없다.
+- `rewardStatus`: `eligible`(정산), `held`(확인 대기), `ineligible`(개인 기록만), `legacy_granted`(기존 정산 보존). `rp=0`만으로 보류와 적격 0점 풀이를 구분하지 않는다.
+- `rewardReason`: `question_unverified`, `time_needs_review`, `outside_study_window`, 미분류 기존 기록은 `unclassified`. 문제·답안 위조는 보류로 저장하지 않고 기존 오류로 거절한다.
+- `eligibility`는 recordAccepted / xpEligible / questEligible / timeQuestEligible / rankEligible / leaderboardEligible / studyDayEligible / repeatEligible / boostEligible / policyVersion을 포함한다. boostEligible은 문제·기록의 기본 후보 자격이며 실제 배율은 기존 구매·만료·수신 시각 검사 후 XP 계산에 반영한다.
+- 서버가 보관한 기본/대체 문제와 기존 전체 원본 대조를 통과한 기본 문제는 일반 XP 대상이다. 기기에서만 확인한 AI·대체 문제가 섞인 신규 제출은 기록만 보관하고 XP·일반 퀘스트·신규 랭크 기여를 인정하지 않는다. 시간 퀘스트에는 special-v1 서버 학습 단계로 확인한 시간만 사용하며 quiz_sec는 제외한다.
+- 보류·미인정 기록도 `saved/results.ok`는 기록 저장 성공으로 응답할 수 있다. 원장이 없어도 조회·메모·숨김·동기화가 된다. 저장 성공은 보상 지급 성공과 다르다.
+- needs_review는 시간 경과·동일 ID 재전송만으로 해제되지 않는다. 서버 내부 `reassessHeld`는 저장된 증거가 승인된 뒤 같은 ID로 한 번만 정산한다. 이를 호출하는 공개 사용자 해제/관리자 HTTP API는 만들지 않았다.
+- 과거 지급은 legacy_granted로 원장·잔액·랭크 기여를 보존한다. 과거 미검증 기록은 새 퀘스트·반복/연속 보너스 입력으로 인정하지 않는다. 숨김/복원은 자격을 바꾸지 않는다. 배틀·스피드는 기존 전용 정산을 유지한다.
+- 배포 시 확장 V8과 새 API를 함께 적용한다. API를 정지하고 DB 이력 확인→마이그레이션→새 API 재시작→검사 순서로 진행해 구 API가 새 판정 상태 없이 지급하는 구간을 만들지 않는다. 2026-11-15 운영 배포·HTTPS 검사 완료. V8은 적용 파일이므로 이후 수정하지 않는다.

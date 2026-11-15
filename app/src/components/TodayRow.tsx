@@ -1,3 +1,5 @@
+import {useRewardStatus} from "@/lib/useRewardStatus";
+import {topicById} from "@/data";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { Modal, Pressable, View } from "react-native";
@@ -17,16 +19,20 @@ import { TierBadge } from "./Rank";
 
 /** 홈의 세 칸: 퀘스트 · 오늘의 주제 · 오늘의 복습 */
 export function TodayRow() {
-  const { catalogVersion, records, active, setActive, prefs, premium, questClaims, claimQuest, uid } = useApp();
+  const { mode, catalogVersion, records, active, setActive, prefs, premium, questClaims, claimQuest, uid } = useApp();
   const c = useColors();
   const day = new Date().toDateString();
-  const topic = useMemo(() => dailyTopic(uid, prefs.interests), [catalogVersion, uid, prefs.interests, day]); // eslint-disable-line react-hooks/exhaustive-deps
-  const done = dailyDone(topic, records);
-  const claimed = questClaims.includes(dailyKey());
+  const {rewards}=useRewardStatus();
+  const localTopic = useMemo(() => dailyTopic(uid, prefs.interests), [catalogVersion, uid, prefs.interests, day]); // eslint-disable-line react-hooks/exhaustive-deps
+  const topic=mode==='user'?topicById(rewards?.daily.topicId??''):localTopic;
+  const done = mode==='user'?!!rewards?.daily.done:dailyDone(topic??null, records);
+  const rewardKey=mode==='user'&&rewards?`daily-topic:${rewards.day}`:dailyKey();
+  const claimed = questClaims.includes(rewardKey);
   const [log, setLog] = useState<RecallLog>({});
   const [open, setOpen] = useState(false);
   useFocusEffect(useCallback(() => { readRecallLog().then(setLog); }, []));
-  const due = useMemo(() => dueTopics(records, log).length, [records, log]);
+  const localDue = useMemo(() => dueTopics(records, log).length, [records, log]);
+  const due=mode==='user'?(rewards?.recall.length??0):localDue;
   // 퀘스트 칸: 오늘 진행 + 일일·주간·이달·프리미엄·연속 기록 보상 중 받을 것
   const q = useQuests("day");
   const w = useQuests("week");
@@ -39,7 +45,7 @@ export function TodayRow() {
     tap();
     if (!topic) return router.push("/interests");
     if (done && !claimed) {
-      claimQuest(dailyKey(), DAILY_TOPIC_GEARS);
+      claimQuest(rewardKey, DAILY_TOPIC_GEARS);
       return;
     }
     if (done || active) return;

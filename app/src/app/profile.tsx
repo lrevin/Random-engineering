@@ -17,7 +17,7 @@ import { titleById, useCosmetics } from "@/lib/skins";
 import { TitleBadge } from "./skins";
 import { domainRanks, userLevel } from "@/lib/rank";
 import { getFriends, socialEnabled } from "@/lib/social";
-import { calcStreak, isBattleRecord } from "@/lib/stats";
+import { calcStreak, isBattleRecord, isRecognizedStudy } from "@/lib/stats";
 import { radius, raised, shadow, useColors } from "@/theme";
 
 /** 슬롯 릴 무늬 (프로필 위 남색 배경) */
@@ -49,7 +49,7 @@ export default function Profile() {
   const { streak } = calcStreak(records, new Date(), keptDays);
   const ranks = useMemo(() => domainRanks(records), [records]);
   const stats = useMemo(() => {
-    const eligible = records.filter(r=>r.countsAsStudy !== false);
+    const eligible = records.filter(isRecognizedStudy);
     const topicIds = [...new Set(eligible.map((r) => r.topicId))];
     const tiers = domainRanks(records).map((d) => d.index);
     const first = eligible.length ? eligible.reduce((a, r) => (r.studiedAt < a ? r.studiedAt : a), eligible[0].studiedAt) : null;

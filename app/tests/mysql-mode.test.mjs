@@ -160,6 +160,7 @@ function stateHarness() {
   uploadRecords:async rs=>{const saved=records.get(user)??[];const results=rs.map(r=>({id:r.id,ok:true,record:{...r,synced:true,changeSeq:'1'}}));records.set(user,[...saved,...results.map(x=>x.record)]);return {results};},
   recordSnapshot:async()=>({records:records.get(user)??[],cursor:'1'}),
   deleteRecord:async target=>{records.set(user,(records.get(user)??[]).filter(r=>r.id!==target));},
+  recordVisibility:async(target,hidden)=>{const record={...(records.get(user)??[]).find(r=>r.id===target),hiddenAt:hidden?new Date().toISOString():null};records.set(user,(records.get(user)??[]).map(r=>r.id===target?record:r));return {record};},
  };
  const hooks={createContext:()=>({Provider:'provider'}),useContext:()=>null,
   useState:initial=>{const i=slot++;if(!(i in values))values[i]=typeof initial==='function'?initial():initial;return [values[i],v=>{values[i]=typeof v==='function'?v(values[i]):v;}];},
@@ -198,7 +199,7 @@ test('actual AppProvider keeps guest data, syncs after login and isolates accoun
  assert.ok(h.cache.has('pg.mysql.local.account-a'));
  await app.signIn('account-b','password');app=h.render();assert.equal(app.records.length,0);assert.equal(app.prefs.nickname,'');
  await app.signIn('account-a','password');app=h.render();assert.equal(app.records.length,1);assert.equal(app.prefs.nickname,'guest');
- await app.removeRecord(app.records[0].id);app=h.render();assert.equal(app.records.length,0);
+ const hiddenId=app.records[0].id;await app.removeRecord(hiddenId);app=h.render();assert.equal(app.records.length,1);assert.ok(app.records[0].hiddenAt);await app.restoreRecord(hiddenId);app=h.render();assert.equal(app.records[0].hiddenAt,null);
  await app.deleteAccount();app=h.render();assert.equal(app.mode,'none');assert.equal(h.cache.has('pg.mysql.local.account-a'),false);
 });
 
@@ -270,5 +271,16 @@ test('모의고사 준비·승인·답안은 같은 기기의 저장에서 복�
  const exam=load('exam',{'@react-native-async-storage/async-storage':{__esModule:true,default:storage},'./local-data':{LOCAL_KEYS:{exam:{key:'pg.exam'},examActive:{key:'pg.exam.active'}}},'@/data':{certById:id=>({id})},'./economy':{FREE_EXAMS_PER_DAY:1},'./quiz':{},'./stats':{dateKey:()=> '2026-11-15'}});
  const a={paper:{certId:'cert',subjects:['과목'],items:[{q:{},subject:0},{q:{},subject:0}]},answers:[],owner:'member-a',startId:'stable-id',approved:false};
  await exam.saveActiveExam(a);assert.deepEqual(await exam.readActiveExam(),a);await exam.saveActiveExam({...a,approved:true,answers:[true]});assert.equal((await exam.readActiveExam()).approved,true);assert.equal((await exam.readActiveExam()).startId,'stable-id');
+ await exam.saveActiveExam({...a,approved:true,serverIssued:true,answers:[true,false]});assert.equal((await exam.readActiveExam()).answers.length,2);
+ await exam.saveActiveExam({...a,paper:{...a.paper,items:[]},approved:false,answers:[]});assert.equal((await exam.readActiveExam()).approved,false);
+ await exam.saveActiveExam({...a,approved:true,answers:[true]});
  fail=true;await assert.rejects(exam.saveActiveExam(a),/disk full/);assert.equal((await exam.readActiveExam()).answers.length,1);
+});
+
+test('회원 풀이의 미전송 XP는 확정 표시하지 않고 서버 성공 후 반영',async()=>{
+ const h=stateHarness();let app=h.render();await app.signIn('pending-member','password');app=h.render();
+ const original=h.auth.uploadRecords;h.auth.uploadRecords=async()=>{throw new AuthApiError('network_error');};
+ const record=await app.addRecord({attemptId:'stable-issued-id',topicId:'ds-01',memo:'',score:7,total:7,rp:999,wrong:[],studySec:30});
+ assert.equal(record.id,'stable-issued-id');assert.equal(record.rp,0);assert.equal(record.synced,false);
+ h.auth.uploadRecords=rs=>original(rs.map(r=>({...r,rp:42})));await app.refreshRecords();app=h.render();assert.equal(app.records.find(r=>r.id===record.id).rp,42);
 });

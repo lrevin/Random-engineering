@@ -1,3 +1,4 @@
+import {useRewardStatus} from "@/lib/useRewardStatus";
 import { useMemo } from "react";
 import { View } from "react-native";
 import { bestStreak } from "@/lib/achievements";
@@ -12,13 +13,16 @@ import { Btn, Card, T } from "./ui";
 
 /** 연속 기록 마일스톤: 최고 연속 일수 · 받을 수 있는 보상 · 받기 */
 export function useMilestones() {
-  const { records, keptDays, claimQuest } = useApp();
+  const { mode, questClaims, records, keptDays, claimQuest } = useApp();
   const { milestones } = useCosmetics();
-  const best = useMemo(() => bestStreak(records, keptDays), [records, keptDays]);
-  const claimed = (m: Milestone) => milestones.includes(m.days);
+  const {rewards,refresh}=useRewardStatus();
+  const localBest = useMemo(() => bestStreak(records, keptDays), [records, keptDays]);
+  const best=mode==='user'?(rewards?.bestStreak??0):localBest;
+  const claimed = (m: Milestone) => mode==='user'?questClaims.includes(`streak-milestone:${m.days}`):milestones.includes(m.days);
   const ready = MILESTONES.filter((m) => best >= m.days && !claimed(m)).length;
   const claim = async (m: Milestone) => {
     if (best < m.days) return false;
+    if(mode==='user'){const ok=await claimQuest(`streak-milestone:${m.days}`,m.gears);if(ok){await refresh();sfx('chest');}return ok;}
     if(!await claimQuest(`streak-milestone:${m.days}`, m.gears)||!markMilestone(m.days))return false;
     addSkin(m.skin, false);
     addTitle(m.title);

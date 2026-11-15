@@ -1,3 +1,5 @@
+import {createActivityService} from '../mysql/activity-service.mjs';
+import {activityRoutes} from '../mysql/activity-http.mjs';
 import http from 'node:http';
 import {createBattleService} from '../mysql/battle-service.mjs';
 import {battleRoutes} from '../mysql/battle-http.mjs';
@@ -27,6 +29,7 @@ import { clientErrorRoutes } from './client-errors.mjs';
 export function createServer({ topics = loadTopics(), bank, store, auth, authLimits, battleService, battleSweep=true, kakao } = {}) {
   const battles=auth?(battleService??createBattleService({auth})):null;
   const handleBattle=battles?battleRoutes(battles):null;
+  const handleActivity=auth?activityRoutes(createActivityService({auth})):null;
   const handleSpeed=auth ? speedRoutes(createSpeedService({auth})) : null;
   const handleMember=auth ? memberRoutes(createMemberService({auth})) : null;
   const handleAuth=auth ? authRoutes(auth,{limits:authLimits}) : null;
@@ -63,6 +66,7 @@ export function createServer({ topics = loadTopics(), bank, store, auth, authLim
     try { pathname = decodeURIComponent(new URL(req.url, 'http://local').pathname).replace(/^\/api(?=\/)/, ''); }
     catch { return send(400, { error: 'bad_request' }); }
     try {
+    if(handleActivity && await handleActivity(req,pathname,send)) return;
     if(handleBattle && await handleBattle(req,pathname,send)) return;
     if(handleSpeed && await handleSpeed(req,pathname,send)) return;
     if(handleMember && await handleMember(req,pathname,send)) return;

@@ -1,3 +1,4 @@
+import {ServerPractice} from "@/components/ServerPractice";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
@@ -16,7 +17,8 @@ import { answerText, isCorrect, QuestionView } from "./quiz";
  * 오답 다시 풀기 (프리미엄): 퀴즈·모의고사에서 틀린 문제를 모아, 같은 주제·같은 유형의 변형 문제로 다시 풉니다.
  * 변형 문제를 맞히면 그 오답은 목록에서 빠집니다.
  */
-export default function Review() {
+export default function Review(){const {mode}=useApp();return mode==='user'?<ServerPractice purpose="review"/>:<GuestReview/>;}
+function GuestReview() {
   const { records, premium } = useApp();
   const c = useColors();
   const [examWrongs, setExamWrongs] = useState<ExamWrong[] | null>(null);

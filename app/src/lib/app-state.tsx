@@ -136,6 +136,7 @@ interface AppStateValue {
   setActive(a: ActiveSession | null | ((prev: ActiveSession | null) => ActiveSession | null)): void;
   addRecord(r: NewRecord): Promise<StudyRecord>;
   removeRecord(id: string): Promise<void>;
+  restoreRecord(id: string): Promise<void>;
 }
 
 const Ctx = createContext<AppStateValue | null>(null);
@@ -570,7 +571,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const id = apiSession?.user.id;
       await mysqlAuth.deleteAccount();
       if (id) {
-        const keys = (await AsyncStorage.getAllKeys()).filter(key => key.startsWith("pg.mysql.memo-draft." + id + ".") || key === "pg.mysql.local." + id || key.startsWith("pg.mysql.speed.")&&key.endsWith("."+id));
+        const keys = (await AsyncStorage.getAllKeys()).filter(key => key.startsWith(L.activities.key.replace(/^pg\./,"pg.mysql.")+"."+id+".") || key.startsWith("pg.mysql.memo-draft." + id + ".") || key === "pg.mysql.local." + id || key.startsWith("pg.mysql.speed.")&&key.endsWith("."+id));
         await AsyncStorage.multiRemove(keys);
       }
       await clearLocal(); return;
@@ -620,7 +621,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const checkStreak = useCallback(async () => {
     if(mode==="user"){
       const ok=await remoteWallet('check_streak');
-      if(ok){const plan=planStreakRescue(recordsRef.current,keptRef.current,freezesRef.current);if(plan&&!plan.tooLate)setRescue(plan);}
+      if(ok){const plan=planStreakRescue(recordsRef.current,keptRef.current,freezesRef.current),today=dateKey(new Date());if(plan&&!plan.tooLate&&(await readJSON<string>(K.rescueAsked,""))!==today){await writeJSON(K.rescueAsked,today);setRescue(plan);}}
       return;
     }
     const plan = planStreakRescue(recordsRef.current, keptRef.current, freezesRef.current);
@@ -812,27 +813,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [mode, remoteWallet]);
 
   const addRecord = useCallback(async (r: NewRecord) => {
-    const rec: StudyRecord = { ...r, id: Crypto.randomUUID(), studiedAt: new Date().toISOString(), synced: false };
-    saveRecordsLocal(sortRecords([...recordsRef.current, rec]));
+    const rec: StudyRecord = { ...r, ...(mode==='user'?{rp:0,xpParts:[],rewardStatus:'held' as const,rewardReason:'upload_pending',countsAsStudy:false}:{}), id: r.attemptId ?? Crypto.randomUUID(), studiedAt: new Date().toISOString(), synced: false };
+    saveRecordsLocal(sortRecords([...recordsRef.current.filter(x=>x.id!==rec.id), rec]));
     if (mode === "user" && apiSession) await syncPending(apiSession.user.id).catch(() => {});
     return recordsRef.current.find(x => x.id === rec.id) ?? rec;
   }, [mode, apiSession, saveRecordsLocal, syncPending]);
 
-  const removeRecord = useCallback(async (id: string) => {
-    const target = recordsRef.current.find((r) => r.id === id);
-    if (!target) return;
-    if (mode === "user") {
-      const owner = ownerRef.current, client = mysqlAuth;
-      await enqueueRecordOperation(syncQueue, async () => {
-        if (ownerRef.current !== owner) return;
-        try { await client.deleteRecord(id); }
-        catch (e) { if (!(e instanceof AuthApiError) || e.status !== 404 || target.synced) throw e; }
-        if (ownerRef.current === owner) saveRecordsLocal(recordsRef.current.filter(r => r.id !== id));
+  const setRecordVisibility = useCallback(async (id:string,hidden:boolean)=>{
+    const target=recordsRef.current.find(r=>r.id===id);if(!target)return;
+    if(mode==='user'){
+      const owner=ownerRef.current;
+      await enqueueRecordOperation(syncQueue,async()=>{
+        if(ownerRef.current!==owner)return;
+        const {record}=await mysqlAuth.recordVisibility(id,hidden);
+        if(ownerRef.current===owner)saveRecordsLocal(recordsRef.current.map(r=>r.id===id?record:r));
       });
-      return;
-    }
-    saveRecordsLocal(recordsRef.current.filter((r) => r.id !== id));
-  }, [mode, saveRecordsLocal]);
+    }else saveRecordsLocal(recordsRef.current.map(r=>r.id===id?{...r,hiddenAt:hidden?new Date().toISOString():null}:r));
+  },[mode,saveRecordsLocal]);
+  const removeRecord=useCallback((id:string)=>setRecordVisibility(id,true),[setRecordVisibility]);
+  const restoreRecord=useCallback((id:string)=>setRecordVisibility(id,false),[setRecordVisibility]);
 
   const xp = useMemo(() => Math.max(0, records.reduce((a, r) => a + (r.rp || 0), 0) + (mode === "user" ? 0 : battleXp) + speedXp), [records, battleXp, speedXp, mode]);
 
@@ -841,11 +840,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     catalogVersion, prefs, onboarded, records, active, gears, spendGears, walletNotice, memberAssets, walletBusy, purchaseItem, equipCosmetic, startMemberExam,
     xp, freezes, keptDays, buyFreeze, rescue, restoreStreak, dismissRescue, devPreviewRescue, devSeedRecords,
     premium, setPremium, purchasePremium, battleTickets: premium ? Infinity : (mode === "user" ? tickets : refillTickets(tickets)).n + ((mode === "user" ? tickets : refillTickets(tickets)).bought ?? 0), freeTickets: (mode === "user" ? tickets : refillTickets(tickets)).n, boughtTickets: (mode === "user" ? tickets : refillTickets(tickets)).bought ?? 0, buyBattleTicket, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid, questClaims, claimQuest, adViewsToday: adViews.day === dateKey(new Date()) ? adViews.n : 0, grantAdReward,
-    startGuest, signUp, signIn, signInKakao, signOut, cancelDeletion, refreshRecords, refreshWallet, refreshSpeedXp, updateRecordMemo, deleteAccount, updatePrefs, setActive, addRecord, removeRecord,
+    startGuest, signUp, signIn, signInKakao, signOut, cancelDeletion, refreshRecords, refreshWallet, refreshSpeedXp, updateRecordMemo, deleteAccount, updatePrefs, setActive, addRecord, removeRecord, restoreRecord,
   }), [catalogVersion, ready, mode, apiSession, prefs, onboarded, records, active, gears, spendGears, walletNotice, memberAssets, walletBusy, purchaseItem, equipCosmetic, startMemberExam,
     xp, freezes, keptDays, buyFreeze, rescue, restoreStreak, dismissRescue, devPreviewRescue, devSeedRecords,
     premium, setPremium, purchasePremium, tickets, buyBattleTicket, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid, questClaims, claimQuest, adViews, grantAdReward,
-    startGuest, signUp, signIn, signInKakao, signOut, cancelDeletion, refreshRecords, refreshWallet, refreshSpeedXp, updateRecordMemo, deleteAccount, updatePrefs, setActive, addRecord, removeRecord]);
+    startGuest, signUp, signIn, signInKakao, signOut, cancelDeletion, refreshRecords, refreshWallet, refreshSpeedXp, updateRecordMemo, deleteAccount, updatePrefs, setActive, addRecord, removeRecord, restoreRecord]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

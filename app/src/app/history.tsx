@@ -7,7 +7,7 @@ import { Btn, Card, Row, T } from "@/components/ui";
 import { ALL_CATEGORIES } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { UserLevelBar } from "@/components/Rank";
-import { averageScore, calcStreak } from "@/lib/stats";
+import { averageScore, calcStreak, isRecognizedStudy } from "@/lib/stats";
 import { useColors } from "@/theme";
 import { DomainIcon, Icon } from "@/components/Icon";
 import { SectionTitle, StatGrid, StatTile } from "@/components/StatTile";
@@ -22,7 +22,7 @@ export default function History() {
   const avg = averageScore(records);
 
   const bars = useMemo(() => {
-    const counts = ALL_CATEGORIES.map((cat) => ({ ...cat, n: records.filter((r) => r.category === cat.id && r.countsAsStudy !== false).length }));
+    const counts = ALL_CATEGORIES.map((cat) => ({ ...cat, n: records.filter((r) => r.category === cat.id && isRecognizedStudy(r)).length }));
     const max = Math.max(1, ...counts.map((x) => x.n));
     return { counts: counts.filter((x) => x.n > 0).sort((a, b) => b.n - a.n), max };
   }, [records]);
@@ -52,7 +52,7 @@ export default function History() {
       <SectionTitle title="학습 현황" right={<Pressable onPress={() => router.push("/profile")} hitSlop={8}><T size={14} weight="semibold" color="accent">프로필 · 업적 ›</T></Pressable>} />
       <StatGrid>
         <StatTile icon={<Icon name="flame" size={30} />} value={`${streak}일`} label={streak && !today ? "연속 · 오늘 아직!" : "연속 공부"} dim={!streak} />
-        <StatTile icon={<Icon name="calendar" size={30} />} value={`${records.filter(r=>r.countsAsStudy !== false).length}회`} label="총 공부" />
+        <StatTile icon={<Icon name="calendar" size={30} />} value={`${records.filter(isRecognizedStudy).length}회`} label="총 공부" />
         <StatTile icon={<Icon name="target" size={30} />} value={records.length ? `${avg.toFixed(1)}점` : "-"} label="평균 점수 (10점)" />
         <StatTile icon={<Icon name="bolt" size={30} />} value={`${xp.toLocaleString()}`} label="누적 XP" />
       </StatGrid>

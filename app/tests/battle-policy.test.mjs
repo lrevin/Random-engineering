@@ -5,7 +5,7 @@ import {createRequire} from 'node:module';
 const ts=createRequire(new URL('../package.json',import.meta.url))('typescript');
 function load(name,deps={}){const source=fs.readFileSync(new URL('../src/lib/'+name+'.ts',import.meta.url),'utf8'),code=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,exports={};new Function('exports','require',code)(exports,k=>{assert(Object.hasOwn(deps,k),k);return deps[k];});return exports;}
 test('battle rank uses only main answers; forfeit and no-answer records give no study days or achievements',()=>{
- const {domainMastery}=load('rank',{'./quiz':{QUIZ_LENGTH:7}}),stats=load('stats');
+ const {domainMastery}=load('rank',{'./quiz':{QUIZ_LENGTH:7}}),stats=load('stats',{'./quest-time':load('quest-time')});
  const at=new Date().toISOString(),base={topicId:'ds-01',domain:'cs',category:'ds',studyType:'battle',score:10,total:10,rankScore:5,countsAsStudy:true,studiedAt:at,memo:'상대님과 배틀',rp:0};
  const absent={...base,countsAsStudy:false,score:0,rankScore:0};
  assert.equal(domainMastery('cs',[base]).points,5);assert.equal(domainMastery('cs',[absent]).index,-1);

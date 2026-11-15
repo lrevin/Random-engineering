@@ -1,3 +1,4 @@
+import {rewardSql} from './reward-eligibility.mjs';
 import { connect, transaction } from '../server/db.mjs';
 import { AuthError } from '../server/auth.mjs';
 
@@ -39,11 +40,12 @@ export function createLeaderboardService({ auth, connectionFactory = connect }) 
                m.friend_code AS uid, SUM(s.rp) AS xp,
                RANK() OVER (ORDER BY SUM(s.rp) DESC) AS rnk
              FROM study_records s
+             JOIN quiz_attempts a ON a.id=s.attempt_id
              JOIN users u ON u.id=s.user_id AND u.status='active'
              LEFT JOIN profiles p ON p.user_id=s.user_id
              LEFT JOIN social_members m ON m.user_id=s.user_id
              LEFT JOIN (SELECT target_id, COUNT(*) AS n FROM nickname_reports GROUP BY target_id) rc ON rc.target_id=s.user_id
-             WHERE s.domain=? AND (COALESCE(p.leaderboard_hidden,0)=0 OR s.user_id=?)
+             WHERE s.domain=? AND ${rewardSql('leaderboard','s')} AND (COALESCE(p.leaderboard_hidden,0)=0 OR s.user_id=?)
              GROUP BY s.user_id, p.nickname, m.friend_code, rc.n
            ) ranked WHERE rnk<=? OR user_id=? ORDER BY rnk`,
           [domainId, claims.sub, limit, claims.sub],
