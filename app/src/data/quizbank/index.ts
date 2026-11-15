@@ -27,6 +27,7 @@ import b_pl_2 from "./pl-2.json";
 import b_pl_3 from "./pl-3.json";
 import b_pl_4 from "./pl-4.json";
 import b_se_1 from "./se-1.json";
+import b_se_2 from "./se-2.json";
 import b_sec_1 from "./sec-1.json";
 import b_sec_3 from "./sec-3.json";
 import b_sec_4 from "./sec-4.json";
@@ -57,6 +58,7 @@ const FILES = [
   b_pl_3,
   b_pl_4,
   b_se_1,
+  b_se_2,
   b_sec_1,
   b_sec_3,
   b_sec_4,
