@@ -63,7 +63,7 @@ AI 문제는 만든 직후 모든 문제를 두 번 검수하고, 둘 다 통과
   ]
 }
 ```
-- 키는 주제 id (`api/supabase/functions/generate-quiz/topics.json`에 있는 id)
+- 키는 주제 id (`api/shared/data/topics.json`에 있는 id)
 - `mc`: `choices` 4개, `answer`는 정답 보기 번호(0부터)
 - `ox`: `answer`는 `true`(O) / `false`(X), `choices` 없음
 - UTF-8, 올바른 JSON (마지막 쉼표 금지)

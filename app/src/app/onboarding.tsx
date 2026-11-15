@@ -1,18 +1,20 @@
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
+import { CertPicker } from "@/components/CertPicker";
 import { DomainPicker } from "@/components/DomainPicker";
 import { InterestPicker } from "@/components/InterestPicker";
 import { LevelPicker } from "@/components/LevelPicker";
 import { RelatedPicker } from "@/components/RelatedPicker";
 import { TimeStepper } from "@/components/TimeStepper";
 import { Btn, Field, Row, Screen, T } from "@/components/ui";
-import { categoryById, domainById, relatedFor } from "@/data";
+import { categoryById, domainById, isCertId, relatedFor } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { requestNotificationPermission } from "@/lib/notify";
 import type { Prefs } from "@/lib/types";
 import { useColors } from "@/theme";
+import { Icon } from "@/components/Icon";
 
-const STEPS = ["닉네임", "분야", "세부 분야", "연관 분야", "난이도", "알림"];
+const STEPS = ["닉네임", "분야", "세부 분야", "자격증", "연관 분야", "난이도", "알림"];
 const LAST = STEPS.length - 1;
 const domainOf = (category: string) => categoryById(category)?.domain;
 
@@ -24,7 +26,9 @@ export default function Onboarding() {
   const [domains, setDomains] = useState<string[]>(() => [
     ...new Set(prefs.interests.map((id) => categoryById(id)?.domain).filter((d): d is string => !!d)),
   ]);
-  const [interests, setInterests] = useState<string[]>(prefs.interests);
+  const [interests, setInterests] = useState<string[]>(() => prefs.interests.filter((id) => !isCertId(id)));
+  // 취득하려는 자격증 (없어도 됨)
+  const [certs, setCerts] = useState<string[]>(() => prefs.interests.filter(isCertId));
   // 연관 분야: 고른 분야의 바탕이 되는 다른 분야의 세부 분야 (예: 컴퓨터공학 → 선형대수·확률·회로이론)
   const relatedItems = relatedFor(domains, domainOf);
   const [related, setRelated] = useState<string[]>([]);
@@ -41,7 +45,11 @@ export default function Onboarding() {
       setNickname(n);
     }
     if (step === 1) {
-      if (!domains.length) return setErr("공부할 분야를 하나 이상 골라 주세요.");
+      // 분야 없이 자격증만으로 공부할 수도 있음: 세부 분야 단계를 건너뛰고 자격증 단계로
+      if (!domains.length) {
+        setInterests([]);
+        return setStep(3);
+      }
       // 고른 분야의 세부 분야만 남기고, 새로 고른 분야는 세부 분야를 모두 선택해 둠
       const kept = interests.filter((id) => domains.includes(categoryById(id)?.domain ?? ""));
       const added = domains
@@ -51,15 +59,18 @@ export default function Onboarding() {
     }
     if (step === 2) {
       if (interests.length === 0) return setErr("세부 분야를 하나 이상 골라 주세요.");
+    }
+    if (step === 3) {
+      if (!interests.length && !certs.length) return setErr("공부할 분야가 없어요. 자격증을 하나 이상 고르거나, 이전으로 가서 분야를 골라 주세요.");
       // 처음에는 추천 연관 분야를 모두 켜 둠
       const items = relatedFor(domains, domainOf).map((x) => x.category);
       setRelated(items);
-      if (!items.length) return setStep(4); // 추천할 연관 분야가 없으면 건너뜀
+      if (!items.length) return setStep(5); // 추천할 연관 분야가 없으면 건너뜀
     }
     setStep(step + 1);
   };
 
-  const allInterests = [...new Set([...interests, ...related.filter((id) => relatedItems.some((x) => x.category === id))])];
+  const allInterests = [...new Set([...interests, ...certs, ...related.filter((id) => relatedItems.some((x) => x.category === id))])];
 
   const finish = async (withReminder: boolean) => {
     setBusy(true);
@@ -77,8 +88,9 @@ export default function Onboarding() {
   };
 
   const nextLabel =
-    step === 1 ? `다음 (${domains.length}개 분야)` : step === 2 ? `다음 (${interests.length}개 선택)`
-      : step === 3 ? `다음 (연관 ${related.length}개 추가)` : "다음";
+    step === 1 ? (domains.length ? `다음 (${domains.length}개 분야)` : "자격증만 할게요") : step === 2 ? `다음 (${interests.length}개 선택)`
+      : step === 3 ? (certs.length ? `다음 (자격증 ${certs.length}개)` : domains.length ? "준비 중인 자격증 없음" : "자격증을 골라 주세요")
+      : step === 4 ? `다음 (연관 ${related.length}개 추가)` : "다음";
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
@@ -96,7 +108,8 @@ export default function Onboarding() {
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 18, paddingBottom: 12 }} keyboardShouldPersistTaps="handled">
           {step === 0 && (
             <>
-              <T size={26} weight="bold">반가워요! 👋{"\n"}뭐라고 불러 드릴까요?</T>
+              <Icon name="slot" size={64} />
+              <T size={26} weight="bold">반가워요!{"\n"}뭐라고 불러 드릴까요?</T>
               <Field label="닉네임" value={nickname} onChangeText={setNickname} maxLength={20} placeholder="예: 공대생" autoFocus onSubmitEditing={next} returnKeyType="next" />
             </>
           )}
@@ -104,7 +117,7 @@ export default function Onboarding() {
             <>
               <View style={{ gap: 4 }}>
                 <T size={26} weight="bold">어떤 분야를 공부할까요?</T>
-                <T color="ink2">여러 개 골라도 좋아요. 고른 분야에서 매일 랜덤 주제가 나와요.</T>
+                <T color="ink2">여러 개 골라도 좋아요. 고른 분야에서 매일 랜덤 주제가 나와요. 자격증 시험만 준비한다면 고르지 않고 넘어가도 돼요.</T>
               </View>
               <DomainPicker value={domains} onChange={setDomains} />
             </>
@@ -121,13 +134,22 @@ export default function Onboarding() {
           {step === 3 && (
             <>
               <View style={{ gap: 4 }}>
+                <T size={26} weight="bold">준비 중인 자격증이 있나요?</T>
+                <T color="ink2">{domains.length ? "고르면 그 자격증 시험 과목의 주제도 랜덤 주제에 나와요. 없으면 그냥 넘어가도 돼요." : "분야를 고르지 않았으니, 고른 자격증의 시험 과목 주제만 나와요."}</T>
+              </View>
+              <CertPicker value={certs} onChange={setCerts} />
+            </>
+          )}
+          {step === 4 && (
+            <>
+              <View style={{ gap: 4 }}>
                 <T size={26} weight="bold">함께 보면 좋은 연관 분야예요</T>
                 <T color="ink2">고른 분야의 바탕이 되는 이론이에요. 같이 공부하면 이해가 훨씬 쉬워요. 필요 없는 것은 눌러 끄세요.</T>
               </View>
               <RelatedPicker items={relatedItems} value={related} onChange={setRelated} />
             </>
           )}
-          {step === 4 && (
+          {step === 5 && (
             <>
               <View style={{ gap: 4 }}>
                 <T size={26} weight="bold">어느 난이도부터 시작할까요?</T>
@@ -139,7 +161,8 @@ export default function Onboarding() {
           {step === LAST && (
             <>
               <View style={{ gap: 4 }}>
-                <T size={26} weight="bold">매일 언제 알려 드릴까요? 🔔</T>
+                <Icon name="bell" size={56} style={{ marginBottom: 6 }} />
+                <T size={26} weight="bold">매일 언제 알려 드릴까요?</T>
                 <T color="ink2">하루 한 주제씩, 연속 기록을 이어 가도록 알려 드려요. 그날 이미 공부했다면 알림은 오지 않아요.</T>
               </View>
               <TimeStepper value={time} onChange={setTime} />
@@ -150,7 +173,7 @@ export default function Onboarding() {
         {err ? <T color="accent">{err}</T> : null}
         {step < LAST ? (
           <Row style={{ flexWrap: "nowrap" }}>
-            {step > 0 && <Btn title="이전" onPress={() => { setErr(""); setStep(step === 4 && !relatedItems.length ? 2 : step - 1); }} style={{ flex: 1 }} size="lg" />}
+            {step > 0 && <Btn title="이전" onPress={() => { setErr(""); setStep(step === 5 && !relatedItems.length ? 3 : step === 3 && !domains.length ? 1 : step - 1); }} style={{ flex: 1 }} size="lg" />}
             <Btn title={nextLabel} variant="primary" size="lg" onPress={next} style={{ flex: 2 }} />
           </Row>
         ) : (

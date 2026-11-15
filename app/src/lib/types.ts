@@ -9,6 +9,21 @@ export interface WrongAnswer {
 }
 
 export interface StudyRecord {
+  studyType?: "study" | "battle";
+  battleId?: string | null;
+  rankScore?: number | null;
+  countsAsStudy?: boolean;
+  devOnly?: boolean;
+  attemptId?: string;
+  items?: {question: QuizQuestion; answer: number | boolean | null; stage?: "main" | "overtime"}[];
+  changeSeq?: string;
+  verificationStatus?: "client_reported" | "server_verified";
+  xpParts?: RpPart[];
+  streak?: number;
+  syncError?: string;
+  memoPending?: {version: string; baseChangeSeq?: string};
+  memoConflict?: {memo: string; changeSeq: string};
+
   id: string;
   topicId: string;
   topicKo: string;
@@ -20,7 +35,7 @@ export interface StudyRecord {
   score: number;
   /** 퀴즈 문제 수 (보통 10) */
   total: number;
-  /** 이번에 얻은 랭크 포인트 */
+  /** 이번에 얻은 경험치(XP) */
   rp: number;
   wrong: WrongAnswer[];
   /** 공부 시간(초). 퀴즈만 다시 푼 경우 0 */
@@ -69,8 +84,9 @@ export interface QuizResult {
   total: number;
   rp: number;
   parts: RpPart[];
-  userTierBefore: number;
-  userTierAfter: number;
+  userLevelBefore: number;
+  userLevelAfter: number;
+  /** 분야 랭크 (이름은 예전 그대로 topicTier) */
   topicTierBefore: number;
   topicTierAfter: number;
   streak: number;

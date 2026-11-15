@@ -1,23 +1,31 @@
 import { router } from "expo-router";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Pressable, View } from "react-native";
-import { TierBadge, UserRankBar } from "@/components/Rank";
-import { Slot } from "@/components/Slot";
-import { GearCount } from "@/components/TimeUpSheet";
+import { HomeIntro, useHomeIntroFirstTime } from "@/components/HomeIntro";
+import { domainById } from "@/data";
+import { dailyTopic } from "@/lib/daily";
+import { TodayRow } from "@/components/TodayRow";
+import { useMemo, useState, type ReactNode } from "react";
+import { Animated, Pressable, View, type ViewStyle } from "react-native";
+import { TierBadge } from "@/components/Rank";
+import { Slot, SlotReel } from "@/components/Slot";
 import { LevelButton } from "@/components/LevelSheet";
-import { TopicLinks } from "@/components/TopicLinks";
 import { Badge, Btn, Card, Chip, levelTone, Row, Screen, T } from "@/components/ui";
-import { categoryById, levelText, TOPICS, type Topic } from "@/data";
+import { inInterests, levelText, TOPICS, type Topic } from "@/data";
 import { useApp } from "@/lib/app-state";
+import { studyMinutesFor } from "@/lib/economy";
 import { prefetchQuiz } from "@/lib/quiz";
-import { maxRpFor, TIERS, topicMastery, totalRp } from "@/lib/rank";
-import { calcStreak, lastWeek } from "@/lib/stats";
+import { domainMastery, MAX_LEVEL, maxRpFor, TIERS, topicMastery, userLevel } from "@/lib/rank";
+import { calcStreak } from "@/lib/stats";
 import { radius, shadow, useColors } from "@/theme";
+import { DomainIcon, Icon, TierIcon } from "@/components/Icon";
 
 type LevelFilter = "0" | "1" | "2" | "3"; // 0 = 전체
 
 export default function Home() {
-  const { prefs, records, active, setActive, gears, updatePrefs } = useApp();
+  const { catalogVersion, prefs, records, active, setActive, gears, updatePrefs, xp, keptDays, freezes, premium, uid } = useApp();
+  const lv = userLevel(xp);
+  // 처음 설정을 마치고 홈에 처음 오면 사용법 안내
+  const [introFirst, doneIntro] = useHomeIntroFirstTime();
+  const studyMin = studyMinutesFor(prefs.studyMinutes, premium);
   const c = useColors();
   const [level, setLevel] = useState<LevelFilter>(String(prefs.level) as LevelFilter);
   // 설정에서 기본 난이도를 바꾸면 필터도 따라가게 함
@@ -31,13 +39,10 @@ export default function Home() {
   const [drawn, setDrawn] = useState<Topic | null>(null);
   const [spinning, setSpinning] = useState(false);
   const [pop] = useState(() => new Animated.Value(1));
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [reel, setReel] = useState<{ key: number; names: string[]; pick: Topic } | null>(null);
 
-  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
-
-  const { streak, today } = calcStreak(records);
-  const week = lastWeek(records);
-  // 마스터 = 주제 랭크가 최고 단계(엔지니어). 같은 개념이 여러 분야에 있을 수 있어서(예: 레이놀즈 수) 이름으로도 확인
+  const { streak } = calcStreak(records, new Date(), keptDays);
+  // 많이 푼 주제 = 그 주제에서 누적 정답 50개 + 만점 1번 이상. 같은 개념이 여러 분야에 있을 수 있어서(예: 레이놀즈 수) 이름으로도 확인
   const mastered = useMemo(() => {
     const set = new Set<string>();
     for (const id of new Set(records.map((r) => r.topicId))) {
@@ -49,15 +54,20 @@ export default function Home() {
     return set;
   }, [records]);
 
+  // 오늘의 주제는 홈 위 칸에서 따로 보여 주므로 슬롯머신 후보에서 뺌
+  const today = new Date().toDateString();
+  const daily = useMemo(() => dailyTopic(uid, prefs.interests), [catalogVersion, uid, prefs.interests, today]); // eslint-disable-line react-hooks/exhaustive-deps
   const inScope = useMemo(() => {
+    void catalogVersion; // Invalidate selections when the shared catalog changes.
     const seen = new Set<string>();
     return TOPICS.filter((t) => {
-      if (!prefs.interests.includes(t.category) || (level !== "0" && t.lv !== Number(level))) return false;
+      if (daily && (t.id === daily.id || t.ko === daily.ko)) return false;
+      if (!inInterests(t, prefs.interests) || (level !== "0" && t.lv !== Number(level))) return false;
       if (seen.has(t.ko)) return false; // 여러 분야에 겹치는 개념은 한 번만
       seen.add(t.ko);
       return true;
     });
-  }, [prefs.interests, level]);
+  }, [catalogVersion, prefs.interests, level, daily]);
   const pool = useMemo(
     () => (includeMastered ? inScope : inScope.filter((t) => !mastered.has(t.id) && !mastered.has(t.ko))),
     [inScope, includeMastered, mastered],
@@ -73,26 +83,21 @@ export default function Home() {
     let candidates = pool;
     if (drawn && pool.length > 1) candidates = pool.filter((t) => t.id !== drawn.id);
     const pick = candidates[Math.floor(Math.random() * candidates.length)];
-    const reel = pool.length >= 8 ? pool : TOPICS;
+    // 릴에 올릴 이름들: 맨 앞이 당첨(마지막에 멈출 주제), 뒤는 굴러가며 지나갈 주제들
+    const reelPool = pool.length >= 8 ? pool : TOPICS;
+    const names = [pick.ko, ...Array.from({ length: 28 }, () => reelPool[Math.floor(Math.random() * reelPool.length)].ko)];
+    setReel({ key: Date.now(), names, pick });
     setSpinning(true);
     setDrawn(null);
-    const dur = 1200 + Math.random() * 600;
-    const t0 = Date.now();
-    const step = () => {
-      const el = Date.now() - t0;
-      if (el >= dur) {
-        setShown(pick);
-        setDrawn(pick);
-        setSpinning(false);
-        pop.setValue(0.9);
-        Animated.spring(pop, { toValue: 1, friction: 5, useNativeDriver: true }).start();
-        return;
-      }
-      setShown(reel[Math.floor(Math.random() * reel.length)]);
-      const p = el / dur;
-      timer.current = setTimeout(step, 45 + p * p * 230);
-    };
-    step();
+  };
+
+  const landed = (pick: Topic) => {
+    setShown(pick);
+    setDrawn(pick);
+    setSpinning(false);
+    setReel(null);
+    pop.setValue(0.9);
+    Animated.spring(pop, { toValue: 1, friction: 5, useNativeDriver: true }).start();
   };
 
   const start = () => {
@@ -100,7 +105,7 @@ export default function Home() {
     prefetchQuiz(drawn); // 공부 시작을 누른 즉시 이 주제의 AI 문제 만들기 + 검수 시작
     setActive({
       topicId: drawn.id, stage: "study", memo: "",
-      studyTotal: prefs.studyMinutes * 60, studyLeft: prefs.studyMinutes * 60, studyUsed: 0,
+      studyTotal: studyMin * 60, studyLeft: studyMin * 60, studyUsed: 0,
       quizOnly: false, quiz: null, result: null, startedAt: new Date().toISOString(), endAt: null,
     });
     router.push("/study");
@@ -109,45 +114,44 @@ export default function Home() {
   const emptyText = !prefs.interests.length
     ? "관심 분야를 먼저 골라 주세요."
     : !pool.length
-      ? includeMastered ? "조건에 맞는 주제가 없어요." : "이 조건의 주제를 모두 마스터했어요! 🎉\n'마스터한 주제 포함'을 눌러 보세요."
+      ? includeMastered ? "조건에 맞는 주제가 없어요." : "이 조건의 주제를 모두 충분히 풀었어요!\n'많이 푼 주제 포함'을 눌러 보세요."
       : "레버를 당기거나 버튼을 눌러\n오늘의 주제를 뽑아 보세요";
 
   return (
     <Screen edges={["top"]} scroll contentStyle={{ flexGrow: 1 }}>
-      {/* 인사 + 스트릭 */}
-      <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
-        <View style={{ flex: 1 }}>
-          <T size={14} color="muted">{today ? "오늘 공부 완료 ✓" : "오늘은 아직이에요"}</T>
-          <T size={22} weight="bold" numberOfLines={1}>{prefs.nickname || "학습자"}님, 안녕하세요</T>
-        </View>
-        <View style={{ alignItems: "center", backgroundColor: c.paper, borderWidth: 1, borderColor: c.line, borderBottomWidth: 3, borderBottomColor: c.paperEdge, borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 4, ...shadow(c, 1) }}>
-          <T size={22} weight="bold" color={streak ? "flame" : "muted"}>🔥 {streak}</T>
-          <T size={11} color="muted">연속 일수</T>
-        </View>
-        <View style={{ alignItems: "center", backgroundColor: c.paper, borderWidth: 1, borderColor: c.line, borderBottomWidth: 3, borderBottomColor: c.paperEdge, borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 4, ...shadow(c, 1) }}>
-          <View style={{ height: 32, justifyContent: "center" }}><GearCount n={gears} size={18} /></View>
-          <T size={11} color="muted">톱니바퀴</T>
-        </View>
-      </Row>
-
-      <Card style={{ paddingVertical: 12 }}>
-        <UserRankBar rp={totalRp(records)} compact />
-      </Card>
-
-      <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
-        {week.map((d, i) => (
-          <View key={i} style={{ alignItems: "center", gap: 4, flex: 1 }}>
-            <View style={{
-              width: 30, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center",
-              backgroundColor: d.done ? c.flame : c.paper, borderWidth: d.done ? 0 : 1.5, ...(d.done ? shadow(c, 1) : null),
-              borderColor: d.isToday ? c.accent : c.line2, borderStyle: d.isToday && !d.done ? "dashed" : "solid",
-            }}>
-              {d.done && <T size={13} weight="bold" color="accentInk">✓</T>}
-            </View>
-            <T size={12} color={d.isToday ? "accent" : "muted"} weight={d.isToday ? "semibold" : "regular"}>{d.label}</T>
+      <HomeIntro open={introFirst && !active} onClose={doneIntro} />
+      {/* 레벨 + 연속 일수 + 톱니바퀴: 세 칸 모두 같은 높이, 위 줄(아이콘 22 · 숫자 18) / 아래 줄(설명 11) */}
+      <Row gap={8} style={{ flexWrap: "nowrap", alignItems: "stretch" }}>
+        <HeaderTile onPress={() => router.push("/profile")} label="내 프로필" style={{ flex: 1, alignItems: "stretch" }}>
+          <View style={{ height: TOP_H, flexDirection: "row", alignItems: "center", gap: 4 }}>
+            <Icon name="star" size={22} />
+            <T size={18} weight="bold">{lv.level >= MAX_LEVEL ? "MAX" : `${lv.level}레벨`}</T>
           </View>
-        ))}
+          <View style={{ height: BOTTOM_H, flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <View style={{ flex: 1, height: 6, borderRadius: 3, backgroundColor: c.chip, overflow: "hidden" }}>
+              <View style={{ width: `${Math.round(lv.progress * 100)}%`, height: "100%", backgroundColor: c.gold }} />
+            </View>
+            <T size={11} color="muted">{lv.need ? `${lv.toNext.toLocaleString()} XP 남음` : "최고 레벨"}</T>
+          </View>
+        </HeaderTile>
+        <HeaderTile onPress={() => router.push("/shop")} label="연속 일수, 보호권 보기">
+          <View style={{ height: TOP_H, flexDirection: "row", alignItems: "center", gap: 4 }}>
+            <Icon name="flame" size={22} style={{ opacity: streak ? 1 : 0.4 }} />
+            <T size={18} weight="bold" color={streak ? "flame" : "muted"}>{streak}</T>
+            {freezes > 0 && <><Icon name="shield" size={22} style={{ marginLeft: 6 }} /><T size={18} weight="bold" color="ink2">{freezes}</T></>}
+          </View>
+          <T size={11} color="muted" style={{ height: BOTTOM_H, lineHeight: BOTTOM_H }}>연속 일수{freezes > 0 ? " · 보호권" : ""}</T>
+        </HeaderTile>
+        <HeaderTile onPress={() => router.push("/shop")} label="톱니바퀴 상점">
+          <View style={{ height: TOP_H, flexDirection: "row", alignItems: "center", gap: 4 }}>
+            <Icon name="gear" size={22} />
+            <T size={18} weight="bold">{gears.toLocaleString()}</T>
+          </View>
+          <T size={11} color="muted" style={{ height: BOTTOM_H, lineHeight: BOTTOM_H }}>톱니바퀴 ›</T>
+        </HeaderTile>
       </Row>
+
+      <TodayRow />
 
       {active && (
         <Pressable onPress={() => router.push(`/${active.stage}`)}>
@@ -166,27 +170,36 @@ export default function Home() {
             onChange={(v) => { setLevel(String(v) as LevelFilter); updatePrefs({ level: v }).catch(() => {}); }}
           />
           <Chip
-            label={`${includeMastered ? "✓ " : ""}🛠️ 마스터한 주제 포함`}
+            label="많이 푼 주제 포함"
+            icon={includeMastered ? <Icon name="check" size={16} color={c.navyInk} /> : <TierIcon index={5} size={20} />}
             selected={includeMastered}
             onPress={() => setIncludeMastered((v) => !v)}
             fill
           />
         </Row>
-        <Pressable onPress={() => router.push("/interests")} hitSlop={6}>
-          <T size={14} color="muted">
-            관심 분야 {prefs.interests.length}개 · 후보 {pool.length}개{" "}
-            <T size={14} color="accent" weight="semibold">바꾸기 ›</T>
-          </T>
-        </Pressable>
+        <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
+          <Pressable onPress={() => router.push("/interests")} hitSlop={6} style={{ flexShrink: 1 }}>
+            <T size={14} color="muted" numberOfLines={1}>
+              관심 분야 {prefs.interests.length}개 · 후보 {pool.length}개{" "}
+              <T size={14} color="accent" weight="semibold">바꾸기 ›</T>
+            </T>
+          </Pressable>
+          <Pressable onPress={() => router.push("/certs")} hitSlop={6} accessibilityRole="button" style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+            <Icon name="medal" size={18} />
+            <T size={14} color="accent" weight="semibold">자격증 ›</T>
+          </Pressable>
+        </Row>
       </View>
 
       {/* 주제 카드 ~ 버튼: 남는 세로 공간의 가운데에 배치 */}
       <View style={{ flex: 1, justifyContent: "center", gap: 18, paddingVertical: 8 }}>
         <Slot spinning={spinning} onPull={draw} disabled={spinning || !pool.length || !!active}>
-          {shown ? (
+          {spinning && reel ? (
+            <SlotReel key={reel.key} names={reel.names} onDone={() => landed(reel.pick)} />
+          ) : shown ? (
             <Animated.View style={{ alignItems: "center", gap: 8, transform: [{ scale: pop }] }}>
               <Row gap={6} style={{ justifyContent: "center" }}>
-                <Badge label={`${categoryById(shown.category)?.emoji ?? ""} ${shown.categoryName}`} />
+                <Badge label={shown.categoryName} icon={<DomainIcon id={shown.domain} size={20} />} />
                 <Badge label={levelText(shown.lv)} tone={levelTone(shown.level)} />
               </Row>
               <T size={34} weight="bold" center color={spinning ? "ink2" : "ink"} style={{ letterSpacing: -0.8, lineHeight: 44 }}>
@@ -197,8 +210,8 @@ export default function Home() {
                   <T size={14} color="muted" center>{shown.en}</T>
                   <T size={16} color="ink2" center style={{ marginTop: 4 }}>{shown.hint}</T>
                   <Row gap={8} style={{ justifyContent: "center", marginTop: 4 }}>
-                    <TierBadge index={topicMastery(shown.id, records).index} size="sm" />
-                    <T size={12} color="muted">퀴즈 최대 +{maxRpFor(shown)} RP</T>
+                    <TierBadge index={domainMastery(shown.domain, records).index} prefix={domainById(shown.domain)?.name} size="sm" />
+                    <T size={12} color="muted">퀴즈 최대 +{maxRpFor(shown)} XP</T>
                   </Row>
                 </>
               )}
@@ -208,12 +221,12 @@ export default function Home() {
           )}
         </Slot>
 
-        {drawn && !spinning && <TopicLinks topic={drawn} />}
 
         <View style={{ gap: 10 }}>
-          {drawn && !spinning && !active && <Btn title={`이걸로 시작 · ${prefs.studyMinutes}분 공부 + 퀴즈`} variant="accent" size="lg" onPress={start} />}
+          {drawn && !spinning && !active && <Btn title={`이걸로 시작 · ${studyMin}분 공부 + 퀴즈`} variant="accent" size="lg" onPress={start} />}
           <Btn
-            title={spinning ? "뽑는 중…" : drawn ? "다시 뽑기" : "주제 뽑기 🎲"}
+            title={spinning ? "뽑는 중…" : drawn ? "다시 뽑기" : "주제 뽑기"}
+            icon={drawn || spinning ? undefined : <Icon name="dice" size={24} />}
             variant={drawn ? "outline" : "primary"}
             size="lg"
             onPress={draw}
@@ -223,5 +236,19 @@ export default function Home() {
         </View>
       </View>
     </Screen>
+  );
+}
+
+const TOP_H = 28;
+const BOTTOM_H = 16;
+
+/** 홈 맨 위 상태 칸: 세 칸이 같은 테두리·여백·높이 */
+function HeaderTile({ onPress, label, style, children }: { onPress: () => void; label: string; style?: ViewStyle; children: ReactNode }) {
+  const c = useColors();
+  return (
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label}
+      style={{ alignItems: "center", justifyContent: "center", gap: 2, backgroundColor: c.paper, borderWidth: 1, borderColor: c.line, borderBottomWidth: 3, borderBottomColor: c.paperEdge, borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 8, ...shadow(c, 1), ...style }}>
+      {children}
+    </Pressable>
   );
 }

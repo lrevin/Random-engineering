@@ -4,6 +4,7 @@ import { Badge, Btn, Card, Screen, T } from "@/components/ui";
 import { topicById } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { radius, useColors } from "@/theme";
+import { Icon } from "@/components/Icon";
 
 /** 오답 노트: 한 번의 퀴즈에서 틀린 문제와 정답·해설 */
 export default function WrongAnswers() {
@@ -33,7 +34,7 @@ export default function WrongAnswers() {
       </View>
 
       {r.wrong.length === 0 ? (
-        <Card><T color="muted" center>틀린 문제가 없어요. 만점이에요! 🎉</T></Card>
+        <Card style={{ alignItems: "center", gap: 8 }}><Icon name="party" size={56} /><T color="muted" center>틀린 문제가 없어요. 만점이에요!</T></Card>
       ) : (
         r.wrong.map((w, i) => (
           <Card key={i} style={{ gap: 8 }}>

@@ -2,6 +2,7 @@ import { Pressable, View } from "react-native";
 import { categoryById, domainById, topicCount } from "@/data";
 import { radius, raised, shadow, useColors } from "@/theme";
 import { T, tap } from "./ui";
+import { DomainIcon, Icon } from "./Icon";
 
 export type RelatedItem = { category: string; why: string; from: string };
 
@@ -33,7 +34,7 @@ export function RelatedPicker({ items, value, onChange }: {
               ...(!pressed ? shadow(c, 1) : null),
             })}
           >
-            <T size={26} style={{ lineHeight: 34 }}>{cat.emoji}</T>
+            <DomainIcon id={cat.domain} size={36} />
             <View style={{ flex: 1, gap: 1 }}>
               <T size={16} weight="bold">{cat.name}</T>
               <T size={13} color="ink2">{it.why}</T>
@@ -44,7 +45,7 @@ export function RelatedPicker({ items, value, onChange }: {
               borderColor: on ? c.accent : c.line2, backgroundColor: on ? c.accent : "transparent",
               alignItems: "center", justifyContent: "center",
             }}>
-              {on && <T size={13} weight="bold" color="accentInk">✓</T>}
+              {on && <Icon name="check" size={15} color="#ffffff" />}
             </View>
           </Pressable>
         );

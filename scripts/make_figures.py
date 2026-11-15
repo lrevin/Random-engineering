@@ -85,44 +85,122 @@ def dashed_rect(d, x1, y1, x2, y2, color=GRAY, width=3, seg=16):
         d.line([x2, y, x2, min(y + seg, y2)], fill=color, width=width)
 
 
+LOGOS = os.path.join(OUT, "logos")
+
+
+def logo(im, name, x, y, h):
+    """로고를 높이 h로 붙이고 너비를 돌려줌"""
+    lg = Image.open(os.path.join(LOGOS, name + ".png")).convert("RGBA")
+    lg = lg.crop(lg.getbbox())
+    w = round(lg.width * h / lg.height)
+    lg = lg.resize((w, h), Image.LANCZOS)
+    im.paste(lg, (int(x), int(y)), lg)
+    return w
+
+
+def tech(im, d, x, y, name, label, sub=None, h=60, size=28):
+    """로고 + 이름(+ 작은 설명) 한 덩어리. 차지한 너비를 돌려줌"""
+    w = logo(im, name, x, y, h)
+    tx = x + w + 14
+    if sub:
+        d.text((tx, y + h / 2 - 4), label, font=F(size, 800), fill=INK, anchor="ls")
+        d.text((tx, y + h / 2 + 6), sub, font=F(size - 6, 450), fill=GRAY, anchor="lt")
+        tw = max(d.textlength(label, font=F(size, 800)), d.textlength(sub, font=F(size - 6, 450)))
+    else:
+        d.text((tx, y + h / 2), label, font=F(size, 800), fill=INK, anchor="lm")
+        tw = d.textlength(label, font=F(size, 800))
+    return w + 14 + tw
+
+
+def hero(im, d, x, w, y, name, label, h=96, size=36):
+    """박스 가운데에 큰 로고 + 이름"""
+    lg = Image.open(os.path.join(LOGOS, name + ".png"))
+    lw = round(lg.crop(lg.getbbox()).width * h / lg.crop(lg.getbbox()).height)
+    tw = d.textlength(label, font=F(size, 800))
+    sx = x + (w - (lw + 20 + tw)) / 2
+    logo(im, name, sx, y, h)
+    d.text((sx + lw + 20, y + h / 2), label, font=F(size, 800), fill=INK, anchor="lm")
+
+
+def lines_at(d, x, y, lines, size=26, center=None):
+    for ln in lines:
+        bold = ln.startswith("**")
+        t = ln.replace("**", "")
+        f = F(size, 700 if bold else 450)
+        col = INK if bold else (60, 66, 84)
+        if center is not None:
+            d.text((center, y), t, font=f, fill=col, anchor="mt")
+        else:
+            d.text((x, y), t, font=f, fill=col)
+        y += size + 18
+
+
 def architecture():
     W, H = 2400, 1560
     im = Image.new("RGB", (W, H), WHITE)
     d = ImageDraw.Draw(im)
 
     d.text((60, 50), "사용자 화면", font=F(30, 700), fill=GRAY)
-    box(d, 60, 100, 560, 420, "모바일 앱 (iOS · Android)",
-        ["**React Native 0.86 · Expo SDK 57**", "TypeScript · Expo Router", "주제 뽑기(슬롯머신) · 15분 공부", "퀴즈 7문제 (AI 4 + 기본 3) · 랭크"])
-    box(d, 60, 600, 560, 440, "휴대폰 안 (오프라인에서도 동작)",
-        ["**내장 퀴즈 문제 은행**", "주제 1,054개 (공학 11 · 과학 5)", "기록·설정 저장 (AsyncStorage)", "매일 알림 · 타이머 알림", "(expo-notifications)"], head=NAVY)
+    box(d, 60, 100, 560, 420, "모바일 앱 (iOS · Android)", [])
+    tech(im, d, 104, 200, "react", "React Native", "0.86")
+    tech(im, d, 390, 200, "expo", "Expo", "SDK 57")
+    tech(im, d, 104, 290, "typescript", "TypeScript", "Expo Router")
+    lines_at(d, 104, 390, ["주제 뽑기(슬롯머신) · 15분 공부", "퀴즈 7문제 (AI 4 + 기본 3) · 레벨"])
+
+    box(d, 60, 600, 560, 440, "휴대폰 안 (오프라인에서도 동작)", [], head=NAVY)
+    tech(im, d, 104, 700, "android", "Android")
+    tech(im, d, 370, 700, "apple", "iOS")
+    lines_at(d, 104, 800, ["**내장 퀴즈 문제 은행**", "주제 1,054개 (공학 11 · 과학 5)", "기록 저장 (AsyncStorage)", "매일 알림 (expo-notifications)"])
     arrow(d, [(340, 520), (340, 600)], both=True)
 
     dashed_rect(d, 760, 60, 1660, 1120)
     lab = F(32, 700)
-    lw = d.textlength(" Supabase Cloud ", font=lab)
-    d.rectangle([786, 40, 790 + lw + 4, 80], fill=WHITE)
-    d.text((790, 60), " Supabase Cloud ", font=lab, fill=GRAY, anchor="lm")
-    box(d, 800, 110, 820, 300, "인증 · 보안",
-        ["**Supabase Auth** (이메일 · 카카오 · Apple 예정)", "JWT 토큰 · 자동 갱신", "**RLS** — 본인 데이터만 읽고 쓰기"], accent=GOLD)
-    box(d, 800, 450, 820, 240, "REST API (PostgREST)",
-        ["profiles · study_records 조회·저장", "rpc/delete_my_account (회원 탈퇴)"], accent=NAVY)
-    box(d, 800, 730, 820, 340, "서버 함수 (Edge Function · Deno)",
-        ["**generate-quiz** (퀴즈 AI 서버가 꺼졌을 때)", "출제 → 2번 검수 → 통과한 문제만 저장", "주제당 최대 40문제 → AI 비용 상한"], accent=RED)
+    lw = d.textlength(" AWS API / RDS ", font=lab)
+    d.rectangle([786, 34, 790 + 48 + lw + 4, 86], fill=WHITE)
+    logo(im, "nodejs", 792, 40, 40)
+    d.text((838, 60), " AWS API / RDS ", font=lab, fill=GRAY, anchor="lm")
+
+    box(d, 800, 110, 820, 300, "인증 · 보안", [], accent=GOLD)
+    x = 844
+    x += tech(im, d, x, 200, "nodejs", "JWT API", "이메일 로그인", h=56) + 50
+    x += tech(im, d, x, 200, "jsonwebtokens", "JWT", "토큰 자동 갱신", h=56) + 50
+    lines_at(d, x, 205, ["**API 권한 검사**", "본인 데이터만"], size=24)
+    x = 844
+    x += logo(im, "kakaotalk", x, 300, 40) + 10
+    x += logo(im, "apple", x, 300, 40) + 14
+    d.text((x, 320), "카카오 · Apple 로그인 (예정)", font=F(24, 450), fill=(60, 66, 84), anchor="lm")
+
+    box(d, 800, 450, 820, 240, "REST API (PostgREST)", [], accent=NAVY)
+    tech(im, d, 844, 545, "postgresql", "PostgREST", "DB 표를 바로 REST API로", h=56)
+    lines_at(d, 1260, 548, ["profiles · study_records", "조회·저장 · 회원 탈퇴"], size=24)
+
+    box(d, 800, 730, 820, 340, "서버 함수 (Edge Function)", [], accent=RED)
+    tech(im, d, 844, 825, "denojs", "Deno", "TypeScript", h=60)
+    tech(im, d, 1110, 825, "claude", "generate-quiz", "퀴즈 AI 서버가 꺼졌을 때", h=60)
+    lines_at(d, 844, 925, ["출제 → 2번 검수 → 통과한 문제만 저장", "주제당 최대 40문제 → AI 비용 상한"])
     for y in (410, 690):
         arrow(d, [(1210, y), (1210, y + 40)])
 
     # 퀴즈 AI 서버 (개인 PC 등에서 계속 켜 두는 출제 AI)
-    box(d, 760, 1200, 900, 300, "퀴즈 AI 서버 (PC 등에서 상시 구동)",
-        ["**api/quiz-server** · Node · 출제 지침 gem.md", "공부 시작 즉시 출제 → 1차·2차 검수", "주제별 문제 창고 · 쉬는 동안 계속 출제"], head=RED)
+    box(d, 760, 1200, 900, 300, "퀴즈 AI 서버 (PC 등에서 상시 구동)", [], head=RED)
+    tech(im, d, 804, 1295, "nodejs", "Node.js", "api/quiz-server", h=60)
+    tech(im, d, 1150, 1295, "claude", "출제 지침", "gem.md (Gems처럼)", h=60)
+    lines_at(d, 804, 1395, ["공부 시작 즉시 출제 → 1차·2차 검수", "주제별 문제 창고 · 쉬는 동안 계속 출제"])
 
-    box(d, 1800, 110, 540, 300, "데이터베이스",
-        ["**PostgreSQL**", "profiles · study_records", "quizzes (검수 통과 AI 문제)"])
-    box(d, 1800, 470, 540, 300, "AI 퀴즈 생성 · 검수",
-        ["**Anthropic Claude API**", "claude-opus-5-5 · JSON 출력", "출제 + 1차(직접 풀기)·2차 검수", "주제 정보만 전달 (개인정보 X)"], head=RED)
-    box(d, 1800, 830, 540, 300, "학습 자료 (외부)",
-        ["**한국어 위키백과** 718개 문서", "**공식 문서** 60개", "RFC · NIST · W3C · ISO 등"], head=NAVY)
+    box(d, 1800, 110, 540, 300, "데이터베이스", [])
+    hero(im, d, 1800, 540, 205, "postgresql", "PostgreSQL")
+    lines_at(d, 0, 330, ["profiles · study_records · quizzes"], size=24, center=2070)
 
-    # 앱 ↔ Supabase
+    box(d, 1800, 470, 540, 300, "AI 퀴즈 생성 · 검수", [], head=RED)
+    hero(im, d, 1800, 540, 560, "claude", "Claude API", h=84)
+    logo(im, "anthropic", 2070 - 60, 655, 22)
+    lines_at(d, 0, 700, ["claude-opus-5-5 · 개인정보 전송 X"], size=24, center=2070)
+
+    box(d, 1800, 830, 540, 300, "학습 자료 (외부)", [], head=NAVY)
+    hero(im, d, 1800, 540, 925, "wikipedia", "한국어 위키백과", h=80, size=32)
+    lines_at(d, 0, 1030, ["문서 718개 · 공식 문서 60개", "RFC · NIST · W3C · ISO 등"], size=24, center=2070)
+
+    # 앱 ↔ 자체 API
     arrow(d, [(620, 260), (800, 260)], both=True)
     chip(d, 710, 222, "HTTPS · JWT")
     arrow(d, [(620, 430), (700, 430), (700, 900), (800, 900)])
@@ -196,67 +274,62 @@ def erd():
 
 
 def gantt():
+    # (이름, 시작, 끝(그날 포함), 담당) — 추진 기간 11/2 ~ 11/23
     tasks = [
-        ("기획 · 요구사항 분석", "2026-09-01", "2026-09-21", "공통", True),
-        ("화면 설계 · 앱 MVP (뽑기·타이머·기록)", "2026-09-15", "2026-10-12", "이재빈", True),
-        ("공학 11개 분야 주제 데이터 (854개)", "2026-10-06", "2026-10-26", "김주안", True),
-        ("퀴즈 · 랭크 시스템 · 오답 노트", "2026-10-19", "2026-11-02", "이재빈", True),
-        ("퀴즈 문제 은행 작성 · 분야별 검수", "2026-10-26", "2026-11-30", "김주안", False),
-        ("Supabase 서버 · DB · AI 퀴즈 함수", "2026-11-02", "2026-11-16", "강건우", False),
-        ("카카오 · Apple 로그인, 알림 개발 빌드", "2026-11-09", "2026-11-23", "강건우", False),
-        ("데이터 도구 · CI · 문제 품질 검사", "2026-10-26", "2026-11-23", "김창원", False),
-        ("사용자 테스트 · 개선", "2026-11-23", "2026-12-07", "공통", False),
-        ("발표 준비 · 최종 보고서", "2026-12-01", "2026-12-14", "공통", False),
+        ("기획 · 요구사항 분석", "2026-11-02", "2026-11-03", "공통"),
+        ("화면 설계 · 앱 MVP (뽑기·타이머·기록)", "2026-11-02", "2026-11-06", "이재빈"),
+        ("공학·과학 주제 데이터 (1,054개)", "2026-11-03", "2026-11-07", "이재빈"),
+        ("퀴즈 · 레벨 · 랭크 · 오답 노트", "2026-11-05", "2026-11-10", "이재빈"),
+        ("퀴즈 문제 은행 작성 · 분야별 검수", "2026-11-08", "2026-11-19", "이재빈"),
+        ("AI 출제 · 2번 검수 지침, 문제 품질 점검", "2026-11-04", "2026-11-16", "김주안"),
+        ("MySQL · API 권한 검사 · 기록 동기화", "2026-11-03", "2026-11-11", "김창원"),
+        ("카카오 · Apple 로그인 (자체 API)", "2026-11-10", "2026-11-17", "김창원"),
+        ("퀴즈 AI 서버 · 서버 함수 배포 · CI", "2026-11-04", "2026-11-17", "강건우"),
+        ("화면 디자인 다듬기", "2026-11-12", "2026-11-18", "이재빈"),
+        ("사용자 테스트 · 개선", "2026-11-17", "2026-11-21", "이재빈"),
+        ("발표 준비 · 최종 보고서", "2026-11-20", "2026-11-23", "공통"),
     ]
     colors = {"이재빈": RED, "강건우": NAVY, "김창원": GREEN, "김주안": GOLD, "공통": GRAY}
-    start, end = dt.date(2026, 9, 1), dt.date(2026, 12, 20)
+    start, end = dt.date(2026, 11, 2), dt.date(2026, 11, 24)  # end는 다음 날 0시
     days = (end - start).days
     W, left, top, rowh = 2400, 640, 150, 78
-    H = top + rowh * len(tasks) + 170
+    H = top + rowh * len(tasks) + 130
     im = Image.new("RGB", (W, H), WHITE)
     d = ImageDraw.Draw(im)
-    x0, x1 = left, W - 60
+    x0, x1 = left, W - 160
     px = (x1 - x0) / days
-    # 달 표시
-    for m in (9, 10, 11, 12):
-        ms = dt.date(2026, m, 1)
-        me = dt.date(2026, m + 1, 1) if m < 12 else end
-        a, b = x0 + (ms - start).days * px, x0 + min((me - start).days, days) * px
-        d.rectangle([a, 60, b, 110], fill=NAVY if m % 2 else (52, 64, 98))
-        d.text(((a + b) / 2, 85), f"{m}월", font=F(30, 800), fill=WHITE, anchor="mm")
-    # 주 눈금
-    wk = start
-    while wk <= end:
-        x = x0 + (wk - start).days * px
-        d.line([x, 120, x, H - 150], fill=(236, 232, 224), width=2)
-        wk += dt.timedelta(days=7)
-    # 오늘
-    today = dt.date(2026, 10, 27)
-    tx = x0 + (today - start).days * px
-    for y in range(120, H - 150, 20):
-        d.line([tx, y, tx, y + 10], fill=RED, width=4)
-    d.text((tx + 8, 128), "현재 (10/27)", font=F(22, 700), fill=RED)
-    for i, (name, s, e, who, done) in enumerate(tasks):
+    # 주차 표시 (월요일 시작)
+    weeks = -(-days // 7)
+    for k in range(weeks):
+        ws = start + dt.timedelta(days=7 * k)
+        we = min(ws + dt.timedelta(days=7), end)
+        a, b = x0 + (ws - start).days * px, x0 + (we - start).days * px
+        d.rectangle([a, 60, b, 110], fill=NAVY if k % 2 == 0 else (52, 64, 98))
+        last = we - dt.timedelta(days=1)
+        d.text(((a + b) / 2, 85), f"{k + 1}주차  {ws.month}/{ws.day}~{last.month}/{last.day}" if (we - ws).days == 7 else f"{last.month}/{last.day}",
+               font=F(26 if (we - ws).days == 7 else 22, 800), fill=WHITE, anchor="mm")
+    # 날짜 눈금 (하루마다 옅게, 주마다 진하게)
+    for i in range(days + 1):
+        x = x0 + i * px
+        d.line([x, 120, x, H - 110], fill=(225, 220, 210) if i % 7 == 0 else (243, 240, 234), width=3 if i % 7 == 0 else 1)
+    for i, (name, s, e, who) in enumerate(tasks):
         y = top + i * rowh
         d.text((60, y + rowh / 2), name, font=F(27, 650), fill=INK, anchor="lm")
-        a = x0 + (dt.date.fromisoformat(s) - start).days * px
-        b = x0 + (dt.date.fromisoformat(e) - start).days * px
-        c = colors[who]
-        if done:
-            d.rounded_rectangle([a, y + 16, b, y + rowh - 16], radius=12, fill=c)
+        sd, ed = dt.date.fromisoformat(s), dt.date.fromisoformat(e)
+        a = x0 + (sd - start).days * px
+        b = x0 + ((ed - start).days + 1) * px
+        d.rounded_rectangle([a + 2, y + 16, b - 2, y + rowh - 16], radius=12, fill=colors[who])
+        label, lf = f"{who}  {sd.month}/{sd.day}~{ed.month}/{ed.day}", F(21, 600)
+        if b + 12 + d.textlength(label, font=lf) > W - 20:  # 오른쪽 끝을 넘으면 막대 왼쪽에
+            d.text((a - 12, y + rowh / 2), label, font=lf, fill=GRAY, anchor="rm")
         else:
-            d.rounded_rectangle([a, y + 16, b, y + rowh - 16], radius=12, fill=WHITE, outline=c, width=5)
-        d.text((b + 12, y + rowh / 2), who, font=F(22, 600), fill=GRAY, anchor="lm")
+            d.text((b + 12, y + rowh / 2), label, font=lf, fill=GRAY, anchor="lm")
     # 범례
-    lx, ly = 60, H - 110
+    lx, ly = 60, H - 80
     for who, c in colors.items():
         d.rounded_rectangle([lx, ly, lx + 40, ly + 28], radius=6, fill=c)
         d.text((lx + 52, ly + 14), who, font=F(24, 600), fill=INK, anchor="lm")
         lx += 200
-    d.rounded_rectangle([lx + 40, ly, lx + 80, ly + 28], radius=6, fill=GRAY)
-    d.text((lx + 92, ly + 14), "완료", font=F(24, 600), fill=INK, anchor="lm")
-    d.rounded_rectangle([lx + 200, ly, lx + 240, ly + 28], radius=6, fill=WHITE, outline=GRAY, width=4)
-    d.text((lx + 252, ly + 14), "예정", font=F(24, 600), fill=INK, anchor="lm")
     im.save(os.path.join(OUT, "schedule.png"))
 
 

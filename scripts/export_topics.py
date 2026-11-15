@@ -9,7 +9,7 @@ import re
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "app", "src", "data")
-OUT = os.path.join(ROOT, "api", "supabase", "functions", "generate-quiz", "topics.json")
+OUT = os.path.join(ROOT, "api", "shared", "data", "topics.json")
 LEVEL = {1: "기초", 2: "중급", 3: "심화"}
 
 index_src = open(os.path.join(DATA, "index.ts"), encoding="utf8").read()

@@ -7,7 +7,7 @@ Gemini의 Gems처럼 출제 지침(`gem.md`)을 한 번 정해 두면, 앱이 �
 
 | 문제 | 개수 | 어디서 |
 |---|---|---|
-| 🤖 AI 출제 | 4 | 이 서버 (없으면 Supabase 함수) |
+| 🤖 AI 출제 | 4 | 이 서버 (실패하면 앱의 캐시·기본 문제로 보충) |
 | 📚 기본 문제 | 3 | 앱에 내장된 문제 은행 `app/src/data/quizbank` |
 
 - AI 문제가 모자라면 기본 문제로, 기본 문제도 없으면 앱이 만든 연습 문제로 채웁니다.
@@ -32,7 +32,7 @@ Gemini의 Gems처럼 출제 지침(`gem.md`)을 한 번 정해 두면, 앱이 �
 1. AI에게 새 문제를 시킬 때 **우리 문제 은행의 그 주제 문제 + 이미 만든 AI 문제**를 먼저 보여 줍니다.
 2. 지침(`gem.md`)에 "이 목록과 겹치지 말고, 상황 판단·비교·계산·오개념 찾기 같은 새로운 유형으로"라고 적어 둡니다.
 3. 그래도 비슷하게 나온 문제는 **글자 2개씩 묶음 유사도(자카드 0.5 이상)** 로 한 번 더 걸러 버립니다.
-   - 같은 검사를 서버, Supabase 함수, 앱(`app/src/lib/quiz.ts`)에서 모두 합니다.
+   - 같은 검사를 서버와 앱(`app/src/lib/quiz.ts`)에서 모두 합니다.
 
 ## 동작
 
@@ -89,5 +89,5 @@ EXPO_PUBLIC_QUIZ_SERVER_TOKEN=(서버 .env 의 QUIZ_TOKEN 과 같은 값, 안 �
 | `QUIZ_BATCH` | `8` | 한 번에 새로 만드는 문제 수 (검수에서 버려질 몫까지) |
 | `QUIZ_MOCK` | `0` | `1`이면 API 키 없이 연습용 가짜 문제 |
 
-주제 목록은 `api/supabase/functions/generate-quiz/topics.json`을, 문제 은행은 `app/src/data/quizbank/*.json`을 그대로 읽습니다.
+주제 목록은 `api/shared/data/topics.json`을, 문제 은행은 `app/src/data/quizbank/*.json`을 그대로 읽습니다.
 주제나 문제 은행을 바꾸면 `python scripts/export_topics.py`를 실행한 뒤 서버를 다시 켜세요.
