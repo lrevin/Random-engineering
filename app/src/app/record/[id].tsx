@@ -16,7 +16,7 @@ import { useColors } from "@/theme";
 
 export default function RecordDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { records, removeRecord, active, setActive, prefs, premium, updateRecordMemo } = useApp();
+  const { records, removeRecord, restoreRecord, active, setActive, prefs, premium, updateRecordMemo } = useApp();
   const c = useColors();
   const [draft,setDraft]=useState<string|null>(null);
   const [saving,setSaving]=useState(false);
@@ -35,17 +35,17 @@ export default function RecordDetail() {
   const del = () => {
     const run = async () => {
       try {
-        await removeRecord(r.id);
+        if(r.hiddenAt)await restoreRecord(r.id);else await removeRecord(r.id);
         router.back();
       } catch {
-        showDialog({ icon: "offline", title: "삭제하지 못했어요", message: "인터넷 연결을 확인하고 다시 시도해 주세요." });
+        showDialog({ icon: "offline", title: "변경하지 못했어요", message: "인터넷 연결을 확인하고 다시 시도해 주세요." });
       }
     };
     showDialog({
       icon: "trash",
-      title: "기록을 삭제할까요?",
-      message: `"${r.topicKo}" 기록이 지워지고 되돌릴 수 없어요.`,
-      buttons: [{ text: "취소", style: "cancel" }, { text: "삭제", style: "destructive", onPress: run }],
+      title: r.hiddenAt?"기록을 복원할까요?":"기록을 숨길까요?",
+      message: "목록 표시만 변경해요. 학습 실적·XP·보상 기록은 유지돼요.",
+      buttons: [{ text: "취소", style: "cancel" }, { text: r.hiddenAt?"복원":"숨기기", onPress: run }],
     });
   };
 
@@ -102,6 +102,14 @@ export default function RecordDetail() {
         </T>
       </View>
 
+      {r.rewardStatus === "held" && <Card style={{gap:6}}>
+        <T weight="bold">보상 확인 대기</T>
+        <T color="muted">{r.rewardReason === "time_needs_review" ? "학습 완료 시각을 확인해야 해요." : r.rewardReason === "upload_pending" ? "서버에 기록을 보내고 보상을 확인하고 있어요." : r.rewardReason === "outside_study_window" ? "보상 인정 기간을 벗어나 확인이 필요해요." : "보상에 필요한 기록을 확인해야 해요."} 기록은 보관되며 확인 전에는 XP·퀘스트 실적에 반영되지 않아요.</T>
+      </Card>}
+      {r.rewardStatus === "ineligible" && <Card style={{gap:6}}>
+        <T weight="bold">개인 연습 기록</T>
+        <T color="muted">서버에서 전체 문제 원본을 확인하지 못했어요. 기록은 보관하지만 XP·퀘스트·랭크 실적에는 반영하지 않아요.</T>
+      </Card>}
       <Card style={{ gap: 6 }}>
         <T size={13} weight="semibold" color="muted">공부 메모</T>
         {<>
@@ -115,13 +123,13 @@ export default function RecordDetail() {
             <Btn title="내 메모로 다시 저장" onPress={()=>{setDraft(null);updateRecordMemo(r.id,draft??r.memo,"local");}}/>
           </>}
         </>}
-        {!r.synced&&<T size={13} color="muted">{r.syncError==="incomplete_record"?"전체 답안이 없는 이전 기록은 기기에만 보관해요.":"아직 서버에 반영되지 않은 기록이에요. XP는 임시 값이에요."}</T>}
+        {!r.synced&&<T size={13} color="muted">{r.syncError==="incomplete_record"?"전체 답안이 없는 이전 기록은 기기에만 보관해요.":"아직 서버에 반영되지 않은 기록이에요. 회원 XP는 서버 확인 후 반영돼요."}</T>}
       </Card>
 
       {r.studyType === "battle" && <Card style={{gap:8}}>
         <T weight="bold">배틀 풀이 기록</T>
         <T>본 문제 정답 {r.rankScore ?? 0} / 5 · {r.countsAsStudy === false ? "학습 실적 제외" : "분야 랭크·학습일 반영"}</T>
-        <T color="muted">승패와 XP 정산이 연결되어 있어 배틀 기록은 개별 삭제할 수 없어요.</T>
+        <T color="muted">배틀 기록을 숨겨도 승패·XP 정산과 학습 실적은 유지돼요.</T>
         {r.items?.map((item,i)=><View key={i} style={{gap:4}}>
           <T weight="semibold">{i+1}. {item.stage === "overtime" ? "[연장전] " : ""}{item.question.q}</T>
           <T size={14}>내 답: {item.answer === null ? "미응답" : item.question.type === "mc" ? item.question.choices[item.answer as number] : item.answer ? "O" : "X"}</T>
@@ -145,7 +153,7 @@ export default function RecordDetail() {
         {topic && !ok && <T size={12} color="muted" center>다시 공부하고 나면 전에 틀린 문제는 빼고 새 문제로 퀴즈를 풀어요.</T>}
         {topic && <Btn title="공부 없이 퀴즈만 다시 풀기" onPress={retryQuiz} />}
         <Btn title="닫기" variant="primary" onPress={() => router.back()} />
-        {r.studyType !== "battle" && <Btn title="이 기록 삭제" variant="ghost" onPress={del} />}
+        <Btn title={r.hiddenAt?"기록 복원":"이 기록 숨기기"} variant="ghost" onPress={del} />
       </View>
     </Screen>
   );

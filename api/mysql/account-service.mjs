@@ -98,6 +98,7 @@ export async function purgeExpiredAccounts({connectionFactory=connect,limit=100,
         const [[user]]=await db.execute(`SELECT id,status,deletion_requested_at<=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 7 DAY) AS due FROM users WHERE id=? FOR UPDATE`,[candidate.id]);
         if(!user||user.status!=='deleting'||!Number(user.due)) return 0;
         await db.execute('DELETE FROM study_records WHERE user_id=?',[user.id]);
+        await db.execute('UPDATE quiz_attempt_items i JOIN quiz_attempts a ON a.id=i.attempt_id SET i.source_attempt_id=NULL,i.source_position=NULL WHERE a.user_id=?',[user.id]);
         await db.execute('DELETE i FROM quiz_attempt_items i JOIN quiz_attempts a ON a.id=i.attempt_id WHERE a.user_id=?',[user.id]);
         await db.execute('DELETE FROM quiz_attempts WHERE user_id=?',[user.id]);
         await db.execute('DELETE FROM study_record_tombstones WHERE user_id=?',[user.id]);

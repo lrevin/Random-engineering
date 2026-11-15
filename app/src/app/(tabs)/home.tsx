@@ -1,3 +1,4 @@
+import {useRewardStatus} from "@/lib/useRewardStatus";
 import { router } from "expo-router";
 import { HomeIntro, useHomeIntroFirstTime } from "@/components/HomeIntro";
 import { domainById } from "@/data";
@@ -21,7 +22,7 @@ import { DomainIcon, Icon, TierIcon } from "@/components/Icon";
 type LevelFilter = "0" | "1" | "2" | "3"; // 0 = 전체
 
 export default function Home() {
-  const { catalogVersion, prefs, records, active, setActive, gears, updatePrefs, xp, keptDays, freezes, premium, uid } = useApp();
+  const { mode, catalogVersion, prefs, records, active, setActive, gears, updatePrefs, xp, keptDays, freezes, premium, uid } = useApp();
   const lv = userLevel(xp);
   // 처음 설정을 마치고 홈에 처음 오면 사용법 안내
   const [introFirst, doneIntro] = useHomeIntroFirstTime();
@@ -56,7 +57,9 @@ export default function Home() {
 
   // 오늘의 주제는 홈 위 칸에서 따로 보여 주므로 슬롯머신 후보에서 뺌
   const today = new Date().toDateString();
-  const daily = useMemo(() => dailyTopic(uid, prefs.interests), [catalogVersion, uid, prefs.interests, today]); // eslint-disable-line react-hooks/exhaustive-deps
+  const {rewards}=useRewardStatus();
+  const localDaily = useMemo(() => dailyTopic(uid, prefs.interests), [catalogVersion, uid, prefs.interests, today]); // eslint-disable-line react-hooks/exhaustive-deps
+  const daily=mode==='user'?TOPICS.find(t=>t.id===rewards?.daily.topicId):localDaily;
   const inScope = useMemo(() => {
     void catalogVersion; // Invalidate selections when the shared catalog changes.
     const seen = new Set<string>();

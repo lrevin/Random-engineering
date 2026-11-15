@@ -1,6 +1,9 @@
+import * as Crypto from "expo-crypto";
+import {mysqlAuth,authErrorMessage} from "@/lib/auth";
+import {AuthApiError} from "@/lib/auth-client";
 import * as Haptics from "expo-haptics";
 import { Redirect, router } from "expo-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ActivityIndicator, Platform, Pressable, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Badge, Btn, levelTone, Row, T, tap } from "@/components/ui";
@@ -26,25 +29,40 @@ export default function Quiz() {
 }
 
 function QuizInner() {
-  const { active, setActive, records, addRecord, xp, keptDays } = useApp();
+  const { mode, active, setActive, records, addRecord, xp, keptDays } = useApp();
   const c = useColors();
   const a = active!;
   const topic = topicById(a.topicId);
   const quiz = a.quiz;
+  const attemptId=useRef(a.serverAttemptId??Crypto.randomUUID());
   const [failed, setFailed] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveError,setSaveError]=useState("");
 
   // 문제 불러오기 (처음 한 번)
   useEffect(() => {
     if (quiz || !topic) return;
     let alive = true;
-    loadQuiz(topic)
+    const load=async()=>{
+      if(mode==='user'&&a.quizOnly){
+        const id=attemptId.current;
+        setActive(x=>x?{...x,serverAttemptId:id}:x);
+        await mysqlAuth.issueActivity({requestId:id,purpose:'study',topicId:topic.id,studySec:0});
+        const value=await mysqlAuth.activityEvent(id,'quiz',id);
+        setActive(x=>x?{...x,serverTracking:true}:x);
+        return {source:value.items.some(i=>i.question.src==='offline')?'offline' as const:'bank' as const,questions:value.items.map(i=>i.question)};
+      }
+      return loadQuiz(topic);
+    };
+    load()
       .then((set) => {
         if (!alive) return;
         setActive((x) => (x ? { ...x, quiz: { source: set.source, questions: set.questions, answers: [] } } : x));
       })
       .catch(() => alive && setFailed(true));
     return () => { alive = false; };
+  // 학습별 최초 로딩은 UUID를 보존하며 실행한다.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quiz, topic, setActive]);
 
   if (!topic) return null;
@@ -61,7 +79,7 @@ function QuizInner() {
           <>
             <ActivityIndicator size="large" color={c.accent} />
             <T size={17} weight="semibold" center>“{topic.ko}” 퀴즈를 준비하고 있어요</T>
-            <T size={14} color="muted" center>AI가 이 주제의 새 문제를 만들고{"\n"}정답이 맞는지 2번 검수하고 있어요.</T>
+            <T size={14} color="muted" center>문제와 답안을 확인하고 있어요.</T>
           </>
         )}
       </SafeAreaView>
@@ -73,7 +91,8 @@ function QuizInner() {
 
   const finish = async (answers: (number | boolean)[]) => {
     if (saving) return;
-    setSaving(true);
+    setSaving(true);setSaveError("");
+    setActive(x=>x?.quiz?{...x,quiz:{...x.quiz,answers}}:x);
     const total = quiz.questions.length;
     const score = quiz.questions.filter((qq, i) => isCorrect(qq, answers[i])).length;
     const wrong: WrongAnswer[] = quiz.questions
@@ -91,15 +110,17 @@ function QuizInner() {
     const rpBefore = xp;
     const topicBefore = domainMastery(topic.domain, records);
     const rec = await addRecord({
+      attemptId:a.serverTracking?a.serverAttemptId:undefined,
       topicId: topic.id, topicKo: topic.ko, domain: topic.domain, category: topic.category, level: topic.level,
       items: quiz.questions.map((question,i)=>({question,answer:answers[i]??null})),
       memo: a.memo, score, total, rp: rp.total, wrong, studySec: a.quizOnly ? 0 : a.studyUsed, quizSource: quiz.source,
     });
+    if(mode==='user'&&a.serverTracking&&!rec.synced){setSaving(false);setSaveError((rec.syncError?authErrorMessage(new AuthApiError(rec.syncError,409)):'서버 저장을 확인하지 못했어요.')+' 답안은 기기에 유지돼요.');return;}
     const topicAfter = domainMastery(topic.domain, [...records, rec]);
     setActive((x) => x ? {
       ...x, stage: "result", quiz: { ...quiz, answers },
       result: {
-        recordId: rec.id, score, total, rp: rec.rp, parts: rec.xpParts ?? rp.parts, streak: rec.streak ?? streak,
+        recordId: rec.id, score:rec.score, total:rec.total, rp: rec.rp, parts: rec.xpParts ?? rp.parts, streak: rec.streak ?? streak,
         userLevelBefore: userLevel(rpBefore).level, userLevelAfter: userLevel(rpBefore + rec.rp).level,
         topicTierBefore: topicBefore.index, topicTierAfter: topicAfter.index,
       },
@@ -113,11 +134,11 @@ function QuizInner() {
     index={idx}
     count={quiz.questions.length}
     topicName={topic.ko}
-    badges={<Row gap={6}><Badge label={topic.categoryName} /><Badge label={levelText(topic.lv)} tone={levelTone(topic.level)} /></Row>}
+    badges={<Row gap={6}><Badge label={topic.categoryName} /><Badge label={levelText(topic.lv)} tone={levelTone(topic.level)} />{!!saveError&&<T color="accent">{saveError}</T>}</Row>}
     saving={saving}
     onQuit={() => confirmQuit(() => { setActive(null); router.replace("/home"); })}
     onNext={(answer) => {
-      const answers = [...quiz.answers, answer];
+      const answers = quiz.answers.length>=quiz.questions.length?quiz.answers:[...quiz.answers, answer];
       if (answers.length >= quiz.questions.length) finish(answers);
       else setActive((x) => (x && x.quiz ? { ...x, quiz: { ...x.quiz, answers } } : x));
     }}

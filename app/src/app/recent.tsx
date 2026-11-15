@@ -8,7 +8,7 @@ import { fmtDate } from "@/lib/stats";
 import type { StudyRecord } from "@/lib/types";
 import { radius, useColors } from "@/theme";
 
-type Filter = "all" | "review";
+type Filter = "all" | "review" | "hidden";
 
 /** 다시 볼 주제 기준: 정답률 60% 이하 */
 const needsReview = (r: StudyRecord) => r.total > 0 && r.score / r.total <= 0.6;
@@ -18,8 +18,8 @@ export default function Recent() {
   const { records } = useApp();
   const c = useColors();
   const [filter, setFilter] = useState<Filter>("all");
-  const list = useMemo(() => [...records].filter((r) => filter === "all" || needsReview(r)).reverse(), [records, filter]);
-  const reviewCount = useMemo(() => records.filter(needsReview).length, [records]);
+  const list = useMemo(() => [...records].filter((r) => filter === "hidden" ? !!r.hiddenAt : !r.hiddenAt && (filter === "all" || needsReview(r))).reverse(), [records, filter]);
+  const reviewCount = useMemo(() => records.filter(r=>!r.hiddenAt&&needsReview(r)).length, [records]);
 
   return (
     <Screen scroll>
@@ -30,7 +30,7 @@ export default function Recent() {
         </Pressable>
       </Row>
       <Row style={{ justifyContent: "space-between" }}>
-        <Segment<Filter> value={filter} onChange={setFilter} options={[{ value: "all", label: "전체" }, { value: "review", label: `다시 볼 주제 ${reviewCount}` }]} />
+        <Segment<Filter> value={filter} onChange={setFilter} options={[{ value: "all", label: "전체" }, { value: "review", label: `다시 볼 주제 ${reviewCount}` }, {value:"hidden",label:"숨긴 기록"}]} />
         <T size={13} color="muted">{list.length}개</T>
       </Row>
 

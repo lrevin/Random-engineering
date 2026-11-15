@@ -119,7 +119,7 @@ cd ../api/server && npm test
 | 공개 API | `https://ppobgong.o-r.kr` (Nginx → EC2:8788 → RDS MySQL) |
 | 카카오 개발자 앱 | "뽑공" (앱 ID 1650041), 리다이렉트 `https://ppobgong.o-r.kr/auth/kakao/callback` — [KAKAO_LOGIN_SETUP.md](KAKAO_LOGIN_SETUP.md) |
 | AdMob | 앱 ID·보상형 광고 단위는 `app/app.json`, `app/src/lib/ads.ts` — [ADMOB_SETUP.md](ADMOB_SETUP.md) |
-| 마지막 마이그레이션 | `V7__member_purchases.sql` (구매 V7 사용은 팀 공유·조율 완료. 다음 번호는 최신 이력·팀 작업 확인 후 사용) |
+| 마지막 마이그레이션 | V8 특수·일반 보상(2026-11-15 운영 RDS 적용 및 develop 통합). V1~V8 수정 금지. 후속 번호는 팀 작업과 확인 |
 | Nginx 필수 설정 | `proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;` — 요청 제한이 실제 사용자 주소로 세어지게 ([client-key.mjs](../api/server/client-key.mjs)) |
 | DB 연결 | API 서버는 회원 요청에 연결 풀 사용 (`MYSQL_POOL_SIZE`, 기본 10). 스크립트는 직접 연결 |
 | 진행 현황 | [DEVELOPMENT_PROGRESS.md](DEVELOPMENT_PROGRESS.md) |

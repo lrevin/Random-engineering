@@ -28,15 +28,15 @@ test('MySQL learning record integration',async t=>{
  const p=make();let saved;
  await t.test('ownership, snapshots, server-derived XP and wrong answers',async()=>{
   assert.equal((await req('/me/records/snapshot')).status,401);
-  const r=await upload(p);assert.equal(r.ok,true);saved=r.record;assert.equal(saved.rp,46);assert.equal(saved.verificationStatus,'client_reported');assert.equal(saved.items.length,7);assert.equal(saved.wrong.length,1);assert.equal(saved.topicKo,'스택');
+  const r=await upload(p);assert.equal(r.ok,true);saved=r.record;assert.equal(saved.rp,0);assert.equal(saved.rewardStatus,'ineligible');assert.equal(saved.eligibility.questEligible,false);assert.equal(saved.verificationStatus,'client_reported');assert.equal(saved.items.length,7);assert.equal(saved.wrong.length,1);assert.equal(saved.topicKo,'스택');
   assert.equal((await req(`/me/records/${p.id}`,'GET',undefined,b.accessToken)).status,404);
-  const [[n]]=await db.execute('SELECT COUNT(*) AS n FROM quiz_attempt_items WHERE attempt_id=?',[p.id]);assert.equal(Number(n.n),7);
+  const [[n]]=await db.execute('SELECT COUNT(*) AS n,SUM(topic_id=?) AS topic_count FROM quiz_attempt_items WHERE attempt_id=?',[p.topicId,p.id]);assert.equal(Number(n.n),7);assert.equal(Number(n.topic_count),7);
  });
  await t.test('retries are idempotent, immutable edits and foreign IDs rejected',async()=>{
   assert.equal((await upload({...p,memo:'다른 메모',rp:1})).record.memo,p.memo);
   assert.equal((await upload({...p,studySec:901})).error,'record_conflict');
   const r=await req('/me/records','PUT',{records:[p]},b.accessToken);assert.equal(r.data.results[0].error,'record_conflict');
-  const [[n]]=await db.execute("SELECT COUNT(*) AS n FROM xp_ledger WHERE source_record_id=? AND event_type='award'",[p.id]);assert.equal(Number(n.n),1);
+  const [[n]]=await db.execute("SELECT COUNT(*) AS n FROM xp_ledger WHERE source_record_id=? AND event_type='award'",[p.id]);assert.equal(Number(n.n),0);
  });
  await t.test('partial batch validation and score tampering',async()=>{
   const r=await req('/me/records','PUT',{records:[make({items:[]}),make({score:7}),make()]},token);assert.equal(r.data.saved,1);assert.deepEqual(r.data.results.map(x=>x.ok),[false,false,true]);
@@ -47,25 +47,25 @@ test('MySQL learning record integration',async t=>{
   assert.equal((await req(`/me/records/${p.id}/memo`,'PUT',{memo:'수정',baseChangeSeq:saved.changeSeq},token)).data.record.changeSeq,seq);
   assert.equal((await req(`/me/records/${p.id}/memo`,'PUT',{memo:'침범',baseChangeSeq:seq},b.accessToken)).status,404);
  });
- await t.test('concurrent duplicate awards only once',async()=>{const r=make();const results=await Promise.all([upload(r),upload(r)]);assert.ok(results.every(x=>x.ok));const [[n]]=await db.execute('SELECT COUNT(*) AS n FROM xp_ledger WHERE source_record_id=?',[r.id]);assert.equal(Number(n.n),1);});
- await t.test('deletion reverses exact XP, preserves completion and prevents resurrection',async()=>{
+ await t.test('concurrent duplicate awards only once',async()=>{const r=make();const results=await Promise.all([upload(r),upload(r)]);assert.ok(results.every(x=>x.ok));const [[n]]=await db.execute('SELECT COUNT(*) AS n FROM xp_ledger WHERE source_record_id=?',[r.id]);assert.equal(Number(n.n),0);});
+ await t.test('숨김은 XP·완료 증거를 유지하고 재전송으로 복원되지 않는다',async()=>{
   const before=(await req('/me/stats','GET',undefined,token)).data.totalXp;
   assert.equal((await req(`/me/records/${p.id}`,'DELETE',undefined,b.accessToken)).status,404);
   assert.equal((await req(`/me/records/${p.id}`,'DELETE',undefined,token)).status,204);assert.equal((await req(`/me/records/${p.id}`,'DELETE',undefined,token)).status,204);
-  assert.equal((await req('/me/stats','GET',undefined,token)).data.totalXp,before-saved.rp);
-  assert.equal((await upload(p)).error,'record_deleted');assert.equal((await upload({...p,id:randomUUID(),attemptId:p.id})).error,'attempt_conflict');
+  assert.equal((await req('/me/stats','GET',undefined,token)).data.totalXp,before);
+  assert.ok((await upload(p)).record.hiddenAt);assert.equal((await upload({...p,id:randomUUID(),attemptId:p.id})).error,'attempt_conflict');
   const [[a]]=await db.execute('SELECT status FROM quiz_attempts WHERE id=?',[p.id]);assert.equal(a.status,'completed');
-  await db.execute('DELETE FROM study_record_tombstones WHERE user_id=? AND record_id=?',[users[0],p.id]);assert.equal((await upload(p)).error,'record_deleted');
+  await db.execute('DELETE FROM study_record_tombstones WHERE user_id=? AND record_id=?',[users[0],p.id]);assert.ok((await upload(p)).record.hiddenAt);
  });
  await t.test('snapshot, incremental changes, stable pagination, expired cursors',async()=>{
-  const snap=(await req('/me/records/snapshot','GET',undefined,token)).data;assert.equal(snap.records.length,2);
+  const snap=(await req('/me/records/snapshot','GET',undefined,token)).data;assert.equal(snap.records.length,3);assert.ok(snap.records.find(r=>r.id===p.id).hiddenAt);
   const r=await upload(make());const changes=(await req(`/me/records/changes?cursor=${snap.cursor}`,'GET',undefined,token)).data;assert.equal(changes.changes[0].record.id,r.id);
-  await req(`/me/records/${r.id}`,'DELETE',undefined,token);const gone=(await req(`/me/records/changes?cursor=${changes.cursor}`,'GET',undefined,token)).data;assert.equal(gone.changes[0].deleted,true);
+  await req(`/me/records/${r.id}`,'DELETE',undefined,token);const gone=(await req(`/me/records/changes?cursor=${changes.cursor}`,'GET',undefined,token)).data;assert.equal(gone.changes[0].deleted,false);assert.ok(gone.changes[0].record.hiddenAt);
   const page=(await req('/me/records?limit=1','GET',undefined,token)).data;assert.ok(page.nextCursor);const next=(await req('/me/records?limit=1&cursor='+page.nextCursor,'GET',undefined,token)).data;assert.notEqual(page.records[0].id,next.records[0].id);
   await db.execute('UPDATE user_sync_states SET min_available_seq=1 WHERE user_id=?',[users[0]]);assert.equal((await req('/me/records/changes?cursor=0','GET',undefined,token)).data.error,'full_resync_required');
  });
  await t.test('failed award rolls back record, answers and sync sequence',async()=>{
-  const record=make(),factory=async()=>{const c=await connect();return new Proxy(c,{get(target,key){if(key==='execute')return(sql,args)=>{if(sql.startsWith('INSERT INTO xp_ledger'))throw new Error('forced award failure');return target.execute(sql,args);};const v=target[key];return typeof v==='function'?v.bind(target):v;}});};
+  const bank=await databaseStore(db).questions('ds-01');const record=make({score:7,items:bank.slice(0,7).map(q=>({question:{...q,src:'bank'},answer:q.answer}))}),factory=async()=>{const c=await connect();return new Proxy(c,{get(target,key){if(key==='execute')return(sql,args)=>{if(sql.startsWith('INSERT INTO xp_ledger'))throw new Error('forced award failure');return target.execute(sql,args);};const v=target[key];return typeof v==='function'?v.bind(target):v;}});};
   const service=createRecordService({auth,connectionFactory:factory});await assert.rejects(service.upload(header,{records:[record]}),/forced award failure/);
   const [[n]]=await db.execute('SELECT COUNT(*) AS n FROM quiz_attempts WHERE id=?',[record.id]);assert.equal(Number(n.n),0);
  });
@@ -77,13 +77,13 @@ test('MySQL learning record integration',async t=>{
   const c=await signup();const storage={read:async()=>null,write:async()=>{},remove:async()=>{}};
   const client=clientModule.createAuthClient(base,storage);await client.signIn(c.user.email,'Records-Test-42!');
   let local=[{...make(),synced:false}],drafts=[];const run=()=>syncMySqlRecords(client,()=>local,rs=>{local=rs;},()=>true,async r=>{drafts.push(r);});
-  await run();assert.equal(local[0].synced,true);assert.equal(local[0].rp,46);
+  await run();assert.equal(local[0].synced,true);assert.equal(local[0].rp,0);
   const first=local[0];local=[{...first,memo:'오프라인 메모',memoPending:{version:'edit1',baseChangeSeq:first.changeSeq}}];await run();assert.equal(local[0].memo,'오프라인 메모');assert.equal(local[0].memoPending,undefined);
   const before=local[0];await client.saveRecordMemo(before.id,'다른 기기',before.changeSeq);local=[{...before,memo:'내 초안',memoPending:{version:'edit2',baseChangeSeq:before.changeSeq}}];
   await run();assert.equal(local[0].memo,'내 초안');assert.equal(local[0].memoConflict.memo,'다른 기기');
   local=[{...local[0],memoConflict:undefined,memoPending:{version:'retry',baseChangeSeq:local[0].memoConflict.changeSeq}}];await run();assert.equal(local[0].memoPending,undefined);assert.equal(local[0].memo,'내 초안');
-  const old=local[0];await client.deleteRecord(old.id);local=[{...old,memo:'삭제 전 초안',memoPending:{version:'edit3',baseChangeSeq:old.changeSeq}}];await run();assert.equal(local.length,0);assert.equal(drafts[0].memo,'삭제 전 초안');
-  local=[{...make(),synced:false,items:undefined}];await run();assert.equal(local[0].synced,false);assert.equal(local[0].syncError,'incomplete_record');
+  const old=local[0];await client.deleteRecord(old.id);local=[{...old,memo:'삭제 전 초안',memoPending:{version:'edit3',baseChangeSeq:old.changeSeq}}];await run();assert.equal(local.length,1);assert.ok(local[0].hiddenAt);assert.equal(local[0].memo,'삭제 전 초안');
+  const incomplete={...make(),synced:false,items:undefined};local=[incomplete];await run();const pending=local.find(r=>r.id===incomplete.id);assert.equal(pending.synced,false);assert.equal(pending.syncError,'incomplete_record');
   let release;const waiting=new Promise(r=>{release=r;});let active=true,writes=0;
   const inFlight=syncMySqlRecords({...client,recordSnapshot:async()=>{await waiting;return {records:[first],cursor:'1'};}},()=>[],()=>{writes++;},()=>active,async()=>{});
   active=false;release();await inFlight;assert.equal(writes,0);
@@ -95,8 +95,8 @@ test('MySQL learning record integration',async t=>{
   const delayed={...client,recordSnapshot:async()=>{const result=await client.recordSnapshot();started();await gate;return result;}};
   const sync=enqueueRecordOperation(queue,()=>syncMySqlRecords(delayed,()=>local,rs=>{local=rs;},()=>true,async()=>{}));
   await ready;const id=local[0].id;
-  const remove=enqueueRecordOperation(queue,async()=>{await client.deleteRecord(id);local=local.filter(r=>r.id!==id);});
-  release();await Promise.all([sync,remove]);assert.equal(local.length,0);assert.equal((await req('/me/records/'+id,'GET',undefined,(await client.ensure()).accessToken)).status,404);
+  const remove=enqueueRecordOperation(queue,async()=>{const {record}=await client.recordVisibility(id,true);local=local.map(r=>r.id===id?record:r);});
+  release();await Promise.all([sync,remove]);assert.equal(local.length,1);assert.ok(local[0].hiddenAt);assert.equal((await req('/me/records/'+id,'GET',undefined,(await client.ensure()).accessToken)).status,200);
   const keep={...make(),synced:true,changeSeq:'1'},gone={...make(),synced:true,memoPending:{version:'gone',baseChangeSeq:'1'}};
   local=[keep,gone];
   await syncMySqlRecords({...client,recordSnapshot:async()=>({records:[keep],cursor:'1'})},()=>local,rs=>{local=rs;},()=>true,async()=>{

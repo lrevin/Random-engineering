@@ -82,7 +82,12 @@ export function useStageTimer(stage: "study", onEnd: () => void) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const restore=useCallback((total:number,left:number,running:boolean)=>{
+    ended.current=left<=0;cd.reset(left);if(running&&left>0)cd.start(left);
+    setActive(a=>a?{...a,studyTotal:total,studyLeft:left,studyUsed:Math.max(0,total-left),endAt:running&&left>0?Date.now()+left*1000:null}:a);
+  },[cd,setActive]);
   return {
+    restore,
     left: cd.left, total, running: cd.running, start, pause,
     toggle: cd.running ? pause : start, stop, extend,
     fresh: !wasRunning && initialLeft >= total - 0.5,

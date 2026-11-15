@@ -1,11 +1,11 @@
+import {STUDY_EXTEND_COST as EXTEND_COST} from "@/lib/economy";
 import { Modal, View } from "react-native";
 import { inset, radius, shadow, useColors } from "@/theme";
 import { Btn, Row, T } from "./ui";
 import { Icon } from "./Icon";
 
 /** 공부 시간 추가: 2분에 톱니바퀴 10개 */
-export const EXTEND_SECONDS = 120;
-export const EXTEND_COST = 10;
+export {STUDY_EXTEND_SECONDS as EXTEND_SECONDS,STUDY_EXTEND_COST as EXTEND_COST} from "@/lib/economy";
 
 /** 톱니바퀴 개수 표시 */
 export function GearCount({ n, size = 15 }: { n: number; size?: number }) {
