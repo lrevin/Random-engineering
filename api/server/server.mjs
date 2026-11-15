@@ -8,7 +8,7 @@ import {createMemberService} from '../mysql/member-service.mjs';
 import {memberRoutes} from '../mysql/member-http.mjs';
 import { pathToFileURL } from 'node:url';
 import { hash, loadBank, loadTopics } from '../shared/question-store.mjs';
-import { createReadPool, safeError } from './db.mjs';
+import { closeSharedPool, createReadPool, safeError, useSharedPool } from './db.mjs';
 import { databaseStore } from './db-store.mjs';
 import { createAuth } from './auth.mjs';
 import { authRoutes } from './auth-http.mjs';
@@ -20,6 +20,9 @@ import { createRecordService } from '../mysql/record-service.mjs';
 import { recordRoutes } from '../mysql/record-http.mjs';
 import { createLeaderboardService } from '../mysql/leaderboard-service.mjs';
 import { leaderboardRoutes } from '../mysql/leaderboard-http.mjs';
+import { createProgressService } from '../mysql/progress-service.mjs';
+import { progressRoutes } from '../mysql/progress-http.mjs';
+import { clientErrorRoutes } from './client-errors.mjs';
 
 export function createServer({ topics = loadTopics(), bank, store, auth, authLimits, battleService, battleSweep=true, kakao } = {}) {
   const battles=auth?(battleService??createBattleService({auth})):null;
@@ -35,6 +38,10 @@ export function createServer({ topics = loadTopics(), bank, store, auth, authLim
   const handleRecords=auth ? recordRoutes(createRecordService({auth})) : null;
   // 분야별 전체 유저 랭킹
   const handleLeaderboard=auth ? leaderboardRoutes(createLeaderboardService({auth})) : null;
+  // 모의고사 · 오답 해결 · 복습 · 자격증 시험일 계정 보관
+  const handleProgress=auth ? progressRoutes(createProgressService({auth})) : null;
+  // 앱 화면 오류 보고 (서버 로그에만 남김)
+  const handleClientErrors=clientErrorRoutes();
   if (!store) {
     bank ??= loadBank(undefined, topics);
     store = {
@@ -65,6 +72,8 @@ export function createServer({ topics = loadTopics(), bank, store, auth, authLim
     if(handleAccount && await handleAccount(req,pathname,send)) return;
     if(handleRecords && await handleRecords(req,pathname,send)) return;
     if(handleLeaderboard && await handleLeaderboard(req,pathname,send)) return;
+    if(handleProgress && await handleProgress(req,pathname,send)) return;
+    if(await handleClientErrors(req,pathname,send)) return;
     if (req.method === 'GET' && pathname === '/health') return send(200, {...await store.health(),auth:auth?'mysql':'not_implemented',profile:auth?'mysql':'not_implemented',accountDeletion:auth?'mysql':'not_implemented',records:auth?'mysql':'not_implemented',kakao:!!handleKakao});
     if(req.method==='GET' && pathname==='/catalog' && store.catalog){const data=await store.catalog();const etag=`"${hash(data)}"`;if(req.headers['if-none-match']===etag)return send(304,undefined,{ETag:etag});return send(200,{...data,version:hash(data)},{ETag:etag});}
     const match = /^\/quiz-bank\/([a-z0-9-]{1,32})$/.exec(pathname);
@@ -87,8 +96,9 @@ export function createServer({ topics = loadTopics(), bank, store, auth, authLim
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const db = process.env.MYSQL_USER ? await createReadPool() : null;
+  if (db) useSharedPool();
   const server = createServer(db ? { store:databaseStore(db),auth:createAuth() } : {});
-  for (const signal of ['SIGINT','SIGTERM']) process.once(signal, () => server.close(async () => { await db?.end(); }));
+  for (const signal of ['SIGINT','SIGTERM']) process.once(signal, () => server.close(async () => { await db?.end(); await closeSharedPool(); }));
   server.listen(Number(process.env.PORT || 8788), process.env.HOST || '127.0.0.1', () => {
     console.log(`Question API listening on ${JSON.stringify(server.address())}`);
   });

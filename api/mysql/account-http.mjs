@@ -1,4 +1,5 @@
 import { AuthError } from '../server/auth.mjs';
+import { rateKey } from '../server/client-key.mjs';
 import { readJsonBody } from '../server/auth-http.mjs';
 export function accountRoutes(service) {
   const hits=new Map();
@@ -10,7 +11,7 @@ export function accountRoutes(service) {
       reply(405,{error:'method_not_allowed'});return true;
     }
     const now=Date.now();for(const [key,h] of hits)if(h.until<=now)hits.delete(key);
-    const key=`${req.socket.remoteAddress}:${pathname}:${method}`,hit=hits.get(key)??{until:now+60000,n:0};
+    const key=`${rateKey(req)}:${pathname}:${method}`,hit=hits.get(key)??{until:now+60000,n:0};
     if(hits.size>=10000&&!hits.has(key)){reply(429,{error:'rate_limited'});return true;}
     hits.set(key,hit);hit.n++;
     if(hit.n>(pathname==='/me/profile'?120:10)){reply(429,{error:'rate_limited'});return true;}

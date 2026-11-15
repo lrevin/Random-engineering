@@ -18,7 +18,41 @@ export function options({ database = true } = {}) {
     timezone: 'Z', dateStrings: true, connectTimeout: 10000, supportBigNumbers: true, bigNumberStrings: true };
 }
 
+// API 서버가 켜질 때 useSharedPool()을 부르면, 회원 요청이 매번 새 연결을 여는 대신 풀에서 빌려 씀.
+// 스크립트(마이그레이션, admin-grant 등)는 부르지 않으므로 예전처럼 연결을 열고 닫음.
+let shared = null;
+export function useSharedPool() {
+  if (shared) return shared;
+  shared = mysql.createPool({ ...options(), connectionLimit: Number(process.env.MYSQL_POOL_SIZE || 10), maxIdle: 5,
+    idleTimeout: 60000, waitForConnections: true, queueLimit: 200, enableKeepAlive: true, keepAliveInitialDelay: 0 });
+  shared.pool.on('connection', (c) => c.query("SET time_zone='+00:00'"));
+  return shared;
+}
+export async function closeSharedPool() {
+  const pool = shared;
+  shared = null;
+  await pool?.end();
+}
+
 export async function connect(config = {}) {
+  if (shared && !Object.keys(config).length) {
+    const connection = await shared.getConnection();
+    let released = false;
+    // 서비스 코드는 끝나면 end()를 부름 → 풀 연결은 닫지 않고 돌려줌.
+    // 배틀 서비스처럼 세션에 이름 잠금·격리 수준을 건 경우가 있어서, 돌려주기 전에 원래대로 되돌림 (실패하면 버림)
+    connection.end = async () => {
+      if (released) return;
+      released = true;
+      try {
+        await connection.query('SELECT RELEASE_ALL_LOCKS()');
+        await connection.query('SET SESSION transaction_isolation=@@GLOBAL.transaction_isolation');
+        connection.release();
+      } catch {
+        connection.destroy();
+      }
+    };
+    return connection;
+  }
   const connection = await mysql.createConnection(options(config));
   await connection.query("SET time_zone='+00:00'");
   return connection;
