@@ -8,7 +8,7 @@ import {createMemberService} from '../mysql/member-service.mjs';
 import {memberRoutes} from '../mysql/member-http.mjs';
 import { pathToFileURL } from 'node:url';
 import { hash, loadBank, loadTopics } from '../shared/question-store.mjs';
-import { createReadPool, safeError } from './db.mjs';
+import { closeSharedPool, createReadPool, safeError, useSharedPool } from './db.mjs';
 import { databaseStore } from './db-store.mjs';
 import { createAuth } from './auth.mjs';
 import { authRoutes } from './auth-http.mjs';
@@ -87,8 +87,9 @@ export function createServer({ topics = loadTopics(), bank, store, auth, authLim
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const db = process.env.MYSQL_USER ? await createReadPool() : null;
+  if (db) useSharedPool();
   const server = createServer(db ? { store:databaseStore(db),auth:createAuth() } : {});
-  for (const signal of ['SIGINT','SIGTERM']) process.once(signal, () => server.close(async () => { await db?.end(); }));
+  for (const signal of ['SIGINT','SIGTERM']) process.once(signal, () => server.close(async () => { await db?.end(); await closeSharedPool(); }));
   server.listen(Number(process.env.PORT || 8788), process.env.HOST || '127.0.0.1', () => {
     console.log(`Question API listening on ${JSON.stringify(server.address())}`);
   });

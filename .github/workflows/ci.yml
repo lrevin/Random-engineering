@@ -45,6 +45,22 @@ jobs:
           python scripts/export_topics.py
           git diff --exit-code api/shared/data/
 
+  api-server:
+    name: API 서버 검사 (인증 · 카카오 · 광고 보상 · 랭킹 · 마이그레이션 설정)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api/server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: api/server/package-lock.json
+      - run: npm ci
+      - run: npm test
+
   quiz-server:
     name: 퀴즈 AI 서버 점검 (연습 모드)
     runs-on: ubuntu-latest

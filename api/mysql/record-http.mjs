@@ -1,11 +1,12 @@
 import { AuthError } from '../server/auth.mjs';
+import { rateKey } from '../server/client-key.mjs';
 import { readJsonBody } from '../server/auth-http.mjs';
 export function recordRoutes(service){
  const hits=new Map();
  return async(req,pathname,send)=>{
   if(pathname!=='/me/stats'&&!pathname.startsWith('/me/records'))return false;
   const reply=(status,data)=>send(status,data,{'Cache-Control':'no-store'});
-  const now=Date.now(),key=req.socket.remoteAddress;for(const[k,v]of hits)if(v.until<=now)hits.delete(k);
+  const now=Date.now(),key=rateKey(req);for(const[k,v]of hits)if(v.until<=now)hits.delete(k);
   const hit=hits.get(key)??{until:now+60000,n:0};if(hits.size>=10000&&!hits.has(key)){reply(429,{error:'rate_limited'});return true;}hits.set(key,hit);if(++hit.n>240){reply(429,{error:'rate_limited'});return true;}
   try{
    const url=new URL(req.url,'http://local'),header=req.headers.authorization,method=req.method;

@@ -1,4 +1,5 @@
 import { AuthError } from './auth.mjs';
+import { clientIp } from './client-key.mjs';
 
 export async function readJsonBody(req,{maxBytes=16384}={}) {
   if(!req.headers['content-type']?.toLowerCase().startsWith('application/json')) throw new AuthError('bad_request');
@@ -27,7 +28,7 @@ export function authRoutes(auth,{limits={signup:5,login:10,refresh:60,logout:60,
     // Nginx connections share one socket address. Verified sessions must not share a quota.
     let subject;
     if(route==='me'){try{subject=(await auth.verifyAccess(req.headers.authorization)).sub;}catch{/* Invalid tokens retain the address quota. */}}
-    const key=subject?`member:${subject}:${route}`:`${req.socket.remoteAddress}:${route}`;
+    const key=subject?`member:${subject}:${route}`:`${clientIp(req)}:${route}`;
     const hit=hits.get(key) ?? {until:now+60000,count:0};
     if(hits.size>=10000 && !hits.has(key)) {reply(429,{error:'rate_limited'});return true;}
     hit.count++;hits.set(key,hit);
