@@ -1,0 +1,3142 @@
+{
+  "web-11": [
+    {
+      "type": "mc",
+      "q": "JSON(JavaScript Object Notation)이라는 이름에서 JSON이 뜻하는 것은?",
+      "choices": [
+        "자바 표준 객체 네트워크",
+        "자바 직렬화 객체 형식",
+        "자바스크립트 실행 노드",
+        "자바스크립트 객체 표기법"
+      ],
+      "answer": 3,
+      "explain": "JSON은 JavaScript Object Notation의 줄임말로, 자바스크립트 객체를 적는 방식에서 문법을 가져왔습니다."
+    },
+    {
+      "type": "mc",
+      "q": "JSON(JavaScript Object Notation)을 가장 잘 설명한 것은?",
+      "choices": [
+        "웹 페이지의 모양을 꾸미는 스타일 언어",
+        "사람과 기계가 모두 읽기 쉬운 텍스트 기반 데이터 교환 형식",
+        "이미지를 압축하는 파일 형식",
+        "데이터베이스에 질의하는 언어"
+      ],
+      "answer": 1,
+      "explain": "JSON은 텍스트로 데이터를 표현해 프로그램끼리 주고받는 데 쓰는 가벼운 데이터 교환 형식입니다."
+    },
+    {
+      "type": "mc",
+      "q": "JSON에서 객체(object)를 감싸는 기호는?",
+      "choices": [
+        "중괄호 { }",
+        "꺾쇠괄호 < >",
+        "대괄호 [ ]",
+        "소괄호 ( )"
+      ],
+      "answer": 0,
+      "explain": "JSON 객체는 중괄호로 감싸고, 그 안에 이름과 값의 쌍을 쉼표로 구분해 적습니다."
+    },
+    {
+      "type": "mc",
+      "q": "JSON에서 배열(array)을 감싸는 기호는?",
+      "choices": [
+        "소괄호 ( )",
+        "중괄호 { }",
+        "대괄호 [ ]",
+        "꺾쇠괄호 < >"
+      ],
+      "answer": 2,
+      "explain": "JSON 배열은 대괄호로 감싸며, 순서가 있는 값 목록을 쉼표로 구분해 나열합니다."
+    },
+    {
+      "type": "mc",
+      "q": "JSON 객체에서 키(key)를 올바르게 적은 것은?",
+      "choices": [
+        "작은따옴표로 감싼 문자열",
+        "따옴표 없는 단어",
+        "큰따옴표로 감싼 문자열",
+        "숫자만"
+      ],
+      "answer": 2,
+      "explain": "JSON 표준에서 객체의 키는 반드시 큰따옴표로 감싼 문자열이어야 합니다."
+    },
+    {
+      "type": "mc",
+      "q": "JSON 객체에서 키와 값을 구분하는 기호는?",
+      "choices": [
+        "콜론(:)",
+        "화살표(->)",
+        "세미콜론(;)",
+        "등호(=)"
+      ],
+      "answer": 0,
+      "explain": "JSON은 \"이름\": 값처럼 콜론으로 키와 값을 구분합니다."
+    },
+    {
+      "type": "mc",
+      "q": "JSON 값으로 쓸 수 없는 것은?",
+      "choices": [
+        "null",
+        "true",
+        "문자열 \"abc\"",
+        "undefined"
+      ],
+      "answer": 3,
+      "explain": "JSON 값은 문자열, 숫자, 불리언, null, 객체, 배열뿐이며 undefined는 JSON 값이 아닙니다."
+    },
+    {
+      "type": "mc",
+      "q": "JSON에서 '값이 없음'을 나타낼 때 쓰는 값은?",
+      "choices": [
+        "none",
+        "null",
+        "empty",
+        "nil"
+      ],
+      "answer": 1,
+      "explain": "JSON은 값이 없음을 소문자 null로 표현합니다."
+    },
+    {
+      "type": "mc",
+      "q": "JSON에서 참과 거짓을 올바르게 적은 것은?",
+      "choices": [
+        "True와 False",
+        "true와 false",
+        "1과 0만 허용",
+        "\"yes\"와 \"no\""
+      ],
+      "answer": 1,
+      "explain": "JSON의 불리언 값은 따옴표 없는 소문자 true와 false입니다."
+    },
+    {
+      "type": "mc",
+      "q": "올바른 JSON 문서에 가장 알맞은 것은?",
+      "choices": [
+        "{\"name\": \"민수\", \"age\": 20}",
+        "{'name': '민수', 'age': 20}",
+        "{\"name\": \"민수\", \"age\": 20,}",
+        "{name: \"민수\", age: 20}"
+      ],
+      "answer": 0,
+      "explain": "JSON은 키를 큰따옴표로 감싸야 하고 문자열에 작은따옴표를 쓸 수 없으며 마지막 쉼표도 허용하지 않습니다."
+    },
+    {
+      "type": "mc",
+      "q": "JSON 파일에 주로 쓰는 확장자는?",
+      "choices": [
+        ".xml",
+        ".txt만 사용",
+        ".json",
+        ".js"
+      ],
+      "answer": 2,
+      "explain": "JSON 데이터를 담은 파일은 보통 .json 확장자를 씁니다."
+    },
+    {
+      "type": "mc",
+      "q": "HTTP(HyperText Transfer Protocol)로 JSON을 보낼 때 Content-Type에 쓰는 미디어 타입은?",
+      "choices": [
+        "application/xml",
+        "text/html",
+        "image/json",
+        "application/json"
+      ],
+      "answer": 3,
+      "explain": "JSON의 표준 미디어 타입은 application/json입니다."
+    },
+    {
+      "type": "mc",
+      "q": "자바스크립트에서 JSON 문자열을 객체로 바꾸는 함수는?",
+      "choices": [
+        "JSON.stringify",
+        "JSON.parse",
+        "JSON.print",
+        "JSON.encode"
+      ],
+      "answer": 1,
+      "explain": "JSON.parse는 JSON 형식의 문자열을 읽어 자바스크립트 값으로 바꿉니다."
+    },
+    {
+      "type": "mc",
+      "q": "자바스크립트에서 객체를 JSON 문자열로 바꾸는 함수는?",
+      "choices": [
+        "JSON.split",
+        "JSON.parse",
+        "JSON.stringify",
+        "JSON.load"
+      ],
+      "answer": 2,
+      "explain": "JSON.stringify는 자바스크립트 값을 JSON 형식의 문자열로 직렬화합니다."
+    },
+    {
+      "type": "mc",
+      "q": "XML(eXtensible Markup Language)과 비교한 JSON의 특징으로 가장 알맞은 것은?",
+      "choices": [
+        "이진 형식이라 사람이 읽을 수 없음",
+        "자바스크립트에서만 읽을 수 있음",
+        "데이터마다 닫는 태그를 반드시 씀",
+        "여는 태그와 닫는 태그가 없어 더 간결함"
+      ],
+      "answer": 3,
+      "explain": "JSON은 태그 없이 괄호와 쉼표로 구조를 나타내므로 같은 데이터를 XML보다 짧게 표현하는 경우가 많습니다."
+    },
+    {
+      "type": "mc",
+      "q": "웹 서비스의 API(Application Programming Interface) 응답 형식으로 JSON이 널리 쓰이는 이유로 가장 알맞은 것은?",
+      "choices": [
+        "가볍고 대부분의 언어에서 쉽게 읽고 쓸 수 있음",
+        "브라우저에서만 처리할 수 있음",
+        "자동으로 암호화됨",
+        "이미지와 영상을 그대로 담을 수 있음"
+      ],
+      "answer": 0,
+      "explain": "JSON은 문법이 단순하고 거의 모든 프로그래밍 언어가 읽고 쓰는 도구를 제공해 API 응답 형식으로 많이 쓰입니다."
+    },
+    {
+      "type": "mc",
+      "q": "{\"scores\": [90, 85, 77]}에서 scores 값의 자료형은?",
+      "choices": [
+        "객체",
+        "문자열",
+        "숫자",
+        "배열"
+      ],
+      "answer": 3,
+      "explain": "대괄호로 감싼 값 목록이므로 scores의 값은 배열입니다."
+    },
+    {
+      "type": "mc",
+      "q": "{\"user\": {\"id\": 1}}처럼 객체 안에 객체를 넣는 것에 대한 설명으로 알맞은 것은?",
+      "choices": [
+        "JSON에서는 금지됨",
+        "배열 안에서만 가능함",
+        "중첩 구조로 허용됨",
+        "키가 숫자일 때만 가능함"
+      ],
+      "answer": 2,
+      "explain": "JSON은 객체와 배열을 서로 자유롭게 중첩해 계층 구조를 표현할 수 있습니다."
+    },
+    {
+      "type": "mc",
+      "q": "JSON 숫자로 올바른 것은?",
+      "choices": [
+        "3.14",
+        "NaN",
+        "0x1F",
+        "Infinity"
+      ],
+      "answer": 0,
+      "explain": "JSON 숫자는 십진수 정수와 소수, 지수 표기만 허용하며 16진수, NaN, Infinity는 쓸 수 없습니다."
+    },
+    {
+      "type": "mc",
+      "q": "JSON 문자열을 감쌀 때 쓰는 기호는?",
+      "choices": [
+        "따옴표 없이 씀",
+        "큰따옴표",
+        "백틱(`)",
+        "작은따옴표"
+      ],
+      "answer": 1,
+      "explain": "JSON 문자열은 반드시 큰따옴표로 감싸야 합니다."
+    },
+    {
+      "type": "mc",
+      "q": "JSON에 날짜를 담을 때 흔히 쓰는 방법은?",
+      "choices": [
+        "주석으로 적음",
+        "date() 함수를 넣음",
+        "\"2024-01-01\"처럼 문자열로 적음",
+        "JSON 전용 날짜 자료형을 씀"
+      ],
+      "answer": 2,
+      "explain": "JSON에는 날짜 자료형이 따로 없어서 보통 정해진 형식의 문자열로 날짜를 표현합니다."
+    },
+    {
+      "type": "mc",
+      "q": "JSON 배열 [1, \"a\", true]에 대한 설명으로 알맞은 것은?",
+      "choices": [
+        "배열 원소는 모두 같은 자료형이어야 함",
+        "서로 다른 자료형을 섞어 담을 수 있음",
+        "문자열은 배열에 넣을 수 없음",
+        "불리언은 배열에 넣을 수 없음"
+      ],
+      "answer": 1,
+      "explain": "JSON 배열은 원소의 자료형을 제한하지 않아 숫자, 문자열, 불리언 등을 섞어 담을 수 있습니다."
+    },
+    {
+      "type": "ox",
+      "q": "JSON은 자바스크립트 문법에서 왔지만 파이썬, 자바 등 여러 언어에서도 읽고 쓸 수 있다.",
+      "answer": true,
+      "explain": "JSON은 언어에 독립적인 텍스트 형식이라 대부분의 프로그래밍 언어가 이를 처리하는 기능을 제공합니다."
+    },
+    {
+      "type": "ox",
+      "q": "표준 JSON 안에는 // 형태의 주석을 넣을 수 있다.",
+      "answer": false,
+      "explain": "표준 JSON 문법에는 주석이 없으므로 주석을 넣으면 올바른 JSON이 아닙니다."
+    },
+    {
+      "type": "ox",
+      "q": "JSON 객체의 마지막 값 뒤에 쉼표를 붙여도 표준 문법에 맞다.",
+      "answer": false,
+      "explain": "JSON은 마지막 원소 뒤의 쉼표(트레일링 콤마)를 허용하지 않아 구문 오류가 됩니다."
+    },
+    {
+      "type": "ox",
+      "q": "JSON은 텍스트 형식이어서 메모장 같은 편집기로 열어 내용을 읽을 수 있다.",
+      "answer": true,
+      "explain": "JSON은 사람이 읽을 수 있는 텍스트로 저장되므로 일반 텍스트 편집기로 열어 볼 수 있습니다."
+    },
+    {
+      "type": "ox",
+      "q": "JSON 객체의 키는 따옴표 없이 적어도 표준 문법에 맞다.",
+      "answer": false,
+      "explain": "JSON 표준에서는 객체의 키를 반드시 큰따옴표로 감싼 문자열로 적어야 합니다."
+    },
+    {
+      "type": "ox",
+      "q": "JSON 배열 안에 객체를 넣을 수 있다.",
+      "answer": true,
+      "explain": "JSON 배열의 원소로는 객체를 포함한 모든 JSON 값을 넣을 수 있습니다."
+    },
+    {
+      "type": "ox",
+      "q": "JSON의 불리언 값은 TRUE처럼 대문자로 적어야 한다.",
+      "answer": false,
+      "explain": "JSON의 불리언 값은 소문자 true와 false만 허용됩니다."
+    },
+    {
+      "type": "ox",
+      "q": "JSON의 문자열 안에서 줄바꿈은 \\n처럼 역슬래시를 이용한 이스케이프로 나타낸다.",
+      "answer": true,
+      "explain": "JSON 문자열에 줄바꿈 같은 제어 문자를 넣을 때는 \\n처럼 역슬래시 이스케이프를 사용합니다."
+    }
+  ],
+  "web-12": [
+    {
+      "type": "mc",
+      "q": "HTML(HyperText Markup Language)이 웹 페이지에서 주로 맡는 역할은?",
+      "choices": [
+        "서버의 데이터 저장",
+        "화면의 색과 배치 꾸미기",
+        "네트워크 주소 변환",
+        "문서의 구조와 내용 표현"
+      ],
+      "answer": 3,
+      "explain": "HTML은 제목, 문단, 목록처럼 웹 문서의 구조와 내용을 표현하는 마크업 언어입니다."
+    },
+    {
+      "type": "mc",
+      "q": "HTML5 문서의 맨 처음에 쓰는 문서 형식 선언은?",
+      "choices": [
+        "<!DOCTYPE html>",
+        "<!HTML5 STRICT>",
+        "<?xml version=\"5\"?>",
+        "<html5>"
+      ],
+      "answer": 0,
+      "explain": "HTML5는 짧고 단순한 <!DOCTYPE html> 선언으로 문서 형식을 알립니다."
+    },
+    {
+      "type": "mc",
+      "q": "HTML5에서 플러그인 없이 동영상을 넣는 태그는?",
+      "choices": [
+        "<flash>",
+        "<movie>",
+        "<video>",
+        "<media>"
+      ],
+      "answer": 2,
+      "explain": "HTML5의 <video> 태그를 쓰면 별도 플러그인 없이 브라우저에서 동영상을 재생할 수 있습니다."
+    },
+    {
+      "type": "mc",
+      "q": "HTML5에서 소리 파일을 재생할 때 쓰는 태그는?",
+      "choices": [
+        "<music>",
+        "<audio>",
+        "<voice>",
+        "<sound>"
+      ],
+      "answer": 1,
+      "explain": "HTML5의 <audio> 태그는 플러그인 없이 소리를 재생하는 기능을 제공합니다."
+    },
+    {
+      "type": "mc",
+      "q": "자바스크립트로 도형이나 그래픽을 그릴 수 있는 HTML5 요소는?",
+      "choices": [
+        "<board>",
+        "<canvas>",
+        "<draw>",
+        "<paint>"
+      ],
+      "answer": 1,
+      "explain": "<canvas>는 자바스크립트로 픽셀 단위 그래픽을 그릴 수 있는 그리기 영역을 제공합니다."
+    },
+    {
+      "type": "mc",
+      "q": "HTML5 시맨틱 태그 중 사이트의 주요 이동 메뉴를 감싸는 데 알맞은 것은?",
+      "choices": [
+        "<figure>",
+        "<aside>",
+        "<footer>",
+        "<nav>"
+      ],
+      "answer": 3,
+      "explain": "<nav>는 다른 페이지나 문서 내부로 이동하는 주요 링크 묶음을 나타냅니다."
+    },
+    {
+      "type": "mc",
+      "q": "페이지에서 핵심 본문 내용을 나타내며 한 문서에 보통 하나만 두는 시맨틱 태그는?",
+      "choices": [
+        "<main>",
+        "<section>",
+        "<header>",
+        "<aside>"
+      ],
+      "answer": 0,
+      "explain": "<main>은 문서의 주요 내용을 나타내며 한 페이지에 보이는 것은 하나만 두도록 권장됩니다."
+    },
+    {
+      "type": "mc",
+      "q": "본문과 관련은 있지만 곁가지인 사이드바 내용에 알맞은 시맨틱 태그는?",
+      "choices": [
+        "<article>",
+        "<main>",
+        "<aside>",
+        "<nav>"
+      ],
+      "answer": 2,
+      "explain": "<aside>는 광고, 관련 글 목록처럼 본문과 간접적으로 관련된 보조 내용을 담습니다."
+    },
+    {
+      "type": "mc",
+      "q": "블로그 글 하나처럼 독립적으로 배포해도 의미가 통하는 내용에 알맞은 태그는?",
+      "choices": [
+        "<article>",
+        "<div>",
+        "<aside>",
+        "<nav>"
+      ],
+      "answer": 0,
+      "explain": "<article>은 그 자체로 완결되어 따로 떼어내도 의미가 통하는 콘텐츠를 나타냅니다."
+    },
+    {
+      "type": "mc",
+      "q": "<div> 대신 <header>, <footer> 같은 시맨틱 태그를 쓸 때의 장점으로 가장 알맞은 것은?",
+      "choices": [
+        "CSS(Cascading Style Sheets)를 쓸 수 없게 됨",
+        "검색 엔진과 화면 낭독기가 구조를 이해하기 쉬움",
+        "페이지가 자동으로 암호화됨",
+        "이미지 용량이 줄어듦"
+      ],
+      "answer": 1,
+      "explain": "시맨틱 태그는 각 영역의 의미를 드러내므로 검색 엔진 최적화와 웹 접근성에 도움이 됩니다."
+    },
+    {
+      "type": "mc",
+      "q": "HTML5에서 이메일 주소 입력에 알맞은 input 타입은?",
+      "choices": [
+        "text-mail",
+        "mail",
+        "address",
+        "email"
+      ],
+      "answer": 3,
+      "explain": "<input type=\"email\">을 쓰면 브라우저가 이메일 형식인지 기본적으로 검사해 줍니다."
+    },
+    {
+      "type": "mc",
+      "q": "HTML5에서 날짜 선택 입력란을 만들 때 쓰는 input 타입은?",
+      "choices": [
+        "day",
+        "calendar",
+        "date",
+        "time-picker"
+      ],
+      "answer": 2,
+      "explain": "<input type=\"date\">를 쓰면 브라우저가 날짜 선택용 입력 컨트롤을 제공합니다."
+    },
+    {
+      "type": "mc",
+      "q": "입력란이 비어 있으면 폼 제출을 막는 HTML5 속성은?",
+      "choices": [
+        "readonly",
+        "placeholder",
+        "autofocus",
+        "required"
+      ],
+      "answer": 3,
+      "explain": "required 속성을 붙이면 값이 비어 있을 때 브라우저가 폼 제출을 막고 안내합니다."
+    },
+    {
+      "type": "mc",
+      "q": "입력란 안에 흐린 안내 문구를 보여 주는 HTML5 속성은?",
+      "choices": [
+        "value",
+        "placeholder",
+        "required",
+        "title"
+      ],
+      "answer": 1,
+      "explain": "placeholder는 입력 전 사용자에게 무엇을 적을지 알려 주는 안내 문구를 표시합니다."
+    },
+    {
+      "type": "mc",
+      "q": "브라우저를 닫았다 다시 열어도 데이터가 남는 HTML5 웹 저장소는?",
+      "choices": [
+        "캐시 레지스터",
+        "sessionStorage",
+        "localStorage",
+        "쿠키 전용 메모리"
+      ],
+      "answer": 2,
+      "explain": "localStorage는 사용자가 지우지 않는 한 브라우저를 닫아도 데이터가 유지됩니다."
+    },
+    {
+      "type": "mc",
+      "q": "HTML5 문서에서 문자 인코딩을 UTF-8로 지정하는 코드는?",
+      "choices": [
+        "<meta charset=\"UTF-8\">",
+        "<encoding>UTF-8</encoding>",
+        "<charset value=\"UTF-8\">",
+        "<html lang=\"UTF-8\">"
+      ],
+      "answer": 0,
+      "explain": "HTML5는 <meta charset=\"UTF-8\">처럼 간단한 meta 태그로 문자 인코딩을 지정합니다."
+    },
+    {
+      "type": "mc",
+      "q": "이미지가 보이지 않을 때 대신 보여 주고 화면 낭독기가 읽는 <img> 속성은?",
+      "choices": [
+        "alt",
+        "src",
+        "title",
+        "href"
+      ],
+      "answer": 0,
+      "explain": "alt 속성은 이미지의 대체 텍스트로, 웹 접근성을 위해 의미 있는 이미지에는 반드시 적는 것이 좋습니다."
+    },
+    {
+      "type": "mc",
+      "q": "요소에 data-user-id처럼 개발자가 정의한 값을 붙일 수 있는 HTML5 기능은?",
+      "choices": [
+        "style 속성",
+        "data-* 사용자 정의 속성",
+        "class 속성 상속",
+        "id 속성 중복 사용"
+      ],
+      "answer": 1,
+      "explain": "HTML5의 data-* 속성을 쓰면 표준에 맞게 요소에 사용자 정의 데이터를 저장할 수 있습니다."
+    },
+    {
+      "type": "mc",
+      "q": "그림과 그 설명을 한 묶음으로 표시할 때 알맞은 HTML5 태그 조합은?",
+      "choices": [
+        "<img>와 <caption>",
+        "<div>와 <legend>",
+        "<picture>와 <label>",
+        "<figure>와 <figcaption>"
+      ],
+      "answer": 3,
+      "explain": "<figure>는 그림 같은 독립 콘텐츠를, <figcaption>은 그 설명을 나타냅니다."
+    },
+    {
+      "type": "mc",
+      "q": "HTML5에서 더 이상 쓰지 않도록 폐지된 표현용 태그는?",
+      "choices": [
+        "<section>",
+        "<strong>",
+        "<font>",
+        "<span>"
+      ],
+      "answer": 2,
+      "explain": "<font>처럼 모양만 바꾸는 태그는 HTML5에서 폐지되었고, 모양은 CSS로 지정합니다."
+    },
+    {
+      "type": "mc",
+      "q": "웹 페이지를 이루는 세 기술 중 HTML5가 담당하는 부분은?",
+      "choices": [
+        "동작",
+        "배포",
+        "스타일",
+        "구조"
+      ],
+      "answer": 3,
+      "explain": "웹 페이지에서 HTML은 구조, CSS는 스타일, 자바스크립트는 동작을 맡습니다."
+    },
+    {
+      "type": "mc",
+      "q": "사용자 동의를 받아 현재 위치 정보를 얻게 해 주는 HTML5 관련 API(Application Programming Interface)는?",
+      "choices": [
+        "Storage API",
+        "Geolocation API",
+        "Canvas API",
+        "History API"
+      ],
+      "answer": 1,
+      "explain": "Geolocation API는 사용자의 허락을 받은 뒤 기기의 위치 정보를 웹 페이지에 제공합니다."
+    },
+    {
+      "type": "ox",
+      "q": "HTML은 반복문과 조건문을 갖춘 프로그래밍 언어다.",
+      "answer": false,
+      "explain": "HTML은 문서 구조를 태그로 표시하는 마크업 언어이며, 반복이나 조건 같은 논리 처리는 자바스크립트가 맡습니다."
+    },
+    {
+      "type": "ox",
+      "q": "HTML5의 <video> 태그를 쓰면 별도 플러그인 없이 동영상을 재생할 수 있다.",
+      "answer": true,
+      "explain": "HTML5는 동영상과 소리를 브라우저가 직접 재생하도록 <video>와 <audio>를 제공합니다."
+    },
+    {
+      "type": "ox",
+      "q": "sessionStorage에 저장한 데이터는 브라우저 탭을 닫으면 사라진다.",
+      "answer": true,
+      "explain": "sessionStorage는 해당 탭의 세션 동안만 유지되므로 탭을 닫으면 데이터가 삭제됩니다."
+    },
+    {
+      "type": "ox",
+      "q": "<br>처럼 내용이 없는 빈 요소는 반드시 닫는 태그 </br>를 함께 써야 한다.",
+      "answer": false,
+      "explain": "<br>은 빈 요소(void element)라 닫는 태그를 쓰지 않으며, </br>은 올바른 문법이 아닙니다."
+    },
+    {
+      "type": "ox",
+      "q": "<header>, <nav>, <footer>는 HTML5에서 추가된 시맨틱 태그다.",
+      "answer": true,
+      "explain": "HTML5는 문서 영역의 의미를 드러내도록 <header>, <nav>, <main>, <footer> 등의 시맨틱 태그를 추가했습니다."
+    },
+    {
+      "type": "ox",
+      "q": "HTML5의 <canvas>는 그 자체만으로 그림이 그려지며 자바스크립트가 필요 없다.",
+      "answer": false,
+      "explain": "<canvas>는 그리기 영역만 제공하며, 실제 도형과 그림은 자바스크립트로 그립니다."
+    },
+    {
+      "type": "ox",
+      "q": "HTML5에서는 글자 색과 크기 같은 꾸밈을 CSS로 지정하는 것이 권장된다.",
+      "answer": true,
+      "explain": "HTML5는 구조와 표현을 분리하도록 하여 꾸밈은 CSS(Cascading Style Sheets)로 지정하도록 권장합니다."
+    },
+    {
+      "type": "ox",
+      "q": "<strong>과 <b>는 굵게 보이므로 HTML5에서 의미까지 완전히 같다.",
+      "answer": false,
+      "explain": "<strong>은 내용의 중요성을 나타내는 의미 태그이고, <b>는 특별한 중요성 없이 눈에 띄게 할 텍스트를 나타냅니다."
+    }
+  ],
+  "web-13": [
+    {
+      "type": "mc",
+      "q": "CSS(Cascading Style Sheets) 박스 모델에서 요소를 이루는 네 영역을 안쪽부터 바깥쪽 순서로 나열한 것은?",
+      "choices": [
+        "패딩, 콘텐츠, 마진, 테두리",
+        "테두리, 콘텐츠, 패딩, 마진",
+        "콘텐츠, 마진, 테두리, 패딩",
+        "콘텐츠, 패딩, 테두리, 마진"
+      ],
+      "answer": 3,
+      "explain": "박스 모델은 가운데 콘텐츠를 패딩이 감싸고, 그 바깥을 테두리와 마진이 차례로 둘러싸는 구조입니다."
+    },
+    {
+      "type": "mc",
+      "q": "박스 모델에서 콘텐츠와 테두리 사이에 있는 안쪽 여백을 정하는 속성은?",
+      "choices": [
+        "border-radius",
+        "outline",
+        "padding",
+        "margin"
+      ],
+      "answer": 2,
+      "explain": "padding은 콘텐츠와 테두리 사이의 안쪽 여백을 정하는 속성입니다."
+    },
+    {
+      "type": "mc",
+      "q": "테두리 바깥에서 다른 요소와의 간격을 만드는 박스 모델 영역은?",
+      "choices": [
+        "콘텐츠",
+        "마진",
+        "패딩",
+        "테두리"
+      ],
+      "answer": 1,
+      "explain": "마진은 테두리 바깥쪽 여백으로, 이웃한 요소와의 거리를 만듭니다."
+    },
+    {
+      "type": "mc",
+      "q": "요소의 둘레에 경계선을 그리는 박스 모델 속성은?",
+      "choices": [
+        "border",
+        "padding",
+        "box-sizing",
+        "margin"
+      ],
+      "answer": 0,
+      "explain": "border는 패딩 바깥에 선을 그려 요소의 경계를 나타내는 속성입니다."
+    },
+    {
+      "type": "mc",
+      "q": "box-sizing이 기본값 content-box일 때 width 속성이 가리키는 범위는?",
+      "choices": [
+        "콘텐츠 영역의 너비",
+        "마진까지 포함한 전체 너비",
+        "콘텐츠와 패딩을 합친 너비",
+        "콘텐츠, 패딩, 테두리를 합친 너비"
+      ],
+      "answer": 0,
+      "explain": "content-box에서는 width가 콘텐츠 영역의 너비만 뜻하므로 패딩과 테두리는 따로 더해집니다."
+    },
+    {
+      "type": "mc",
+      "q": "box-sizing: border-box를 적용했을 때 width에 포함되는 영역은?",
+      "choices": [
+        "콘텐츠와 패딩",
+        "콘텐츠, 패딩, 테두리, 마진",
+        "콘텐츠만",
+        "콘텐츠, 패딩, 테두리"
+      ],
+      "answer": 3,
+      "explain": "border-box에서는 width가 테두리 바깥 경계까지의 너비이므로 콘텐츠, 패딩, 테두리가 모두 포함됩니다. 마진은 포함되지 않습니다."
+    },
+    {
+      "type": "mc",
+      "q": "content-box 요소의 width가 200px, 좌우 padding이 각각 10px, 좌우 border가 각각 2px일 때 화면에 차지하는 너비는? (마진 제외)",
+      "choices": [
+        "244px",
+        "200px",
+        "224px",
+        "212px"
+      ],
+      "answer": 2,
+      "explain": "content-box에서는 패딩과 테두리를 더하므로 200 + 2×10 + 2×2 = 224px입니다."
+    },
+    {
+      "type": "mc",
+      "q": "border-box 요소의 width가 300px, 좌우 padding이 각각 20px, 좌우 border가 각각 5px일 때 콘텐츠 영역의 너비는?",
+      "choices": [
+        "350px",
+        "250px",
+        "300px",
+        "275px"
+      ],
+      "answer": 1,
+      "explain": "border-box의 width에는 패딩과 테두리가 포함되므로 300 − 2×20 − 2×5 = 250px입니다."
+    },
+    {
+      "type": "mc",
+      "q": "세로로 맞닿은 두 블록 요소의 위아래 마진이 하나로 합쳐지는 현상은?",
+      "choices": [
+        "테두리 중첩",
+        "마진 상쇄",
+        "패딩 확장",
+        "콘텐츠 넘침"
+      ],
+      "answer": 1,
+      "explain": "마진 상쇄(margin collapsing)는 블록 요소의 세로 마진이 겹칠 때 하나로 합쳐지는 현상입니다."
+    },
+    {
+      "type": "mc",
+      "q": "위 블록의 margin-bottom이 30px, 바로 아래 블록의 margin-top이 20px일 때 마진 상쇄로 생기는 두 요소 사이 간격은?",
+      "choices": [
+        "10px",
+        "50px",
+        "30px",
+        "20px"
+      ],
+      "answer": 2,
+      "explain": "마진 상쇄가 일어나면 두 값을 더하지 않고 더 큰 값인 30px만 간격으로 남습니다."
+    },
+    {
+      "type": "mc",
+      "q": "요소에 배경색을 지정해도 그 배경색이 칠해지지 않는 영역은?",
+      "choices": [
+        "마진 영역",
+        "패딩 영역",
+        "콘텐츠 영역",
+        "콘텐츠와 패딩을 합친 영역"
+      ],
+      "answer": 0,
+      "explain": "배경은 콘텐츠와 패딩(기본적으로 테두리 아래까지)에 칠해지며, 마진은 항상 투명합니다."
+    },
+    {
+      "type": "mc",
+      "q": "박스 모델 속성 가운데 음수 값을 지정할 수 있는 것은?",
+      "choices": [
+        "padding",
+        "width",
+        "border-width",
+        "margin"
+      ],
+      "answer": 3,
+      "explain": "margin은 음수 값을 허용해 요소를 겹치거나 당길 수 있지만, padding과 border-width, width에는 음수를 쓸 수 없습니다."
+    },
+    {
+      "type": "mc",
+      "q": "padding: 10px 20px; 라고 썼을 때의 의미로 알맞은 것은?",
+      "choices": [
+        "위 10px, 아래 20px",
+        "위아래 20px, 좌우 10px",
+        "위아래 10px, 좌우 20px",
+        "왼쪽 10px, 오른쪽 20px"
+      ],
+      "answer": 2,
+      "explain": "값을 두 개 쓰면 첫 번째가 위아래, 두 번째가 좌우 여백으로 적용됩니다."
+    },
+    {
+      "type": "mc",
+      "q": "margin: 5px 10px 15px 20px; 처럼 값을 네 개 썼을 때 적용되는 방향 순서는?",
+      "choices": [
+        "위, 오른쪽, 아래, 왼쪽",
+        "왼쪽, 위, 오른쪽, 아래",
+        "위, 아래, 왼쪽, 오른쪽",
+        "위, 왼쪽, 아래, 오른쪽"
+      ],
+      "answer": 0,
+      "explain": "값 네 개는 위에서 시작해 시계 방향으로 위, 오른쪽, 아래, 왼쪽 순서로 적용됩니다."
+    },
+    {
+      "type": "mc",
+      "q": "너비가 지정된 블록 요소를 부모 안에서 가로 가운데에 두는 대표적인 방법은?",
+      "choices": [
+        "padding을 auto로 지정",
+        "좌우 margin을 auto로 지정",
+        "border-width를 auto로 지정",
+        "margin을 0으로 지정"
+      ],
+      "answer": 1,
+      "explain": "너비가 정해진 블록 요소에 좌우 margin을 auto로 주면 남는 공간이 양쪽에 똑같이 나뉘어 가운데에 놓입니다."
+    },
+    {
+      "type": "mc",
+      "q": "span 같은 인라인 요소에 width와 height를 지정했을 때의 결과는?",
+      "choices": [
+        "지정한 크기가 그대로 적용됨",
+        "요소가 자동으로 블록 요소로 바뀜",
+        "너비만 적용되고 높이는 무시됨",
+        "지정한 너비와 높이가 적용되지 않음"
+      ],
+      "answer": 3,
+      "explain": "일반 인라인 요소는 내용에 따라 크기가 정해지므로 width와 height가 적용되지 않습니다."
+    },
+    {
+      "type": "mc",
+      "q": "일반 인라인 요소에 위아래 margin을 지정했을 때의 결과는?",
+      "choices": [
+        "좌우 마진까지 함께 무시됨",
+        "음수 값일 때만 적용됨",
+        "주변 줄의 세로 배치에 영향을 주지 않음",
+        "블록 요소처럼 위아래 간격을 만듦"
+      ],
+      "answer": 2,
+      "explain": "일반 인라인 요소의 위아래 마진은 줄의 세로 배치에 반영되지 않고, 좌우 마진만 간격을 만듭니다."
+    },
+    {
+      "type": "mc",
+      "q": "테두리 바깥에 선을 그리지만 박스 크기와 레이아웃에는 영향을 주지 않는 속성은?",
+      "choices": [
+        "outline",
+        "border",
+        "padding",
+        "margin"
+      ],
+      "answer": 0,
+      "explain": "outline은 공간을 차지하지 않고 그려지므로 박스 크기나 주변 요소 위치를 바꾸지 않습니다."
+    },
+    {
+      "type": "mc",
+      "q": "많은 프로젝트에서 모든 요소에 box-sizing: border-box를 적용하는 주된 이유는?",
+      "choices": [
+        "인라인 요소에도 width를 적용하기 위함",
+        "패딩과 테두리를 더해도 지정한 너비가 유지되어 크기 계산이 쉬움",
+        "세로 마진 상쇄를 막기 위함",
+        "배경색을 마진까지 칠하기 위함"
+      ],
+      "answer": 1,
+      "explain": "border-box에서는 패딩과 테두리가 width 안에 포함되므로 지정한 크기가 그대로 유지되어 레이아웃 계산이 쉬워집니다."
+    },
+    {
+      "type": "mc",
+      "q": "버튼의 글자와 버튼 테두리 사이 공간을 넓히고 싶을 때 조정할 속성은?",
+      "choices": [
+        "border-style",
+        "outline",
+        "margin",
+        "padding"
+      ],
+      "answer": 3,
+      "explain": "글자(콘텐츠)와 테두리 사이 공간은 패딩이므로 padding 값을 늘리면 됩니다."
+    },
+    {
+      "type": "mc",
+      "q": "나란히 놓인 두 카드의 안쪽 모양은 그대로 두고 카드 사이 간격만 넓히고 싶을 때 조정할 속성은?",
+      "choices": [
+        "padding",
+        "width",
+        "margin",
+        "border-width"
+      ],
+      "answer": 2,
+      "explain": "카드 바깥쪽 간격은 마진이 만들므로 margin을 늘리면 카드 내부는 바뀌지 않습니다."
+    },
+    {
+      "type": "mc",
+      "q": "border: 1px solid black; 에서 solid가 나타내는 것은?",
+      "choices": [
+        "테두리 선의 모양(스타일)",
+        "모서리의 둥글기",
+        "테두리의 두께",
+        "테두리의 색"
+      ],
+      "answer": 0,
+      "explain": "border 단축 속성은 두께, 스타일, 색을 함께 지정하며 solid는 실선이라는 선의 스타일입니다."
+    },
+    {
+      "type": "ox",
+      "q": "브라우저는 HTML(HyperText Markup Language) 문서의 각 요소를 사각형 박스로 다루어 배치한다.",
+      "answer": true,
+      "explain": "CSS 박스 모델에 따라 브라우저는 모든 요소를 콘텐츠, 패딩, 테두리, 마진으로 이루어진 사각형 박스로 계산합니다."
+    },
+    {
+      "type": "ox",
+      "q": "box-sizing 속성의 기본값은 content-box다.",
+      "answer": true,
+      "explain": "box-sizing의 초기값은 content-box이며, 이때 width와 height는 콘텐츠 영역의 크기를 뜻합니다."
+    },
+    {
+      "type": "ox",
+      "q": "content-box 요소에서 padding 값을 늘리면 화면에 차지하는 전체 크기도 커진다.",
+      "answer": true,
+      "explain": "content-box에서는 패딩이 width 바깥에 더해지므로 패딩을 늘리면 전체 크기가 커집니다."
+    },
+    {
+      "type": "ox",
+      "q": "좌우로 이웃한 요소의 가로 방향 마진은 서로 상쇄되지 않는다.",
+      "answer": true,
+      "explain": "마진 상쇄는 블록 요소의 세로 마진에서만 일어나며, 가로 마진은 그대로 더해집니다."
+    },
+    {
+      "type": "ox",
+      "q": "padding에는 음수 값을 지정해 요소끼리 겹치게 만들 수 있다.",
+      "answer": false,
+      "explain": "padding에는 음수 값을 쓸 수 없으며, 요소를 겹치게 하려면 음수 margin 등을 사용합니다."
+    },
+    {
+      "type": "ox",
+      "q": "box-sizing: border-box를 적용하면 width에 마진까지 포함된다.",
+      "answer": false,
+      "explain": "border-box의 width는 콘텐츠, 패딩, 테두리까지만 포함하며 마진은 바깥에 따로 더해집니다."
+    },
+    {
+      "type": "ox",
+      "q": "content-box 요소에서 테두리 두께는 화면에 차지하는 전체 너비 계산에 포함되지 않는다.",
+      "answer": false,
+      "explain": "content-box에서는 width에 좌우 패딩과 좌우 테두리 두께를 더한 값이 화면에 차지하는 너비가 됩니다."
+    },
+    {
+      "type": "ox",
+      "q": "padding: 10px; 처럼 값을 하나만 쓰면 위쪽 여백에만 적용된다.",
+      "answer": false,
+      "explain": "값을 하나만 쓰면 위, 오른쪽, 아래, 왼쪽 네 방향 모두에 같은 값이 적용됩니다."
+    }
+  ],
+  "web-14": [
+    {
+      "type": "mc",
+      "q": "DOM(Document Object Model)에 대한 설명으로 가장 알맞은 것은?",
+      "choices": [
+        "브라우저와 서버가 데이터를 주고받는 통신 규약",
+        "웹 페이지의 색과 글꼴을 정하는 스타일 언어",
+        "HTML(HyperText Markup Language) 문서를 객체로 표현해 프로그램이 접근하고 조작하게 하는 인터페이스",
+        "서버의 데이터를 저장하는 데이터베이스 구조"
+      ],
+      "answer": 2,
+      "explain": "DOM은 문서를 객체들의 구조로 표현해 자바스크립트 같은 프로그램이 내용, 구조, 스타일을 읽고 바꿀 수 있게 하는 인터페이스입니다."
+    },
+    {
+      "type": "mc",
+      "q": "DOM이 HTML 문서를 표현하는 자료 구조는?",
+      "choices": [
+        "스택",
+        "트리",
+        "해시 테이블",
+        "큐"
+      ],
+      "answer": 1,
+      "explain": "DOM은 요소들이 부모와 자식 관계로 이어진 트리 구조로 문서를 표현합니다."
+    },
+    {
+      "type": "mc",
+      "q": "자바스크립트에서 DOM 트리 전체에 접근하는 출발점이 되는 객체는?",
+      "choices": [
+        "JSON",
+        "Math",
+        "console",
+        "document"
+      ],
+      "answer": 3,
+      "explain": "document 객체는 웹 페이지 문서 자체를 나타내며, 이를 통해 DOM 트리의 모든 노드에 접근합니다."
+    },
+    {
+      "type": "mc",
+      "q": "일반적인 HTML 문서의 DOM 트리에서 최상위 요소 노드는?",
+      "choices": [
+        "html 요소",
+        "head 요소",
+        "title 요소",
+        "body 요소"
+      ],
+      "answer": 0,
+      "explain": "HTML 문서에서 head와 body를 모두 감싸는 html 요소가 DOM 트리의 루트 요소입니다."
+    },
+    {
+      "type": "mc",
+      "q": "id 속성 값으로 요소 하나를 찾는 document의 메서드는?",
+      "choices": [
+        "createElement",
+        "appendChild",
+        "getElementsByTagName",
+        "getElementById"
+      ],
+      "answer": 3,
+      "explain": "getElementById는 주어진 id를 가진 요소 하나를 찾아 돌려주는 메서드입니다."
+    },
+    {
+      "type": "mc",
+      "q": "CSS(Cascading Style Sheets) 선택자를 써서 조건에 맞는 첫 번째 요소 하나를 찾는 메서드는?",
+      "choices": [
+        "querySelectorAll",
+        "removeChild",
+        "querySelector",
+        "getElementsByClassName"
+      ],
+      "answer": 2,
+      "explain": "querySelector는 CSS 선택자와 일치하는 요소 중 첫 번째 하나만 돌려줍니다."
+    },
+    {
+      "type": "mc",
+      "q": "자바스크립트로 새로운 요소 노드를 만들 때 쓰는 메서드는?",
+      "choices": [
+        "getElementById",
+        "createElement",
+        "appendChild",
+        "setAttribute"
+      ],
+      "answer": 1,
+      "explain": "document.createElement는 지정한 태그 이름의 새 요소를 만드는 메서드입니다. 만든 요소는 따로 트리에 붙여야 화면에 나타납니다."
+    },
+    {
+      "type": "mc",
+      "q": "새로 만든 요소를 어떤 부모 요소의 마지막 자식으로 붙이는 메서드는?",
+      "choices": [
+        "appendChild",
+        "removeAttribute",
+        "querySelector",
+        "createElement"
+      ],
+      "answer": 0,
+      "explain": "appendChild는 노드를 부모 요소의 자식 목록 맨 끝에 추가하는 메서드입니다."
+    },
+    {
+      "type": "mc",
+      "q": "요소에 클릭 같은 이벤트가 일어났을 때 실행할 함수를 등록하는 메서드는?",
+      "choices": [
+        "getAttribute",
+        "cloneNode",
+        "createTextNode",
+        "addEventListener"
+      ],
+      "answer": 3,
+      "explain": "addEventListener는 지정한 이벤트가 발생하면 실행될 함수(이벤트 리스너)를 요소에 등록합니다."
+    },
+    {
+      "type": "mc",
+      "q": "요소 안의 글자를 HTML로 해석하지 않고 순수한 텍스트로 읽거나 바꾸는 속성은?",
+      "choices": [
+        "className",
+        "textContent",
+        "outerHTML",
+        "innerHTML"
+      ],
+      "answer": 1,
+      "explain": "textContent는 요소의 텍스트만 다루며, 넣은 문자열의 태그를 해석하지 않고 글자 그대로 표시합니다."
+    },
+    {
+      "type": "mc",
+      "q": "사용자 입력을 innerHTML에 그대로 넣을 때 주의해야 하는 이유는?",
+      "choices": [
+        "입력한 텍스트가 항상 무시됨",
+        "입력 내용이 자동으로 서버에 저장됨",
+        "악성 스크립트가 삽입되는 XSS(Cross-Site Scripting) 공격에 노출될 수 있음",
+        "해당 요소에 CSS가 적용되지 않음"
+      ],
+      "answer": 2,
+      "explain": "innerHTML은 문자열을 HTML로 해석하므로 검증하지 않은 입력을 넣으면 악성 코드가 실행되는 XSS 위험이 생깁니다."
+    },
+    {
+      "type": "mc",
+      "q": "DOM 트리에서 같은 부모 노드를 공유하는 노드들의 관계는?",
+      "choices": [
+        "형제 관계",
+        "루트와 잎 관계",
+        "부모와 자식 관계",
+        "조상과 자손 관계"
+      ],
+      "answer": 0,
+      "explain": "같은 부모 아래에 나란히 있는 노드들은 서로 형제(sibling) 노드라고 부릅니다."
+    },
+    {
+      "type": "mc",
+      "q": "DOM 노드의 종류에 해당하지 않는 것은?",
+      "choices": [
+        "요소 노드",
+        "주석 노드",
+        "텍스트 노드",
+        "쿠키 노드"
+      ],
+      "answer": 3,
+      "explain": "DOM에는 문서, 요소, 텍스트, 주석 노드 등이 있지만 쿠키는 노드가 아니라 브라우저가 따로 저장하는 데이터입니다."
+    },
+    {
+      "type": "mc",
+      "q": "<p>안녕</p>에서 태그 사이의 글자 '안녕'이 DOM에서 표현되는 노드는?",
+      "choices": [
+        "텍스트 노드",
+        "주석 노드",
+        "문서 노드",
+        "요소 노드"
+      ],
+      "answer": 0,
+      "explain": "태그 사이의 글자는 p 요소 노드의 자식인 텍스트 노드로 표현됩니다."
+    },
+    {
+      "type": "mc",
+      "q": "웹 페이지의 DOM을 만드는 주체와 방식으로 알맞은 것은?",
+      "choices": [
+        "개발자가 모든 노드를 직접 손으로 작성함",
+        "CSS 파일을 실행해 만듦",
+        "브라우저가 HTML 문서를 읽어 해석(파싱)해 만듦",
+        "서버의 데이터베이스가 자동으로 만듦"
+      ],
+      "answer": 2,
+      "explain": "브라우저는 받은 HTML을 파싱해 DOM 트리를 만들고, 이를 바탕으로 화면을 그립니다."
+    },
+    {
+      "type": "mc",
+      "q": "DOM이 특정 프로그래밍 언어와 맺는 관계로 알맞은 것은?",
+      "choices": [
+        "HTML 태그의 한 종류",
+        "특정 언어에 묶이지 않은 언어 중립적 인터페이스",
+        "CSS의 하위 문법",
+        "자바스크립트에서만 정의된 전용 문법"
+      ],
+      "answer": 1,
+      "explain": "DOM은 언어 중립적인 표준 인터페이스로, 웹 브라우저에서는 주로 자바스크립트로 사용합니다."
+    },
+    {
+      "type": "mc",
+      "q": "이벤트가 발생한 요소에서 시작해 부모 요소 쪽으로 차례로 전달되는 현상은?",
+      "choices": [
+        "호이스팅",
+        "이벤트 캡처링",
+        "가비지 컬렉션",
+        "이벤트 버블링"
+      ],
+      "answer": 3,
+      "explain": "이벤트 버블링은 이벤트가 대상 요소에서 조상 요소 방향으로 거슬러 올라가며 전달되는 현상입니다. 캡처링은 반대로 위에서 아래로 내려옵니다."
+    },
+    {
+      "type": "mc",
+      "q": "요소의 class를 추가, 제거, 전환하는 메서드를 제공하는 속성은?",
+      "choices": [
+        "textContent",
+        "parentNode",
+        "classList",
+        "childNodes"
+      ],
+      "answer": 2,
+      "explain": "classList는 add, remove, toggle 같은 메서드로 요소의 class를 편리하게 다루게 해 줍니다."
+    },
+    {
+      "type": "mc",
+      "q": "어떤 노드의 부모 노드를 가리키는 속성은?",
+      "choices": [
+        "nextSibling",
+        "parentNode",
+        "firstChild",
+        "childNodes"
+      ],
+      "answer": 1,
+      "explain": "parentNode는 해당 노드를 자식으로 가진 바로 위 노드를 가리킵니다."
+    },
+    {
+      "type": "mc",
+      "q": "HTML과 DOM의 차이를 설명한 것으로 알맞은 것은?",
+      "choices": [
+        "HTML은 문서를 적은 텍스트이고 DOM은 브라우저가 이를 읽어 만든 객체 구조",
+        "HTML은 DOM을 압축한 파일 형식",
+        "둘은 이름만 다른 같은 파일",
+        "DOM은 HTML의 옛 이름"
+      ],
+      "answer": 0,
+      "explain": "HTML은 마크업으로 쓴 텍스트 문서이고, DOM은 브라우저가 그 문서를 해석해 메모리에 만든 객체 트리입니다."
+    },
+    {
+      "type": "mc",
+      "q": "버튼을 누르면 문단의 글자가 바뀌게 하려 할 때 알맞은 방법은?",
+      "choices": [
+        "문단의 margin 값을 변경",
+        "버튼에 클릭 이벤트 리스너를 등록하고 문단의 textContent를 변경",
+        "CSS 파일에 문단 내용을 새로 작성",
+        "서버에 있는 HTML 파일을 직접 수정"
+      ],
+      "answer": 1,
+      "explain": "버튼의 클릭 이벤트에 함수를 등록하고 그 안에서 문단 요소의 textContent를 바꾸면 페이지에 바로 반영됩니다."
+    },
+    {
+      "type": "mc",
+      "q": "요소 자신을 DOM 트리에서 제거하는 메서드는?",
+      "choices": [
+        "append",
+        "focus",
+        "remove",
+        "cloneNode"
+      ],
+      "answer": 2,
+      "explain": "element.remove()를 호출하면 그 요소가 DOM 트리에서 빠져 화면에서도 사라집니다."
+    },
+    {
+      "type": "ox",
+      "q": "DOM에서 HTML 문서의 요소, 텍스트, 주석은 각각 노드로 표현된다.",
+      "answer": true,
+      "explain": "DOM은 문서를 이루는 요소, 텍스트, 주석 등을 모두 노드로 표현해 트리로 연결합니다."
+    },
+    {
+      "type": "ox",
+      "q": "querySelectorAll은 CSS 선택자와 일치하는 모든 요소를 모아 돌려준다.",
+      "answer": true,
+      "explain": "querySelectorAll은 조건에 맞는 요소 전부를 NodeList로 돌려줍니다."
+    },
+    {
+      "type": "ox",
+      "q": "자바스크립트로 DOM을 바꾸면 페이지를 새로고침하지 않아도 화면 내용이 바뀐다.",
+      "answer": true,
+      "explain": "브라우저는 바뀐 DOM을 바탕으로 화면을 다시 그리므로 새로고침 없이 변경이 반영됩니다."
+    },
+    {
+      "type": "ox",
+      "q": "addEventListener를 쓰면 한 요소의 같은 이벤트에 여러 함수를 등록할 수 있다.",
+      "answer": true,
+      "explain": "addEventListener는 기존 리스너를 덮어쓰지 않으므로 같은 이벤트에 서로 다른 함수를 여러 개 등록할 수 있습니다."
+    },
+    {
+      "type": "ox",
+      "q": "DOM 트리에서 하나의 요소는 여러 개의 부모 요소를 가질 수 있다.",
+      "answer": false,
+      "explain": "트리 구조에서는 루트를 제외한 모든 노드가 부모를 정확히 하나만 가집니다."
+    },
+    {
+      "type": "ox",
+      "q": "getElementById는 같은 id를 가진 모든 요소를 배열로 돌려준다.",
+      "answer": false,
+      "explain": "getElementById는 일치하는 요소 하나만 돌려주며, id는 문서 안에서 하나만 쓰도록 정해져 있습니다."
+    },
+    {
+      "type": "ox",
+      "q": "자바스크립트로 DOM을 조작하면 서버에 저장된 원본 HTML 파일도 함께 수정된다.",
+      "answer": false,
+      "explain": "DOM 조작은 브라우저 메모리에 있는 문서 구조만 바꾸며, 서버의 원본 파일은 그대로입니다."
+    },
+    {
+      "type": "ox",
+      "q": "textContent에 넣은 문자열 속 HTML 태그는 브라우저가 해석해 실제 요소로 만든다.",
+      "answer": false,
+      "explain": "textContent는 문자열을 글자 그대로 표시하며, 태그를 요소로 해석하는 것은 innerHTML입니다."
+    }
+  ],
+  "web-15": [
+    {
+      "type": "mc",
+      "q": "브라우저가 HTML(HyperText Markup Language) 문서를 파싱해 만드는 트리 구조는?",
+      "choices": [
+        "레이어 트리",
+        "CSSOM(CSS Object Model) 트리",
+        "DOM(Document Object Model, 문서 객체 모델) 트리",
+        "렌더 트리"
+      ],
+      "answer": 2,
+      "explain": "브라우저는 HTML을 파싱해 요소를 노드로 표현한 DOM 트리를 만듭니다. CSSOM은 CSS를 파싱한 결과입니다."
+    },
+    {
+      "type": "mc",
+      "q": "브라우저가 CSS(Cascading Style Sheets)를 파싱해 만드는 구조는?",
+      "choices": [
+        "CSSOM(CSS Object Model, CSS 객체 모델)",
+        "자바스크립트 실행 컨텍스트",
+        "DOM(Document Object Model)",
+        "렌더 트리"
+      ],
+      "answer": 0,
+      "explain": "CSS 규칙은 파싱되어 스타일 정보를 담은 CSSOM으로 만들어집니다."
+    },
+    {
+      "type": "mc",
+      "q": "DOM(문서 객체 모델)과 CSSOM(CSS 객체 모델)을 결합해 만드는 구조는?",
+      "choices": [
+        "접근성 트리",
+        "렌더 트리",
+        "레이아웃 큐",
+        "구문 트리"
+      ],
+      "answer": 1,
+      "explain": "DOM과 CSSOM을 합쳐 화면에 실제로 그려질 요소와 스타일만 담은 렌더 트리를 만듭니다."
+    },
+    {
+      "type": "mc",
+      "q": "브라우저 렌더링 단계의 순서로 가장 알맞은 것은?",
+      "choices": [
+        "레이아웃 → 파싱 → 합성 → 렌더 트리 구성 → 페인트",
+        "파싱 → 페인트 → 레이아웃 → 렌더 트리 구성 → 합성",
+        "렌더 트리 구성 → 합성 → 파싱 → 페인트 → 레이아웃",
+        "파싱 → 렌더 트리 구성 → 레이아웃 → 페인트 → 합성"
+      ],
+      "answer": 3,
+      "explain": "문서를 파싱해 렌더 트리를 만들고, 위치와 크기를 계산한 뒤 픽셀을 그리고 레이어를 합칩니다."
+    },
+    {
+      "type": "mc",
+      "q": "렌더링 과정 중 레이아웃 단계에서 하는 일은?",
+      "choices": [
+        "HTML 문자열을 토큰으로 분리",
+        "요소를 실제 픽셀로 채색",
+        "각 요소의 정확한 위치와 크기 계산",
+        "여러 레이어를 합쳐 최종 화면 생성"
+      ],
+      "answer": 2,
+      "explain": "레이아웃 단계에서는 뷰포트를 기준으로 각 요소가 놓일 위치와 크기를 계산합니다."
+    },
+    {
+      "type": "mc",
+      "q": "렌더링 과정 중 페인트 단계에서 하는 일은?",
+      "choices": [
+        "글자, 색, 테두리, 그림자 등을 픽셀로 그리기",
+        "CSS 규칙을 파싱해 CSSOM 만들기",
+        "요소의 위치와 크기 계산",
+        "서버에 HTML 문서 요청"
+      ],
+      "answer": 0,
+      "explain": "페인트 단계는 레이아웃 결과를 바탕으로 요소의 시각적 부분을 픽셀로 그립니다."
+    },
+    {
+      "type": "mc",
+      "q": "렌더링 마지막의 합성(composite) 단계에서 하는 일은?",
+      "choices": [
+        "DOM 트리를 처음부터 다시 만들기",
+        "HTML을 다시 내려받기",
+        "스크립트 다운로드 순서 결정",
+        "여러 레이어를 올바른 순서로 합쳐 최종 화면 만들기"
+      ],
+      "answer": 3,
+      "explain": "합성 단계는 따로 그려진 레이어들을 겹치는 순서대로 합쳐 화면에 보이는 결과를 만듭니다."
+    },
+    {
+      "type": "mc",
+      "q": "CSS로 display: none을 지정한 요소가 렌더 트리에서 처리되는 방식은?",
+      "choices": [
+        "합성 단계에서만 제외됨",
+        "렌더 트리에 포함되지 않음",
+        "렌더 트리에 포함되고 공간도 차지함",
+        "투명한 상태로 렌더 트리에 포함됨"
+      ],
+      "answer": 1,
+      "explain": "display: none인 요소는 화면에 그려지지 않으므로 렌더 트리에서 빠지고 공간도 차지하지 않습니다."
+    },
+    {
+      "type": "mc",
+      "q": "CSS로 visibility: hidden을 지정한 요소의 특징은?",
+      "choices": [
+        "DOM 트리에서 삭제됨",
+        "CSSOM 생성이 멈춤",
+        "렌더 트리에서 빠지고 공간도 사라짐",
+        "렌더 트리에 포함되어 공간은 차지하지만 보이지 않음"
+      ],
+      "answer": 3,
+      "explain": "visibility: hidden은 요소를 보이지 않게만 할 뿐 레이아웃상 자리는 그대로 유지합니다."
+    },
+    {
+      "type": "mc",
+      "q": "리플로(reflow)를 일으키는 변경으로 가장 알맞은 것은?",
+      "choices": [
+        "요소의 outline-color 값 변경",
+        "요소의 color 값 변경",
+        "요소의 width 값 변경",
+        "요소의 background-color 값 변경"
+      ],
+      "answer": 2,
+      "explain": "너비가 바뀌면 요소와 주변 요소의 위치·크기를 다시 계산해야 하므로 리플로가 일어납니다."
+    },
+    {
+      "type": "mc",
+      "q": "레이아웃을 다시 계산하지 않고 리페인트만 일으키는 변경으로 가장 알맞은 것은?",
+      "choices": [
+        "글자 color 변경",
+        "height 변경",
+        "padding 변경",
+        "font-size 변경"
+      ],
+      "answer": 0,
+      "explain": "글자 색은 요소의 크기나 위치에 영향을 주지 않으므로 다시 그리기만 하면 됩니다."
+    },
+    {
+      "type": "mc",
+      "q": "움직이는 효과에 top, left 대신 transform을 쓰면 좋은 이유는?",
+      "choices": [
+        "HTML 파싱 속도가 빨라져서",
+        "레이아웃과 페인트를 다시 하지 않고 합성 단계에서 처리할 수 있어서",
+        "CSSOM 생성을 건너뛰어서",
+        "DOM 트리를 다시 만들어 주어서"
+      ],
+      "answer": 1,
+      "explain": "transform은 다른 요소의 배치에 영향을 주지 않아 리플로 없이 합성만으로 처리할 수 있어 부드럽습니다."
+    },
+    {
+      "type": "mc",
+      "q": "HTML 파싱 중 속성이 없는 일반 <script> 태그를 만났을 때 브라우저의 동작은?",
+      "choices": [
+        "HTML 파싱을 멈추고 스크립트를 내려받아 실행",
+        "페이지 로드가 끝난 뒤에만 실행",
+        "파싱을 계속하면서 스크립트를 무시",
+        "CSSOM이 없어도 렌더 트리를 먼저 완성"
+      ],
+      "answer": 0,
+      "explain": "일반 스크립트는 DOM을 바꿀 수 있어 파서를 막는 리소스로, 실행이 끝나야 파싱을 이어 갑니다."
+    },
+    {
+      "type": "mc",
+      "q": "<script> 태그의 defer 속성에 대한 설명으로 가장 알맞은 것은?",
+      "choices": [
+        "파싱을 멈추고 즉시 실행",
+        "파싱과 함께 내려받고 HTML 파싱이 끝난 뒤 문서 순서대로 실행",
+        "내려받는 즉시 순서와 상관없이 실행",
+        "스크립트를 절대 실행하지 않음"
+      ],
+      "answer": 1,
+      "explain": "defer 스크립트는 파싱을 막지 않고 내려받아 두었다가 파싱이 끝난 뒤 적힌 순서대로 실행됩니다."
+    },
+    {
+      "type": "mc",
+      "q": "<script> 태그의 async 속성에 대한 설명으로 가장 알맞은 것은?",
+      "choices": [
+        "CSS 파일에만 쓸 수 있음",
+        "HTML 파싱이 완전히 끝난 뒤에만 실행",
+        "다운로드가 끝나는 즉시 실행되며 실행 순서가 보장되지 않음",
+        "항상 문서에 적힌 순서대로 실행"
+      ],
+      "answer": 2,
+      "explain": "async 스크립트는 받는 즉시 실행되므로 여러 개일 때 끝나는 순서에 따라 실행 순서가 달라질 수 있습니다."
+    },
+    {
+      "type": "mc",
+      "q": "CSS가 렌더링 차단 리소스로 불리는 이유는?",
+      "choices": [
+        "CSS가 자바스크립트로 변환되어야 해서",
+        "CSS 파일은 항상 가장 마지막에 내려받아서",
+        "CSS가 DOM 트리를 삭제해서",
+        "CSSOM이 완성되어야 렌더 트리를 만들 수 있어서"
+      ],
+      "answer": 3,
+      "explain": "스타일 정보 없이 그리면 화면이 틀어지므로 브라우저는 CSSOM이 준비될 때까지 렌더링을 미룹니다."
+    },
+    {
+      "type": "mc",
+      "q": "레이아웃 스래싱(layout thrashing)의 원인으로 가장 알맞은 것은?",
+      "choices": [
+        "CSS 클래스를 한 번에 바꿈",
+        "transform으로 애니메이션 처리",
+        "이미지 파일 크기를 줄임",
+        "스타일 변경과 offsetHeight 같은 레이아웃 값 읽기를 번갈아 반복"
+      ],
+      "answer": 3,
+      "explain": "스타일을 바꾼 직후 레이아웃 값을 읽으면 강제로 레이아웃을 다시 계산하게 되어 이를 반복하면 성능이 크게 떨어집니다."
+    },
+    {
+      "type": "mc",
+      "q": "리플로 횟수를 줄이는 방법으로 가장 알맞은 것은?",
+      "choices": [
+        "반복문 안에서 매번 offsetWidth 읽기",
+        "여러 스타일 변경을 클래스 하나로 묶어 한 번에 적용",
+        "요소를 하나씩 DOM에 추가할 때마다 크기 측정",
+        "스타일 속성을 하나씩 따로 바꾸기"
+      ],
+      "answer": 1,
+      "explain": "변경을 모아 한 번에 적용하면 레이아웃 계산이 한 번으로 줄어듭니다."
+    },
+    {
+      "type": "mc",
+      "q": "HTML 바이트가 DOM이 되기까지의 순서로 가장 알맞은 것은?",
+      "choices": [
+        "바이트 → 노드 → 문자 → 토큰 → DOM",
+        "문자 → 바이트 → DOM → 토큰 → 노드",
+        "바이트 → 문자 → 토큰 → 노드 → DOM",
+        "토큰 → 바이트 → 노드 → 문자 → DOM"
+      ],
+      "answer": 2,
+      "explain": "받은 바이트를 문자로 바꾸고 토큰화한 뒤 노드를 만들어 트리로 연결하면 DOM이 됩니다."
+    },
+    {
+      "type": "mc",
+      "q": "요소의 위치와 크기를 다시 계산하는 과정을 부르는 다른 이름은?",
+      "choices": [
+        "리플로(reflow)",
+        "리페인트(repaint)",
+        "토큰화(tokenization)",
+        "하이드레이션(hydration)"
+      ],
+      "answer": 0,
+      "explain": "레이아웃을 다시 계산하는 과정을 리플로라고 하며, 다시 그리기만 하는 것은 리페인트입니다."
+    },
+    {
+      "type": "mc",
+      "q": "주요 렌더링 경로(Critical Rendering Path)의 뜻으로 가장 알맞은 것은?",
+      "choices": [
+        "HTML, CSS, 자바스크립트를 받아 화면에 첫 픽셀을 그리기까지 거치는 단계",
+        "서버가 데이터베이스를 조회하는 순서",
+        "이미지 파일을 압축하는 과정",
+        "사용자가 링크를 클릭하는 경로"
+      ],
+      "answer": 0,
+      "explain": "주요 렌더링 경로는 리소스를 받아 DOM, CSSOM, 렌더 트리, 레이아웃, 페인트를 거쳐 화면을 그리는 흐름입니다."
+    },
+    {
+      "type": "mc",
+      "q": "렌더 트리에 포함되지 않는 것으로 가장 알맞은 것은?",
+      "choices": [
+        "visibility: hidden을 지정한 요소",
+        "opacity: 0을 지정한 요소",
+        "<head> 안의 <meta> 태그",
+        "화면에 보이는 <p> 문단 텍스트"
+      ],
+      "answer": 2,
+      "explain": "<meta>처럼 화면에 그려지지 않는 요소는 렌더 트리에서 빠집니다. 보이지 않아도 공간을 차지하는 요소는 포함됩니다."
+    },
+    {
+      "type": "ox",
+      "q": "DOM 트리와 CSSOM 트리는 따로 만들어진 뒤 결합되어 렌더 트리가 된다.",
+      "answer": true,
+      "explain": "브라우저는 HTML로 DOM을, CSS로 CSSOM을 각각 만든 뒤 둘을 합쳐 렌더 트리를 구성합니다."
+    },
+    {
+      "type": "ox",
+      "q": "요소의 크기나 위치가 바뀌면 레이아웃을 다시 계산하는 리플로가 일어날 수 있다.",
+      "answer": true,
+      "explain": "크기나 위치 변화는 주변 요소의 배치에도 영향을 주므로 레이아웃을 다시 계산해야 합니다."
+    },
+    {
+      "type": "ox",
+      "q": "리플로가 일어나면 보통 이어서 리페인트도 일어난다.",
+      "answer": true,
+      "explain": "레이아웃이 바뀌면 바뀐 위치와 크기대로 다시 그려야 하므로 리페인트가 뒤따릅니다."
+    },
+    {
+      "type": "ox",
+      "q": "defer 속성을 붙인 스크립트는 HTML 파싱을 막지 않고 내려받아진다.",
+      "answer": true,
+      "explain": "defer 스크립트는 파싱과 병렬로 내려받고, 파싱이 끝난 뒤에 실행됩니다."
+    },
+    {
+      "type": "ox",
+      "q": "display: none으로 숨긴 요소도 렌더 트리에 포함되어 화면 공간을 차지한다.",
+      "answer": false,
+      "explain": "display: none인 요소는 렌더 트리에서 빠지고 공간도 차지하지 않습니다. 공간을 유지하며 숨기려면 visibility: hidden을 씁니다."
+    },
+    {
+      "type": "ox",
+      "q": "글자 색만 바꿔도 반드시 페이지 전체의 리플로가 일어난다.",
+      "answer": false,
+      "explain": "글자 색은 크기와 위치에 영향을 주지 않으므로 보통 리플로 없이 리페인트만 일어납니다."
+    },
+    {
+      "type": "ox",
+      "q": "브라우저는 페인트를 먼저 한 뒤 레이아웃 단계에서 요소의 위치를 계산한다.",
+      "answer": false,
+      "explain": "레이아웃으로 위치와 크기를 먼저 계산해야 그 결과를 바탕으로 페인트할 수 있습니다."
+    },
+    {
+      "type": "ox",
+      "q": "async 속성을 붙인 스크립트들은 항상 문서에 적힌 순서대로 실행된다.",
+      "answer": false,
+      "explain": "async 스크립트는 다운로드가 끝나는 대로 실행되어 순서가 보장되지 않습니다. 순서를 지키려면 defer를 씁니다."
+    }
+  ],
+  "web-16": [
+    {
+      "type": "mc",
+      "q": "AJAX라는 이름의 뜻으로 가장 알맞은 것은?",
+      "choices": [
+        "고급 자바 응용 교환(Advanced Java Application eXchange)",
+        "자동 자바스크립트 연결 확장",
+        "비동기 자바스크립트와 XML(Asynchronous JavaScript and XML)",
+        "동기식 자바 서버 실행 기술"
+      ],
+      "answer": 2,
+      "explain": "AJAX는 Asynchronous JavaScript and XML의 약자로, 자바스크립트로 서버와 비동기 통신하는 방식을 뜻합니다."
+    },
+    {
+      "type": "mc",
+      "q": "AJAX의 가장 큰 특징은?",
+      "choices": [
+        "모든 요청마다 새 페이지를 통째로 받음",
+        "페이지 전체를 새로 고치지 않고 서버와 데이터를 주고받음",
+        "HTML 대신 이미지로만 화면을 그림",
+        "서버 없이 브라우저만으로 데이터를 저장함"
+      ],
+      "answer": 1,
+      "explain": "AJAX는 필요한 데이터만 비동기로 주고받아 페이지 일부만 갱신할 수 있게 합니다."
+    },
+    {
+      "type": "mc",
+      "q": "AJAX 요청에 전통적으로 쓰여 온 브라우저 내장 객체는?",
+      "choices": [
+        "document.cookie",
+        "setTimeout",
+        "localStorage",
+        "XMLHttpRequest"
+      ],
+      "answer": 3,
+      "explain": "XMLHttpRequest 객체로 자바스크립트에서 서버에 HTTP 요청을 보내고 응답을 받을 수 있습니다."
+    },
+    {
+      "type": "mc",
+      "q": "최근 AJAX 요청에 많이 쓰는 Promise 기반 브라우저 내장 함수는?",
+      "choices": [
+        "fetch",
+        "console.log",
+        "querySelector",
+        "alert"
+      ],
+      "answer": 0,
+      "explain": "fetch는 서버에 요청을 보내고 Promise로 응답을 돌려주는 최신 표준 함수입니다."
+    },
+    {
+      "type": "mc",
+      "q": "이름에 XML이 들어 있지만 요즘 AJAX에서 가장 흔히 주고받는 데이터 형식은?",
+      "choices": [
+        "EXE(실행 파일)",
+        "JSON(JavaScript Object Notation)",
+        "BMP(비트맵 이미지)",
+        "MP3(오디오 파일)"
+      ],
+      "answer": 1,
+      "explain": "JSON은 가볍고 자바스크립트에서 다루기 쉬워 AJAX 응답 형식으로 널리 쓰입니다."
+    },
+    {
+      "type": "mc",
+      "q": "AJAX에서 '비동기'가 뜻하는 것으로 가장 알맞은 것은?",
+      "choices": [
+        "서버와 브라우저의 시계를 맞춤",
+        "요청을 정해진 시각에만 보낼 수 있음",
+        "응답을 기다리는 동안에도 사용자가 페이지를 계속 사용할 수 있음",
+        "요청을 보내면 응답이 올 때까지 화면이 멈춤"
+      ],
+      "answer": 2,
+      "explain": "비동기 요청은 응답을 기다리며 다른 작업을 막지 않으므로 사용자는 페이지를 계속 쓸 수 있습니다."
+    },
+    {
+      "type": "mc",
+      "q": "AJAX를 활용한 예로 가장 알맞은 것은?",
+      "choices": [
+        "검색창에 글자를 입력할 때 추천 검색어 표시",
+        "링크를 눌러 다른 페이지로 이동",
+        "브라우저의 새로고침 버튼 누르기",
+        "주소창에 URL을 직접 입력해 접속"
+      ],
+      "answer": 0,
+      "explain": "추천 검색어는 입력할 때마다 페이지 이동 없이 서버에서 목록만 받아 보여 주는 대표적인 AJAX 활용입니다."
+    },
+    {
+      "type": "mc",
+      "q": "전통적인 폼 제출 방식과 AJAX의 차이로 가장 알맞은 것은?",
+      "choices": [
+        "둘은 동작 방식이 완전히 같음",
+        "폼 제출은 서버가 필요 없고, AJAX만 서버가 필요",
+        "폼 제출은 자바스크립트가 필수이고, AJAX는 자바스크립트가 필요 없음",
+        "폼 제출은 새 페이지 전체를 받고, AJAX는 필요한 데이터만 받아 일부를 갱신"
+      ],
+      "answer": 3,
+      "explain": "일반 폼 제출은 응답으로 페이지 전체를 다시 그리지만 AJAX는 데이터만 받아 화면 일부만 바꿉니다."
+    },
+    {
+      "type": "mc",
+      "q": "AJAX를 사용할 때의 장점으로 가장 알맞은 것은?",
+      "choices": [
+        "서버 보안 검사가 필요 없어짐",
+        "필요한 데이터만 주고받아 전송량이 줄고 반응이 빠름",
+        "인터넷 연결 없이도 서버 데이터를 받음",
+        "검색 엔진이 항상 더 잘 수집함"
+      ],
+      "answer": 1,
+      "explain": "페이지 전체 대신 필요한 데이터만 주고받으므로 전송량이 줄고 사용자 경험이 매끄러워집니다."
+    },
+    {
+      "type": "mc",
+      "q": "AJAX만으로 화면을 바꿀 때 생길 수 있는 단점으로 가장 알맞은 것은?",
+      "choices": [
+        "주소가 바뀌지 않아 뒤로 가기나 즐겨찾기 처리가 어려울 수 있음",
+        "서버와 전혀 통신할 수 없음",
+        "페이지가 항상 처음부터 다시 로드됨",
+        "이미지를 화면에 표시할 수 없음"
+      ],
+      "answer": 0,
+      "explain": "페이지 이동 없이 내용만 바뀌면 브라우저 기록이 남지 않아 뒤로 가기나 즐겨찾기를 따로 처리해야 합니다."
+    },
+    {
+      "type": "mc",
+      "q": "AJAX로 받은 데이터를 화면에 반영할 때 자바스크립트가 조작하는 대상은?",
+      "choices": [
+        "데이터베이스 인덱스",
+        "운영체제 커널",
+        "DOM(Document Object Model, 문서 객체 모델)",
+        "서버 방화벽"
+      ],
+      "answer": 2,
+      "explain": "받은 데이터로 DOM을 수정하면 새로 고침 없이 화면 일부가 바뀝니다."
+    },
+    {
+      "type": "mc",
+      "q": "브라우저가 다른 출처의 서버로 보내는 AJAX 요청을 기본적으로 제한하는 보안 정책은?",
+      "choices": [
+        "최소 권한 원칙",
+        "캐시 무효화 정책",
+        "선입선출 정책",
+        "동일 출처 정책(Same-Origin Policy)"
+      ],
+      "answer": 3,
+      "explain": "동일 출처 정책은 스크립트가 다른 출처의 응답을 함부로 읽지 못하게 막는 브라우저 보안 규칙입니다."
+    },
+    {
+      "type": "mc",
+      "q": "서버가 허락하면 다른 출처의 AJAX 요청을 허용하는 방식은?",
+      "choices": [
+        "DNS(Domain Name System, 도메인 이름 시스템)",
+        "FTP(File Transfer Protocol, 파일 전송 프로토콜)",
+        "CORS(Cross-Origin Resource Sharing, 교차 출처 리소스 공유)",
+        "SMTP(Simple Mail Transfer Protocol, 간이 메일 전송 프로토콜)"
+      ],
+      "answer": 2,
+      "explain": "CORS는 서버가 응답 헤더로 허용할 출처를 알려 주어 다른 출처 요청을 안전하게 허용하는 방식입니다."
+    },
+    {
+      "type": "mc",
+      "q": "AJAX로 서버에서 데이터를 조회하기만 할 때 주로 쓰는 HTTP(HyperText Transfer Protocol) 메서드는?",
+      "choices": [
+        "PUT",
+        "DELETE",
+        "POST",
+        "GET"
+      ],
+      "answer": 3,
+      "explain": "GET은 서버의 자원을 조회할 때 쓰는 메서드입니다."
+    },
+    {
+      "type": "mc",
+      "q": "AJAX로 새 게시글 내용을 서버에 보내 등록할 때 주로 쓰는 HTTP(HyperText Transfer Protocol) 메서드는?",
+      "choices": [
+        "POST",
+        "OPTIONS",
+        "HEAD",
+        "GET"
+      ],
+      "answer": 0,
+      "explain": "POST는 요청 본문에 데이터를 담아 서버에 새 자원을 만들 때 주로 씁니다."
+    },
+    {
+      "type": "mc",
+      "q": "자바스크립트의 fetch 함수를 호출하면 돌려받는 값은?",
+      "choices": [
+        "DOM 요소",
+        "Promise 객체",
+        "완성된 HTML 페이지",
+        "숫자 상태 코드만"
+      ],
+      "answer": 1,
+      "explain": "fetch는 응답이 오면 이행되는 Promise를 바로 반환하므로 then이나 await로 결과를 다룹니다."
+    },
+    {
+      "type": "mc",
+      "q": "XMLHttpRequest의 readyState 값 중 요청이 완료되었음을 뜻하는 값은?",
+      "choices": [
+        "0",
+        "4",
+        "1",
+        "2"
+      ],
+      "answer": 1,
+      "explain": "readyState는 0부터 4까지 바뀌며, 4는 응답을 모두 받아 요청이 끝난 상태입니다."
+    },
+    {
+      "type": "mc",
+      "q": "AJAX로 받은 JSON 문자열을 자바스크립트 객체로 바꾸는 함수는?",
+      "choices": [
+        "parseInt",
+        "String",
+        "JSON.parse",
+        "JSON.stringify"
+      ],
+      "answer": 2,
+      "explain": "JSON.parse는 JSON 문자열을 객체로 바꾸고, JSON.stringify는 반대로 객체를 문자열로 바꿉니다."
+    },
+    {
+      "type": "mc",
+      "q": "AJAX를 이루는 기술의 조합으로 가장 알맞은 것은?",
+      "choices": [
+        "자바스크립트, XMLHttpRequest, DOM, XML이나 JSON",
+        "SQL, 하드디스크, 이메일",
+        "C 언어, 운영체제, 프린터 드라이버",
+        "자바 애플릿, FTP, 엑셀 파일"
+      ],
+      "answer": 0,
+      "explain": "AJAX는 하나의 언어가 아니라 자바스크립트와 통신 객체, DOM, 데이터 형식을 함께 쓰는 방식입니다."
+    },
+    {
+      "type": "mc",
+      "q": "AJAX를 적극 활용해 한 페이지 안에서 화면 내용을 바꾸는 웹 애플리케이션 방식은?",
+      "choices": [
+        "명령줄 인터페이스 프로그램",
+        "정적 HTML 문서만 쓰는 방식",
+        "배치 처리 프로그램",
+        "SPA(Single Page Application, 단일 페이지 애플리케이션)"
+      ],
+      "answer": 3,
+      "explain": "SPA는 처음 한 페이지를 받은 뒤 AJAX로 데이터만 받아 화면을 바꾸는 방식입니다."
+    },
+    {
+      "type": "mc",
+      "q": "AJAX가 서버와 데이터를 주고받을 때 사용하는 통신 규약은?",
+      "choices": [
+        "HTTP(HyperText Transfer Protocol, 하이퍼텍스트 전송 프로토콜)",
+        "SMTP(Simple Mail Transfer Protocol)",
+        "블루투스",
+        "USB(Universal Serial Bus)"
+      ],
+      "answer": 0,
+      "explain": "AJAX 요청은 일반 웹 요청과 같이 HTTP로 서버와 통신합니다."
+    },
+    {
+      "type": "mc",
+      "q": "게시판에서 댓글을 등록하면 페이지 이동 없이 댓글 목록만 바뀌게 하려 할 때 알맞은 방법은?",
+      "choices": [
+        "서버 없이 화면에만 글자를 추가",
+        "AJAX로 댓글을 보내고 받은 데이터로 목록 영역만 갱신",
+        "댓글을 쓸 때마다 페이지 전체를 새로 고침",
+        "댓글을 브라우저 쿠키에만 저장"
+      ],
+      "answer": 1,
+      "explain": "AJAX로 서버에 댓글을 저장하고 응답 데이터로 목록 부분만 바꾸면 새로 고침 없이 반영됩니다."
+    },
+    {
+      "type": "ox",
+      "q": "AJAX를 쓰면 페이지 전체를 새로 고치지 않고 일부 내용만 바꿀 수 있다.",
+      "answer": true,
+      "explain": "AJAX는 필요한 데이터만 받아 DOM을 수정하므로 페이지 일부만 갱신할 수 있습니다."
+    },
+    {
+      "type": "ox",
+      "q": "XMLHttpRequest 객체로도 JSON 데이터를 주고받을 수 있다.",
+      "answer": true,
+      "explain": "이름에 XML이 있지만 XMLHttpRequest는 JSON, 텍스트 등 여러 형식의 데이터를 주고받을 수 있습니다."
+    },
+    {
+      "type": "ox",
+      "q": "fetch 함수는 Promise를 반환한다.",
+      "answer": true,
+      "explain": "fetch는 응답이 도착하면 이행되는 Promise를 반환합니다."
+    },
+    {
+      "type": "ox",
+      "q": "AJAX는 하나의 프로그래밍 언어가 아니라 여러 웹 기술을 함께 쓰는 방식이다.",
+      "answer": true,
+      "explain": "AJAX는 자바스크립트, XMLHttpRequest나 fetch, DOM 등을 조합해 비동기 통신을 하는 기법입니다."
+    },
+    {
+      "type": "ox",
+      "q": "AJAX 요청을 보내면 응답이 올 때까지 사용자는 페이지를 전혀 조작할 수 없다.",
+      "answer": false,
+      "explain": "AJAX는 비동기로 동작하므로 응답을 기다리는 동안에도 사용자는 페이지를 계속 사용할 수 있습니다."
+    },
+    {
+      "type": "ox",
+      "q": "AJAX를 쓰려면 반드시 XML 형식으로만 데이터를 주고받아야 한다.",
+      "answer": false,
+      "explain": "AJAX는 XML뿐 아니라 JSON, 일반 텍스트, HTML 조각 등도 주고받을 수 있으며 요즘은 JSON을 가장 많이 씁니다."
+    },
+    {
+      "type": "ox",
+      "q": "AJAX 요청은 서버 프로그램만으로 보내지며 브라우저의 자바스크립트는 필요 없다.",
+      "answer": false,
+      "explain": "AJAX 요청은 브라우저에서 자바스크립트가 XMLHttpRequest나 fetch로 보내는 것입니다."
+    },
+    {
+      "type": "ox",
+      "q": "브라우저는 다른 출처의 서버로 보내는 AJAX 요청의 응답을 아무 제한 없이 항상 읽게 해 준다.",
+      "answer": false,
+      "explain": "브라우저는 동일 출처 정책으로 다른 출처 응답 읽기를 제한하며, 서버가 CORS로 허용해야 읽을 수 있습니다."
+    }
+  ],
+  "web-17": [
+    {
+      "type": "mc",
+      "q": "웹소켓(WebSocket)의 가장 큰 특징으로 알맞은 것은?",
+      "choices": [
+        "하나의 연결에서 서버와 클라이언트가 양방향으로 메시지를 주고받음",
+        "서버가 보낸 데이터를 반드시 파일로 저장함",
+        "클라이언트만 서버로 데이터를 보낼 수 있음",
+        "요청마다 새 연결을 맺고 응답 후 바로 끊음"
+      ],
+      "answer": 0,
+      "explain": "웹소켓은 한 번 맺은 연결을 유지하면서 양쪽이 언제든 메시지를 보낼 수 있는 양방향 통신 프로토콜입니다."
+    },
+    {
+      "type": "mc",
+      "q": "웹소켓 연결을 처음 맺을 때 클라이언트가 보내는 요청으로 알맞은 것은?",
+      "choices": [
+        "FTP(File Transfer Protocol) 로그인 요청",
+        "DNS(Domain Name System) 역방향 질의",
+        "SMTP(Simple Mail Transfer Protocol) 메일 전송",
+        "HTTP(HyperText Transfer Protocol) 업그레이드 요청"
+      ],
+      "answer": 3,
+      "explain": "웹소켓은 HTTP 요청에 Upgrade 헤더를 담아 프로토콜 전환을 요청하는 핸드셰이크로 시작합니다."
+    },
+    {
+      "type": "mc",
+      "q": "웹소켓 핸드셰이크에서 프로토콜 전환을 요청하는 헤더로 알맞은 것은?",
+      "choices": [
+        "Accept: websocket",
+        "Content-Type: websocket",
+        "Upgrade: websocket",
+        "Cache-Control: websocket"
+      ],
+      "answer": 2,
+      "explain": "클라이언트는 Upgrade: websocket과 Connection: Upgrade 헤더로 웹소켓 전환을 요청합니다."
+    },
+    {
+      "type": "mc",
+      "q": "서버가 웹소켓 업그레이드 요청을 수락할 때 돌려주는 HTTP 상태 코드는?",
+      "choices": [
+        "404 Not Found",
+        "101 Switching Protocols",
+        "200 OK",
+        "301 Moved Permanently"
+      ],
+      "answer": 1,
+      "explain": "서버는 101 Switching Protocols 응답으로 프로토콜 전환을 수락하며, 이후 같은 연결이 웹소켓으로 쓰입니다."
+    },
+    {
+      "type": "mc",
+      "q": "암호화하지 않은 웹소켓 연결에 쓰는 URL 스킴은?",
+      "choices": [
+        "ftp://",
+        "file://",
+        "wss://",
+        "ws://"
+      ],
+      "answer": 3,
+      "explain": "ws는 암호화하지 않은 웹소켓 연결의 스킴이며, 암호화된 연결은 wss를 씁니다."
+    },
+    {
+      "type": "mc",
+      "q": "TLS(Transport Layer Security)로 암호화한 웹소켓 연결의 URL 스킴은?",
+      "choices": [
+        "sftp://",
+        "wss://",
+        "ws://",
+        "mailto:"
+      ],
+      "answer": 1,
+      "explain": "wss는 TLS 위에서 동작하는 웹소켓 연결로, HTTP에 대한 HTTPS와 비슷한 관계입니다."
+    },
+    {
+      "type": "mc",
+      "q": "웹소켓이 기반으로 하는 전송 계층 프로토콜은?",
+      "choices": [
+        "UDP(User Datagram Protocol)",
+        "ARP(Address Resolution Protocol)",
+        "TCP(Transmission Control Protocol)",
+        "ICMP(Internet Control Message Protocol)"
+      ],
+      "answer": 2,
+      "explain": "웹소켓은 HTTP와 같은 TCP 연결 위에서 동작하므로 데이터의 순서와 전달이 보장됩니다."
+    },
+    {
+      "type": "mc",
+      "q": "핸드셰이크에서 클라이언트가 임의 값을 담아 보내고, 서버가 이를 이용해 Sec-WebSocket-Accept 값을 계산하는 헤더는?",
+      "choices": [
+        "Sec-WebSocket-Key",
+        "Set-Cookie",
+        "Content-Length",
+        "Authorization"
+      ],
+      "answer": 0,
+      "explain": "서버는 Sec-WebSocket-Key 값에 정해진 문자열을 붙여 해시한 결과를 Sec-WebSocket-Accept로 돌려주어 웹소켓 요청을 이해했음을 보입니다."
+    },
+    {
+      "type": "mc",
+      "q": "핸드셰이크가 끝난 뒤 웹소켓이 데이터를 주고받는 기본 단위는?",
+      "choices": [
+        "HTTP 요청과 응답 쌍",
+        "쿠키",
+        "HTML 문서",
+        "프레임"
+      ],
+      "answer": 3,
+      "explain": "웹소켓은 연결 수립 후 HTTP 메시지가 아닌 가벼운 프레임 단위로 데이터를 주고받습니다."
+    },
+    {
+      "type": "mc",
+      "q": "주기적으로 요청을 보내는 폴링(Polling)과 비교한 웹소켓의 장점은?",
+      "choices": [
+        "서버 자원을 전혀 쓰지 않음",
+        "매 요청마다 붙는 HTTP 헤더 부담과 응답 지연이 줄어듦",
+        "서버가 연결 상태를 전혀 관리하지 않아도 됨",
+        "어떤 프록시와 방화벽도 항상 문제없이 통과함"
+      ],
+      "answer": 1,
+      "explain": "웹소켓은 연결을 유지하며 작은 프레임만 보내므로 반복 요청의 헤더 낭비가 없고, 새 데이터를 즉시 전달할 수 있습니다."
+    },
+    {
+      "type": "mc",
+      "q": "롱 폴링(Long polling)의 동작 방식으로 알맞은 것은?",
+      "choices": [
+        "서버가 새 데이터가 생길 때까지 응답을 미루고, 응답을 받은 클라이언트가 곧바로 다시 요청함",
+        "하나의 연결에서 양쪽이 자유롭게 메시지를 보냄",
+        "서버가 클라이언트에게 먼저 TCP 연결을 맺음",
+        "클라이언트가 정해진 짧은 간격으로 요청을 계속 보냄"
+      ],
+      "answer": 0,
+      "explain": "롱 폴링은 서버가 요청을 붙잡아 두었다가 데이터가 생기면 응답하는 방식으로, 응답 뒤에는 클라이언트가 새 요청을 다시 보내야 합니다."
+    },
+    {
+      "type": "mc",
+      "q": "SSE(Server-Sent Events)와 웹소켓의 차이로 알맞은 것은?",
+      "choices": [
+        "SSE는 브라우저에서 쓸 수 없고, 웹소켓만 브라우저에서 쓸 수 있음",
+        "SSE는 UDP 위에서 동작하고, 웹소켓은 TCP 위에서 동작함",
+        "SSE는 서버에서 클라이언트로만 보내고, 웹소켓은 양방향으로 주고받음",
+        "SSE는 양방향이고, 웹소켓은 서버에서 클라이언트로만 보냄"
+      ],
+      "answer": 2,
+      "explain": "SSE는 HTTP 연결로 서버가 클라이언트에 이벤트를 흘려보내는 단방향 기술이며, 웹소켓은 양쪽이 모두 보낼 수 있습니다."
+    },
+    {
+      "type": "mc",
+      "q": "웹소켓을 쓰기에 가장 알맞은 서비스는?",
+      "choices": [
+        "검색 노출이 중요한 블로그 글 목록",
+        "하루에 한 번 내려받는 보고서 파일",
+        "여러 사용자가 동시에 메시지를 주고받는 채팅",
+        "내용이 거의 바뀌지 않는 회사 소개 페이지"
+      ],
+      "answer": 2,
+      "explain": "채팅은 서버와 클라이언트가 수시로 메시지를 주고받아야 하므로 지연이 적은 양방향 연결인 웹소켓이 잘 맞습니다."
+    },
+    {
+      "type": "mc",
+      "q": "서버가 브라우저로 알림만 계속 보내고 브라우저가 보낼 데이터는 거의 없을 때, 웹소켓 대신 고려할 만한 더 단순한 기술은?",
+      "choices": [
+        "FTP(File Transfer Protocol)",
+        "SSE(Server-Sent Events)",
+        "SMTP(Simple Mail Transfer Protocol)",
+        "Telnet"
+      ],
+      "answer": 1,
+      "explain": "서버에서 클라이언트로 가는 단방향 전송만 필요하다면 일반 HTTP 위에서 동작하는 SSE가 더 간단한 선택입니다."
+    },
+    {
+      "type": "mc",
+      "q": "브라우저에서 웹소켓 연결을 만들 때 쓰는 자바스크립트 객체는?",
+      "choices": [
+        "WebSocket",
+        "FileReader",
+        "localStorage",
+        "XMLHttpRequest"
+      ],
+      "answer": 0,
+      "explain": "브라우저는 new WebSocket(주소) 형태로 웹소켓 연결을 만들고, send 메서드로 메시지를 보냅니다."
+    },
+    {
+      "type": "mc",
+      "q": "브라우저의 WebSocket 객체가 서버로부터 메시지를 받을 때 발생하는 이벤트는?",
+      "choices": [
+        "scroll",
+        "resize",
+        "submit",
+        "message"
+      ],
+      "answer": 3,
+      "explain": "WebSocket 객체는 open, message, error, close 이벤트를 제공하며, 받은 데이터는 message 이벤트로 전달됩니다."
+    },
+    {
+      "type": "mc",
+      "q": "웹소켓에서 연결이 살아 있는지 확인하려고 주고받는 제어 프레임은?",
+      "choices": [
+        "HTTP 리다이렉트 응답",
+        "텍스트 데이터 프레임",
+        "쿠키 만료 헤더",
+        "핑(Ping)과 퐁(Pong)"
+      ],
+      "answer": 3,
+      "explain": "한쪽이 핑 프레임을 보내면 상대는 퐁 프레임으로 답하므로, 이를 이용해 연결 유지 여부를 확인할 수 있습니다."
+    },
+    {
+      "type": "mc",
+      "q": "웹소켓 서버를 운영할 때의 단점으로 알맞은 것은?",
+      "choices": [
+        "서버가 클라이언트에 먼저 메시지를 보낼 수 없음",
+        "많은 연결을 오래 유지해야 해 연결 관리와 서버 확장 부담이 큼",
+        "메시지마다 전체 HTTP 헤더가 붙음",
+        "텍스트 데이터를 보낼 수 없음"
+      ],
+      "answer": 1,
+      "explain": "웹소켓은 상태를 가진 긴 연결이라 서버가 많은 연결을 동시에 붙잡고 있어야 하고, 여러 서버로 나눌 때도 연결 관리가 필요합니다."
+    },
+    {
+      "type": "mc",
+      "q": "웹소켓 프레임으로 보낼 수 있는 데이터 종류는?",
+      "choices": [
+        "텍스트만",
+        "HTML 문서만",
+        "텍스트와 바이너리",
+        "바이너리만"
+      ],
+      "answer": 2,
+      "explain": "웹소켓 프레임에는 텍스트 프레임과 바이너리 프레임이 있어 문자열과 이진 데이터를 모두 보낼 수 있습니다."
+    },
+    {
+      "type": "mc",
+      "q": "웹소켓 표준에서 프레임 마스킹 규칙으로 알맞은 것은?",
+      "choices": [
+        "클라이언트에서 서버로 가는 프레임은 마스킹해야 함",
+        "모든 프레임은 압축한 뒤 보내야 함",
+        "서버에서 클라이언트로 가는 프레임만 마스킹해야 함",
+        "프레임마다 쿠키를 붙여야 함"
+      ],
+      "answer": 0,
+      "explain": "웹소켓 표준은 클라이언트가 보내는 프레임을 반드시 마스킹하도록 정해, 중간 프록시 캐시를 오염시키는 공격을 막습니다."
+    },
+    {
+      "type": "mc",
+      "q": "실시간 웹 게임에서 플레이어 위치를 아주 자주 주고받아야 할 때 알맞은 통신 방식은?",
+      "choices": [
+        "위치가 바뀔 때마다 새 HTML 페이지 요청",
+        "웹소켓 연결을 유지하며 메시지 교환",
+        "이메일로 위치 정보 전송",
+        "1분마다 페이지 전체 새로고침"
+      ],
+      "answer": 1,
+      "explain": "잦은 양방향 데이터 교환에는 연결을 유지한 채 작은 메시지를 바로 주고받는 웹소켓이 지연과 부담 면에서 유리합니다."
+    },
+    {
+      "type": "mc",
+      "q": "웹소켓 연결을 정상적으로 끝내는 방법으로 알맞은 것은?",
+      "choices": [
+        "핑 프레임만 계속 보냄",
+        "Upgrade 헤더를 다시 보냄",
+        "닫기(Close) 제어 프레임을 주고받음",
+        "101 응답을 다시 보냄"
+      ],
+      "answer": 2,
+      "explain": "웹소켓은 한쪽이 닫기 프레임을 보내고 상대가 닫기 프레임으로 답하는 절차로 연결을 정상 종료합니다."
+    },
+    {
+      "type": "ox",
+      "q": "웹소켓 연결이 맺어진 뒤에는 서버가 클라이언트의 요청 없이도 먼저 메시지를 보낼 수 있다.",
+      "answer": true,
+      "explain": "웹소켓은 양방향 통신이므로 연결이 열려 있는 동안 서버도 원할 때 클라이언트에 메시지를 보낼 수 있습니다."
+    },
+    {
+      "type": "ox",
+      "q": "웹소켓 핸드셰이크는 HTTP 요청으로 시작한다.",
+      "answer": true,
+      "explain": "웹소켓은 HTTP 요청에 Upgrade 헤더를 담아 보내고 서버가 101 응답으로 수락하면서 연결이 전환됩니다."
+    },
+    {
+      "type": "ox",
+      "q": "wss는 TLS(Transport Layer Security)로 암호화한 웹소켓 연결을 나타낸다.",
+      "answer": true,
+      "explain": "wss는 TLS 위에서 동작하는 웹소켓으로, 주고받는 데이터가 암호화됩니다."
+    },
+    {
+      "type": "ox",
+      "q": "웹소켓은 한 번 맺은 연결을 유지하면서 여러 메시지를 주고받는다.",
+      "answer": true,
+      "explain": "웹소켓은 연결을 계속 열어 두고 그 위에서 여러 프레임을 주고받으므로 메시지마다 새 연결을 맺지 않습니다."
+    },
+    {
+      "type": "ox",
+      "q": "웹소켓은 UDP(User Datagram Protocol) 위에서 동작한다.",
+      "answer": false,
+      "explain": "웹소켓은 TCP 연결 위에서 동작하므로 데이터의 순서와 전달이 보장됩니다."
+    },
+    {
+      "type": "ox",
+      "q": "웹소켓은 메시지를 보낼 때마다 새로운 HTTP 요청을 만든다.",
+      "answer": false,
+      "explain": "웹소켓은 처음 핸드셰이크에서만 HTTP를 쓰고, 이후에는 유지된 연결에서 프레임으로 메시지를 보냅니다."
+    },
+    {
+      "type": "ox",
+      "q": "SSE(Server-Sent Events)는 클라이언트와 서버가 같은 연결로 양방향 메시지를 주고받는 기술이다.",
+      "answer": false,
+      "explain": "SSE는 서버에서 클라이언트로만 이벤트를 보내는 단방향 기술이며, 양방향 통신이 필요하면 웹소켓을 씁니다."
+    },
+    {
+      "type": "ox",
+      "q": "서버가 웹소켓 업그레이드 요청을 수락하면 상태 코드 200 OK를 돌려준다.",
+      "answer": false,
+      "explain": "서버는 101 Switching Protocols 상태 코드로 웹소켓 전환을 수락합니다."
+    }
+  ],
+  "web-18": [
+    {
+      "type": "mc",
+      "q": "SPA(Single-page application)의 정의로 알맞은 것은?",
+      "choices": [
+        "하나의 HTML 페이지를 불러온 뒤 필요한 부분만 바꿔 화면을 갱신하는 웹 앱",
+        "한 쪽 분량의 정적 문서만 있는 웹사이트",
+        "브라우저 없이 실행하는 설치형 프로그램",
+        "페이지를 이동할 때마다 서버에서 새 HTML 전체를 받는 웹 앱"
+      ],
+      "answer": 0,
+      "explain": "SPA는 처음 한 페이지를 불러온 뒤 자바스크립트로 화면 내용을 바꾸며 동작하는 웹 앱입니다."
+    },
+    {
+      "type": "mc",
+      "q": "MPA(Multi-page application)와 비교한 SPA의 특징은?",
+      "choices": [
+        "링크를 누를 때마다 서버가 완성된 새 HTML을 보냄",
+        "화면을 바꿀 때 페이지 전체를 새로 불러오지 않음",
+        "자바스크립트 없이 모든 기능이 동작함",
+        "첫 화면 로딩이 항상 더 빠름"
+      ],
+      "answer": 1,
+      "explain": "MPA는 이동할 때마다 새 페이지를 받지만, SPA는 한 페이지 안에서 필요한 부분만 바꿉니다."
+    },
+    {
+      "type": "mc",
+      "q": "SPA가 화면을 바꿀 때 서버에서 주로 받아 오는 것은?",
+      "choices": [
+        "운영체제 업데이트 파일",
+        "브라우저 설치 파일",
+        "JSON(JavaScript Object Notation) 같은 데이터",
+        "완성된 새 HTML 문서 전체"
+      ],
+      "answer": 2,
+      "explain": "SPA는 화면 틀을 이미 가지고 있으므로 보통 API로 필요한 데이터만 받아 화면에 반영합니다."
+    },
+    {
+      "type": "mc",
+      "q": "SPA에서 URL에 따라 보여 줄 화면을 브라우저의 자바스크립트가 정하는 방식은?",
+      "choices": [
+        "서버 측 렌더링",
+        "DNS(Domain Name System) 라우팅",
+        "정적 사이트 생성",
+        "클라이언트 측 라우팅"
+      ],
+      "answer": 3,
+      "explain": "클라이언트 측 라우팅은 서버에 새 페이지를 요청하지 않고 브라우저에서 URL에 맞는 화면을 골라 그립니다."
+    },
+    {
+      "type": "mc",
+      "q": "SPA가 페이지를 새로 불러오지 않고 주소창의 URL을 바꿀 때 쓰는 브라우저 기능은?",
+      "choices": [
+        "Geolocation API",
+        "History API의 pushState",
+        "localStorage",
+        "쿠키 만료 설정"
+      ],
+      "answer": 1,
+      "explain": "History API의 pushState는 페이지 요청 없이 방문 기록과 주소창 URL을 바꿀 수 있어 SPA 라우팅에 쓰입니다."
+    },
+    {
+      "type": "mc",
+      "q": "SPA의 해시(#) 기반 라우팅이 새로고침 없이 동작하는 이유는?",
+      "choices": [
+        "#이 붙은 주소는 HTTPS 연결을 강제하기 때문",
+        "# 뒷부분이 매번 서버로 전송되기 때문",
+        "#이 붙은 주소는 쿠키를 지우기 때문",
+        "URL의 # 뒷부분이 바뀌어도 브라우저가 서버에 새 페이지를 요청하지 않기 때문"
+      ],
+      "answer": 3,
+      "explain": "URL의 해시 부분은 서버로 전송되지 않고 바뀌어도 페이지를 다시 불러오지 않으므로, 이를 감지해 화면만 바꿀 수 있습니다."
+    },
+    {
+      "type": "mc",
+      "q": "SPA의 대표적인 단점은?",
+      "choices": [
+        "서버와 데이터를 주고받을 수 없음",
+        "화면을 바꿀 때마다 전체 새로고침이 일어남",
+        "처음에 내려받을 자바스크립트가 많아 첫 화면 표시가 느릴 수 있음",
+        "사용자와 상호작용을 할 수 없음"
+      ],
+      "answer": 2,
+      "explain": "SPA는 앱 전체를 움직일 자바스크립트를 먼저 받아 실행해야 하므로 초기 로딩이 무거워질 수 있습니다."
+    },
+    {
+      "type": "mc",
+      "q": "검색 엔진 최적화(SEO, Search Engine Optimization) 측면에서 클라이언트 렌더링만 쓰는 SPA의 약점은?",
+      "choices": [
+        "처음 받는 HTML에 내용이 거의 없어 검색 로봇이 내용을 파악하기 어려울 수 있음",
+        "HTTPS를 쓸 수 없음",
+        "페이지 제목을 아예 정할 수 없음",
+        "URL을 하나도 가질 수 없음"
+      ],
+      "answer": 0,
+      "explain": "클라이언트 렌더링 SPA의 첫 HTML은 거의 빈 틀이고 내용은 자바스크립트 실행 후에 채워지므로 검색 노출에 불리할 수 있습니다."
+    },
+    {
+      "type": "mc",
+      "q": "SPA의 첫 화면 속도와 검색 노출 약점을 보완하려고 서버에서 첫 화면 HTML을 만들어 보내는 기법은?",
+      "choices": [
+        "CORS(Cross-Origin Resource Sharing)",
+        "CSR(Client-Side Rendering, 클라이언트 측 렌더링)",
+        "롱 폴링",
+        "SSR(Server-Side Rendering, 서버 측 렌더링)"
+      ],
+      "answer": 3,
+      "explain": "SSR은 서버가 내용을 채운 HTML을 먼저 보내고, 이후 브라우저에서 SPA처럼 동작하게 하여 두 장점을 함께 얻습니다."
+    },
+    {
+      "type": "mc",
+      "q": "순수 SPA가 화면을 그리는 기본 방식인 CSR(Client-Side Rendering)의 뜻으로 알맞은 것은?",
+      "choices": [
+        "브라우저가 자바스크립트로 화면을 만들어 그림",
+        "서버가 요청마다 완성된 HTML을 만들어 보냄",
+        "빌드할 때 모든 페이지의 HTML을 미리 만들어 둠",
+        "서버가 이미지를 압축해 보냄"
+      ],
+      "answer": 0,
+      "explain": "CSR은 서버에서 받은 자바스크립트와 데이터로 브라우저가 직접 화면을 구성하는 방식입니다."
+    },
+    {
+      "type": "mc",
+      "q": "History API로 라우팅하는 SPA에서 /about 주소를 직접 열었더니 서버가 404를 돌려줄 때 알맞은 해결책은?",
+      "choices": [
+        "자바스크립트 파일을 지움",
+        "서버가 알 수 없는 경로 요청에도 index.html을 돌려주도록 설정",
+        "브라우저 캐시를 끔",
+        "모든 링크를 이미지로 바꿈"
+      ],
+      "answer": 1,
+      "explain": "/about은 브라우저 라우터만 아는 경로이므로, 서버가 어떤 경로든 index.html을 주면 SPA가 실행되어 해당 화면을 그립니다."
+    },
+    {
+      "type": "mc",
+      "q": "SPA의 초기 로딩 부담을 줄이려고 코드를 나누어 필요한 화면에 들어갈 때 불러오는 기법은?",
+      "choices": [
+        "쿠키 크기 늘리기",
+        "모든 코드를 한 파일로 합쳐 처음에 모두 받기",
+        "코드 분할과 지연 로딩",
+        "서버 재시작"
+      ],
+      "answer": 2,
+      "explain": "코드 분할은 앱 코드를 여러 조각으로 나눠 당장 필요한 부분만 먼저 받게 하므로 첫 로딩이 가벼워집니다."
+    },
+    {
+      "type": "mc",
+      "q": "SPA로 만들기에 가장 알맞은 서비스는?",
+      "choices": [
+        "검색 노출만 중요한 단순한 정적 안내문",
+        "인쇄용 PDF 파일 하나를 내려받는 페이지",
+        "자바스크립트를 끈 환경에서도 써야 하는 문서 모음",
+        "화면 전환이 잦고 상호작용이 많은 웹 메일이나 관리 대시보드"
+      ],
+      "answer": 3,
+      "explain": "사용자가 오래 머물며 화면을 자주 바꾸는 서비스는 새로고침 없이 빠르게 전환되는 SPA의 장점이 잘 드러납니다."
+    },
+    {
+      "type": "mc",
+      "q": "SPA가 서버와 데이터를 비동기로 주고받을 때 쓰는 브라우저 기능은?",
+      "choices": [
+        "HTML의 meta 태그",
+        "CSS(Cascading Style Sheets) 미디어 쿼리",
+        "Fetch API 또는 XMLHttpRequest",
+        "History API의 back 메서드"
+      ],
+      "answer": 2,
+      "explain": "Fetch API나 XMLHttpRequest를 쓰면 페이지를 다시 불러오지 않고 서버에 요청해 데이터를 받을 수 있습니다."
+    },
+    {
+      "type": "mc",
+      "q": "웹페이지의 일부만 비동기로 갱신하는 기법으로, SPA 등장의 바탕이 된 것은?",
+      "choices": [
+        "Ajax(Asynchronous JavaScript and XML)",
+        "Telnet",
+        "FTP(File Transfer Protocol)",
+        "SMTP(Simple Mail Transfer Protocol)"
+      ],
+      "answer": 0,
+      "explain": "Ajax는 페이지 전체를 다시 받지 않고 자바스크립트로 서버와 통신해 일부만 바꾸는 기법으로, SPA의 기반이 되었습니다."
+    },
+    {
+      "type": "mc",
+      "q": "SPA에서 사용자가 브라우저의 뒤로 가기 버튼을 눌렀을 때 이전 화면을 보여 주는 방법으로 알맞은 것은?",
+      "choices": [
+        "브라우저 쿠키를 모두 지움",
+        "라우터가 popstate 이벤트 같은 방문 기록 변화를 감지해 화면을 바꿈",
+        "서버가 이전 페이지의 HTML 전체를 다시 보냄",
+        "페이지 전체를 강제로 새로고침함"
+      ],
+      "answer": 1,
+      "explain": "뒤로 가기로 방문 기록이 바뀌면 popstate 이벤트가 발생하고, SPA 라우터는 이를 받아 해당 URL의 화면을 다시 그립니다."
+    },
+    {
+      "type": "mc",
+      "q": "SPA가 페이지 전체를 새로 받지 않아서 생기는 사용자 경험상 장점은?",
+      "choices": [
+        "서버 비용이 전혀 들지 않음",
+        "첫 방문 때 항상 가장 빨리 표시됨",
+        "자바스크립트를 꺼도 모든 기능이 동작함",
+        "화면 깜빡임이 적고 앱처럼 부드럽게 전환됨"
+      ],
+      "answer": 3,
+      "explain": "SPA는 바뀌는 부분만 다시 그리므로 페이지 전환 때 흰 화면이나 깜빡임이 적어 설치형 앱과 비슷한 느낌을 줍니다."
+    },
+    {
+      "type": "mc",
+      "q": "SPA와 MPA에서 서버가 맡는 역할의 차이로 알맞은 것은?",
+      "choices": [
+        "SPA의 서버는 주로 API로 데이터를 주고, MPA의 서버는 페이지마다 HTML을 만들어 줌",
+        "두 방식 모두 서버가 전혀 필요 없음",
+        "SPA의 서버는 페이지마다 HTML을 만들고, MPA의 서버는 데이터만 줌",
+        "SPA의 서버는 이미지 파일만 제공함"
+      ],
+      "answer": 0,
+      "explain": "SPA에서는 화면 구성을 브라우저가 맡아 서버는 데이터 API 역할이 중심이고, MPA에서는 서버가 요청마다 완성된 페이지를 만듭니다."
+    },
+    {
+      "type": "mc",
+      "q": "오래 열어 두고 쓰는 SPA에서 특히 주의해야 할 문제는?",
+      "choices": [
+        "서버와 연결할 수 없는 문제",
+        "스타일시트가 적용되지 않는 문제",
+        "화면 전환 때 이벤트 리스너나 타이머를 정리하지 않아 생기는 메모리 누수",
+        "클릭할 때마다 일어나는 페이지 새로고침"
+      ],
+      "answer": 2,
+      "explain": "SPA는 페이지를 다시 불러오지 않아 메모리가 초기화되지 않으므로, 사라진 화면의 리스너나 타이머를 정리하지 않으면 메모리가 계속 쌓입니다."
+    },
+    {
+      "type": "mc",
+      "q": "SPA에서 화면이 바뀌어도 자바스크립트 변수에 담긴 앱 상태가 유지되는 이유는?",
+      "choices": [
+        "브라우저가 전환마다 상태를 파일로 저장하기 때문",
+        "페이지를 다시 불러오지 않아 같은 자바스크립트 실행 환경이 이어지기 때문",
+        "서버가 상태를 매번 HTML에 넣어 보내기 때문",
+        "쿠키가 변수를 자동으로 복원하기 때문"
+      ],
+      "answer": 1,
+      "explain": "SPA는 한 페이지 안에서 동작하므로 화면을 바꿔도 메모리에 있는 자바스크립트 상태가 그대로 남습니다."
+    },
+    {
+      "type": "mc",
+      "q": "새로고침 없이 화면을 바꾸는 SPA에서 화면마다 브라우저 탭 제목을 다르게 보이게 하는 방법은?",
+      "choices": [
+        "이미지 크기를 바꿈",
+        "URL에서 #을 지움",
+        "서버를 다시 시작",
+        "라우트가 바뀔 때 자바스크립트로 document.title을 갱신"
+      ],
+      "answer": 3,
+      "explain": "SPA는 새 HTML을 받지 않으므로 화면이 바뀔 때 자바스크립트로 문서 제목과 메타 정보를 직접 바꿔 주어야 합니다."
+    },
+    {
+      "type": "mc",
+      "q": "빌드할 때 페이지별 HTML을 미리 만들어 두어 SPA의 검색 노출과 첫 화면 속도를 보완하는 기법은?",
+      "choices": [
+        "CSR(Client-Side Rendering)",
+        "SSG(Static Site Generation, 정적 사이트 생성)",
+        "쿠키 기반 세션",
+        "롱 폴링"
+      ],
+      "answer": 1,
+      "explain": "SSG는 빌드 단계에서 내용이 채워진 HTML을 미리 만들어 두므로 검색 로봇과 사용자가 바로 내용을 볼 수 있습니다."
+    },
+    {
+      "type": "ox",
+      "q": "SPA는 첫 로딩 이후 화면을 바꿀 때 페이지 전체를 새로 불러오지 않는다.",
+      "answer": true,
+      "explain": "SPA는 처음 받은 페이지 안에서 자바스크립트로 필요한 부분만 바꾸어 화면을 전환합니다."
+    },
+    {
+      "type": "ox",
+      "q": "SPA도 History API를 쓰면 화면마다 서로 다른 URL을 가질 수 있다.",
+      "answer": true,
+      "explain": "History API의 pushState로 페이지 요청 없이 URL을 바꿀 수 있어 화면별 주소를 만들 수 있습니다."
+    },
+    {
+      "type": "ox",
+      "q": "클라이언트 렌더링만 쓰는 SPA는 MPA보다 첫 화면 표시가 느릴 수 있다.",
+      "answer": true,
+      "explain": "SPA는 화면을 그리기 전에 자바스크립트를 내려받고 실행해야 하므로 첫 표시가 늦어질 수 있습니다."
+    },
+    {
+      "type": "ox",
+      "q": "SPA의 화면 갱신은 주로 브라우저에서 실행되는 자바스크립트가 맡는다.",
+      "answer": true,
+      "explain": "SPA는 서버에서 받은 데이터를 바탕으로 브라우저의 자바스크립트가 화면을 다시 그립니다."
+    },
+    {
+      "type": "ox",
+      "q": "SPA는 자바스크립트를 끈 브라우저에서도 MPA와 똑같이 모든 화면을 보여 준다.",
+      "answer": false,
+      "explain": "클라이언트 렌더링 SPA는 자바스크립트로 화면을 만들기 때문에 자바스크립트를 끄면 대부분의 내용이 표시되지 않습니다."
+    },
+    {
+      "type": "ox",
+      "q": "SPA는 서버와 통신하지 않으므로 백엔드 서버가 전혀 필요 없다.",
+      "answer": false,
+      "explain": "SPA도 데이터 저장과 조회를 위해 보통 API 서버와 통신하며, 페이지 파일을 제공할 서버도 필요합니다."
+    },
+    {
+      "type": "ox",
+      "q": "SPA라는 이름은 웹 앱 전체에 화면이 하나뿐이라는 뜻이다.",
+      "answer": false,
+      "explain": "SPA는 HTML 페이지를 한 번만 불러온다는 뜻이며, 그 안에서 여러 화면을 자바스크립트로 바꿔 보여 줍니다."
+    },
+    {
+      "type": "ox",
+      "q": "MPA는 링크를 누를 때 페이지를 새로 불러오지 않고 데이터만 받아 화면 일부를 바꾼다.",
+      "answer": false,
+      "explain": "MPA는 링크를 누를 때마다 서버에서 새 HTML 페이지를 받아 전체를 다시 불러오며, 일부만 바꾸는 것은 SPA의 방식입니다."
+    }
+  ],
+  "web-19": [
+    {
+      "type": "mc",
+      "q": "서버 사이드 렌더링(SSR, Server-Side Rendering)의 뜻으로 가장 알맞은 것은?",
+      "choices": [
+        "서버가 이미지 파일만 압축해 보내는 방식",
+        "서버가 요청마다 내용이 채워진 HTML을 만들어 보내는 방식",
+        "브라우저가 빈 HTML을 받아 자바스크립트로 화면을 그리는 방식",
+        "빌드할 때 모든 페이지를 미리 만들어 두는 방식"
+      ],
+      "answer": 1,
+      "explain": "SSR은 서버가 요청을 받을 때 화면 내용을 담은 HTML을 완성해 응답하는 방식입니다."
+    },
+    {
+      "type": "mc",
+      "q": "클라이언트 사이드 렌더링(CSR, Client-Side Rendering)에서 화면 내용을 주로 그리는 곳은?",
+      "choices": [
+        "데이터베이스 서버",
+        "웹 서버",
+        "사용자의 브라우저",
+        "DNS 서버"
+      ],
+      "answer": 2,
+      "explain": "CSR은 브라우저가 자바스크립트를 내려받아 실행하면서 화면을 만들어 냅니다."
+    },
+    {
+      "type": "mc",
+      "q": "SSR이 CSR보다 일반적으로 유리한 점으로 가장 알맞은 것은?",
+      "choices": [
+        "첫 화면의 내용이 더 빨리 보임",
+        "서버의 연산 부담이 줄어듦",
+        "자바스크립트가 전혀 필요 없어짐",
+        "페이지 이동 때 서버 요청이 전혀 없음"
+      ],
+      "answer": 0,
+      "explain": "SSR은 내용이 들어 있는 HTML을 바로 받으므로 자바스크립트 실행을 기다리지 않고 첫 화면을 보여 줄 수 있습니다."
+    },
+    {
+      "type": "mc",
+      "q": "검색 엔진 최적화(SEO, Search Engine Optimization) 면에서 SSR이 유리한 이유로 가장 알맞은 것은?",
+      "choices": [
+        "검색 엔진의 자바스크립트 실행을 막아 줌",
+        "페이지 용량이 항상 더 작음",
+        "서버가 검색 엔진에 순위를 직접 요청함",
+        "크롤러가 받는 HTML에 본문 내용이 이미 들어 있음"
+      ],
+      "answer": 3,
+      "explain": "SSR 페이지는 첫 HTML에 본문이 담겨 있어 크롤러가 스크립트를 실행하지 않아도 내용을 읽을 수 있습니다."
+    },
+    {
+      "type": "mc",
+      "q": "서버가 보낸 HTML에 자바스크립트를 연결해 클릭 같은 이벤트에 반응하도록 만드는 과정은?",
+      "choices": [
+        "트랜스파일",
+        "미니파이",
+        "캐시 무효화",
+        "하이드레이션"
+      ],
+      "answer": 3,
+      "explain": "하이드레이션은 이미 그려진 HTML에 이벤트 처리기와 상태를 붙여 상호작용이 가능하게 만드는 과정입니다."
+    },
+    {
+      "type": "mc",
+      "q": "SSR의 단점으로 가장 알맞은 것은?",
+      "choices": [
+        "요청마다 서버가 렌더링해 서버 부담이 커짐",
+        "검색 엔진이 본문을 읽지 못함",
+        "첫 화면이 빈 화면으로 오래 보임",
+        "브라우저에 HTML을 보내지 않음"
+      ],
+      "answer": 0,
+      "explain": "SSR은 요청이 올 때마다 서버가 HTML을 만들어야 하므로 서버 자원 사용이 늘어납니다."
+    },
+    {
+      "type": "mc",
+      "q": "CSR 방식에서 첫 화면이 늦게 보이기 쉬운 이유로 가장 알맞은 것은?",
+      "choices": [
+        "CSS를 사용할 수 없음",
+        "자바스크립트를 내려받아 실행한 뒤에야 화면이 그려짐",
+        "서버가 요청마다 HTML을 완성해야 함",
+        "브라우저가 HTML을 해석하지 못함"
+      ],
+      "answer": 1,
+      "explain": "CSR은 거의 빈 HTML을 먼저 받고 자바스크립트 번들을 내려받아 실행해야 내용이 나타납니다."
+    },
+    {
+      "type": "mc",
+      "q": "SSR과 정적 사이트 생성(SSG, Static Site Generation)의 차이로 가장 알맞은 것은?",
+      "choices": [
+        "SSG는 브라우저에서, SSR은 서버에서 HTML을 만듦",
+        "SSG는 HTML 파일을 만들지 않음",
+        "SSG는 빌드 시점에, SSR은 요청 시점에 HTML을 만듦",
+        "SSG는 검색 엔진에 노출될 수 없음"
+      ],
+      "answer": 2,
+      "explain": "SSG는 배포 전에 HTML을 미리 만들어 두고, SSR은 요청이 들어올 때마다 서버에서 HTML을 만듭니다."
+    },
+    {
+      "type": "mc",
+      "q": "요청할 때마다 최신 데이터를 반영해야 하고 검색 노출도 중요한 페이지에 가장 알맞은 렌더링 방식은?",
+      "choices": [
+        "클라이언트 사이드 렌더링",
+        "빌드 시점 정적 생성",
+        "이미지 스프라이트",
+        "서버 사이드 렌더링"
+      ],
+      "answer": 3,
+      "explain": "SSR은 요청 시점의 데이터로 HTML을 만들고 그 HTML에 본문이 들어 있어 최신성과 검색 노출을 함께 챙길 수 있습니다."
+    },
+    {
+      "type": "mc",
+      "q": "검색 노출이 필요 없고 로그인 뒤 상호작용이 많은 관리자 화면에 흔히 쓰는 렌더링 방식은?",
+      "choices": [
+        "서버에서 매번 전체 페이지 새로 렌더링",
+        "클라이언트 사이드 렌더링",
+        "이미지로 화면 전송",
+        "빌드 시점 정적 생성"
+      ],
+      "answer": 1,
+      "explain": "검색 노출이 필요 없고 상호작용이 많은 화면은 서버 부담 없이 브라우저에서 그리는 CSR이 잘 맞습니다."
+    },
+    {
+      "type": "mc",
+      "q": "SSR이 CSR보다 불리해질 수 있는 지표로 가장 알맞은 것은?",
+      "choices": [
+        "검색 크롤러가 읽는 본문 양",
+        "첫 콘텐츠가 보이기까지 걸리는 시간",
+        "첫 바이트까지 걸리는 시간(TTFB, Time To First Byte)",
+        "자바스크립트가 꺼진 환경의 내용 표시"
+      ],
+      "answer": 2,
+      "explain": "SSR은 서버가 HTML을 다 만든 뒤 응답하므로 첫 바이트가 도착하기까지 시간이 늘어날 수 있습니다."
+    },
+    {
+      "type": "mc",
+      "q": "SSR 페이지에서 하이드레이션이 끝나기 전에 사용자가 겪을 수 있는 현상은?",
+      "choices": [
+        "화면은 보이지만 버튼을 눌러도 반응하지 않음",
+        "화면이 완전히 비어 있음",
+        "HTML을 처음부터 다시 내려받음",
+        "서버와의 연결이 끊어짐"
+      ],
+      "answer": 0,
+      "explain": "하이드레이션 전에는 HTML만 그려져 있고 이벤트 처리기가 아직 연결되지 않아 상호작용이 되지 않습니다."
+    },
+    {
+      "type": "mc",
+      "q": "하이드레이션 불일치 경고가 나는 주된 원인은?",
+      "choices": [
+        "서버 렌더링 결과와 브라우저의 첫 렌더링 결과가 다름",
+        "서버 메모리가 부족함",
+        "CSS 파일을 찾지 못함",
+        "이미지 용량이 너무 큼"
+      ],
+      "answer": 0,
+      "explain": "하이드레이션은 서버가 만든 HTML과 브라우저가 그린 결과가 같다고 보고 연결하므로 둘이 다르면 불일치가 생깁니다."
+    },
+    {
+      "type": "mc",
+      "q": "SSR에서 하이드레이션 불일치를 일으키기 쉬운 코드로 가장 알맞은 것은?",
+      "choices": [
+        "정해진 CSS 클래스를 지정",
+        "렌더링 중 현재 시각이나 난수를 화면에 출력",
+        "고정된 문자열 제목을 출력",
+        "모든 사용자에게 같은 메뉴를 출력"
+      ],
+      "answer": 1,
+      "explain": "현재 시각이나 난수는 서버에서 렌더링할 때와 브라우저에서 렌더링할 때 값이 달라져 결과가 어긋납니다."
+    },
+    {
+      "type": "mc",
+      "q": "SSR 코드에서 렌더링 중 window 객체에 바로 접근하면 문제가 되는 이유는?",
+      "choices": [
+        "서버가 window에 더 빨리 접근함",
+        "HTML 크기가 크게 늘어남",
+        "window 객체는 보안상 사용이 금지됨",
+        "서버 실행 환경에는 브라우저 전역 객체가 없음"
+      ],
+      "answer": 3,
+      "explain": "SSR 코드는 서버에서도 실행되는데 서버 환경에는 window 같은 브라우저 전용 객체가 없어 오류가 납니다."
+    },
+    {
+      "type": "mc",
+      "q": "자바스크립트가 꺼진 브라우저에서 SSR 페이지와 순수 CSR 페이지의 차이로 알맞은 것은?",
+      "choices": [
+        "CSR 페이지는 내용이 보이고 SSR 페이지는 빈 화면임",
+        "둘 다 내용이 똑같이 보임",
+        "SSR 페이지는 내용이 보이고 CSR 페이지는 내용이 거의 보이지 않음",
+        "둘 다 HTML을 받지 못함"
+      ],
+      "answer": 2,
+      "explain": "SSR은 HTML 자체에 내용이 있어 스크립트 없이도 보이지만 순수 CSR은 스크립트가 실행돼야 내용이 생깁니다."
+    },
+    {
+      "type": "mc",
+      "q": "PHP나 JSP처럼 서버가 템플릿으로 HTML을 만들어 보내는 전통적 방식과 가장 관계 깊은 것은?",
+      "choices": [
+        "서버 사이드 렌더링",
+        "브라우저 확장 프로그램",
+        "클라이언트 사이드 렌더링",
+        "단일 페이지 애플리케이션"
+      ],
+      "answer": 0,
+      "explain": "서버 템플릿으로 완성된 HTML을 응답하는 전통적 웹 방식은 SSR에 해당합니다."
+    },
+    {
+      "type": "mc",
+      "q": "단일 페이지 애플리케이션(SPA, Single Page Application)에 SSR을 더했을 때 얻는 주된 효과는?",
+      "choices": [
+        "자바스크립트 번들이 완전히 없어짐",
+        "서버가 더는 필요 없어짐",
+        "첫 화면은 서버 HTML로 빨리 보이고 이후 전환은 브라우저가 처리함",
+        "페이지를 옮길 때마다 전체 새로고침이 강제됨"
+      ],
+      "answer": 2,
+      "explain": "SSR을 더한 SPA는 첫 요청에 완성된 HTML을 보여 주고 하이드레이션 뒤에는 브라우저에서 화면을 전환합니다."
+    },
+    {
+      "type": "mc",
+      "q": "모든 사용자에게 같은 내용을 보여 주는 SSR 페이지의 서버 부담을 줄이는 방법으로 알맞은 것은?",
+      "choices": [
+        "요청마다 데이터베이스 조회를 늘림",
+        "렌더링한 HTML을 캐시해 재사용",
+        "응답 캐시를 모두 끔",
+        "하이드레이션을 두 번 실행"
+      ],
+      "answer": 1,
+      "explain": "내용이 같다면 한 번 렌더링한 HTML을 캐시해 두고 재사용하면 요청마다 렌더링할 필요가 줄어듭니다."
+    },
+    {
+      "type": "mc",
+      "q": "전통적인 SSR 사이트에서 링크를 눌러 다른 페이지로 이동할 때 일어나는 일은?",
+      "choices": [
+        "브라우저가 서버 없이 새 화면을 만듦",
+        "DNS 서버에서 HTML을 받아 옴",
+        "이전 페이지의 HTML을 그대로 다시 보여 줌",
+        "서버에 새 페이지를 요청해 완성된 HTML을 다시 받음"
+      ],
+      "answer": 3,
+      "explain": "전통적 SSR에서는 페이지를 옮길 때마다 서버가 해당 페이지의 HTML을 새로 만들어 보냅니다."
+    },
+    {
+      "type": "mc",
+      "q": "메신저나 SNS에 링크를 공유할 때 미리보기가 잘 나오는 데 SSR이 도움이 되는 이유는?",
+      "choices": [
+        "공유된 이미지가 자동으로 압축됨",
+        "미리보기 수집기가 받는 HTML에 메타 태그가 이미 채워져 있음",
+        "SNS 서버가 사이트의 자바스크립트를 대신 빌드함",
+        "사이트 쿠키가 SNS에 공유됨"
+      ],
+      "answer": 1,
+      "explain": "많은 미리보기 수집기는 스크립트를 실행하지 않으므로 HTML에 제목과 이미지 메타 태그가 들어 있어야 제대로 표시됩니다."
+    },
+    {
+      "type": "mc",
+      "q": "CSR보다 SSR이 성능이 낮은 기기의 사용자에게 유리할 수 있는 이유는?",
+      "choices": [
+        "네트워크 연결이 필요 없어짐",
+        "기기의 메모리 용량을 늘려 줌",
+        "화면 해상도를 높여 줌",
+        "화면을 만드는 작업 일부를 서버가 맡아 기기의 계산 부담이 줄어듦"
+      ],
+      "answer": 3,
+      "explain": "SSR은 첫 화면의 HTML 생성을 서버가 맡으므로 기기가 처리해야 할 자바스크립트 작업이 줄어듭니다."
+    },
+    {
+      "type": "ox",
+      "q": "SSR에서는 브라우저가 처음 받은 HTML에 이미 페이지 내용이 들어 있다.",
+      "answer": true,
+      "explain": "SSR은 서버가 데이터를 채운 HTML을 응답하므로 첫 HTML에 화면 내용이 담겨 있습니다."
+    },
+    {
+      "type": "ox",
+      "q": "SSR은 CSR보다 서버의 렌더링 부담이 작다.",
+      "answer": false,
+      "explain": "SSR은 요청마다 서버가 HTML을 만들어야 하므로 렌더링을 브라우저에 맡기는 CSR보다 서버 부담이 큽니다."
+    },
+    {
+      "type": "ox",
+      "q": "하이드레이션은 서버가 만든 HTML에 이벤트 처리기를 연결하는 과정이다.",
+      "answer": true,
+      "explain": "하이드레이션은 이미 그려진 HTML에 자바스크립트의 이벤트 처리기와 상태를 붙여 상호작용을 가능하게 합니다."
+    },
+    {
+      "type": "ox",
+      "q": "순수 CSR 페이지는 첫 HTML에 본문이 모두 담겨 있어 검색 크롤러에 항상 유리하다.",
+      "answer": false,
+      "explain": "순수 CSR 페이지의 첫 HTML은 거의 비어 있고 본문은 자바스크립트 실행 뒤에 생기므로 검색 노출에 불리할 수 있습니다."
+    },
+    {
+      "type": "ox",
+      "q": "SSG는 빌드할 때 HTML을 미리 만들어 두므로 요청마다 렌더링하지 않는다.",
+      "answer": true,
+      "explain": "SSG는 배포 전에 만들어 둔 HTML 파일을 그대로 내려주므로 요청 시점의 렌더링이 필요 없습니다."
+    },
+    {
+      "type": "ox",
+      "q": "하이드레이션이 끝나기 전에도 SSR 페이지의 모든 버튼은 항상 정상적으로 동작한다.",
+      "answer": false,
+      "explain": "하이드레이션 전에는 이벤트 처리기가 연결되지 않아 자바스크립트로 동작하는 버튼은 반응하지 않을 수 있습니다."
+    },
+    {
+      "type": "ox",
+      "q": "하이드레이션을 쓰는 SSR에서는 같은 컴포넌트 코드가 서버와 브라우저 양쪽에서 실행될 수 있다.",
+      "answer": true,
+      "explain": "같은 컴포넌트가 서버에서 HTML을 만들고 브라우저에서 다시 실행되며 하이드레이션되므로 양쪽 환경을 모두 고려해야 합니다."
+    },
+    {
+      "type": "ox",
+      "q": "SSR은 첫 바이트까지 걸리는 시간(TTFB, Time To First Byte)을 항상 CSR보다 짧게 만든다.",
+      "answer": false,
+      "explain": "SSR은 서버가 HTML을 만드는 동안 응답이 늦어질 수 있어 첫 바이트까지 걸리는 시간이 오히려 길어지기도 합니다."
+    }
+  ],
+  "web-20": [
+    {
+      "type": "mc",
+      "q": "동일 출처 정책(Same-origin policy)에서 출처(origin)를 이루는 요소로 알맞은 것은?",
+      "choices": [
+        "스킴, 호스트, 포트",
+        "호스트, 경로, 쿼리 문자열",
+        "IP 주소와 쿠키",
+        "스킴, 경로, 프래그먼트"
+      ],
+      "answer": 0,
+      "explain": "출처는 스킴(프로토콜), 호스트, 포트의 조합으로 정해지며 셋이 모두 같아야 같은 출처입니다."
+    },
+    {
+      "type": "mc",
+      "q": "동일 출처 정책의 주된 목적으로 가장 알맞은 것은?",
+      "choices": [
+        "검색 순위를 높임",
+        "악성 페이지가 다른 출처의 데이터를 읽지 못하게 막음",
+        "서버 과부하를 막음",
+        "이미지 용량을 줄임"
+      ],
+      "answer": 1,
+      "explain": "동일 출처 정책은 한 출처의 스크립트가 다른 출처의 문서나 응답을 마음대로 읽지 못하게 해 사용자 정보를 보호합니다."
+    },
+    {
+      "type": "mc",
+      "q": "https://example.com/a 와 같은 출처인 URL은?",
+      "choices": [
+        "http://example.com/a",
+        "https://example.com:8443/a",
+        "https://example.com/b/c?x=1",
+        "https://www.example.com/a"
+      ],
+      "answer": 2,
+      "explain": "경로와 쿼리는 출처에 포함되지 않으므로 스킴, 호스트, 포트가 같은 https://example.com/b/c?x=1 이 같은 출처입니다."
+    },
+    {
+      "type": "mc",
+      "q": "http://shop.com 과 https://shop.com 을 서로 다른 출처로 만드는 요소는?",
+      "choices": [
+        "경로",
+        "쿼리 문자열",
+        "호스트",
+        "스킴"
+      ],
+      "answer": 3,
+      "explain": "두 URL은 호스트가 같지만 http와 https로 스킴이 달라 다른 출처입니다."
+    },
+    {
+      "type": "mc",
+      "q": "https://a.example.com 과 https://b.example.com 의 관계로 알맞은 것은?",
+      "choices": [
+        "호스트가 달라 다른 출처",
+        "포트가 달라 다른 출처",
+        "스킴이 달라 다른 출처",
+        "상위 도메인이 같아 같은 출처"
+      ],
+      "answer": 0,
+      "explain": "출처는 호스트 전체를 비교하므로 상위 도메인이 같아도 하위 도메인이 다르면 다른 출처입니다."
+    },
+    {
+      "type": "mc",
+      "q": "https://site.com 과 https://site.com:443 의 관계로 알맞은 것은?",
+      "choices": [
+        "호스트가 달라 다른 출처",
+        "443이 https의 기본 포트라 같은 출처",
+        "포트 표기가 달라 다른 출처",
+        "스킴이 달라 다른 출처"
+      ],
+      "answer": 1,
+      "explain": "포트를 생략하면 https는 기본 포트 443을 쓰므로 두 URL의 스킴, 호스트, 포트가 모두 같습니다."
+    },
+    {
+      "type": "mc",
+      "q": "교차 출처 리소스 공유(CORS, Cross-Origin Resource Sharing)의 역할로 가장 알맞은 것은?",
+      "choices": [
+        "서버 사이의 통신을 암호화함",
+        "브라우저가 모든 교차 출처 요청을 무조건 차단함",
+        "서버가 응답 헤더로 다른 출처의 접근을 허용함을 알림",
+        "브라우저의 쿠키를 지움"
+      ],
+      "answer": 2,
+      "explain": "CORS는 서버가 HTTP 응답 헤더로 허용할 출처를 밝혀 브라우저가 동일 출처 제한을 풀어 주게 하는 방식입니다."
+    },
+    {
+      "type": "mc",
+      "q": "CORS에서 서버가 접근을 허용할 출처를 알리는 응답 헤더는?",
+      "choices": [
+        "Content-Type",
+        "Set-Cookie",
+        "Cache-Control",
+        "Access-Control-Allow-Origin"
+      ],
+      "answer": 3,
+      "explain": "Access-Control-Allow-Origin 헤더에 허용할 출처를 적으면 브라우저가 그 출처의 스크립트에 응답을 넘겨줍니다."
+    },
+    {
+      "type": "mc",
+      "q": "CORS 프리플라이트 요청에 쓰이는 HTTP 메서드는?",
+      "choices": [
+        "HEAD",
+        "OPTIONS",
+        "GET",
+        "TRACE"
+      ],
+      "answer": 1,
+      "explain": "브라우저는 본 요청 전에 OPTIONS 메서드로 프리플라이트 요청을 보내 서버의 허용 여부를 묻습니다."
+    },
+    {
+      "type": "mc",
+      "q": "브라우저가 CORS 프리플라이트 요청을 보내는 목적으로 가장 알맞은 것은?",
+      "choices": [
+        "브라우저 캐시를 비움",
+        "서버 인증서를 새로 발급",
+        "본 요청 전에 서버가 그 교차 출처 요청을 허용하는지 확인",
+        "응답 본문을 압축"
+      ],
+      "answer": 2,
+      "explain": "프리플라이트는 메서드와 헤더를 미리 알려 서버가 허용하는지 확인한 뒤에 본 요청을 보내도록 하는 절차입니다."
+    },
+    {
+      "type": "mc",
+      "q": "동일 출처 정책을 적용해 스크립트의 교차 출처 응답 읽기를 막는 주체는?",
+      "choices": [
+        "데이터베이스",
+        "웹 서버",
+        "DNS 서버",
+        "웹 브라우저"
+      ],
+      "answer": 3,
+      "explain": "동일 출처 정책은 브라우저가 지키는 보안 규칙이므로 응답을 스크립트에 넘길지 브라우저가 결정합니다."
+    },
+    {
+      "type": "mc",
+      "q": "동일 출처 정책이 있어도 다른 출처에서 불러와 페이지에 쓸 수 있는 것은?",
+      "choices": [
+        "img 태그로 표시하는 이미지",
+        "fetch로 받은 응답 본문 읽기",
+        "다른 출처 iframe의 DOM 읽기",
+        "XMLHttpRequest의 응답 텍스트 읽기"
+      ],
+      "answer": 0,
+      "explain": "이미지, 스크립트, 스타일시트처럼 태그로 삽입하는 자원은 다른 출처에서도 불러올 수 있지만 그 내용을 스크립트로 읽는 것은 제한됩니다."
+    },
+    {
+      "type": "mc",
+      "q": "https://app.com 의 스크립트가 https://api.com 에 fetch 요청을 보내 CORS 오류가 났을 때 올바른 해결 방향은?",
+      "choices": [
+        "브라우저 캐시를 지움",
+        "요청 주소를 http로 바꿈",
+        "api.com 서버가 app.com을 허용하는 CORS 응답 헤더를 보냄",
+        "app.com 페이지에 메타 태그를 추가함"
+      ],
+      "answer": 2,
+      "explain": "교차 출처 접근 허용은 자원을 가진 서버가 결정하므로 api.com이 응답 헤더로 app.com을 허용해야 합니다."
+    },
+    {
+      "type": "mc",
+      "q": "서버끼리 직접 HTTP 요청을 주고받을 때 동일 출처 정책의 적용 여부로 알맞은 것은?",
+      "choices": [
+        "항상 똑같이 적용됨",
+        "브라우저 정책이라 적용되지 않음",
+        "같은 데이터센터 안에서만 적용됨",
+        "80번 포트에서만 적용됨"
+      ],
+      "answer": 1,
+      "explain": "동일 출처 정책은 브라우저가 강제하는 규칙이므로 서버끼리의 통신에는 적용되지 않습니다."
+    },
+    {
+      "type": "mc",
+      "q": "다른 출처의 iframe에 대해 부모 페이지의 스크립트가 받는 제한으로 알맞은 것은?",
+      "choices": [
+        "iframe 내부 DOM을 자유롭게 읽음",
+        "iframe의 입력값을 읽음",
+        "iframe 출처의 쿠키를 읽음",
+        "iframe 내부 DOM을 직접 읽거나 고칠 수 없음"
+      ],
+      "answer": 3,
+      "explain": "동일 출처 정책 때문에 다른 출처 문서의 DOM에는 직접 접근할 수 없습니다."
+    },
+    {
+      "type": "mc",
+      "q": "서로 다른 출처의 창이나 iframe이 데이터를 주고받도록 브라우저가 제공하는 방법은?",
+      "choices": [
+        "window.postMessage",
+        "다른 출처와의 localStorage 공유",
+        "document.write",
+        "eval 함수"
+      ],
+      "answer": 0,
+      "explain": "postMessage는 다른 출처의 창끼리 메시지를 보내는 표준 방법이며 받는 쪽이 보낸 출처를 확인할 수 있습니다."
+    },
+    {
+      "type": "mc",
+      "q": "CORS가 널리 쓰이기 전, script 태그는 다른 출처에서도 불러올 수 있다는 점을 이용한 우회 기법은?",
+      "choices": [
+        "WebSocket",
+        "JSONP",
+        "REST",
+        "SOAP"
+      ],
+      "answer": 1,
+      "explain": "JSONP는 다른 출처의 스크립트로 콜백 함수 호출을 받아 데이터를 얻는 방식입니다."
+    },
+    {
+      "type": "mc",
+      "q": "같은 출처의 서버가 다른 출처 API에 대신 요청해 브라우저의 동일 출처 제한을 피하는 방식은?",
+      "choices": [
+        "프록시 서버 활용",
+        "쿠키 삭제",
+        "이미지 스프라이트",
+        "DNS 캐시 비우기"
+      ],
+      "answer": 0,
+      "explain": "브라우저는 같은 출처 서버에만 요청하고 그 서버가 다른 출처 API를 대신 호출하면 동일 출처 정책에 걸리지 않습니다."
+    },
+    {
+      "type": "mc",
+      "q": "두 URL이 같은 출처인지 판단할 때 고려하지 않는 URL 요소는?",
+      "choices": [
+        "호스트",
+        "스킴",
+        "포트",
+        "경로"
+      ],
+      "answer": 3,
+      "explain": "출처는 스킴, 호스트, 포트로만 정해지고 경로는 출처 판단에 쓰이지 않습니다."
+    },
+    {
+      "type": "mc",
+      "q": "http://localhost:3000 페이지에서 http://localhost:8080 으로 보낸 fetch가 교차 출처 요청이 되는 이유는?",
+      "choices": [
+        "경로가 다름",
+        "호스트가 다름",
+        "포트가 다름",
+        "스킴이 다름"
+      ],
+      "answer": 2,
+      "explain": "두 URL은 스킴과 호스트가 같지만 포트가 3000과 8080으로 달라 다른 출처입니다."
+    },
+    {
+      "type": "mc",
+      "q": "교차 출처 요청에서 브라우저가 요청한 페이지의 출처를 서버에 알리려고 붙이는 요청 헤더는?",
+      "choices": [
+        "Host",
+        "Origin",
+        "Authorization",
+        "Accept"
+      ],
+      "answer": 1,
+      "explain": "브라우저는 교차 출처 요청에 Origin 헤더를 붙이고 서버는 이 값을 보고 허용 여부를 정합니다."
+    },
+    {
+      "type": "mc",
+      "q": "동일 출처 정책만으로는 막지 못해 토큰 같은 별도 대책이 필요한 공격은?",
+      "choices": [
+        "다른 출처 XMLHttpRequest 응답 읽기",
+        "다른 출처 fetch 응답 본문 탈취",
+        "교차 사이트 요청 위조(CSRF, Cross-Site Request Forgery)",
+        "다른 출처 iframe의 DOM 읽기"
+      ],
+      "answer": 2,
+      "explain": "동일 출처 정책은 응답 읽기를 막을 뿐 다른 출처로 요청을 보내는 것 자체는 막지 않으므로 CSRF에는 별도 대책이 필요합니다."
+    },
+    {
+      "type": "ox",
+      "q": "두 URL이 같은 출처가 되려면 스킴, 호스트, 포트가 모두 같아야 한다.",
+      "answer": true,
+      "explain": "출처는 스킴, 호스트, 포트의 조합이므로 하나라도 다르면 다른 출처입니다."
+    },
+    {
+      "type": "ox",
+      "q": "스킴, 호스트, 포트가 같아도 URL의 경로가 다르면 다른 출처로 본다.",
+      "answer": false,
+      "explain": "경로는 출처에 포함되지 않으므로 스킴, 호스트, 포트가 같으면 경로가 달라도 같은 출처입니다."
+    },
+    {
+      "type": "ox",
+      "q": "CORS는 서버가 응답 헤더로 특정 출처의 접근을 허용하는 방식이다.",
+      "answer": true,
+      "explain": "CORS는 Access-Control-Allow-Origin 같은 응답 헤더로 허용할 출처를 브라우저에 알립니다."
+    },
+    {
+      "type": "ox",
+      "q": "동일 출처 정책은 웹 서버가 다른 출처에서 온 요청을 받지 않도록 막는 서버 측 규칙이다.",
+      "answer": false,
+      "explain": "동일 출처 정책은 브라우저가 적용하는 규칙이며 서버는 요청을 받을 수 있고 브라우저가 스크립트의 응답 접근을 제한합니다."
+    },
+    {
+      "type": "ox",
+      "q": "다른 출처의 이미지를 img 태그로 페이지에 표시하는 것은 동일 출처 정책이 있어도 가능하다.",
+      "answer": true,
+      "explain": "태그로 삽입하는 이미지는 다른 출처에서도 불러와 표시할 수 있으며 픽셀 데이터를 스크립트로 읽는 것만 제한됩니다."
+    },
+    {
+      "type": "ox",
+      "q": "https://example.com 과 https://www.example.com 은 같은 출처다.",
+      "answer": false,
+      "explain": "두 URL은 호스트가 example.com과 www.example.com으로 달라 서로 다른 출처입니다."
+    },
+    {
+      "type": "ox",
+      "q": "교차 출처 요청이 서버에 도착해 처리되었더라도 브라우저가 스크립트의 응답 읽기를 막을 수 있다.",
+      "answer": true,
+      "explain": "프리플라이트가 없는 단순 요청은 서버까지 전달되지만 허용 헤더가 없으면 브라우저가 응답을 스크립트에 넘기지 않습니다."
+    },
+    {
+      "type": "ox",
+      "q": "CORS 프리플라이트 요청에는 POST 메서드가 쓰인다.",
+      "answer": false,
+      "explain": "프리플라이트 요청에는 OPTIONS 메서드가 쓰입니다."
+    }
+  ]
+}
