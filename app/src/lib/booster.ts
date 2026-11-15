@@ -48,6 +48,9 @@ export function addBoost(now = Date.now()) {
   set(Math.max(until, now) + BOOST_MIN * 60000);
 }
 
+/** 서버의 만료 시각을 적용하며 기기 값을 회원 권한으로 사용하지 않는다. */
+export function applyServerBoost(value:string|null){loaded=true;set(value?Date.parse(value):0,false);}
+
 export function resetBoost() {
   set(0);
 }

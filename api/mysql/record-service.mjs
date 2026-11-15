@@ -1,3 +1,4 @@
+import {boostMultiplier} from './purchase-policy.mjs';
 import {verifyBankItems} from './verify-bank.mjs';
 import { randomUUID } from 'node:crypto';
 import { connect, transaction } from '../server/db.mjs';
@@ -98,6 +99,8 @@ export function createRecordService({auth,connectionFactory=connect,now=()=>new 
       let streak=0;
       if(studyDate){const [days]=await db.execute('SELECT DISTINCT study_date FROM study_records WHERE user_id=? AND study_date<=?',[user.id,studyDate]);const set=new Set(days.map(d=>d.study_date));set.add(studyDate);for(let d=studyDate;set.has(d);d=prev(d))streak++;}
       const xp=calculateXp(topic.difficulty,p.score,Number(prior.n),streak,p.total),seq=await nextSeq(db,user,state);
+      const multiplier=p.items.every(i=>i.question.src!=='offline')&&!future&&studied<=received&&received-studied<=300000?await boostMultiplier(db,user.id,studied):1;
+      if(multiplier===2){xp.parts.push({label:'부스터 2배',value:xp.total});xp.total*=2;}xp.multiplier=multiplier;
       await db.execute("INSERT INTO quiz_attempts(id,user_id,topic_id,status,verification_status,started_at,completed_at) VALUES (?,?,?,'completed',?,?,?)",[p.attemptId,user.id,p.topicId,verification,studied,studied]);
       for(let i=0;i<p.total;i++){
        const item=p.items[i],snapshot={...item.question,topicId:p.topicId,topicKo:topic.name_ko,domain:topic.domain_id,category:topic.category_id,difficulty:topic.difficulty};

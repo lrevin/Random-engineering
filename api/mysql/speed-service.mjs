@@ -1,3 +1,4 @@
+import {boostMultiplier} from './purchase-policy.mjs';
 import {randomUUID,randomInt} from 'node:crypto';
 import {connect,transaction} from '../server/db.mjs';
 import {AuthError} from '../server/auth.mjs';
@@ -21,7 +22,9 @@ export function createSpeedService({auth,connectionFactory=connect,now=()=>new D
   if(run.status==='completed')return {...json(run.result_json),store:await stats(db,id)};
   const before=await stats(db,id);
   const [[used]]=await db.execute("SELECT COALESCE(SUM(awarded_xp),0) AS n FROM speed_runs WHERE user_id=? AND reward_day=? AND status='completed'",[id,run.reward_day]);
-  const xp=Math.max(0,Math.min(run.correct_count*3,150-Number(used.n)));
+  const completed=new Date(Math.min(now().getTime(),instant(run.deadline_at).getTime()));
+  const multiplier=await boostMultiplier(db,id,completed);
+  const xp=Math.max(0,Math.min(run.correct_count*3*multiplier,150-Number(used.n)));
   const result={xp,newBest:run.correct_count>before.best,correct:run.correct_count,total:run.next_position,runId:run.id};
   await db.execute("UPDATE speed_runs SET status='completed',awarded_xp=?,completed_at=?,result_json=? WHERE id=?",[xp,now(),JSON.stringify(result),run.id]);
   return {...result,store:await stats(db,id)};
