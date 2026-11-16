@@ -12,7 +12,30 @@ const REASONS = ['offensive', 'spam', 'other'];
  * 유저 수가 적은 캡스톤 규모라 매 요청 집계로도 충분하고, 중복 유지해야 할 상태가 늘지 않는다.
  * 랭킹 숨기기를 켠 사람은 다른 사람에게 안 보이고(본인은 자기 순위를 봄), 신고가 REPORT_MASK명 이상이면 닉네임을 가린다.
  */
-export function createLeaderboardService({ auth, connectionFactory = connect }) {
+/** 앱(src/lib/rank.ts)과 같은 규칙: 레벨 n→n+1에 50+10(n-1) XP, 최대 100레벨 */
+export function levelOf(totalXp) {
+  let level = 1, floor = 0;
+  while (level < 100 && totalXp >= floor + 50 + 10 * (level - 1)) { floor += 50 + 10 * (level - 1); level++; }
+  return level;
+}
+/** 앱과 같은 분야 랭크 기준: 브론즈 0 · 실버 30 · 골드 100 · 플래티넘 250 · 다이아 500 · 엔지니어 1000점(+서로 다른 주제 30개) */
+export const DOMAIN_TIER_MIN = [0, 30, 100, 250, 500, 1000];
+export function domainTier(points, topics) {
+  let i = 0;
+  while (i + 1 < DOMAIN_TIER_MIN.length && points >= DOMAIN_TIER_MIN[i + 1]) i++;
+  if (i === DOMAIN_TIER_MIN.length - 1 && topics < 30) i--;
+  return i;
+}
+/** 이번 주 월요일 0시(한국 시간)를 DB 시각(UTC) 문자열로 */
+export function weekStartUtc(nowMs) {
+  const kst = new Date(nowMs + 9 * 3600e3);
+  const back = (kst.getUTCDay() + 6) % 7;
+  const start = Date.UTC(kst.getUTCFullYear(), kst.getUTCMonth(), kst.getUTCDate() - back) - 9 * 3600e3;
+  return new Date(start).toISOString().slice(0, 23).replace('T', ' ');
+}
+export const RANKING_KINDS = ['weekly', 'level', 'tier'];
+
+export function createLeaderboardService({ auth, connectionFactory = connect, now = () => Date.now() }) {
   async function withUser(header, action) {
     const claims = await auth.verifyAccess(header);
     const db = await connectionFactory();
@@ -59,6 +82,69 @@ export function createLeaderboardService({ auth, connectionFactory = connect }) 
           }),
           me: mine ? { rank: Number(mine.rnk), xp: Number(mine.xp) } : null,
         };
+      } finally { await db.end(); }
+    },
+    /**
+     * 전체 랭킹 세 가지 (분야 상관없음)
+     * - weekly: 이번 주(월요일 0시, 한국 시간부터) 얻은 XP
+     * - level: 누적 XP → 레벨
+     * - tier: 공부한 분야 중 가장 높은 분야 랭크(같으면 그 분야 점수)
+     * 숨기기 · 신고 가림은 분야별 랭킹과 같음. 점수 0인 사람은 빼고, 같은 점수는 같은 순위(RANK).
+     */
+    async ranking(header, kind, params) {
+      const claims = await auth.verifyAccess(header);
+      if (!RANKING_KINDS.includes(kind)) throw new AuthError('not_found', 404);
+      const limit = Math.min(100, Math.max(1, Number(params.get('limit') ?? 50) || 50));
+      const since = weekStartUtc(now());
+      const db = await connectionFactory();
+      try {
+        const people = `FROM users u
+             LEFT JOIN profiles p ON p.user_id=u.id
+             LEFT JOIN social_members m ON m.user_id=u.id
+             LEFT JOIN (SELECT target_id, COUNT(*) AS n FROM nickname_reports GROUP BY target_id) rc ON rc.target_id=u.id
+             WHERE u.status='active' AND (COALESCE(p.leaderboard_hidden,0)=0 OR u.id=?)`;
+        const name = `CASE WHEN COALESCE(rc.n,0)>=${REPORT_MASK} THEN '학습자' ELSE COALESCE(p.nickname,'학습자') END AS nickname, m.friend_code AS uid`;
+        let scored;
+        if (kind === 'tier') {
+          const [users] = await db.execute(`SELECT u.id AS user_id, ${name} ${people}`, [claims.sub]);
+          const [doms] = await db.execute(
+            `SELECT s.user_id, s.domain,
+               SUM(LEAST(COALESCE(s.rank_score,s.score), IF(s.study_type='battle',5,s.quiz_total))) AS points,
+               COUNT(DISTINCT s.topic_id) AS topics
+             FROM study_records s JOIN quiz_attempts a ON a.id=s.attempt_id
+             WHERE ${rewardSql('rank', 's')}
+             GROUP BY s.user_id, s.domain`, []);
+          const best = new Map();
+          for (const d of doms) {
+            const points = Number(d.points), tier = domainTier(points, Number(d.topics));
+            const b = best.get(d.user_id);
+            if (!b || tier > b.tier || (tier === b.tier && points > b.value)) best.set(d.user_id, { tier, value: points, domain: d.domain });
+          }
+          scored = users.filter((u) => best.has(u.user_id)).map((u) => ({ ...u, ...best.get(u.user_id) }))
+            .sort((a, b) => b.tier - a.tier || b.value - a.value);
+        } else {
+          const w = kind === 'weekly';
+          const [rows] = await db.execute(
+            `SELECT u.id AS user_id, ${name},
+               (SELECT COALESCE(SUM(x.amount),0) FROM xp_ledger x WHERE x.user_id=u.id${w ? ' AND x.created_at>=?' : ''})
+               + (SELECT COALESCE(SUM(r.awarded_xp),0) FROM speed_runs r WHERE r.user_id=u.id AND r.status='completed'${w ? ' AND r.completed_at>=?' : ''}) AS xp
+             ${people}`, w ? [since, since, claims.sub] : [claims.sub]);
+          scored = rows.map((r) => ({ ...r, value: Math.max(0, Number(r.xp)) })).filter((r) => r.value > 0)
+            .sort((a, b) => b.value - a.value);
+        }
+        // 같은 점수(tier는 랭크+점수)면 같은 순위
+        let prev = null, rank = 0;
+        const ranked = scored.map((r, i) => {
+          const key = kind === 'tier' ? `${r.tier}:${r.value}` : String(r.value);
+          if (key !== prev) { rank = i + 1; prev = key; }
+          const me = r.user_id === claims.sub;
+          const e = { rank, nickname: r.nickname, value: r.value, me, uid: me ? null : r.uid ?? null };
+          if (kind === 'level') e.level = levelOf(r.value);
+          if (kind === 'tier') { e.tier = r.tier; e.domain = r.domain; }
+          return e;
+        });
+        const mine = ranked.find((e) => e.me) ?? null;
+        return { kind, since: kind === 'weekly' ? since.replace(' ', 'T') + 'Z' : null, entries: ranked.filter((e) => e.rank <= limit), me: mine };
       } finally { await db.end(); }
     },
     getSettings: (header) => withUser(header, async (db, id) => {
