@@ -36,7 +36,7 @@ test('MySQL profiles and seven-day account deletion',async t=>{
   return {status:r.status,data:r.status===204?null:await r.json()};
  };
  const signup=async name=>{const r=await request('/auth/signup',{method:'POST',body:{email:`${prefix}-${name}@example.com`,password}});assert.equal(r.status,201);return r.data;};
- const profile={nickname:'프로필 검증',interests:['ds'],level:2,studyMinutes:15,reminderEnabled:true,reminderTime:'21:00'};
+ const profile={nickname:'프로필검증',interests:['ds'],level:2,studyMinutes:15,reminderEnabled:true,reminderTime:'21:00'};
  const a=await signup('a'),b=await signup('b');
  await t.test('profile requires auth and missing own profile returns 404',async()=>{
   assert.equal((await request('/me/profile')).status,401);
@@ -48,6 +48,15 @@ test('MySQL profiles and seven-day account deletion',async t=>{
   assert.equal((await request('/me/profile',{token:b.accessToken})).status,404);
   r=await request('/me/profile',{method:'PUT',token:a.accessToken,body:{...profile,nickname:' 수정 이름 ',reminderEnabled:false}});
   assert.equal(r.status,200);assert.equal(r.data.profile.nickname,'수정 이름');assert.equal(r.data.profile.reminderEnabled,false);
+  assert.equal(r.data.nicknameCharged,0,'첫 닉네임 변경은 무료');
+  // 새 닉네임은 2~5자
+  assert.equal((await request('/me/profile',{method:'PUT',token:a.accessToken,body:{...profile,nickname:'가나다라마바'}})).data.error,'nickname_length');
+  // 두 번째 변경부터 톱니바퀴 50개: 시작 톱니바퀴 30개라 부족
+  r=await request('/me/profile',{method:'PUT',token:a.accessToken,body:{...profile,nickname:'두번째'}});
+  assert.equal(r.status,409);assert.equal(r.data.error,'insufficient_balance');
+  // 같은 닉네임으로 다른 설정만 바꾸는 건 무료
+  r=await request('/me/profile',{method:'PUT',token:a.accessToken,body:{...profile,nickname:'수정 이름',reminderEnabled:false,level:3}});
+  assert.equal(r.status,200);assert.equal(r.data.nicknameCharged,0);
  });
  await t.test('invalid profile rejected and existing profile remains unchanged',async()=>{
   for(const change of [{nickname:'  '},{nickname:'가'.repeat(21)},{interests:['ds','ds']},{interests:['missing-category']},{level:4},{level:1.5},{studyMinutes:0},{studyMinutes:121},{reminderEnabled:1},{reminderTime:'25:00'}]){

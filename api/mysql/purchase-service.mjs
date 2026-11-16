@@ -1,5 +1,5 @@
 import {AuthError} from '../server/auth.mjs';
-import {productPrice,extendBoost,kstDay,instant} from './purchase-policy.mjs';
+import {productPrice,extendBoost,kstDay,instant,isProfileLook} from './purchase-policy.mjs';
 export async function assetsState(db,id){
  await db.execute('INSERT IGNORE INTO member_assets(user_id) VALUES (?)',[id]);
  await db.execute("INSERT IGNORE INTO member_cosmetics(user_id,item_type,item_id,is_equipped,acquired_via) VALUES (?,'skin','classic',FALSE,'default')",[id]);
@@ -12,7 +12,7 @@ export async function assetsState(db,id){
  activeSkin:items.find(i=>i.item_type==='skin'&&Number(i.is_equipped))?.item_id??'classic',activeTitle:items.find(i=>i.item_type==='title'&&Number(i.is_equipped))?.item_id??null};
 }
 export async function equip(db,id,type,item){
- if(!['skin','title'].includes(type)||!(typeof item==='string'||(type==='title'&&item===null)))throw new AuthError('invalid_operation',400);
+ if(!['skin','title'].includes(type)||!(typeof item==='string'||(type==='title'&&item===null))||(type==='skin'&&isProfileLook(item)))throw new AuthError('invalid_operation',400);
  if(item!==null){const [[owned]]=await db.execute('SELECT item_id FROM member_cosmetics WHERE user_id=? AND item_type=? AND item_id=?',[id,type,item]);if(!owned)throw new AuthError('not_owned',409);}
  await db.execute('UPDATE member_cosmetics SET is_equipped=FALSE WHERE user_id=? AND item_type=? AND is_equipped=TRUE',[id,type]);
  if(item!==null)await db.execute('UPDATE member_cosmetics SET is_equipped=TRUE WHERE user_id=? AND item_type=? AND item_id=?',[id,type,item]);
@@ -31,7 +31,8 @@ export async function purchase(db,id,product,value,now){
   const [[owned]]=await db.execute('SELECT item_id FROM member_cosmetics WHERE user_id=? AND item_type=? AND item_id=?',[id,type,item]);
   if(owned)throw new AuthError('already_owned',409);
   await db.execute("INSERT INTO member_cosmetics(user_id,item_type,item_id,acquired_via) VALUES (?,?,?,'purchase')",[id,type,item]);
-  await equip(db,id,type,item);
+  // 프로필 그림은 보관만 하고 쓰던 테마는 그대로 둔다
+  if(!isProfileLook(item))await equip(db,id,type,item);
  }
  return -price;
 }
