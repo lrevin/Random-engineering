@@ -25,12 +25,25 @@ const FILES = {
   gear: require("../../assets/sfx/gear.wav"),
   chest: require("../../assets/sfx/chest.wav"),
   levelup: require("../../assets/sfx/levelup.wav"),
+  /** 톱니바퀴 획득: 터져 나올 때 짤랑 · 하나 도착할 때마다 띵(1→8 점점 높아짐) · 다 모이면 반짝 */
+  coin_spill: require("../../assets/sfx/coin_spill.wav"),
+  coin1: require("../../assets/sfx/coin1.wav"),
+  coin2: require("../../assets/sfx/coin2.wav"),
+  coin3: require("../../assets/sfx/coin3.wav"),
+  coin4: require("../../assets/sfx/coin4.wav"),
+  coin5: require("../../assets/sfx/coin5.wav"),
+  coin6: require("../../assets/sfx/coin6.wav"),
+  coin7: require("../../assets/sfx/coin7.wav"),
+  coin8: require("../../assets/sfx/coin8.wav"),
+  coin_done: require("../../assets/sfx/coin_done.wav"),
 } as const;
 export type SfxName = keyof typeof FILES;
 
 const KEY = "pg.sfx";
 /** 짧게 연달아 나는 소리는 여러 개를 돌려 가며 씀 (앞 소리가 안 끊기게) */
-const POOL: Partial<Record<SfxName, number>> = { reel: 3, tick: 2, count: 2 };
+const POOL: Partial<Record<SfxName, number>> = { reel: 3, tick: 2, count: 2, coin8: 2 };
+/** 도착 순서대로 높아지는 동전 소리 */
+export const COIN_STEPS = ["coin1", "coin2", "coin3", "coin4", "coin5", "coin6", "coin7", "coin8"] as const satisfies readonly SfxName[];
 
 let enabled = true;
 let ready = false;
@@ -54,7 +67,7 @@ export async function initSfx() {
   ready = true;
   try { enabled = (await AsyncStorage.getItem(KEY)) !== "off"; } catch { /* 기본 켬 */ }
   try { await setAudioModeAsync({ playsInSilentMode: false, interruptionMode: "mixWithOthers" }); } catch { /* 기본 모드 */ }
-  for (const n of ["lever", "slot_spin", "slot_win", "correct", "wrong"] as SfxName[]) { try { player(n); } catch { /* 나중에 */ } }
+  for (const n of ["lever", "slot_spin", "slot_win", "correct", "wrong", "coin_spill", ...COIN_STEPS, "coin_done"] as SfxName[]) { try { player(n); } catch { /* 나중에 */ } }
 }
 
 export function sfx(name: SfxName, volume = 1) {
