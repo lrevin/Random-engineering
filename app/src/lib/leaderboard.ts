@@ -36,6 +36,29 @@ async function call<T>(path: string, body?: unknown, method: "GET" | "POST" | "P
   }
 }
 
+/** 전체 랭킹 (분야 상관없음): 주간 XP · 레벨 · 분야 랭크 */
+export type RankingKind = "weekly" | "level" | "tier";
+export interface RankingEntry {
+  rank: number;
+  nickname: string;
+  /** weekly · level: XP, tier: 대표 분야 점수 */
+  value: number;
+  me: boolean;
+  uid: string | null;
+  level?: number;
+  /** 0 브론즈 ~ 5 엔지니어 */
+  tier?: number;
+  domain?: string;
+}
+export interface Ranking {
+  kind: RankingKind;
+  /** weekly일 때 이번 주 시작 시각 */
+  since: string | null;
+  entries: RankingEntry[];
+  me: RankingEntry | null;
+}
+export const getRanking = (kind: RankingKind, limit = 50) => call<Ranking>(`/rankings/${kind}?limit=${limit}`);
+
 export const getLeaderboard = (domain: string, limit = 50) => call<Leaderboard>(`/leaderboard/${domain}?limit=${limit}`);
 /** 내 닉네임을 다른 사람의 랭킹에서 숨겼는지 */
 export const getLeaderboardHidden = () => call<{ hidden: boolean }>("/leaderboard-settings").then((r) => r.hidden);

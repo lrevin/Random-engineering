@@ -37,7 +37,7 @@ export function BattleWatcher() {
           const opp = current.from.uid === uid ? current.to : current.from;
           notifyNow("배틀 상대를 찾았어요", `${opp.nickname}님과 배틀이 곧 시작돼요.`).catch(() => {});
         }
-        if (!pathRef.current.startsWith("/battle") && pathRef.current !== "/arena") router.push({ pathname: "/battle", params: { id: current.id } });
+        if (!pathRef.current.startsWith("/battle") && pathRef.current !== "/match") router.push({ pathname: "/battle", params: { id: current.id } });
       } catch {
         // 서버에 못 닿으면 다음에 다시
       }
