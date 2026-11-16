@@ -3,10 +3,15 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { Animated, Easing, StyleSheet, View } from "react-native";
 import { useApp } from "@/lib/app-state";
 import { addPending, pickGearTarget, registerGearTarget, takeGearSource, type Pt } from "@/lib/gear-fly";
-import { sfx } from "@/lib/sfx";
+import { COIN_STEPS, sfx } from "@/lib/sfx";
 import { Icon } from "./Icon";
 
 const SIZE = 26;
+/** 터져 나오는 시간 · 날아가는 시간 (도착 시각 = BURST + delay + FLY) */
+const BURST = 300;
+const FLY = 540;
+/** 소리는 화면보다 늦게 들리므로(안드로이드 출력 지연) 이만큼 먼저 틀어 도착하는 순간에 맞춤 */
+const AUDIO_LEAD = 40;
 
 /** 톱니바퀴 개수 칸을 감싸면 날아온 톱니바퀴의 도착점이 되고, 하나 도착할 때마다 통 튐 */
 export function GearTarget({ children }: { children: ReactNode }) {
@@ -41,7 +46,7 @@ export function GearTarget({ children }: { children: ReactNode }) {
   );
 }
 
-interface Particle { id: number; from: Pt; burst: Pt; to: Pt; delay: number; spin: number; land: () => void }
+interface Particle { id: number; from: Pt; burst: Pt; to: Pt; delay: number; spin: number; done: () => void }
 
 /** 톱니바퀴 한 개: 터져 나왔다가 곡선을 그리며 개수 칸으로 빨려 들어감 */
 function GearParticle({ p }: { p: Particle }) {
@@ -51,15 +56,15 @@ function GearParticle({ p }: { p: Particle }) {
   }));
   useEffect(() => {
     const out = Easing.out(Easing.cubic);
-    const fly = 540;
+    const fly = FLY;
     Animated.parallel([
-      Animated.timing(v.rot, { toValue: 1, duration: 300 + p.delay + fly, easing: Easing.linear, useNativeDriver: true }),
+      Animated.timing(v.rot, { toValue: 1, duration: BURST + p.delay + fly, easing: Easing.linear, useNativeDriver: true }),
       Animated.sequence([
         // 1) 받은 곳에서 사방으로 톡 터짐
         Animated.parallel([
-          Animated.timing(v.x, { toValue: p.burst.x, duration: 300, easing: out, useNativeDriver: true }),
-          Animated.timing(v.y, { toValue: p.burst.y, duration: 300, easing: out, useNativeDriver: true }),
-          Animated.timing(v.scale, { toValue: 1.15, duration: 300, easing: Easing.out(Easing.back(2)), useNativeDriver: true }),
+          Animated.timing(v.x, { toValue: p.burst.x, duration: BURST, easing: out, useNativeDriver: true }),
+          Animated.timing(v.y, { toValue: p.burst.y, duration: BURST, easing: out, useNativeDriver: true }),
+          Animated.timing(v.scale, { toValue: 1.15, duration: BURST, easing: Easing.out(Easing.back(2)), useNativeDriver: true }),
           Animated.timing(v.opacity, { toValue: 1, duration: 120, useNativeDriver: true }),
         ]),
         Animated.delay(p.delay),
@@ -70,7 +75,7 @@ function GearParticle({ p }: { p: Particle }) {
           Animated.timing(v.scale, { toValue: 0.6, duration: fly, easing: Easing.in(Easing.quad), useNativeDriver: true }),
         ]),
       ]),
-    ]).start(() => p.land());
+    ]).start(() => p.done());
   }, [p, v]);
   const rotate = v.rot.interpolate({ inputRange: [0, 1], outputRange: ["0deg", `${p.spin}deg`] });
   return (
@@ -105,7 +110,6 @@ export function GearFlyLayer() {
     void pickGearTarget().then(({ p: to, pulse }) => {
       const n = Math.max(3, Math.min(12, Math.round(delta / 3)));
       const share = (i: number) => Math.floor(delta / n) + (i < delta % n ? 1 : 0);
-      let landed = 0;
       const made: Particle[] = Array.from({ length: n }, (_, i) => {
         const a = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 1.5; // 위쪽 위주로 퍼짐
         const r = 45 + Math.random() * 55;
@@ -115,17 +119,24 @@ export function GearFlyLayer() {
           burst: { x: from.x + Math.cos(a) * r, y: from.y + Math.sin(a) * r },
           delay: i * 45 + Math.random() * 60,
           spin: (Math.random() < 0.5 ? -1 : 1) * (240 + Math.random() * 300),
-          land: () => {
-            settle(share(i));
-            pulse();
-            landed++;
-            sfx(landed === n ? "gear" : "tick", landed === n ? 1 : 0.45);
-            if (landed === n) clearTimeout(guard);
-            setParts((ps) => ps.filter((x) => x.id !== id));
-          },
+          done: () => setParts((ps) => ps.filter((x) => x.id !== id)),
         };
       });
       setParts((ps) => [...ps, ...made]);
+      sfx("coin_spill", 0.7); // 받은 곳에서 터져 나오는 순간 짤랑
+
+      // 도착하는 순서대로: 숫자 +, 개수 칸 통, 띵(점점 높아짐). 시각을 미리 계산해 애니메이션과 맞춤
+      const order = made.map((m, i) => ({ i, at: BURST + m.delay + FLY })).sort((x, y) => x.at - y.at);
+      order.forEach(({ i, at }, k) => {
+        const step = COIN_STEPS[Math.min(COIN_STEPS.length - 1, Math.floor((k * COIN_STEPS.length) / n))];
+        const last = k === n - 1;
+        setTimeout(() => sfx(step, last ? 1 : 0.75), Math.max(0, at - AUDIO_LEAD));
+        setTimeout(() => {
+          settle(share(i));
+          pulse();
+          if (last) { clearTimeout(guard); sfx("coin_done", 0.8); }
+        }, at);
+      });
     });
   }, [gears]);
 
