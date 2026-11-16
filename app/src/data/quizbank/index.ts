@@ -21,6 +21,7 @@ import b_arch_2 from "./arch-2.json";
 import b_arch_3 from "./arch-3.json";
 import b_bm_biomed_1 from "./bm-biomed-1.json";
 import b_bm_biotech_1 from "./bm-biotech-1.json";
+import b_bm_genetic_1 from "./bm-genetic-1.json";
 import b_db_1 from "./db-1.json";
 import b_db_2 from "./db-2.json";
 import b_db_3 from "./db-3.json";
@@ -72,6 +73,7 @@ const FILES = [
   b_arch_3,
   b_bm_biomed_1,
   b_bm_biotech_1,
+  b_bm_genetic_1,
   b_db_1,
   b_db_2,
   b_db_3,
