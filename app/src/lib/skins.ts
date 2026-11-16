@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LOCAL_KEYS } from "./local-data";
 import { useSyncExternalStore } from "react";
+import { applyServerLooks, resetProfileLook } from "./profile-look";
 
 /**
  * 꾸미기: 앱 전체 색 테마 + 칭호. 산 것과 고른 것은 이 휴대폰에 저장합니다 (회원은 서버 응답을 그대로 씀).
@@ -145,6 +146,7 @@ export function applyTitle(id: string | null) {
 export function applyServerCosmetics(a: { ownedSkins: string[]; ownedTitles: string[]; activeSkin: string; activeTitle: string | null }) {
   loaded = true;
   const owned = ["classic", ...a.ownedSkins].filter((id, i, xs) => isTheme(id) && xs.indexOf(id) === i);
+  applyServerLooks(a.ownedSkins); // 같은 칸에 들어 있는 유료 프로필 그림
   set({ owned, active: owned.includes(a.activeSkin) ? a.activeSkin : "classic", titles: a.ownedTitles, title: a.activeTitle, milestones: [] }, false);
 }
 
@@ -163,4 +165,5 @@ export function markMilestone(days: number) {
 /** 둘러보기 데이터 지우기 등: 처음 상태로 */
 export function resetSkins() {
   set(INITIAL);
+  resetProfileLook();
 }

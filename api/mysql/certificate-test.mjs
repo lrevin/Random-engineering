@@ -55,7 +55,7 @@ test('certificate catalog and mixed profile interests on real MySQL',async t=>{
   const client=exports.createAuthClient('http://127.0.0.1:'+server.address().port,{read:async()=>null,write:async()=>{},remove:async()=>{}});let user;
   try{
    user=(await client.signUp('cert-'+randomUUID()+'@example.com','Cert-Test-42!')).user;
-   const profile={nickname:'자격증 검증',interests:['ds',seed[0].id],level:1,studyMinutes:15,reminderEnabled:false,reminderTime:'21:00'};
+   const profile={nickname:'자격증검증',interests:['ds',seed[0].id],level:1,studyMinutes:15,reminderEnabled:false,reminderTime:'21:00'};
    assert.deepEqual(await client.saveProfile(profile),profile);assert.deepEqual(await client.getProfile(),profile);
    // Onboarding may select certificates alone or every category plus every certificate.
    const certOnly={...profile,interests:seed.map(c=>c.id)};
