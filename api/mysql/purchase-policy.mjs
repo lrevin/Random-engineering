@@ -1,11 +1,10 @@
 import {AuthError} from '../server/auth.mjs';
 export const kstDay=d=>new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(d);
 export const instant=v=>v instanceof Date?v:new Date(v.includes('T')?v:v.replace(' ','T')+'Z');
-// 화면과 동일한 상품 ID·가격. 보상 상품은 구매 목록에 넣지 않는다.
+// 화면(app/src/lib/skins.ts THEMES)과 동일한 상품 ID·가격. 앱 전체 색 테마를 예전 '스킨' 칸(item_type='skin')에 저장한다.
+// 칭호는 연속 기록·업적 보상으로만 주고 팔지 않는다.
 export const COSMETICS={
- 'skin:cherry':{price:150},'skin:mint':{price:150},'skin:galaxy':{price:250},'skin:gold':{price:400},
- 'skin:maple':{price:300,months:[9,10,11]},'skin:snow':{price:300,months:[12,1,2]},'skin:owl':{price:300,months:[4,6,10,12]},
- 'title:t-autumn':{price:120,months:[9,10,11]},'title:t-winter':{price:120,months:[12,1,2]},'title:t-exam':{price:120,months:[4,6,10,12]}
+ 'skin:sunset':{price:900},'skin:aurora':{price:900},'skin:lavender':{price:1200},'skin:midnight':{price:1800}
 };
 export function productPrice(product,now){
  if(product==='exam_ticket'||product==='xp_boost')return 40;

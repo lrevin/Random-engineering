@@ -225,7 +225,8 @@ adb reverse tcp:8788 tcp:8788                    # 안드로이드 에뮬레이�
 | /me/wallet | GET | 기존 지갑 응답에 assets 추가. 모의고사권·한국 날짜 무료 사용·부스터 만료·소유/장착 목록 |
 | /me/wallet/operations | POST | 기존 requestId/action/payload 구조로 구매·장착·시험 시작. 같은 UUID·같은 내용은 재실행 없이 최신 지갑 반환 |
 
-- `action: spend`, `payload: {product}`: `exam_ticket`, `xp_boost`, `skin:<id>`, `title:<id>`. 기존 `study_extend`도 유지.
+- `action: spend`, `payload: {product}`: `exam_ticket`, `xp_boost`, `skin:<테마 id>`(sunset · aurora · lavender · midnight). 칭호는 팔지 않음(보상 전용). 기존 `study_extend`도 유지.
+- 테마는 예전 슬롯머신 스킨 칸(`member_cosmetics.item_type='skin'`)에 저장한다. 기본 테마는 `classic`.
 - `action: equip_cosmetic`, `payload: {type: skin 또는 title, itemId}`. title의 itemId만 NULL 허용.
 - `action: exam_start`, `payload: {startId, certId}`. 앱은 startId를 requestId로 재사용. 서버가 무료 횟수·프리미엄·구매권을 판정한다.
 - 추가 오류: inventory_full / already_owned / not_owned / not_in_season / premium_unlimited / exam_ticket_required / exam_already_started / unknown_certificate. 인증·잔액·요청 충돌은 기존 오류 유지.

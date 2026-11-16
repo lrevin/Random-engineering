@@ -1,7 +1,7 @@
 import { ActivityIndicator, Modal, Pressable, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { WebView } from "react-native-webview";
-import { radius, useColors } from "@/theme";
+import { radius, screenBg, useColors } from "@/theme";
 import { Row, T, tap } from "./ui";
 import { Icon } from "./Icon";
 
@@ -24,7 +24,7 @@ export function StudyReader({ page, left, total, running, onClose }: {
   const urgent = left <= 60;
   return (
     <Modal visible={!!page} animationType="slide" onRequestClose={onClose} presentationStyle="fullScreen">
-      <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: c.bg }}>
+      <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, ...screenBg(c) }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 14, paddingVertical: 8 }}>
           <Pressable onPress={() => { tap(); onClose(); }} hitSlop={10} accessibilityRole="button" accessibilityLabel="문서 닫기">
             <Row gap={4} style={{ flexWrap: "nowrap" }}><Icon name="close" size={14} color={c.accent} /><T size={15} weight="semibold" color="accent">닫기</T></Row>

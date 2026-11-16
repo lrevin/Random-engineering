@@ -65,3 +65,20 @@ save("levelup", mix((0, tone(np.linspace(note(60), note(84), int(SR * .35)), .35
                     *[(0.3 + i * 0.09, tone(note(n), 0.4, "tri", r=.15)) for i, n in enumerate([72, 76, 79])],
                     (0.57, tone(note(84), 0.7, "bell", r=.3) * 0.7), (0.57, tone(note(76), 0.7, "sine", r=.3) * 0.4)), 0.7)
 print(sorted(os.listdir(OUT)))
+
+# 톱니바퀴(코인) 획득: 터져 나올 때 짤랑 → 하나 도착할 때마다 띵(점점 높아짐) → 다 모이면 반짝
+def metal(f, d, r=0.09):
+    """금속 동전 울림: 기음 + 어긋난 배음(빨리 사라짐) + 맨 앞 딸깍"""
+    tt = t(d); y = np.zeros_like(tt)
+    for k, amp, dec in [(1, 1.0, 1.0), (2.0, 0.35, 1.8), (2.76, 0.3, 3.0), (5.4, 0.12, 5.0)]:
+        if f * k < SR * 0.45: y += amp * np.sin(2 * np.pi * f * k * tt) * np.exp(-tt / (r / dec))
+    y[:int(SR * 0.004)] *= np.linspace(0, 1, int(SR * 0.004))
+    return mix((0, y), (0, noise(0.006, lp=1) * 0.25))
+COIN = [79, 81, 83, 86, 88, 91, 93, 95]  # 펜타토닉으로 한 칸씩 올라감
+for i, n in enumerate(COIN):
+    save(f"coin{i + 1}", mix((0, metal(note(n), 0.06, r=.03) * 0.7), (0.045, metal(note(n + 5), 0.3, r=.11))), 0.55)
+save("coin_spill", mix((0, noise(0.22, a=0.02, curve=2.5, lp=6) * 0.18),
+                       *[(s, metal(note(int(n)), 0.12, r=.035) * g) for s, n, g in
+                         zip(rng.uniform(0, 0.2, 7), rng.choice([84, 86, 88, 91, 93], 7), rng.uniform(0.35, 0.7, 7))]), 0.5)
+save("coin_done", mix(*[(i * 0.05, tone(note(n), 0.5, "bell", r=.16) * (0.9 - i * 0.12)) for i, n in enumerate([91, 95, 98, 103])],
+                      (0, noise(0.35, a=0.03, curve=2, lp=0) * 0.04)), 0.55)

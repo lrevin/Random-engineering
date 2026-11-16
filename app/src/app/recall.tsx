@@ -12,7 +12,7 @@ import type { ExamItem } from "@/lib/quiz";
 import {
   buildRecall, dueTopics, markRecalled, readRecallLog, RECALL_DAYS, RECALL_PER_TOPIC, RECALL_TOPICS, todayKey, type RecallLog,
 } from "@/lib/recall";
-import { useColors } from "@/theme";
+import { screenBg, useColors } from "@/theme";
 import { answerText, isCorrect, QuestionView } from "./quiz";
 
 /** 하루에 한 번 복습을 끝내면 받는 톱니바퀴 */
@@ -52,7 +52,7 @@ function GuestRecall() {
 
   if (loading) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: c.bg, alignItems: "center", justifyContent: "center", gap: 14 }}>
+      <SafeAreaView style={{ flex: 1, ...screenBg(c), alignItems: "center", justifyContent: "center", gap: 14 }}>
         <ActivityIndicator size="large" color={c.accent} />
         <T size={17} weight="semibold">복습 문제를 고르고 있어요</T>
       </SafeAreaView>

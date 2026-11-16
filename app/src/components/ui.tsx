@@ -5,7 +5,7 @@ import {
   type StyleProp, type TextInputProps, type TextProps, type TextStyle, type ViewStyle,
 } from "react-native";
 import { SafeAreaView, type Edge } from "react-native-safe-area-context";
-import { inset, radius, raised, shadow, useColors } from "@/theme";
+import { inset, radius, raised, screenBg, shadow, useColors } from "@/theme";
 import { Icon } from "./Icon";
 
 export const FONT = {
@@ -71,6 +71,8 @@ export function Btn({ title, onPress, variant = "outline", size = "md", disabled
       style={({ pressed }) => [
         {
           backgroundColor: bg, borderColor: border, borderWidth: variant === "outline" ? 1.5 : 1, borderRadius: size === "lg" ? radius.lg : radius.md,
+          // 테마에 그라데이션이 있으면 강조 버튼만 그라데이션 (테두리는 안 보이게)
+          ...(variant === "accent" && c.grad.accent ? { experimental_backgroundImage: c.grad.accent, borderColor: "transparent" } : null),
           ...(depth ? raised(under, pressed && !disabled, depth) : null),
           ...(depth && !pressed && !disabled ? shadow(c, 1) : null),
           paddingVertical: pad[0], paddingHorizontal: pad[1], flexDirection: "row", alignItems: "center",
@@ -220,7 +222,7 @@ export function Screen({ children, scroll, edges = ["top", "bottom"], contentSty
   const c = useColors();
   const inner = [{ paddingHorizontal: 20, paddingVertical: 16, gap: 16, maxWidth: 640, width: "100%" as const, alignSelf: "center" as const }, contentStyle];
   return (
-    <SafeAreaView edges={edges} style={{ flex: 1, backgroundColor: c.bg }}>
+    <SafeAreaView edges={edges} style={{ flex: 1, ...screenBg(c) }}>
       {scroll ? (
         <ScrollView contentContainerStyle={inner} keyboardShouldPersistTaps="handled">{children}</ScrollView>
       ) : (

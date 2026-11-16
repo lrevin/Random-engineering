@@ -3,10 +3,11 @@ import {questDateKey} from './policy/quest-time.mjs';
 
 // 서버가 발급·보존한 문항에만 적용한다. 기기가 제출한 정답은 사용하지 않는다.
 export const SPECIAL_RULE_VERSION='special-v1';
+// 앱 app/src/lib/milestones.ts와 같아야 함. 보상 스킨은 테마로 바뀌면서 없어지고 톱니바퀴 + 칭호만 준다.
 export const MILESTONES=[
- {days:7,gears:30,skin:'sprout',title:'t-streak7'},
- {days:30,gears:100,skin:'blaze',title:'t-streak30'},
- {days:100,gears:300,skin:'diamond',title:'t-streak100'},
+ {days:7,gears:30,title:'t-streak7'},
+ {days:30,gears:100,title:'t-streak30'},
+ {days:100,gears:300,title:'t-streak100'},
 ];
 const invalid=()=>{throw new AuthError('invalid_answers',400);};
 export function gradeIssued(items,answers){

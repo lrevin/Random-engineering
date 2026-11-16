@@ -16,7 +16,7 @@ import {
   readExamStore, saveExamResult, subjectFailed, type ActiveExam, type ExamPaper, type ExamResult,
 } from "@/lib/exam";
 import { dateKey, fmtDate } from "@/lib/stats";
-import { radius, shadow, useColors } from "@/theme";
+import { radius, screenBg, shadow, useColors } from "@/theme";
 import { answerText, isCorrect, QuestionView } from "./quiz";
 
 type Store = Awaited<ReturnType<typeof readExamStore>>;
@@ -108,7 +108,7 @@ export default function Exam() {
   // ───────── 준비 중 ─────────
   if (loading) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: c.bg, alignItems: "center", justifyContent: "center", gap: 14, padding: 24 }}>
+      <SafeAreaView style={{ flex: 1, ...screenBg(c), alignItems: "center", justifyContent: "center", gap: 14, padding: 24 }}>
         <ActivityIndicator size="large" color={c.accent} />
         <T size={17} weight="semibold" center>{loading} 모의고사를 준비하고 있어요</T>
         <T size={14} color="muted" center>과목마다 {EXAM_PER_SUBJECT}문제씩 골고루 뽑고 있어요.</T>

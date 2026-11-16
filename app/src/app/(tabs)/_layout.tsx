@@ -2,7 +2,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { Tabs } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FONT } from "@/components/ui";
-import { useColors } from "@/theme";
+import { screenBg, useColors } from "@/theme";
 
 export default function TabLayout() {
   const c = useColors();
@@ -16,7 +16,7 @@ export default function TabLayout() {
         tabBarInactiveTintColor: c.muted,
         tabBarStyle: { backgroundColor: c.paper, borderTopWidth: 0, elevation: 0, height: 64 + bottomPadding, paddingTop: 6, paddingBottom: bottomPadding },
         tabBarLabelStyle: { fontFamily: FONT.medium, fontSize: 12, lineHeight: 20, includeFontPadding: false },
-        sceneStyle: { backgroundColor: c.bg },
+        sceneStyle: { ...screenBg(c) },
       }}
     >
       <Tabs.Screen name="home" options={{ title: "공부", tabBarIcon: ({ color, size }) => <Ionicons name="dice-outline" color={color} size={size} /> }} />

@@ -135,7 +135,7 @@ test('특수 보상·출제 증거·학습 단계·숨김 실제 MySQL 통합',a
   const broken=createMemberService({auth,now,connectionFactory:async()=>{const c=await connect(),execute=c.execute.bind(c);c.execute=async(sql,args)=>{if(sql.startsWith('INSERT INTO wallet_operations'))throw new Error('injected');return execute(sql,args);};return c;}});
   await assert.rejects(broken.operate(h,{requestId:randomUUID(),action:'quest',payload:{key}}),/injected/);
   let after=await members.wallet(h);assert.equal(after.balance,before.balance);assert(!after.assets.ownedSkins.includes('sprout'));
-  const request=randomUUID();await op(key,request);await op(key,request);after=await members.wallet(h);assert.equal(after.balance,before.balance+30);assert(after.assets.ownedSkins.includes('sprout'));assert(after.assets.ownedTitles.includes('t-streak7'));assert.equal(after.assets.activeSkin,before.assets.activeSkin);assert.equal(after.assets.activeTitle,before.assets.activeTitle);
+  const request=randomUUID();await op(key,request);await op(key,request);after=await members.wallet(h);assert.equal(after.balance,before.balance+30);assert(!after.assets.ownedSkins.includes('sprout'));assert(after.assets.ownedTitles.includes('t-streak7'));assert.equal(after.assets.activeSkin,before.assets.activeSkin);assert.equal(after.assets.activeTitle,before.assets.activeTitle);
   await assert.rejects(op(key),{code:'already_claimed'});
  });
 

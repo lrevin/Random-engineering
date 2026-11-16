@@ -18,11 +18,14 @@ import { domainMastery, MAX_LEVEL, maxRpFor, TIERS, topicMastery, userLevel } fr
 import { calcStreak } from "@/lib/stats";
 import { radius, shadow, useColors } from "@/theme";
 import { DomainIcon, Icon, TierIcon } from "@/components/Icon";
+import { GearTarget } from "@/components/GearFly";
+import { useShownGears } from "@/lib/gear-fly";
 
 type LevelFilter = "0" | "1" | "2" | "3"; // 0 = 전체
 
 export default function Home() {
   const { mode, catalogVersion, prefs, records, active, setActive, gears, updatePrefs, xp, keptDays, freezes, premium, uid } = useApp();
+  const shownGears = useShownGears(gears);
   const lv = userLevel(xp);
   // 처음 설정을 마치고 홈에 처음 오면 사용법 안내
   const [introFirst, doneIntro] = useHomeIntroFirstTime();
@@ -146,10 +149,12 @@ export default function Home() {
           <T size={11} color="muted" style={{ height: BOTTOM_H, lineHeight: BOTTOM_H }}>연속 일수{freezes > 0 ? " · 보호권" : ""}</T>
         </HeaderTile>
         <HeaderTile onPress={() => router.push("/shop")} label="톱니바퀴 상점">
-          <View style={{ height: TOP_H, flexDirection: "row", alignItems: "center", gap: 4 }}>
-            <Icon name="gear" size={22} />
-            <T size={18} weight="bold">{gears.toLocaleString()}</T>
-          </View>
+          <GearTarget>
+            <View style={{ height: TOP_H, flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <Icon name="gear" size={22} />
+              <T size={18} weight="bold">{shownGears.toLocaleString()}</T>
+            </View>
+          </GearTarget>
           <T size={11} color="muted" style={{ height: BOTTOM_H, lineHeight: BOTTOM_H }}>톱니바퀴 ›</T>
         </HeaderTile>
       </Row>

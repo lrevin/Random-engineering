@@ -14,11 +14,11 @@ import { useApp } from "@/lib/app-state";
 import { readExamStore } from "@/lib/exam";
 import { readDone } from "@/lib/review";
 import { titleById, useCosmetics } from "@/lib/skins";
-import { TitleBadge } from "./skins";
+import { TitleBadge } from "@/components/TitleBadge";
 import { domainRanks, userLevel } from "@/lib/rank";
 import { getFriends, socialEnabled } from "@/lib/social";
 import { calcStreak, isBattleRecord, isRecognizedStudy } from "@/lib/stats";
-import { radius, raised, shadow, useColors } from "@/theme";
+import { radius, raised, screenBg, shadow, useColors } from "@/theme";
 
 /** 슬롯 릴 무늬 (프로필 위 남색 배경) */
 function ReelPattern() {
@@ -78,7 +78,7 @@ export default function Profile() {
   };
 
   return (
-    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: c.bg }}>
+    <SafeAreaView edges={["top"]} style={{ flex: 1, ...screenBg(c) }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
         {/* 위: 남색 배경 + 큰 프로필 그림 */}
         <View style={{ height: 210, backgroundColor: "#1d2742", overflow: "hidden" }}>
@@ -105,7 +105,7 @@ export default function Profile() {
           {/* 이름 · UID */}
           <View style={{ alignItems: "center", gap: 6, marginTop: 10 }}>
             <T size={26} weight="bold">{name}</T>
-            {activeTitle && <TitleBadge t={activeTitle} />}
+            {activeTitle && <TitleBadge t={activeTitle} size={16} />}
             <T size={14} color="muted">
               @{uid || "--------"}{stats.since ? ` · ${stats.since.getFullYear()}년 ${stats.since.getMonth() + 1}월부터 공부 중` : ""}
             </T>
