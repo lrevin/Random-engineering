@@ -30,6 +30,7 @@ import b_ch_general_1 from "./ch-general-1.json";
 import b_ch_organic_1 from "./ch-organic-1.json";
 import b_ch_physical_1 from "./ch-physical-1.json";
 import b_che_process_1 from "./che-process-1.json";
+import b_che_reaction_1 from "./che-reaction-1.json";
 import b_db_1 from "./db-1.json";
 import b_db_2 from "./db-2.json";
 import b_db_3 from "./db-3.json";
@@ -90,6 +91,7 @@ const FILES = [
   b_ch_organic_1,
   b_ch_physical_1,
   b_che_process_1,
+  b_che_reaction_1,
   b_db_1,
   b_db_2,
   b_db_3,
