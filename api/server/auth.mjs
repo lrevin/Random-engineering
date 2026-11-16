@@ -4,6 +4,12 @@ import { SignJWT, jwtVerify } from 'jose';
 import { connect, transaction } from './db.mjs';
 
 const ISSUER = 'ppobgong-api', AUDIENCE = 'ppobgong-app';
+/** 운영자 도구 전용: 회원 한 명의 짧은 로그인 토큰 (EC2의 JWT_SECRET 필요, 앱·API로는 노출되지 않음) */
+export async function adminAccessToken(user, secret = process.env.JWT_SECRET, seconds = 120) {
+  if (typeof secret !== 'string' || Buffer.byteLength(secret) < 32) throw new Error('JWT_SECRET must contain at least 32 bytes');
+  return new SignJWT({av:user.auth_version}).setProtectedHeader({alg:'HS256',typ:'JWT'}).setSubject(user.id)
+    .setIssuer(ISSUER).setAudience(AUDIENCE).setIssuedAt().setExpirationTime(`${seconds}s`).sign(new TextEncoder().encode(secret));
+}
 export const tokenHash = token => createHash('sha256').update(token).digest();
 export class AuthError extends Error {
   constructor(code, status=400) { super(code); this.code=code; this.status=status; }
