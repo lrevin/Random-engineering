@@ -16,12 +16,13 @@ export interface ThemeDef {
   price: number;
 }
 
+// 가격: 꾸준한 사용자가 주 400개 안팎(광고 포함)을 버니 2~5주 모아서 사는 목표 아이템. 서버 purchase-policy.mjs와 같아야 함
 export const THEMES: ThemeDef[] = [
   { id: "classic", name: "클래식", desc: "뽑공 로고의 크림 · 남색 · 빨강. 휴대폰 다크 모드를 따라가요", price: 0 },
-  { id: "sunset", name: "노을 피치", desc: "해 질 녘 복숭아빛이 연보라로 번지는 따뜻한 테마", price: 250 },
-  { id: "aurora", name: "오로라 민트", desc: "민트에서 하늘빛으로, 맑고 시원한 아침 같은 테마", price: 250 },
-  { id: "lavender", name: "라벤더 드림", desc: "연보라와 벚꽃 분홍이 섞인 몽글몽글한 파스텔 테마", price: 300 },
-  { id: "midnight", name: "미드나잇 네온", desc: "깊은 밤하늘에 하늘빛 · 보랏빛 네온이 흐르는 어두운 테마", price: 400 },
+  { id: "sunset", name: "노을 피치", desc: "해 질 녘 복숭아빛이 연보라로 번지는 따뜻한 테마", price: 900 },
+  { id: "aurora", name: "오로라 민트", desc: "민트에서 하늘빛으로, 맑고 시원한 아침 같은 테마", price: 900 },
+  { id: "lavender", name: "라벤더 드림", desc: "연보라와 벚꽃 분홍이 섞인 몽글몽글한 파스텔 테마", price: 1200 },
+  { id: "midnight", name: "미드나잇 네온", desc: "깊은 밤하늘에 하늘빛 · 보랏빛 네온이 흐르는 어두운 테마", price: 1800 },
 ];
 
 export const themeById = (id: string) => THEMES.find((t) => t.id === id) ?? THEMES[0];

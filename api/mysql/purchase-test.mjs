@@ -42,8 +42,8 @@ test('회원 구매·사용과 보상은 실제 MySQL 트랜잭션으로 처리'
   const results=await Promise.allSettled(Array.from({length:6},()=>op('spend',{product:'exam_ticket'})));assert.equal(results.filter(x=>x.status==='fulfilled').length,4);assert.equal((await wallet()).assets.examTickets,5);
  });
  await t.test('구매·장착·중복 소유·다른 계정 권한',async()=>{
-  const before=(await wallet()).balance;const w=await op('spend',{product:'skin:sunset'});assert.equal(w.balance,before-250);assert.equal(w.assets.activeSkin,'sunset');assert(w.assets.ownedSkins.includes('sunset'));
-  await assert.rejects(op('spend',{product:'skin:sunset'}),{code:'already_owned'});assert.equal((await wallet()).balance,before-250);
+  const before=(await wallet()).balance;const w=await op('spend',{product:'skin:sunset'});assert.equal(w.balance,before-900);assert.equal(w.assets.activeSkin,'sunset');assert(w.assets.ownedSkins.includes('sunset'));
+  await assert.rejects(op('spend',{product:'skin:sunset'}),{code:'already_owned'});assert.equal((await wallet()).balance,before-900);
   await assert.rejects(op('equip_cosmetic',{type:'skin',itemId:'sunset'},randomUUID(),hb),{code:'not_owned'});
   await op('equip_cosmetic',{type:'skin',itemId:'classic'});assert.equal((await wallet()).assets.activeSkin,'classic');
   await assert.rejects(op('spend',{product:'skin:sprout'}),{code:'product_not_available'});
@@ -87,10 +87,10 @@ test('회원 구매·사용과 보상은 실제 MySQL 트랜잭션으로 처리'
   try{
    const id=randomUUID(),before=(await wallet()).balance;
    const result=await Promise.all([op('spend',{product:'skin:lavender'},id),op('spend',{product:'skin:lavender'},id)]);
-   assert(result.every(x=>x.assets.ownedSkins.includes('lavender')));assert.equal((await wallet()).balance,before-300);
+   assert(result.every(x=>x.assets.ownedSkins.includes('lavender')));assert.equal((await wallet()).balance,before-1200);
    await Promise.all(Array.from({length:12},()=>wallet()));
    await assert.rejects(op('spend',{product:'skin:lavender'}),{code:'already_owned'});
-   assert.equal((await wallet()).balance,before-300);
+   assert.equal((await wallet()).balance,before-1200);
   }finally{await closeSharedPool();}
  });
 

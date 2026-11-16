@@ -4,7 +4,7 @@ export const instant=v=>v instanceof Date?v:new Date(v.includes('T')?v:v.replace
 // 화면(app/src/lib/skins.ts THEMES)과 동일한 상품 ID·가격. 앱 전체 색 테마를 예전 '스킨' 칸(item_type='skin')에 저장한다.
 // 칭호는 연속 기록·업적 보상으로만 주고 팔지 않는다.
 export const COSMETICS={
- 'skin:sunset':{price:250},'skin:aurora':{price:250},'skin:lavender':{price:300},'skin:midnight':{price:400}
+ 'skin:sunset':{price:900},'skin:aurora':{price:900},'skin:lavender':{price:1200},'skin:midnight':{price:1800}
 };
 export function productPrice(product,now){
  if(product==='exam_ticket'||product==='xp_boost')return 40;
