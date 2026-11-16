@@ -121,7 +121,8 @@ export function Chip({ label, selected, onPress, disabled, fill, icon }: { label
 }
 
 /** 여러 개 중 하나 고르는 분할 버튼 */
-export function Segment<V extends string>({ options, value, onChange }: { options: { value: V; label: string }[]; value: V; onChange: (v: V) => void }) {
+/** 고르기 버튼 줄. fill이면 칸을 똑같이 나눠 가로를 꽉 채움 */
+export function Segment<V extends string>({ options, value, onChange, fill }: { options: { value: V; label: string }[]; value: V; onChange: (v: V) => void; fill?: boolean }) {
   const c = useColors();
   return (
     <View style={{ flexDirection: "row", borderRadius: radius.md, backgroundColor: c.chip, padding: 3, gap: 2, ...inset(c) }}>
@@ -134,12 +135,13 @@ export function Segment<V extends string>({ options, value, onChange }: { option
             accessibilityState={{ selected: on }}
             onPress={() => { tap(); onChange(o.value); }}
             style={{
-              paddingVertical: 6, paddingHorizontal: 13, borderRadius: radius.md - 3,
+              paddingVertical: fill ? 9 : 6, paddingHorizontal: 13, borderRadius: radius.md - 3,
+              ...(fill ? { flex: 1, alignItems: "center" as const } : null),
               backgroundColor: on ? c.navy : "transparent", borderBottomWidth: 3, borderBottomColor: on ? c.navyDeep : "transparent",
               ...(on ? shadow(c, 1) : null),
             }}
           >
-            <Text style={{ fontFamily: FONT.medium, fontSize: 14, color: on ? c.navyInk : c.ink2 }}>{o.label}</Text>
+            <Text numberOfLines={1} style={{ fontFamily: on && fill ? FONT.semibold : FONT.medium, fontSize: fill ? 15 : 14, color: on ? c.navyInk : c.ink2 }}>{o.label}</Text>
           </Pressable>
         );
       })}
