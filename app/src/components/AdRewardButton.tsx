@@ -1,12 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Modal, Pressable, View } from "react-native";
 import { AD_DAILY_LIMIT, AD_REWARD, adsSimulated, showRewardedAd } from "@/lib/ads";
 import { useApp } from "@/lib/app-state";
-import { sfx } from "@/lib/sfx";
 import { mysqlAuth } from "@/lib/auth";
 import { radius, raised, shadow, useColors } from "@/theme";
 import { Icon } from "./Icon";
 import { T, tap } from "./ui";
+import { expectGears } from "@/lib/gear-fly";
 
 const SIM_SEC = 5;
 
@@ -49,11 +49,16 @@ export function AdRewardButton() {
   const left = Math.max(0, AD_DAILY_LIMIT - adViewsToday);
   const disabled = loading || left === 0;
 
+  const box = useRef<View>(null);
   const done = async (earned: boolean) => {
-    if (earned) setLoading(true);
+    if (earned) {
+      setLoading(true);
+      // 광고를 보는 동안 시간이 지났으니, 톱니바퀴가 이 버튼에서 날아가도록 출발점을 알려 둠
+      await new Promise<void>((res) => { const v = box.current; if (!v) return res(); v.measureInWindow((x, y, w, h) => { expectGears({ x: x + w / 2, y: y + h / 2 }); res(); }); });
+    }
     const ok = earned && await grantAdReward();
     setLoading(false);
-    if (ok) { sfx("gear"); setMsg({ text: `톱니바퀴 ${AD_REWARD}개를 받았어요!`, ok: true }); }
+    if (ok) { setMsg({ text: `톱니바퀴 ${AD_REWARD}개를 받았어요!`, ok: true }); }
     else if (earned) setMsg({ text: mode === "user" ? "보상 확인이 늦어지고 있어요. 잠시 뒤 톱니바퀴가 들어와요." : "오늘은 더 받을 수 없어요.", ok: false });
     else if (!earned) setMsg({ text: "광고를 끝까지 봐야 톱니바퀴를 받아요.", ok: false });
   };
@@ -72,7 +77,7 @@ export function AdRewardButton() {
   };
 
   return (
-    <View style={{ gap: 6 }}>
+    <View style={{ gap: 6 }} ref={box} collapsable={false}>
       <Pressable
         onPress={press}
         disabled={disabled}

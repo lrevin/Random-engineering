@@ -3,18 +3,23 @@ import { Modal, View } from "react-native";
 import { inset, radius, shadow, useColors } from "@/theme";
 import { Btn, Row, T } from "./ui";
 import { Icon } from "./Icon";
+import { GearTarget } from "./GearFly";
+import { useShownGears } from "@/lib/gear-fly";
 
 /** 공부 시간 추가: 2분에 톱니바퀴 10개 */
 export {STUDY_EXTEND_SECONDS as EXTEND_SECONDS,STUDY_EXTEND_COST as EXTEND_COST} from "@/lib/economy";
 
 /** 톱니바퀴 개수 표시 */
-export function GearCount({ n, size = 15 }: { n: number; size?: number }) {
-  return (
+export function GearCount({ n, size = 15, target = true }: { n: number; size?: number; target?: boolean }) {
+  const shown = useShownGears(n);
+  const body = (
     <Row gap={4} style={{ flexWrap: "nowrap" }}>
       <Icon name="gear" size={size + 5} />
-      <T size={size} weight="bold">{n.toLocaleString()}</T>
+      <T size={size} weight="bold">{shown.toLocaleString()}</T>
     </Row>
   );
+  // target: 톱니바퀴를 받으면 이 칸으로 날아옴 (화면 밖 창처럼 쓰는 곳은 false)
+  return target ? <GearTarget>{body}</GearTarget> : body;
 }
 
 /**
