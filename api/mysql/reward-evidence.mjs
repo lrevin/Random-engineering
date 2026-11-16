@@ -70,7 +70,7 @@ export async function validateSpecialReward(db,id,key,now){
  if(key.startsWith('streak-milestone:')){
   const m=MILESTONES.find(m=>key===`streak-milestone:${m.days}`),wallet=await walletState(db,id,now);
   if(!m||await milestoneBest(db,id,wallet.state.keptDays)<m.days)throw new AuthError('quest_not_complete',409);
-  for(const [type,item] of [['skin',m.skin],['title',m.title]])await db.execute("INSERT IGNORE INTO member_cosmetics(user_id,item_type,item_id,acquired_via) VALUES (?,?,?,'streak')",[id,type,item]);
+  await db.execute("INSERT IGNORE INTO member_cosmetics(user_id,item_type,item_id,acquired_via) VALUES (?,'title',?,'streak')",[id,m.title]);
   return m.gears;
  }
  return null;

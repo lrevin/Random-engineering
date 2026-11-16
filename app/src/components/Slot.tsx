@@ -1,7 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Animated, Easing, PanResponder, Text, View } from "react-native";
 import { sfx } from "@/lib/sfx";
-import { useSkins } from "@/lib/skins";
 import { radius, shadow, useColors } from "@/theme";
 import { FONT, tap } from "./ui";
 
@@ -16,14 +15,13 @@ export function Slot({ children, spinning, onPull, disabled }: {
   children: ReactNode; spinning?: boolean; onPull?: () => void; disabled?: boolean;
 }) {
   const c = useColors();
-  // 스킨: 정한 색이 없으면 앱 테마 기본색
-  const skin = useSkins().active;
-  const body = skin.body ?? c.slot;
-  const edge = skin.edge ?? c.slotEdge;
-  const leverColor = skin.lever ?? c.lever;
-  const knob = skin.knob ?? c.accent;
-  const knobDeep = skin.knobDeep ?? c.accentDeep;
-  const pointer = skin.pointer ?? c.gold;
+  // 색은 앱 테마를 따름 (테마에 그라데이션이 있으면 몸통에 깔림)
+  const body = c.slot;
+  const edge = c.slotEdge;
+  const leverColor = c.lever;
+  const knob = c.accent;
+  const knobDeep = c.accentDeep;
+  const pointer = c.gold;
   const [blink] = useState(() => new Animated.Value(0));
   const [rod] = useState(() => new Animated.Value(ROD));
 
@@ -61,7 +59,7 @@ export function Slot({ children, spinning, onPull, disabled }: {
   // 손가락을 따라 레버가 내려옴
   const pan = leverPan(rod, { disabled, pull, release });
 
-  const lights = skin.lights ? [skin.lights[0], skin.lights[1], skin.lights[0]] : [c.gold, c.accent, c.gold];
+  const lights = [c.gold, c.accent, c.gold];
   const triangle = (side: "left" | "right") => (
     <View style={{
       position: "absolute", top: "50%", marginTop: -8, [side]: 0, width: 0, height: 0,
@@ -76,7 +74,7 @@ export function Slot({ children, spinning, onPull, disabled }: {
       {/* 레버와 같은 폭의 빈칸: 몸체(글자)가 화면 가운데에 오게 */}
       <View style={{ width: LEVER_W }} />
       <View style={{
-        flex: 1, backgroundColor: body, borderRadius: radius.lg + 4, padding: 10, paddingTop: 9, gap: 8,
+        flex: 1, backgroundColor: body, ...(c.grad.hero ? { experimental_backgroundImage: c.grad.hero } : null), borderRadius: radius.lg + 4, padding: 10, paddingTop: 9, gap: 8,
         borderBottomWidth: 6, borderBottomColor: edge, ...shadow(c, 3),
       }}>
         <View style={{ flexDirection: "row", justifyContent: "center", gap: 10 }}>

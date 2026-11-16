@@ -17,7 +17,7 @@ import { initAds } from "@/lib/ads";
 import { initSfx } from "@/lib/sfx";
 import { StreakSheet } from "@/components/StreakSheet";
 import { AppProvider, useApp } from "@/lib/app-state";
-import { useColors } from "@/theme";
+import { screenBg, useColors } from "@/theme";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -28,7 +28,7 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   const c = useColors();
   useEffect(() => { reportClientError(error, "screen"); }, [error]);
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: c.bg }}>
+    <SafeAreaView style={{ flex: 1, ...screenBg(c) }}>
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 28, gap: 14 }}>
         <Icon name="warning" size={56} />
         <T size={22} weight="bold" center>화면을 여는 중에 문제가 생겼어요</T>
@@ -66,8 +66,8 @@ function RootNav() {
 
   return (
     <>
-      <StatusBar style="auto" />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
+      <StatusBar style={c.mode === "dark" ? "light" : "dark"} />
+      <Stack screenOptions={{ headerShown: false, contentStyle: screenBg(c) }}>
         <Stack.Screen name="index" />
         <Stack.Protected guard={!started}>
           <Stack.Screen name="welcome" />

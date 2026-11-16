@@ -70,7 +70,7 @@ try {
   await db.execute("INSERT INTO topics(id,category_id,name_ko,difficulty) VALUES ('upgrade-topic','upgrade-category','검증 주제',1)");
   await db.execute('INSERT INTO wallets(user_id,balance) VALUES (?,123)',[owner]);
   await db.execute("INSERT INTO member_assets(user_id,exam_tickets,boost_until) VALUES (?,3,'2026-12-01 00:00:00.000')",[owner]);
-  await db.execute("INSERT INTO member_cosmetics(user_id,item_type,item_id,is_equipped,acquired_via) VALUES (?,'skin','cherry',1,'purchase')",[owner]);
+  await db.execute("INSERT INTO member_cosmetics(user_id,item_type,item_id,is_equipped,acquired_via) VALUES (?,'skin','sunset',1,'purchase')",[owner]);
   const attemptIds=[];
   for(const [i,type]of ['study','battle'].entries()){
     const attempt=randomUUID();attemptIds.push(attempt);
@@ -84,7 +84,7 @@ try {
   const [[items]]=await db.execute("SELECT COUNT(*) AS n FROM quiz_attempt_items WHERE topic_id='upgrade-topic'");assert.equal(Number(items.n),14);
   const [[asset]]=await db.execute('SELECT exam_tickets,boost_until FROM member_assets WHERE user_id=?',[owner]);assert.equal(Number(asset.exam_tickets),3);assert.equal(new Date(asset.boost_until.replace(' ','T')+'Z').toISOString(),'2026-12-01T00:00:00.000Z');
   const [[wallet]]=await db.execute('SELECT balance FROM wallets WHERE user_id=?',[owner]);assert.equal(Number(wallet.balance),123);
-  const [[cosmetic]]=await db.execute("SELECT is_equipped FROM member_cosmetics WHERE user_id=? AND item_id='cherry'",[owner]);assert.equal(Number(cosmetic.is_equipped),1);
+  const [[cosmetic]]=await db.execute("SELECT is_equipped FROM member_cosmetics WHERE user_id=? AND item_id='sunset'",[owner]);assert.equal(Number(cosmetic.is_equipped),1);
   const [[visible]]=await db.execute('SELECT COUNT(*) AS n FROM study_records WHERE user_id=? AND hidden_at IS NULL',[owner]);assert.equal(Number(visible.n),2);
   const [[granted]]=await db.execute("SELECT COUNT(*) AS n,SUM(rp) AS xp FROM study_records WHERE user_id=? AND reward_status='legacy_granted'",[owner]);assert.equal(Number(granted.n),2);assert.equal(Number(granted.xp),20);
   const [[ledger]]=await db.execute('SELECT SUM(amount) AS n FROM xp_ledger WHERE user_id=?',[owner]);assert.equal(Number(ledger.n),20);

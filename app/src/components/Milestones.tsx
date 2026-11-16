@@ -5,7 +5,7 @@ import { bestStreak } from "@/lib/achievements";
 import { useApp } from "@/lib/app-state";
 import { sfx } from "@/lib/sfx";
 import { MILESTONES, type Milestone } from "@/lib/milestones";
-import { addSkin, addTitle, markMilestone, skinById, titleById, useCosmetics } from "@/lib/skins";
+import { addTitle, markMilestone, titleById, useCosmetics } from "@/lib/skins";
 import { radius, raised, useColors } from "@/theme";
 import { Icon } from "./Icon";
 import { ProgressBar } from "./Quests";
@@ -24,7 +24,6 @@ export function useMilestones() {
     if (best < m.days) return false;
     if(mode==='user'){const ok=await claimQuest(`streak-milestone:${m.days}`,m.gears);if(ok){await refresh();sfx('chest');}return ok;}
     if(!await claimQuest(`streak-milestone:${m.days}`, m.gears)||!markMilestone(m.days))return false;
-    addSkin(m.skin, false);
     addTitle(m.title);
     sfx("chest");
     return true;
@@ -43,22 +42,21 @@ export function MilestoneCard({ onGot }: { onGot: (gears: number) => void }) {
         <T size={17} weight="bold" style={{ flex: 1 }}>연속 기록 보상</T>
         <T size={13} color="muted">최고 {m.best}일</T>
       </View>
-      <T size={13} color="ink2">연속으로 공부한 날이 쌓이면 상자와 한정 스킨·칭호를 받아요.</T>
+      <T size={13} color="ink2">연속으로 공부한 날이 쌓이면 상자와 칭호를 받아요.</T>
       {MILESTONES.map((x, i) => {
         const got = m.claimed(x);
         const can = m.best >= x.days && !got;
-        const skin = skinById(x.skin);
         return (
           <View key={x.days} style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingTop: 12, borderTopWidth: i ? 1 : 0, borderTopColor: c.line, marginTop: i ? 6 : 8 }}>
             <View style={{
               width: 48, height: 48, borderRadius: 14, alignItems: "center", justifyContent: "center",
-              backgroundColor: skin.body ?? c.slot, ...raised(skin.edge ?? c.slotEdge, false, 3),
+              backgroundColor: c.slot, ...(c.grad.hero ? { experimental_backgroundImage: c.grad.hero } : null), ...raised(c.slotEdge, false, 3),
             }}>
               <Icon name={got ? "chest-open" : "chest"} size={32} />
             </View>
             <View style={{ flex: 1, gap: 6 }}>
               <T size={15} weight="bold">연속 {x.days}일</T>
-              <T size={12} color="muted">톱니바퀴 {x.gears} · {skin.name} 스킨 · 칭호 {`"${titleById(x.title)?.name ?? ""}"`}</T>
+              <T size={12} color="muted">톱니바퀴 {x.gears} · 칭호 {`"${titleById(x.title)?.name ?? ""}"`}</T>
               <ProgressBar value={m.best} goal={x.days} unit="일" color={m.best >= x.days ? c.success : c.flame} />
             </View>
             {got ? (

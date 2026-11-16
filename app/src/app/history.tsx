@@ -8,7 +8,7 @@ import { ALL_CATEGORIES } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { UserLevelBar } from "@/components/Rank";
 import { averageScore, calcStreak, isRecognizedStudy } from "@/lib/stats";
-import { useColors } from "@/theme";
+import { screenBg, useColors } from "@/theme";
 import { DomainIcon, Icon } from "@/components/Icon";
 import { SectionTitle, StatGrid, StatTile } from "@/components/StatTile";
 import { WeeklyReport } from "@/components/WeeklyReport";
@@ -109,7 +109,7 @@ export default function History() {
   );
 
   return (
-    <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: c.bg }}>
+    <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, ...screenBg(c) }}>
       <ScrollView contentContainerStyle={{ padding: 20, maxWidth: 640, width: "100%", alignSelf: "center" }}>
         {header}
       </ScrollView>
