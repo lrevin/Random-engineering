@@ -98,7 +98,11 @@ function RootNav() {
           <Stack.Screen name="certs" options={{ presentation: "modal" }} />
           <Stack.Screen name="skins" options={{ presentation: "modal" }} />
           <Stack.Screen name="titles" options={{ presentation: "modal" }} />
+          <Stack.Screen name="items" options={{ presentation: "modal" }} />
+          <Stack.Screen name="cosmetics" options={{ presentation: "modal" }} />
           <Stack.Screen name="review" options={flow} />
+          <Stack.Screen name="match" />
+          <Stack.Screen name="ranking" />
           <Stack.Screen name="battle" options={flow} />
         </Stack.Protected>
         <Stack.Protected guard={mode !== "user"}>

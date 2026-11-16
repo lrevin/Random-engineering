@@ -11,7 +11,7 @@ export type IconName =
   | "flame" | "gear" | "shield" | "ticket" | "swords" | "trophy" | "star" | "crown" | "dice" | "book" | "globe"
   | "tree" | "doc" | "door" | "trash" | "offline" | "hourglass" | "bell" | "bolt" | "medal" | "target" | "robot"
   | "books" | "party" | "mail" | "check" | "close" | "slot" | "handshake" | "dizzy" | "nope" | "lock" | "user-plus"
-  | "share" | "clock" | "chart" | "warning" | "calendar" | "chest" | "chest-open" | "play" | "kakao" | "eye" | "eye-off";
+  | "share" | "clock" | "chart" | "warning" | "calendar" | "chest" | "chest-open" | "play" | "kakao" | "eye" | "eye-off" | "pencil";
 
 const NAVY = "#1d2742";
 const NAVY_D = "#0e1424";
@@ -377,6 +377,17 @@ const ICONS: Record<IconName, () => ReactNode> = {
     <G>
       <Path d="M16 4v15M10 9.5L16 3.5l6 6" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" fill="none" />
       <Path d="M8 14H6.5A1.5 1.5 0 0 0 5 15.5v11A1.5 1.5 0 0 0 6.5 28h19a1.5 1.5 0 0 0 1.5-1.5v-11a1.5 1.5 0 0 0-1.5-1.5H24" stroke="currentColor" strokeWidth={3} strokeLinecap="round" fill="none" />
+    </G>
+  ),
+  pencil: () => (
+    <G transform="rotate(45 16 16)">
+      {/* 지우개 · 쇠테 · 노란 몸통 · 깎은 나무 · 심 */}
+      <Rect x={11.5} y={1.5} width={9} height={5} rx={2} fill={RED} stroke={NAVY} strokeWidth={2} />
+      <Rect x={11.5} y={6.5} width={9} height={3} fill={GREY} stroke={NAVY} strokeWidth={2} />
+      <Rect x={11.5} y={9.5} width={9} height={13} fill={GOLD} stroke={NAVY} strokeWidth={2} />
+      <Line x1={16} y1={10.5} x2={16} y2={21.5} stroke={GOLD_D} strokeWidth={2} />
+      <Polygon points="11.5,22.5 20.5,22.5 16,30" fill={CREAM} stroke={NAVY} strokeWidth={2} strokeLinejoin="round" />
+      <Polygon points="14.6,27.6 17.4,27.6 16,30" fill={NAVY} />
     </G>
   ),
   clock: () => (

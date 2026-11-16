@@ -1,6 +1,6 @@
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Pressable, ScrollView, Share, View } from "react-native";
+import { Pressable, ScrollView, Share, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AchievementBadge, AchievementRow } from "@/components/Achievements";
 import { DomainIcon, Icon, TierIcon } from "@/components/Icon";
@@ -8,9 +8,10 @@ import { LevelBadge, TierBadge } from "@/components/Rank";
 import { ProgressBar } from "@/components/Quests";
 import { domainById } from "@/data";
 import { SectionTitle, StatGrid, StatTile } from "@/components/StatTile";
-import { Btn, Card, T, tap } from "@/components/ui";
+import { Btn, Card, FONT, T, tap } from "@/components/ui";
 import { ACHIEVEMENT_GROUPS, achievements, type AchievementExtra } from "@/lib/achievements";
 import { useApp } from "@/lib/app-state";
+import { authErrorMessage } from "@/lib/auth";
 import { readExamStore } from "@/lib/exam";
 import { readDone } from "@/lib/review";
 import { titleById, useCosmetics } from "@/lib/skins";
@@ -35,7 +36,7 @@ function ReelPattern() {
 }
 
 export default function Profile() {
-  const { prefs, uid, xp, records, keptDays, freezes, gears, questClaims } = useApp();
+  const { prefs, updatePrefs, uid, xp, records, keptDays, freezes, gears, questClaims } = useApp();
   const c = useColors();
   const [friends, setFriends] = useState<number | null>(null);
 
@@ -45,6 +46,27 @@ export default function Profile() {
   }, []));
 
   const name = prefs.nickname || "나";
+  // 닉네임 바꾸기: 이름 옆 연필을 누르면 그 자리에서 고침
+  const [editing, setEditing] = useState(false);
+  const [nick, setNick] = useState("");
+  const [nickMsg, setNickMsg] = useState("");
+  const [saving, setSaving] = useState(false);
+  const startEdit = () => { tap(); setNick(prefs.nickname); setNickMsg(""); setEditing(true); };
+  const saveNick = async () => {
+    const n = nick.trim();
+    if (!n || n.length > 20) return setNickMsg("닉네임은 1~20자로 정해 주세요.");
+    if (n === prefs.nickname) return setEditing(false);
+    setSaving(true);
+    try {
+      await updatePrefs({ nickname: n });
+      setEditing(false);
+      setNickMsg("닉네임을 바꿨어요.");
+    } catch (e) {
+      setNickMsg(authErrorMessage(e));
+    } finally {
+      setSaving(false);
+    }
+  };
   const lv = userLevel(xp);
   const { streak } = calcStreak(records, new Date(), keptDays);
   const ranks = useMemo(() => domainRanks(records), [records]);
@@ -104,7 +126,38 @@ export default function Profile() {
         <View style={{ paddingHorizontal: 20, gap: 16, maxWidth: 640, width: "100%", alignSelf: "center" }}>
           {/* 이름 · UID */}
           <View style={{ alignItems: "center", gap: 6, marginTop: 10 }}>
-            <T size={26} weight="bold">{name}</T>
+            {editing ? (
+              <View style={{ width: "100%", maxWidth: 360, gap: 10, alignItems: "stretch" }}>
+                <TextInput
+                  value={nick}
+                  onChangeText={setNick}
+                  maxLength={20}
+                  autoFocus
+                  returnKeyType="done"
+                  onSubmitEditing={() => { void saveNick(); }}
+                  placeholder="닉네임 (1~20자)"
+                  placeholderTextColor={c.muted}
+                  accessibilityLabel="닉네임"
+                  style={{
+                    textAlign: "center", fontSize: 22, fontFamily: FONT.bold, color: c.ink, backgroundColor: c.paper,
+                    borderWidth: 2, borderColor: c.accent, borderRadius: radius.md, paddingVertical: 10, paddingHorizontal: 14,
+                  }}
+                />
+                <View style={{ flexDirection: "row", gap: 8 }}>
+                  <Btn title="취소" size="md" variant="outline" onPress={() => { setEditing(false); setNickMsg(""); }} style={{ flex: 1 }} />
+                  <Btn title={saving ? "저장 중…" : "저장"} size="md" variant="primary" disabled={saving} onPress={() => { void saveNick(); }} style={{ flex: 1 }} />
+                </View>
+              </View>
+            ) : (
+              <Pressable onPress={startEdit} hitSlop={8} accessibilityRole="button" accessibilityLabel="닉네임 바꾸기"
+                style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 8, opacity: pressed ? 0.6 : 1 })}>
+                <T size={26} weight="bold">{name}</T>
+                <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: c.chip, borderWidth: 1, borderColor: c.line, alignItems: "center", justifyContent: "center" }}>
+                  <Icon name="pencil" size={22} />
+                </View>
+              </Pressable>
+            )}
+            {nickMsg ? <T size={14} weight="semibold" color={nickMsg.endsWith("바꿨어요.") ? "success" : "accent"} center>{nickMsg}</T> : null}
             {activeTitle && <TitleBadge t={activeTitle} size={16} />}
             <T size={14} color="muted">
               @{uid || "--------"}{stats.since ? ` · ${stats.since.getFullYear()}년 ${stats.since.getMonth() + 1}월부터 공부 중` : ""}

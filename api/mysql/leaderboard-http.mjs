@@ -6,9 +6,10 @@ export function leaderboardRoutes(service) {
   const hits = new Map();
   return async (req, pathname, send) => {
     const board = /^\/leaderboard\/([a-z0-9_-]{1,32})$/.exec(pathname);
+    const ranking = /^\/rankings\/(weekly|level|tier)$/.exec(pathname);
     const settings = pathname === '/leaderboard-settings';
     const report = pathname === '/leaderboard-reports';
-    if (!board && !settings && !report) return false;
+    if (!board && !ranking && !settings && !report) return false;
     const reply = (status, data) => send(status, data, { 'Cache-Control': 'no-store' });
     const now = Date.now(), key = rateKey(req);
     for (const [k, v] of hits) if (v.until <= now) hits.delete(k);
@@ -19,6 +20,7 @@ export function leaderboardRoutes(service) {
     try {
       const auth = req.headers.authorization;
       if (board && req.method === 'GET') reply(200, await service.top(auth, board[1], new URL(req.url, 'http://local').searchParams));
+      else if (ranking && req.method === 'GET') reply(200, await service.ranking(auth, ranking[1], new URL(req.url, 'http://local').searchParams));
       else if (settings && req.method === 'GET') reply(200, await service.getSettings(auth));
       else if (settings && req.method === 'PUT') reply(200, await service.setSettings(auth, await readJsonBody(req)));
       else if (report && req.method === 'POST') reply(200, await service.report(auth, await readJsonBody(req)));
