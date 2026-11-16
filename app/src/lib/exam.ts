@@ -117,25 +117,26 @@ export async function addExamTicket(): Promise<ExamStore> {
 }
 
 // ───────── 풀고 있는 모의고사 (앱이 꺼져도 이어서 풀기) ─────────
-const ACTIVE_KEY = LOCAL_KEYS.examActive.key;
-export interface ActiveExam { paper: ExamPaper; answers: (number | boolean)[] }
+const ACTIVE_KEY = LOCAL_KEYS.examActive.key.replace(/^pg\./,'pg.mysql.');
+export interface ActiveExam {
+  serverIssued?:boolean; paper: ExamPaper; answers: (number | boolean)[]; owner?:string|null; startId?:string; approved?:boolean }
 export async function readActiveExam(): Promise<ActiveExam | null> {
   try {
     const raw = await AsyncStorage.getItem(ACTIVE_KEY);
     const a = raw ? (JSON.parse(raw) as ActiveExam) : null;
-    if (!a?.paper?.items?.length || !Array.isArray(a.answers) || a.answers.length >= a.paper.items.length) return null;
+    if (!a?.paper || !Array.isArray(a.paper.items) || !Array.isArray(a.answers) || a.answers.length > a.paper.items.length || (!a.paper.items.length&&!(a.owner&&a.startId&&a.approved===false))) return null;
     return certById(a.paper.certId) ? a : null;
   } catch {
     return null;
   }
 }
-export const saveActiveExam = (a: ActiveExam) => AsyncStorage.setItem(ACTIVE_KEY, JSON.stringify(a)).catch(() => {});
-export const clearActiveExam = () => AsyncStorage.removeItem(ACTIVE_KEY).catch(() => {});
+export const saveActiveExam = (a: ActiveExam) => AsyncStorage.setItem(ACTIVE_KEY, JSON.stringify(a));
+export const clearActiveExam = () => AsyncStorage.removeItem(ACTIVE_KEY);
 
 /** 결과 저장 (최근 30회) + 틀린 문제 모아 두기 (최근 300개) */
 export async function saveExamResult(r: ExamResult, wrongs: ExamWrong[] = []): Promise<ExamStore> {
   const s = await readExamStore();
-  const next = { ...s, results: [r, ...s.results].slice(0, 30), wrongs: [...wrongs, ...s.wrongs].slice(0, 300) };
+  const next = { ...s, results: [r, ...s.results.filter(x=>x.at!==r.at||x.certId!==r.certId)].slice(0, 30), wrongs: [...wrongs, ...s.wrongs].slice(0, 300) };
   await save(next);
   return next;
 }

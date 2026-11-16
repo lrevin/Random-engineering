@@ -1,5 +1,11 @@
+import type {ServerActivity,RewardStatus} from "./reward-types";
 import type { StudyRecord } from "./types";
+export interface MemberAssets {
+ examTickets:number; examUsageDate:string|null; examFreeUsed:number; boostUntil:string|null;
+ ownedSkins:string[]; ownedTitles:string[]; activeSkin:string; activeTitle:string|null;
+}
 export interface WalletState {
+ assets?: MemberAssets;
  balance: number; revision: string; claims: string[];
  /** 오늘 서버가 확인해 지급한 광고 보상 횟수 (AdMob SSV) */
  adsToday?: number;
@@ -101,6 +107,14 @@ export function createAuthClient(url: string, storage: SessionStorage, fetcher: 
     getUserId() { return session?.user.id ?? null; },
     async getSpeedStats(): Promise<{best:number;plays:number;day:string;xpToday:number;totalXp:number}> {return authorized("/me/speed/stats");},
     async apiRequest(path: string, body?: unknown, method?: "GET" | "POST" | "PUT" | "DELETE") { return authorized(path, body, method); },
+    async rewardStatus():Promise<RewardStatus>{return authorized('/me/rewards');},
+    async issueActivity(body:{requestId:string;purpose:'study'|'recall'|'review'|'exam';topicId?:string;certId?:string;studySec?:number}):Promise<ServerActivity>{return authorized('/me/activities',body,'POST');},
+    async getActivity(id:string):Promise<ServerActivity>{return authorized('/me/activities/'+id);},
+    async activityEvent(id:string,event:'pause'|'resume'|'quiz'|'extend',requestId:string):Promise<ServerActivity>{return authorized('/me/activities/'+id+'/events',{event,requestId},'POST');},
+    async activityAnswer(id:string,position:number,answer:number|boolean):Promise<ServerActivity>{return authorized('/me/activities/'+id+'/answers',{position,answer},'POST');},
+    async completeActivity(id:string,answers:(number|boolean)[]):Promise<ServerActivity>{return authorized('/me/activities/'+id+'/complete',{answers},'POST');},
+    async abandonActivity(id:string):Promise<ServerActivity>{return authorized('/me/activities/'+id+'/abandon',{},'POST');},
+    async recordVisibility(id:string,hidden:boolean):Promise<{record:StudyRecord}>{return authorized('/me/records/'+id+'/visibility',{hidden},'PUT');},
     async getWallet(): Promise<WalletState> { return authorized("/me/wallet"); },
     async walletOperation(requestId: string, action: string, payload: Record<string, unknown> = {}): Promise<WalletState> {
       return authorized("/me/wallet/operations", {requestId, action, payload}, "POST");

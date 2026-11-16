@@ -52,8 +52,9 @@ test('durable battle matching, clocks, shared records, tickets and XP on real My
   for(let i=0;i<5;i++){const q=state.questions[i];await engine.answer(b.header,main.id,{position:i+1,answer:i===0?q.answer:q.type==='mc'?(q.answer+1)%4:!q.answer});}
   const done=await engine.get(a.header,main.id);assert.equal(done.status,'finished');assert.equal(done.outcome.winner,state.from.id===a.id?state.from.uid:state.to.uid);assert.equal(done.outcome.xp,100);
   const [rows]=await db.execute('SELECT * FROM study_records WHERE battle_id=? ORDER BY user_id',[main.id]);assert.equal(rows.length,2);assert(rows.every(r=>r.study_type==='battle'&&r.quiz_total===5));assert.equal(rows.reduce((n,r)=>n+r.rp,0),0);
+  const [purposes]=await db.execute("SELECT a.purpose FROM quiz_attempts a JOIN study_records r ON r.attempt_id=a.id WHERE r.battle_id=?",[main.id]);assert(purposes.every(a=>a.purpose==='battle'));
   const mine=rows.find(r=>r.user_id===a.id);assert.equal(mine.rank_score,5);assert.equal(mine.rp,100);assert.equal((await records.get(a.header,mine.id)).record.items.length,5);
-  await assert.rejects(records.remove(a.header,mine.id),{code:'battle_record_locked'});
+  const beforeHide=await records.stats(a.header);await records.remove(a.header,mine.id);assert.ok((await records.get(a.header,mine.id)).record.hiddenAt);assert.deepEqual(await records.stats(a.header),beforeHide);await records.visibility(a.header,mine.id,{hidden:false});
   await Promise.all([engine.submit(a.header,main.id),engine.forfeit(b.header,main.id),engine.get(a.header,main.id)]);
   const [[n]]=await db.execute("SELECT COUNT(*) AS n,SUM(amount) AS amount FROM xp_ledger WHERE source_type='battle'");assert.equal(Number(n.n),2);assert.equal(Number(n.amount),0);
  });

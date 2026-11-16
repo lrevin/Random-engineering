@@ -1,5 +1,6 @@
 import { connect, transaction } from '../server/db.mjs';
 import { AuthError, normalizeEmail, passwordMatches } from '../server/auth.mjs';
+import { nicknameAllowed } from '../server/nickname-policy.mjs';
 
 const asJson=v=>typeof v==='string'?JSON.parse(v):v;
 const profile=row=>({nickname:row.nickname,interests:asJson(row.interests),level:row.level,
@@ -12,7 +13,9 @@ function validate(value) {
     new Set(p.interests).size!==p.interests.length || !Number.isInteger(p.level)||p.level<0||p.level>3 ||
     !Number.isInteger(p.studyMinutes)||p.studyMinutes<1||p.studyMinutes>120 || typeof p.reminderEnabled!=='boolean' ||
     typeof p.reminderTime!=='string'||!/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(p.reminderTime)) throw new AuthError('invalid_profile');
-  p.nickname=p.nickname.trim();return p;
+  p.nickname=p.nickname.trim();
+  if(!nicknameAllowed(p.nickname)) throw new AuthError('nickname_not_allowed');
+  return p;
 }
 export function createAccountService({auth,connectionFactory=connect}) {
   async function withDb(action) {const db=await connectionFactory();try{return await action(db);}finally{await db.end();}}
@@ -40,6 +43,9 @@ export function createAccountService({auth,connectionFactory=connect}) {
           const [rows]=await db.execute(`SELECT id FROM categories WHERE is_active=1 AND id IN (${marks}) UNION SELECT id FROM certificates WHERE is_active=1 AND id IN (${marks})`,[...p.interests,...p.interests]);
           if(rows.length!==p.interests.length) throw new AuthError('invalid_interests');
         }
+        // 닉네임을 바꾸면 이전 닉네임에 대한 신고는 초기화
+        const [[old]]=await db.execute('SELECT nickname FROM profiles WHERE user_id=?',[user.id]);
+        if(old && old.nickname!==p.nickname) await db.execute('DELETE FROM nickname_reports WHERE target_id=?',[user.id]);
         await db.execute(`INSERT INTO profiles(user_id,nickname,interests,level,study_minutes,reminder_enabled,reminder_time)
           VALUES (?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE nickname=?,interests=?,level=?,study_minutes=?,reminder_enabled=?,reminder_time=?`,
           [user.id,p.nickname,JSON.stringify(p.interests),p.level,p.studyMinutes,p.reminderEnabled,p.reminderTime,
@@ -92,6 +98,7 @@ export async function purgeExpiredAccounts({connectionFactory=connect,limit=100,
         const [[user]]=await db.execute(`SELECT id,status,deletion_requested_at<=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 7 DAY) AS due FROM users WHERE id=? FOR UPDATE`,[candidate.id]);
         if(!user||user.status!=='deleting'||!Number(user.due)) return 0;
         await db.execute('DELETE FROM study_records WHERE user_id=?',[user.id]);
+        await db.execute('UPDATE quiz_attempt_items i JOIN quiz_attempts a ON a.id=i.attempt_id SET i.source_attempt_id=NULL,i.source_position=NULL WHERE a.user_id=?',[user.id]);
         await db.execute('DELETE i FROM quiz_attempt_items i JOIN quiz_attempts a ON a.id=i.attempt_id WHERE a.user_id=?',[user.id]);
         await db.execute('DELETE FROM quiz_attempts WHERE user_id=?',[user.id]);
         await db.execute('DELETE FROM study_record_tombstones WHERE user_id=?',[user.id]);

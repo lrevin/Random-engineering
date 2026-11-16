@@ -1,3 +1,4 @@
+import {useRewardStatus} from "@/lib/useRewardStatus";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { Pressable, View } from "react-native";
@@ -14,7 +15,7 @@ import { T, tap } from "./ui";
 
 /** 한 기간(일일·주간·이달)의 퀘스트 + 받은 상태 */
 export function useQuests(period: Period) {
-  const { records, questClaims, claimQuest, premium } = useApp();
+  const { mode, records, questClaims, claimQuest, premium } = useApp();
   // 프리미엄 퀘스트는 모의고사 결과·해결한 오답도 봄 (화면에 돌아올 때마다 다시 읽음)
   const [extra, setExtra] = useState<QuestExtra>(NO_EXTRA);
   useFocusEffect(useCallback(() => {
@@ -27,10 +28,13 @@ export function useQuests(period: Period) {
   const locked = period === "premium" && !premium;
   // 날짜가 바뀌면 다음 렌더 때 새 기간으로 계산됨
   const day = questDateKey(new Date());
-  const quests = useMemo(() => questsFor(period, records, new Date(), extra), [period, records, day, extra]); // eslint-disable-line react-hooks/exhaustive-deps
-  const claimed = (id: string) => questClaims.includes(questKey(period, id));
+  const {rewards}=useRewardStatus();
+  const localQuests = useMemo(() => questsFor(period, records, new Date(), extra), [period, records, day, extra]); // eslint-disable-line react-hooks/exhaustive-deps
+  const quests=mode==='user'&&period==='premium'?(rewards?.premiumQuests??[]):localQuests;
+  const keyFor=(id:string)=>mode==='user'&&period==='premium'?(id==='bonus'?rewards?.premiumBonusKey:rewards?.premiumQuests.find(q=>q.id===id)?.claimKey)??questKey(period,id):questKey(period,id);
+  const claimed = (id: string) => questClaims.includes(keyFor(id));
   const doneCount = quests.filter((q) => q.done).length;
-  const allDone = doneCount === quests.length;
+  const allDone = quests.length>0 && doneCount === quests.length;
   const bonusClaimed = claimed("bonus");
   // 출석은 일일 탭에만 (3개 모두 끝내기에는 안 셈)
   const attendance = period === "day" ? ATTENDANCE : null;
@@ -39,12 +43,12 @@ export function useQuests(period: Period) {
   return {
     quests, claimed, doneCount, allDone, bonusClaimed, ready, bonus, attendance, locked,
     claim: async (q: Quest) => {
-      const ok = !locked && q.done && await claimQuest(questKey(period, q.id), q.reward);
+      const ok = !locked && q.done && await claimQuest(keyFor(q.id), q.reward);
       if (ok) sfx("gear");
       return ok;
     },
     claimBonus: async () => {
-      const ok = !locked && allDone && await claimQuest(questKey(period, "bonus"), bonus);
+      const ok = !locked && allDone && await claimQuest(keyFor("bonus"), bonus);
       if (ok) sfx("chest");
       return ok;
     },

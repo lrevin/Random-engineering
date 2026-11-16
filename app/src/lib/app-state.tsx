@@ -7,13 +7,14 @@ import { AppState as RNAppState } from "react-native";
 import { BATTLE_TICKET_COST, FREE_BATTLE_TICKETS, FREEZE_COST, MAX_BOUGHT_TICKETS, MAX_FREEZES, monthKey, planStreakRescue, PREMIUM_BONUS_GEARS, refillTickets, RESTORE_COST_PER_DAY, type StreakRescue, type Tickets } from "./economy";
 import { AD_DAILY_LIMIT, AD_REWARD } from "./ads";
 import { clearAllLocalData, LOCAL_KEYS } from "./local-data";
-import { resetBoost } from "./booster";
-import { resetSkins } from "./skins";
+import { resetBoost, applyServerBoost } from "./booster";
+import { resetSkins, applyServerCosmetics } from "./skins";
 import { dateKey } from "./stats";
 import { cancelAllNotifications, rescheduleReminders } from "./notify";
 import { mysqlAuth } from "./auth";
 import { kakaoSignIn } from "./kakao-login";
-import { AuthApiError, type AuthSession, type WalletState } from "./auth-client";
+import { syncProgress } from "./progress-sync";
+import { AuthApiError, type AuthSession, type WalletState, type MemberAssets } from "./auth-client";
 import { enqueueRecordOperation, syncMySqlRecords } from "./record-sync";
 import { DEFAULT_PREFS, type ActiveSession, type Prefs, type StudyRecord } from "./types";
 
@@ -42,6 +43,7 @@ const K = {
   rescueAsked: L.rescueAsked.key,
   questClaims: L.questClaims.key,
   adViews: L.adViews.key,
+  examActive: L.examActive.key,
 };
 
 // Preserve existing MySQL cache keys and account isolation.
@@ -73,6 +75,11 @@ interface AppStateValue {
   /** 톱니바퀴를 n개 씁니다. 모자라면 false */
   spendGears(n: number, product?: string): Promise<boolean>;
   walletNotice: string;
+  memberAssets: MemberAssets | null;
+  walletBusy:boolean;
+  purchaseItem(product:string):Promise<boolean>;
+  equipCosmetic(type:'skin'|'title',itemId:string|null):Promise<boolean>;
+  startMemberExam(startId:string,certId:string):Promise<boolean>;
   /** 경험치 합계 = 공부 기록에서 얻은 경험치 + 배틀로 얻고 잃은 경험치 */
   xp: number;
   /** 연속 기록 보호권 개수 · 보호권/톱니바퀴로 지킨 날짜 */
@@ -129,6 +136,7 @@ interface AppStateValue {
   setActive(a: ActiveSession | null | ((prev: ActiveSession | null) => ActiveSession | null)): void;
   addRecord(r: NewRecord): Promise<StudyRecord>;
   removeRecord(id: string): Promise<void>;
+  restoreRecord(id: string): Promise<void>;
 }
 
 const Ctx = createContext<AppStateValue | null>(null);
@@ -201,6 +209,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const keptRef = useRef(keptDays);
   const freezesRef = useRef(freezes);
   const appliedRef = useRef<string[]>([]);
+  const [walletBusy,setWalletBusy]=useState(false);
+  const purchaseBusy=useRef(false);
+  const [memberAssets,setMemberAssets]=useState<MemberAssets|null>(null);
   const [walletNotice, setWalletNotice] = useState("");
   const walletQueue = useRef<Promise<unknown>>(Promise.resolve());
   const walletRevision = useRef("0");
@@ -208,6 +219,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const revision=value.revision??"0";
     if(BigInt(revision)<BigInt(walletRevision.current))return;
     walletRevision.current=revision;
+    if(value.assets){setMemberAssets(value.assets);applyServerCosmetics(value.assets);applyServerBoost(value.assets.boostUntil);}
     gearsRef.current=value.balance; setGears(value.balance); writeJSON(K.gears,value.balance);
     freezesRef.current=value.state.freezes; setFreezes(value.state.freezes); writeJSON(K.freezes,value.state.freezes);
     const t={n:value.state.freeTickets,bought:value.state.boughtTickets,month:value.state.month};
@@ -234,13 +246,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
           if(pending.action===action&&JSON.stringify(pending.payload)===JSON.stringify(payload)){setWalletNotice("");return true;}
         }catch(e){if(e instanceof AuthApiError&&e.status>=400&&e.status<500)await AsyncStorage.removeItem(key);throw e;}
       }
-      const request={id:Crypto.randomUUID(),action,payload};await AsyncStorage.setItem(key,JSON.stringify(request));
+      const request={id:action==='exam_start'?String(payload.startId):Crypto.randomUUID(),action,payload};await AsyncStorage.setItem(key,JSON.stringify(request));
       try {const value=await mysqlAuth.walletOperation(request.id,action,payload);if(ownerRef.current!==owner)return false;applyWallet(value);await AsyncStorage.removeItem(key);setWalletNotice("");return true;}
       catch(e){if(e instanceof AuthApiError&&e.status>=400&&e.status<500)await AsyncStorage.removeItem(key);throw e;}
     }).catch((e:unknown)=>{
-      if(ownerRef.current===owner){const code=e instanceof AuthApiError?e.code:'';setWalletNotice(({insufficient_balance:'톱니바퀴가 부족해요.',verification_required:'서버의 광고·결제 확인을 준비하고 있어요.',product_not_available:'이 상품의 계정 저장을 준비하고 있어요.',operation_not_available:'이 기능의 서버 연결을 준비하고 있어요.',quest_not_complete:'서버에 저장된 학습 기록으로 보상 조건을 확인하지 못했어요.',already_claimed:'이미 받은 보상이에요.'} as Record<string,string>)[code]??'서버에 연결하지 못했어요. 다시 시도해 주세요.');}return false;
+      if(ownerRef.current===owner){const code=e instanceof AuthApiError?e.code:'';setWalletNotice(({inventory_full:'최대 보유량 또는 부스터 시간을 초과해요.',already_owned:'이미 소유한 상품이에요.',not_owned:'소유한 상품만 사용할 수 있어요.',not_in_season:'현재 판매 기간이 아니에요.',premium_unlimited:'프리미엄은 모의고사를 무제한 이용할 수 있어요.',exam_ticket_required:'모의고사 이용권이 필요해요.',insufficient_balance:'톱니바퀴가 부족해요.',verification_required:'서버의 광고·결제 확인을 준비하고 있어요.',product_not_available:'이 상품의 계정 저장을 준비하고 있어요.',operation_not_available:'이 기능의 서버 연결을 준비하고 있어요.',quest_not_complete:'서버에 저장된 학습 기록으로 보상 조건을 확인하지 못했어요.',already_claimed:'이미 받은 보상이에요.'} as Record<string,string>)[code]??'서버에 연결하지 못했어요. 다시 시도해 주세요.');}return false;
     });walletQueue.current=run;return run;
   }, [applyWallet]);
+  const assetOperation=useCallback(async(action:string,payload:Record<string,unknown>)=>{
+    if(purchaseBusy.current)return false;
+    purchaseBusy.current=true;setWalletBusy(true);
+    try{return await remoteWallet(action,payload);}finally{purchaseBusy.current=false;setWalletBusy(false);}
+  },[remoteWallet]);
+  const purchaseItem=useCallback((product:string)=>assetOperation('spend',{product}),[assetOperation]);
+  const equipCosmetic=useCallback((type:'skin'|'title',itemId:string|null)=>assetOperation('equip_cosmetic',{type,itemId}),[assetOperation]);
+  const startMemberExam=useCallback((startId:string,certId:string)=>assetOperation('exam_start',{startId,certId}),[assetOperation]);
   useLayoutEffect(() => {
     recordsRef.current = records;
     prefsRef.current = prefs;
@@ -273,7 +293,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const clearLocal = useCallback(async () => {
     ownerRef.current = null;
-    walletRevision.current="0";
+    walletRevision.current="0";setMemberAssets(null);
     setApiSession(null);
     // 회원 캐시(pg.mysql.*) + 기기 저장 항목 전체(lib/local-data.ts) 지우기
     await AsyncStorage.multiRemove(Object.values(K)).catch(() => {});
@@ -365,6 +385,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const owner = await readJSON<string | null>(K.account, null);
     const previousMode = await readJSON<Mode>(K.mode, "none");
     if (owner !== s.user.id) {
+      setMemberAssets(null);applyServerCosmetics({ownedSkins:["classic"],ownedTitles:[],activeSkin:"classic",activeTitle:null});applyServerBoost(null);
       await archiveApiAccount();
       const saved = await readJSON<{ extras?: [string,string|null][]; prefs: Prefs; records: StudyRecord[]; active: ActiveSession | null; gears: number; onboarded: boolean } | null>(`pg.mysql.local.${s.user.id}`, null);
       if (owner || previousMode === "user" || saved) await clearLocal();
@@ -391,6 +412,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try { const value=await mysqlAuth.getWallet();if(ownerRef.current===s.user.id)applyWallet(value); }catch {setWalletNotice('재화 정보를 갱신하지 못했어요. 인터넷 연결 후 다시 열어 주세요.');}
     try { const social=await mysqlAuth.apiRequest('/social/me',{},'POST');if(ownerRef.current===s.user.id){setUid(social.uid);await writeJSON(K.uid,social.uid);} }catch { /* Friends retry on the next account load. */ }
     await syncPending(s.user.id).catch(() => {});
+    await syncProgress(s.user.id, () => ownerRef.current === s.user.id).catch(() => {});
   }, [applyWallet, archiveApiAccount, clearLocal, refreshSpeedXp, refreshApiProfile, restoreAccountExtras, saveRecordsLocal, setModePersist, syncPending]);
 
   const cancelDeletion = useCallback(async (email: string, password: string) => {
@@ -536,6 +558,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [loadApiAccount]);
 
   const signOut = useCallback(async () => {
+    // 로그아웃하면 기기의 학습 진행을 지우므로, 그 전에 계정에 올려 둠
+    const id = ownerRef.current;
+    if (id) await syncProgress(id, () => ownerRef.current === id).catch(() => {});
     await archiveApiAccount();
     try { await mysqlAuth.signOut(); } catch { /* Clear local login even when offline. */ }
     await clearLocal();
@@ -546,7 +571,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const id = apiSession?.user.id;
       await mysqlAuth.deleteAccount();
       if (id) {
-        const keys = (await AsyncStorage.getAllKeys()).filter(key => key.startsWith("pg.mysql.memo-draft." + id + ".") || key === "pg.mysql.local." + id || key.startsWith("pg.mysql.speed.")&&key.endsWith("."+id));
+        const keys = (await AsyncStorage.getAllKeys()).filter(key => key.startsWith(L.activities.key.replace(/^pg\./,"pg.mysql.")+"."+id+".") || key.startsWith("pg.mysql.memo-draft." + id + ".") || key === "pg.mysql.local." + id || key.startsWith("pg.mysql.speed.")&&key.endsWith("."+id));
         await AsyncStorage.multiRemove(keys);
       }
       await clearLocal(); return;
@@ -596,7 +621,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const checkStreak = useCallback(async () => {
     if(mode==="user"){
       const ok=await remoteWallet('check_streak');
-      if(ok){const plan=planStreakRescue(recordsRef.current,keptRef.current,freezesRef.current);if(plan&&!plan.tooLate)setRescue(plan);}
+      if(ok){const plan=planStreakRescue(recordsRef.current,keptRef.current,freezesRef.current),today=dateKey(new Date());if(plan&&!plan.tooLate&&(await readJSON<string>(K.rescueAsked,""))!==today){await writeJSON(K.rescueAsked,today);setRescue(plan);}}
       return;
     }
     const plan = planStreakRescue(recordsRef.current, keptRef.current, freezesRef.current);
@@ -653,6 +678,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
     saveRecordsLocal(sortRecords([...recordsRef.current, ...seeded]));
   }, [mode, saveRecordsLocal]);
+
+  // 학습 진행(모의고사 · 오답 해결 · 복습 · 자격증 시험일) 계정 보관: 앱으로 돌아올 때 받고, 앱을 떠날 때 올림
+  useEffect(() => {
+    if (mode !== "user") return;
+    const sub = RNAppState.addEventListener("change", (st) => {
+      const id = ownerRef.current;
+      if (id && (st === "active" || st === "background")) syncProgress(id, () => ownerRef.current === id).catch(() => {});
+    });
+    return () => sub.remove();
+  }, [mode]);
 
   // 연속 기록 확인: 앱을 열 때와 앱으로 돌아올 때
   useEffect(() => {
@@ -778,40 +813,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [mode, remoteWallet]);
 
   const addRecord = useCallback(async (r: NewRecord) => {
-    const rec: StudyRecord = { ...r, id: Crypto.randomUUID(), studiedAt: new Date().toISOString(), synced: false };
-    saveRecordsLocal(sortRecords([...recordsRef.current, rec]));
+    const rec: StudyRecord = { ...r, ...(mode==='user'?{rp:0,xpParts:[],rewardStatus:'held' as const,rewardReason:'upload_pending',countsAsStudy:false}:{}), id: r.attemptId ?? Crypto.randomUUID(), studiedAt: new Date().toISOString(), synced: false };
+    saveRecordsLocal(sortRecords([...recordsRef.current.filter(x=>x.id!==rec.id), rec]));
     if (mode === "user" && apiSession) await syncPending(apiSession.user.id).catch(() => {});
     return recordsRef.current.find(x => x.id === rec.id) ?? rec;
   }, [mode, apiSession, saveRecordsLocal, syncPending]);
 
-  const removeRecord = useCallback(async (id: string) => {
-    const target = recordsRef.current.find((r) => r.id === id);
-    if (!target) return;
-    if (mode === "user") {
-      const owner = ownerRef.current, client = mysqlAuth;
-      await enqueueRecordOperation(syncQueue, async () => {
-        if (ownerRef.current !== owner) return;
-        try { await client.deleteRecord(id); }
-        catch (e) { if (!(e instanceof AuthApiError) || e.status !== 404 || target.synced) throw e; }
-        if (ownerRef.current === owner) saveRecordsLocal(recordsRef.current.filter(r => r.id !== id));
+  const setRecordVisibility = useCallback(async (id:string,hidden:boolean)=>{
+    const target=recordsRef.current.find(r=>r.id===id);if(!target)return;
+    if(mode==='user'){
+      const owner=ownerRef.current;
+      await enqueueRecordOperation(syncQueue,async()=>{
+        if(ownerRef.current!==owner)return;
+        const {record}=await mysqlAuth.recordVisibility(id,hidden);
+        if(ownerRef.current===owner)saveRecordsLocal(recordsRef.current.map(r=>r.id===id?record:r));
       });
-      return;
-    }
-    saveRecordsLocal(recordsRef.current.filter((r) => r.id !== id));
-  }, [mode, saveRecordsLocal]);
+    }else saveRecordsLocal(recordsRef.current.map(r=>r.id===id?{...r,hiddenAt:hidden?new Date().toISOString():null}:r));
+  },[mode,saveRecordsLocal]);
+  const removeRecord=useCallback((id:string)=>setRecordVisibility(id,true),[setRecordVisibility]);
+  const restoreRecord=useCallback((id:string)=>setRecordVisibility(id,false),[setRecordVisibility]);
 
   const xp = useMemo(() => Math.max(0, records.reduce((a, r) => a + (r.rp || 0), 0) + (mode === "user" ? 0 : battleXp) + speedXp), [records, battleXp, speedXp, mode]);
 
   const value = useMemo<AppStateValue>(() => ({
     ready, mode, email: apiSession?.user.email ?? null, serverEnabled: true,
-    catalogVersion, prefs, onboarded, records, active, gears, spendGears, walletNotice,
+    catalogVersion, prefs, onboarded, records, active, gears, spendGears, walletNotice, memberAssets, walletBusy, purchaseItem, equipCosmetic, startMemberExam,
     xp, freezes, keptDays, buyFreeze, rescue, restoreStreak, dismissRescue, devPreviewRescue, devSeedRecords,
     premium, setPremium, purchasePremium, battleTickets: premium ? Infinity : (mode === "user" ? tickets : refillTickets(tickets)).n + ((mode === "user" ? tickets : refillTickets(tickets)).bought ?? 0), freeTickets: (mode === "user" ? tickets : refillTickets(tickets)).n, boughtTickets: (mode === "user" ? tickets : refillTickets(tickets)).bought ?? 0, buyBattleTicket, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid, questClaims, claimQuest, adViewsToday: adViews.day === dateKey(new Date()) ? adViews.n : 0, grantAdReward,
-    startGuest, signUp, signIn, signInKakao, signOut, cancelDeletion, refreshRecords, refreshWallet, refreshSpeedXp, updateRecordMemo, deleteAccount, updatePrefs, setActive, addRecord, removeRecord,
-  }), [catalogVersion, ready, mode, apiSession, prefs, onboarded, records, active, gears, spendGears, walletNotice,
+    startGuest, signUp, signIn, signInKakao, signOut, cancelDeletion, refreshRecords, refreshWallet, refreshSpeedXp, updateRecordMemo, deleteAccount, updatePrefs, setActive, addRecord, removeRecord, restoreRecord,
+  }), [catalogVersion, ready, mode, apiSession, prefs, onboarded, records, active, gears, spendGears, walletNotice, memberAssets, walletBusy, purchaseItem, equipCosmetic, startMemberExam,
     xp, freezes, keptDays, buyFreeze, rescue, restoreStreak, dismissRescue, devPreviewRescue, devSeedRecords,
     premium, setPremium, purchasePremium, tickets, buyBattleTicket, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid, questClaims, claimQuest, adViews, grantAdReward,
-    startGuest, signUp, signIn, signInKakao, signOut, cancelDeletion, refreshRecords, refreshWallet, refreshSpeedXp, updateRecordMemo, deleteAccount, updatePrefs, setActive, addRecord, removeRecord]);
+    startGuest, signUp, signIn, signInKakao, signOut, cancelDeletion, refreshRecords, refreshWallet, refreshSpeedXp, updateRecordMemo, deleteAccount, updatePrefs, setActive, addRecord, removeRecord, restoreRecord]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

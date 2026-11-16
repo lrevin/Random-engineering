@@ -1,11 +1,16 @@
 import {
   IBMPlexSansKR_400Regular, IBMPlexSansKR_500Medium, IBMPlexSansKR_600SemiBold, IBMPlexSansKR_700Bold, useFonts,
 } from "@expo-google-fonts/ibm-plex-sans-kr";
-import { Stack } from "expo-router";
+import { router, Stack, type ErrorBoundaryProps } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { restoreCatalog, syncCatalog } from "@/lib/catalog-sync";
 import { useState, useEffect } from "react";
+import { View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Icon } from "@/components/Icon";
+import { Btn, T } from "@/components/ui";
+import { installGlobalErrorReporter, reportClientError } from "@/lib/error-report";
 import { BattleWatcher } from "@/components/BattleWatcher";
 import { showDialog, DialogHost } from "@/components/Dialog";
 import { initAds } from "@/lib/ads";
@@ -17,6 +22,25 @@ import { useColors } from "@/theme";
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export const unstable_settings = { anchor: "index" };
+
+/** 화면 하나가 오류로 멈춰도 앱 전체가 흰 화면이 되지 않게: 안내 + 다시 시도 + 오류 보고 */
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  const c = useColors();
+  useEffect(() => { reportClientError(error, "screen"); }, [error]);
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: c.bg }}>
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 28, gap: 14 }}>
+        <Icon name="warning" size={56} />
+        <T size={22} weight="bold" center>화면을 여는 중에 문제가 생겼어요</T>
+        <T size={14} color="muted" center>공부 기록은 그대로 있어요. 다시 시도해도 같으면 홈으로 돌아가 주세요.</T>
+        <View style={{ width: "100%", maxWidth: 360, gap: 10, marginTop: 8 }}>
+          <Btn title="다시 시도" variant="accent" onPress={() => { retry(); }} />
+          <Btn title="홈으로" onPress={() => { try { router.replace("/"); } catch { retry(); } }} />
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+}
 
 function RootNav() {
   const { ready, mode, onboarded, walletNotice } = useApp();
@@ -89,6 +113,7 @@ function RootNav() {
 // 구글 광고 SDK 준비 (Expo Go에서는 아무것도 안 함)
 initAds();
 initSfx();
+installGlobalErrorReporter();
 
 export default function RootLayout() {
   return (

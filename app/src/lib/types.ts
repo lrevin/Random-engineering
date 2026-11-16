@@ -9,6 +9,14 @@ export interface WrongAnswer {
 }
 
 export interface StudyRecord {
+  rewardStatus?: "eligible" | "held" | "ineligible" | "legacy_granted";
+  rewardReason?: string | null;
+  rewardPolicyVersion?: string;
+  timeValidationStatus?: "accepted" | "needs_review";
+  studyDate?: string | null;
+  eligibility?: {recordAccepted: boolean; xpEligible: boolean; questEligible: boolean; timeQuestEligible: boolean;
+    rankEligible: boolean; leaderboardEligible: boolean; studyDayEligible: boolean; repeatEligible: boolean; boostEligible: boolean; policyVersion: string};
+  hiddenAt?: string | null;
   studyType?: "study" | "battle";
   battleId?: string | null;
   rankScore?: number | null;
@@ -94,6 +102,9 @@ export interface QuizResult {
 
 /** 진행 중인 공부 (앱을 껐다 켜도 이어서 할 수 있도록 저장) */
 export interface ActiveSession {
+  serverAttemptId?: string;
+  serverTracking?: boolean;
+  serverPendingEvent?: {event:"pause"|"resume"|"quiz"|"extend";id:string};
   topicId: string;
   stage: Stage;
   memo: string;

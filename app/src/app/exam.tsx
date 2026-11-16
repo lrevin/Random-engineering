@@ -1,3 +1,5 @@
+import * as Crypto from "expo-crypto";
+import { mysqlAuth, authErrorMessage } from "@/lib/auth";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
@@ -6,14 +8,14 @@ import { showDialog } from "@/components/Dialog";
 import { Icon } from "@/components/Icon";
 import { SectionTitle } from "@/components/StatTile";
 import { Badge, Btn, Card, Row, Screen, T } from "@/components/ui";
-import { certById, CERTS, isCertId, type CertDef } from "@/data";
+import { certById, topicById, CERTS, isCertId, type CertDef } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { EXAM_TICKET_COST, FREE_EXAMS_PER_DAY, MAX_EXAM_TICKETS } from "@/lib/economy";
 import {
   addExamTicket, buildExam, clearActiveExam, countExamStart, readActiveExam, saveActiveExam, EXAM_PER_SUBJECT, EXAM_SUBJECT_MIN, EXAM_TOTAL_MIN, freeExamsLeft, gradeExam,
-  readExamStore, saveExamResult, subjectFailed, type ExamPaper, type ExamResult,
+  readExamStore, saveExamResult, subjectFailed, type ActiveExam, type ExamPaper, type ExamResult,
 } from "@/lib/exam";
-import { fmtDate } from "@/lib/stats";
+import { dateKey, fmtDate } from "@/lib/stats";
 import { radius, shadow, useColors } from "@/theme";
 import { answerText, isCorrect, QuestionView } from "./quiz";
 
@@ -22,7 +24,7 @@ const pct = (score: number, total: number) => (total ? Math.round((score / total
 
 /** 자격증 모의고사: 자격증 고르기 → 과목별 문제 풀기 → 과목별 점수와 합격 판정 */
 export default function Exam() {
-  const { prefs, premium, gears, spendGears } = useApp();
+  const { mode, memberAssets, purchaseItem, refreshWallet, walletNotice, prefs, premium, gears, spendGears } = useApp();
   const c = useColors();
   const [store, setStore] = useState<Store | null>(null);
   const [paper, setPaper] = useState<ExamPaper | null>(null);
@@ -32,42 +34,57 @@ export default function Exam() {
   const [notice, setNotice] = useState("");
 
   const [resumed, setResumed] = useState(false);
+  const [approval,setApproval]=useState<ActiveExam|null>(null);
+  const [pendingExam,setPendingExam]=useState<ActiveExam|null>(null);
   useEffect(() => {
     readExamStore().then(setStore);
     // 풀다가 나간 모의고사가 있으면 이어서 (횟수·1회권은 처음 시작할 때 이미 씀)
     readActiveExam().then((a) => {
-      if (!a) return;
-      setPaper(a.paper);
-      setAnswers(a.answers);
-      setResumed(true);
+      if (!a || (a.owner??null)!==(mode==='user'?mysqlAuth.getUserId():null)) return;
+      if(mode==='user' && !a.approved){setPendingExam(a);return;}
+      setApproval(a);setPaper(a.paper);setAnswers(a.answers);setResumed(true);
     });
-  }, []);
+    if(mode==='user')void refreshWallet().catch(()=>{});
+  }, [mode,refreshWallet]);
 
-  const left = store ? freeExamsLeft(store) : 0;
-  const tickets = store?.tickets ?? 0;
+  const left = mode==='user'?(memberAssets?(memberAssets.examUsageDate===dateKey(new Date())?Math.max(0,1-memberAssets.examFreeUsed):1):0):(store ? freeExamsLeft(store) : 0);
+  const tickets = mode==='user'?(memberAssets?.examTickets??0):(store?.tickets ?? 0);
   /** 무료 횟수를 다 쓴 무료 회원은 1회권으로 봄 */
   const useTicket = !premium && left <= 0;
   const canStart = premium || left > 0 || tickets > 0;
 
   const buyTicket = async () => {
-    if (tickets >= MAX_EXAM_TICKETS || !await spendGears(EXAM_TICKET_COST)) return;
-    setStore(await addExamTicket());
+    if(tickets>=MAX_EXAM_TICKETS)return;
+    if(mode==='user'){if(!await purchaseItem('exam_ticket'))return;}else {if(!await spendGears(EXAM_TICKET_COST))return;setStore(await addExamTicket());}
     setNotice("");
   };
 
+  const authorize=async(a:ActiveExam)=>{
+    if(!a.startId)return null;
+    const activity=await mysqlAuth.issueActivity({requestId:a.startId,purpose:'exam',certId:a.paper.certId});
+    const subjects=[...new Map(activity.items.map(i=>[i.subject!,i.subjectName!])).entries()].sort((a,b)=>a[0]-b[0]).map(([,name])=>name);
+    const p:ExamPaper={certId:a.paper.certId,subjects,items:activity.items.map(i=>{const topic=topicById(i.topicId);if(!topic)throw new Error('unknown_topic');return {topic,q:i.question,subject:i.subject!};})};
+    const approved={...a,paper:p,approved:true,serverIssued:true};
+    await saveActiveExam(approved);setApproval(approved);setPendingExam(null);await refreshWallet();return approved;
+  };
+  const recover=async()=>{if(!pendingExam||loading)return;setLoading('이어 풀기');try{const a=await authorize(pendingExam);if(a){setPaper(a.paper);setAnswers(a.answers);setResumed(true);}}catch{setNotice('서버 연결을 확인하고 같은 요청으로 다시 시도해 주세요.');}finally{setLoading(null);}};
   const start = async (cert: CertDef) => {
-    if (loading || !canStart) return;
+    if (loading || !canStart || pendingExam) return;
     setNotice("");
     setLoading(cert.name);
     try {
-      const p = await buildExam(cert);
-      if (!p.items.length) throw new Error("empty");
-      setStore(await countExamStart(useTicket));
+      const p:ExamPaper = mode==='user'?{certId:cert.id,subjects:cert.subjects.map(s=>s.name),items:[]}:await buildExam(cert);
+      if (mode!=='user'&&!p.items.length) throw new Error("empty");
+      if(mode==='user'){
+        const prepared:ActiveExam={paper:p,answers:[],owner:mysqlAuth.getUserId(),startId:Crypto.randomUUID(),approved:false};
+        await saveActiveExam(prepared);setPendingExam(prepared);
+        const approved=await authorize(prepared);if(!approved)return;setPaper(approved.paper);
+      }else {setStore(await countExamStart(useTicket));await saveActiveExam({paper:p,answers:[],owner:null});}
       setAnswers([]);
       setResult(null);
       setResumed(false);
-      setPaper(p);
-      saveActiveExam({ paper: p, answers: [] });
+      if(mode!=='user')setPaper(p);
+      // 시작 전에 승인 복원 정보를 저장했다.
     } catch {
       setNotice("문제를 불러오지 못했어요. 잠시 뒤 다시 해 주세요.");
     } finally {
@@ -79,12 +96,14 @@ export default function Exam() {
     showDialog({
       icon: "door",
       title: "모의고사를 그만둘까요?",
-      message: "그만두면 지금까지 푼 문제는 채점되지 않아요. 앱을 닫기만 하면 다음에 이어서 풀 수 있어요.",
+      message: "그만두면 채점되지 않고 사용한 횟수·이용권도 반환되지 않아요. 앱을 닫기만 하면 같은 기기에서 이어서 풀 수 있어요.",
       buttons: [
         { text: "계속 풀기", style: "cancel" },
-        { text: "그만두기", style: "destructive", onPress: () => { clearActiveExam(); setPaper(null); } },
+        { text: "그만두기", style: "destructive", onPress: async () => { try{if(approval?.serverIssued&&approval.startId)await mysqlAuth.abandonActivity(approval.startId);await clearActiveExam();setPaper(null);}catch{setNotice("진행 상태를 지우지 못했어요. 다시 시도해 주세요.");} } },
       ],
     });
+
+  if(pendingExam && !loading)return <Screen scroll><T>시험 시작 승인 결과를 확인해야 해요. 동일 요청으로 확인하므로 추가 차감되지 않아요.</T>{(walletNotice||notice)?<T color="accent">{walletNotice||notice}</T>:null}<Btn title="상점 열기" onPress={()=>router.push("/(tabs)/shop")} /><Btn title="시작 결과 다시 확인" onPress={()=>{void recover();}} /></Screen>;
 
   // ───────── 준비 중 ─────────
   if (loading) {
@@ -111,19 +130,23 @@ export default function Exam() {
         badges={<Row gap={6}><Badge label={`${item.subject + 1}과목`} tone="navy" /><Badge label={paper.subjects[item.subject]} />{resumed && idx === answers.length && <Badge label="이어서 푸는 중" tone="accent" />}</Row>}
         saving={false}
         onQuit={quit}
-        onNext={(a) => {
-          const next = [...answers, a];
-          setAnswers(next);
-          if (next.length < paper.items.length) saveActiveExam({ paper, answers: next });
-          else clearActiveExam();
-          if (next.length >= paper.items.length) {
-            const r = gradeExam(paper, next);
-            setResult(r);
-            const at = new Date().toISOString();
-            const wrongs = paper.items.filter((x, i) => !isCorrect(x.q, next[i]))
-              .map((x) => ({ topicId: x.topic.id, q: x.q.q, answer: answerText(x.q), explain: x.q.explain, at }));
-            saveExamResult(r, wrongs).then(setStore);
-          }
+        onNext={async(a) => {
+          const next = answers.length===paper.items.length?answers:[...answers,a];
+          try{
+            await saveActiveExam({...approval,paper,answers:next});
+            if(next.length>=paper.items.length){
+              let r:ExamResult;
+              if(mode==='user'&&approval?.serverIssued&&approval.startId){
+                const activity=await mysqlAuth.completeActivity(approval.startId,next);
+                r={certId:paper.certId,at:activity.completedAt!,score:activity.result!.score,total:activity.result!.total,pass:!!activity.result!.pass,subjects:activity.result!.subjects!};
+                await refreshWallet();
+              }else r=gradeExam(paper,next);
+              // 서버 성공을 확인하기 전에는 진행 캐시를 지우지 않는다.
+              const at=r.at,wrongs=paper.items.filter((x,i)=>!isCorrect(x.q,next[i])).map(x=>({topicId:x.topic.id,q:x.q.q,answer:answerText(x.q),explain:x.q.explain,at}));
+              setStore(await saveExamResult(r,wrongs));await clearActiveExam();setResult(r);
+            }
+            setAnswers(next);
+          }catch(error){showDialog({title:'완료를 확인하지 못했어요',message:authErrorMessage(error)+' 답안은 기기에 남아 있어요.'});}
         }}
       />
     );
@@ -250,7 +273,7 @@ export default function Exam() {
       {!premium && store && left <= 0 && (
         <Btn title="프리미엄으로 무제한 모의고사" variant="premium" icon={<Icon name="crown" size={24} />} onPress={() => router.push("/shop")} />
       )}
-      {notice ? <T color="accent">{notice}</T> : null}
+      {(walletNotice || notice) ? <T color="accent">{walletNotice || notice}</T> : null}
 
       {mine.length > 0 && <SectionTitle title="내가 준비 중인 자격증" />}
       {mine.map(card)}

@@ -55,7 +55,7 @@ type Def = Omit<Quest, "value" | "done" | "unit"> & { kind: string; measure: (x:
 const finished = (x: Ctx) => x.inPeriod.length;
 const correct = (x: Ctx) => x.inPeriod.reduce((a, r) => a + r.score, 0);
 const perfect = (x: Ctx) => x.inPeriod.filter((r) => r.total > 0 && r.score === r.total).length;
-const minutes = (x: Ctx) => Math.floor(x.inPeriod.reduce((a, r) => a + (r.studySec || 0), 0) / 60);
+const minutes = (x: Ctx) => Math.floor(x.inPeriod.reduce((a, r) => a + (r.eligibility && !r.eligibility.timeQuestEligible ? 0 : r.studySec || 0), 0) / 60);
 const days = (x: Ctx) => new Set(x.inPeriod.map((r) => dateKey(new Date(r.studiedAt)))).size;
 const xpSum = (x: Ctx) => x.inPeriod.reduce((a, r) => a + Math.max(0, r.rp || 0), 0);
 const hard = (lv: string[]) => (x: Ctx) => x.inPeriod.filter((r) => lv.includes(r.level)).length;
@@ -65,8 +65,8 @@ const examsDone = (x: Ctx) => x.extra.exams.filter((e) => within(x, e.at)).lengt
 const examsPassed = (x: Ctx) => x.extra.exams.filter((e) => e.pass && within(x, e.at)).length;
 const solved = (x: Ctx) => x.extra.solvedAt.filter((t) => within(x, t)).length;
 /** 한 번에 n분 넘게 공부한 횟수 (무료는 15분까지라 프리미엄만 가능) */
-const longStudy = (min: number) => (x: Ctx) => x.inPeriod.filter((r) => (r.studySec || 0) >= min * 60).length;
-const battles = (x: Ctx) => x.inPeriod.filter((r) => r.memo.includes("님과 배틀")).length;
+const longStudy = (min: number) => (x: Ctx) => x.inPeriod.filter((r) => (r.eligibility && !r.eligibility.timeQuestEligible ? 0 : r.studySec || 0) >= min * 60).length;
+const battles = (x: Ctx) => x.inPeriod.filter((r) => r.studyType === "battle").length;
 /** 이 기간에 처음 푼 주제 수 */
 const newTopics = (x: Ctx) => {
   const first = new Map<string, string>();
@@ -136,7 +136,7 @@ PERIODS.premium = {
     { id: "pass1", kind: "pass", title: "모의고사에서 합격권 받기", icon: "medal", goal: 1, reward: 20, measure: examsPassed },
     { id: "solve10", kind: "solve", title: "오답 다시 풀기로 오답 10개 해결하기", icon: "target", goal: 10, reward: 12, measure: solved },
     { id: "solve25", kind: "solve", title: "오답 다시 풀기로 오답 25개 해결하기", icon: "target", goal: 25, reward: 18, measure: solved },
-    { id: "long2", kind: "long", title: "30분 넘게 공부 2번 하기", icon: "hourglass", goal: 2, reward: 15, measure: longStudy(30) },
+    { id: "long2", kind: "long", title: "30분 이상 공부 2번 하기", icon: "hourglass", goal: 2, reward: 15, measure: longStudy(30) },
     { id: "battle5", kind: "battle", title: "랜덤 매칭 배틀 5번 하기", icon: "swords", goal: 5, reward: 15, measure: battles },
   ],
 };
@@ -167,7 +167,7 @@ function seeded(key: string) {
 }
 
 export function questsFor(p: Period, records: StudyRecord[], now = new Date(), extra: QuestExtra = NO_EXTRA): Quest[] {
-  records = records.filter(r=>r.studyType !== "battle");
+  records = records.filter(r=>(p === "premium" || r.studyType !== "battle") && (r.eligibility ? r.eligibility.questEligible || (p === "premium" && r.studyType === "battle" && r.eligibility.studyDayEligible) : r.rewardStatus === undefined && r.synced !== true));
   const def = PERIODS[p];
   const start = periodStart(p, now);
   const end = periodEnd(p, now);
