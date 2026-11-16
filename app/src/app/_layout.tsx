@@ -12,6 +12,8 @@ import { Icon } from "@/components/Icon";
 import { Btn, T } from "@/components/ui";
 import { installGlobalErrorReporter, reportClientError } from "@/lib/error-report";
 import { BattleWatcher } from "@/components/BattleWatcher";
+import { GearFlyLayer } from "@/components/GearFly";
+import { noteTouch } from "@/lib/gear-fly";
 import { showDialog, DialogHost } from "@/components/Dialog";
 import { initAds } from "@/lib/ads";
 import { initSfx } from "@/lib/sfx";
@@ -65,7 +67,8 @@ function RootNav() {
   const flow = { headerShown: false, gestureEnabled: false, animation: "fade" } as const;
 
   return (
-    <>
+    // 누른 위치를 기억해 두면 톱니바퀴를 받았을 때 그 자리에서 날아가는 연출의 출발점이 됨
+    <View style={{ flex: 1 }} onTouchStart={(e) => noteTouch(e.nativeEvent.pageX, e.nativeEvent.pageY)}>
       <StatusBar style={c.mode === "dark" ? "light" : "dark"} />
       <Stack screenOptions={{ headerShown: false, contentStyle: screenBg(c) }}>
         <Stack.Screen name="index" />
@@ -107,7 +110,8 @@ function RootNav() {
       {inApp && <StreakSheet />}
       {inApp && <BattleWatcher />}
       <DialogHost />
-    </>
+      {inApp && <GearFlyLayer />}
+    </View>
   );
 }
 

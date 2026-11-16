@@ -48,7 +48,7 @@ export function StreakSheet() {
           {!saved && (
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: c.chip, borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 10, ...inset(c) }}>
               <T size={14} color="ink2">내 톱니바퀴</T>
-              <GearCount n={gears} />
+              <GearCount n={gears} target={false} />
             </View>
           )}
 
