@@ -1,107 +1,44 @@
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useState, type ReactNode } from "react";
 import { Pressable, View } from "react-native";
-import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { AdRewardButton } from "@/components/AdRewardButton";
 import { Icon } from "@/components/Icon";
+import { Perk, PlanCard } from "@/components/PlanCard";
 import { SectionTitle } from "@/components/StatTile";
 import { GearCount } from "@/components/TimeUpSheet";
-import { Btn, Row, Screen, T } from "@/components/ui";
+import { Btn, Row, Screen, T, tap } from "@/components/ui";
 import { useApp } from "@/lib/app-state";
-import { BATTLE_TICKET_COST, EXAM_TICKET_COST, MAX_EXAM_TICKETS, FREE_BATTLE_TICKETS, FREE_EXAMS_PER_DAY, PREMIUM_BONUS_GEARS, FREE_MAX_STUDY_MIN, PREMIUM_MAX_STUDY_MIN, FREEZE_COST, MAX_BOUGHT_TICKETS, MAX_FREEZES } from "@/lib/economy";
-import { addExamTicket, readExamStore } from "@/lib/exam";
-import { addBoost, BOOST_COST, BOOST_MAX_MIN, BOOST_MIN, canStackBoost, fmtLeft, useBoost } from "@/lib/booster";
-import { TITLES, titleById, useCosmetics, useThemes } from "@/lib/skins";
+import { BATTLE_TICKET_COST, EXAM_TICKET_COST, FREE_BATTLE_TICKETS, FREE_EXAMS_PER_DAY, PREMIUM_BONUS_GEARS, FREE_MAX_STUDY_MIN, PREMIUM_MAX_STUDY_MIN } from "@/lib/economy";
+import { TITLES } from "@/lib/skins";
 import { inset, radius, raised, shadow, useColors } from "@/theme";
 
-/** 체크 표시 한 줄 */
-function Perk({ children }: { children: ReactNode }) {
+/** 상점 분류 버튼: 큰 그림 + 이름 + 설명, 누르면 그 상점으로 */
+function ShopDoor({ title, sub, art, onPress }: { title: string; sub: string; art: ReactNode; onPress: () => void }) {
   const c = useColors();
   return (
-    <Row gap={10} style={{ flexWrap: "nowrap" }}>
-      <Icon name="check" size={16} color={c.success} />
-      <T size={15} style={{ flex: 1 }}>{children}</T>
-    </Row>
-  );
-}
-
-/** 요금제·아이템 카드: (있으면) 위에 색 띠 + 이름 + 설명 + 오른쪽 그림 + 아래 버튼 */
-function PlanCard({ ribbon, title, art, children, footer, highlight }: {
-  ribbon?: string; title: string; art: ReactNode; children: ReactNode; footer?: ReactNode; highlight?: boolean;
-}) {
-  const c = useColors();
-  return (
-    <View style={{
-      borderRadius: radius.lg, borderWidth: 2, borderColor: highlight ? c.accent : c.line, borderBottomWidth: 5,
-      borderBottomColor: highlight ? c.accentDeep : c.paperEdge, backgroundColor: c.paper, overflow: "hidden", ...shadow(c, 2),
-    }}>
-      {ribbon ? (
-        <View style={{ height: 34, justifyContent: "center", paddingHorizontal: 16 }}>
-          <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
-          <Svg width="100%" height="100%" viewBox="0 0 100 10" preserveAspectRatio="none">
-            <Defs>
-              <LinearGradient id={highlight ? "ribA" : "ribB"} x1="0" y1="0" x2="1" y2="0">
-                <Stop offset="0" stopColor={highlight ? "#e0453a" : "#1d2742"} />
-                <Stop offset="1" stopColor={highlight ? "#f7b500" : "#46506b"} />
-              </LinearGradient>
-            </Defs>
-            <Rect width="100" height="10" fill={highlight ? "url(#ribA)" : "url(#ribB)"} />
-          </Svg>
-          </View>
-          <T size={14} weight="bold" style={{ color: "#ffffff" }}>{ribbon}</T>
-        </View>
-      ) : null}
-      <View style={{ padding: 18, gap: 14 }}>
-        <View style={{ flexDirection: "row", gap: 12 }}>
-          <View style={{ flex: 1, gap: 10 }}>
-            <T size={21} weight="bold">{title}</T>
-            {children}
-          </View>
-          <View style={{ paddingTop: 4 }}>{art}</View>
-        </View>
-        {footer}
-      </View>
-    </View>
+    <Pressable
+      onPress={() => { tap(); onPress(); }}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      style={({ pressed }) => ({
+        flex: 1, alignItems: "center", gap: 10, paddingVertical: 20, paddingHorizontal: 12, borderRadius: radius.lg, borderWidth: 2,
+        borderColor: c.line, backgroundColor: c.paper, ...raised(c.paperEdge, pressed, 6), ...(!pressed ? shadow(c, 2) : null),
+      })}
+    >
+      {art}
+      <T size={19} weight="bold" center>{title}</T>
+      <T size={13} color="muted" center>{sub}</T>
+    </Pressable>
   );
 }
 
 /** 톱니바퀴 쓰는 곳 + 무료/유료 버전 */
 export default function Shop() {
-  const { mode, walletBusy, walletNotice, gears, freezes, buyFreeze, premium, setPremium, purchasePremium, spendGears, memberAssets, purchaseItem, refreshWallet, battleTickets, freeTickets, boughtTickets, buyBattleTicket } = useApp();
+  const { mode, walletNotice, gears, premium, setPremium, purchasePremium, refreshWallet, battleTickets } = useApp();
   const c = useColors();
   const [askUpgrade, setAskUpgrade] = useState(false);
-  const [notice, setNotice] = useState("");
-  const full = freezes >= MAX_FREEZES;
-  const [ticketNotice, setTicketNotice] = useState("");
   const [bonusNotice, setBonusNotice] = useState("");
-  // 모의고사 1회권 (모의고사 화면에서 쓰고 오면 다시 읽음)
-  const [guestExamTickets, setExamTickets] = useState(0);
-  const examTickets=mode==='user'?(memberAssets?.examTickets??0):guestExamTickets;
-  const [examNotice, setExamNotice] = useState("");
-  useFocusEffect(useCallback(() => { if(mode==='user')void refreshWallet().catch(()=>{});else void readExamStore().then(s=>setExamTickets(s.tickets)); }, [mode,refreshWallet]));
-  const examFull = examTickets >= MAX_EXAM_TICKETS;
-  const buyExamTicket = async () => {
-    if(examFull)return;
-    if(mode==='user'){if(!await purchaseItem('exam_ticket'))return;}
-    else {if(!await spendGears(EXAM_TICKET_COST))return;setExamTickets((await addExamTicket()).tickets);}
-    setExamNotice("모의고사 1회권을 1개 샀어요");
-  };
-  const themes = useThemes();
-  const cos = useCosmetics();
-  const boost = useBoost();
-  const [boostNotice, setBoostNotice] = useState("");
-  const boostFull = !canStackBoost();
-  const buyBoost = async () => {
-    if(boostFull)return;
-    if(mode==='user'){if(!await purchaseItem('xp_boost'))return;}
-    else {if(!await spendGears(BOOST_COST))return;addBoost();}
-    setBoostNotice(`부스터를 켰어요. ${BOOST_MIN}분 동안 퀴즈 경험치가 2배예요`);
-  };
-  const ticketsFull = boughtTickets >= MAX_BOUGHT_TICKETS;
-
-  const buy = async () => {
-    if (await buyFreeze()) setNotice("보호권을 1개 샀어요");
-  };
+  useFocusEffect(useCallback(() => { if (mode === "user") void refreshWallet().catch(() => {}); }, [mode, refreshWallet]));
 
   return (
     <Screen scroll edges={["top"]}>
@@ -117,159 +54,27 @@ export default function Shop() {
       {/* 광고 보고 톱니바퀴 (배틀 탭과 같은 버튼, 하루 횟수도 같이 셈) */}
       <AdRewardButton />
 
-      <SectionTitle title="아이템" />
-      <PlanCard
-        title="연속 기록 보호권"
-        art={
-          <View style={{ alignItems: "center", gap: 4 }}>
-            <Icon name="shield" size={64} />
-            <T size={13} weight="bold" color="ink2">{freezes} / {MAX_FREEZES}개</T>
-          </View>
-        }
-        footer={
-          <View style={{ gap: 8 }}>
-            <Btn
-              title={full ? "보호권을 가득 갖고 있어요" : `보호권 사기 · 톱니바퀴 ${FREEZE_COST}개`}
-              variant="accent"
-              icon={full ? undefined : <Icon name="gear" size={22} />}
-              onPress={buy}
-              disabled={full || gears < FREEZE_COST}
-            />
-            {!full && gears < FREEZE_COST && <T size={13} color="accent" center>톱니바퀴가 {FREEZE_COST - gears}개 부족해요</T>}
-            {notice ? <T size={13} color="success" center>{notice}</T> : null}
-          </View>
-        }
-      >
-        <T size={14} color="ink2">하루 빠져도 연속 기록을 지켜 줘요.</T>
-      </PlanCard>
-
-      <PlanCard
-        title="배틀권"
-        art={
-          <View style={{ alignItems: "center", gap: 4 }}>
-            <Icon name="ticket" size={64} />
-            <T size={13} weight="bold" color="ink2">{premium ? "무제한" : `${battleTickets}개`}</T>
-          </View>
-        }
-        footer={
-          premium ? (
-            <T size={13} color="success" weight="semibold">프리미엄은 무제한이에요</T>
-          ) : (
-            <View style={{ gap: 8 }}>
-              <Btn
-                title={ticketsFull ? `산 배틀권은 ${MAX_BOUGHT_TICKETS}개까지 가질 수 있어요` : `배틀권 사기 · 톱니바퀴 ${BATTLE_TICKET_COST}개`}
-                variant="accent"
-                icon={ticketsFull ? undefined : <Icon name="gear" size={22} />}
-                onPress={async () => { if (await buyBattleTicket()) setTicketNotice("배틀권을 1개 샀어요"); }}
-                disabled={ticketsFull || gears < BATTLE_TICKET_COST}
-              />
-              {!ticketsFull && gears < BATTLE_TICKET_COST && <T size={13} color="accent" center>톱니바퀴가 {BATTLE_TICKET_COST - gears}개 부족해요</T>}
-              {ticketNotice ? <T size={13} color="success" center>{ticketNotice}</T> : null}
+      {/* 분류: 누르면 각 상점 화면으로 */}
+      <View style={{ flexDirection: "row", gap: 12 }}>
+        <ShopDoor
+          title="아이템 상점"
+          sub={"보호권 · 배틀권\n모의고사권 · 부스터"}
+          art={<Icon name="chest" size={64} />}
+          onPress={() => router.push("/items")}
+        />
+        <ShopDoor
+          title="꾸미기 상점"
+          sub={`테마 4종\n칭호 ${TITLES.length}종`}
+          art={
+            <View style={{ width: 64, height: 64, borderRadius: radius.md, overflow: "hidden", borderWidth: 1, borderColor: c.line2, flexDirection: "row" }}>
+              {[{ backgroundColor: c.bg, ...(c.grad.bg ? { experimental_backgroundImage: c.grad.bg } : null) },
+                { backgroundColor: c.slot, ...(c.grad.hero ? { experimental_backgroundImage: c.grad.hero } : null) },
+                { backgroundColor: c.accent, ...(c.grad.accent ? { experimental_backgroundImage: c.grad.accent } : null) }].map((st, i) => <View key={i} style={{ flex: 1, ...st }} />)}
             </View>
-          )
-        }
-      >
-        <T size={14} color="ink2">랜덤 매칭 배틀 1번</T>
-        {!premium && <T size={13} color="muted">이번 달 무료 {freeTickets} / {FREE_BATTLE_TICKETS} · 산 것 {boughtTickets}개</T>}
-      </PlanCard>
-
-      <PlanCard
-        title="모의고사 1회권"
-        art={
-          <View style={{ alignItems: "center", gap: 4 }}>
-            <Icon name="medal" size={64} />
-            <T size={13} weight="bold" color="ink2">{premium ? "무제한" : `${examTickets} / ${MAX_EXAM_TICKETS}개`}</T>
-          </View>
-        }
-        footer={
-          premium ? (
-            <T size={13} color="success" weight="semibold">프리미엄은 무제한이에요</T>
-          ) : (
-            <View style={{ gap: 8 }}>
-              <Btn
-                title={examFull ? `1회권은 ${MAX_EXAM_TICKETS}개까지 가질 수 있어요` : `1회권 사기 · 톱니바퀴 ${EXAM_TICKET_COST}개`}
-                variant="accent"
-                icon={examFull ? undefined : <Icon name="gear" size={22} />}
-                onPress={buyExamTicket}
-                disabled={walletBusy || examFull || gears < EXAM_TICKET_COST}
-              />
-              {!examFull && gears < EXAM_TICKET_COST && <T size={13} color="accent" center>톱니바퀴가 {EXAM_TICKET_COST - gears}개 부족해요</T>}
-              {examNotice ? <T size={13} color="success" center>{examNotice}</T> : null}
-              {examTickets > 0 && <Btn title="모의고사 보러 가기" size="sm" variant="ghost" onPress={() => router.push("/exam")} />}
-            </View>
-          )
-        }
-      >
-        <T size={14} color="ink2">자격증 모의고사 1번 더 보기</T>
-      </PlanCard>
-
-      <PlanCard
-        title="경험치 2배 부스터"
-        art={
-          <View style={{ alignItems: "center", gap: 4 }}>
-            <Icon name="bolt" size={64} />
-            <T size={13} weight="bold" color={boost.active ? "success" : "ink2"}>{boost.active ? fmtLeft(boost.left) : "꺼짐"}</T>
-          </View>
-        }
-        footer={
-          <View style={{ gap: 8 }}>
-            <Btn
-              title={boostFull ? `부스터는 ${BOOST_MAX_MIN}분까지 쌓을 수 있어요` : `${boost.active ? "시간 더하기" : "부스터 켜기"} · 톱니바퀴 ${BOOST_COST}개`}
-              variant="accent"
-              icon={boostFull ? undefined : <Icon name="gear" size={22} />}
-              onPress={buyBoost}
-              disabled={walletBusy || boostFull || gears < BOOST_COST}
-            />
-            {!boostFull && gears < BOOST_COST && <T size={13} color="accent" center>톱니바퀴가 {BOOST_COST - gears}개 부족해요</T>}
-            {boostNotice ? <T size={13} color="success" center>{boostNotice}</T> : null}
-          </View>
-        }
-      >
-        <T size={14} color="ink2">{BOOST_MIN}분 동안 퀴즈 경험치 2배</T>
-      </PlanCard>
-
-      <SectionTitle title="꾸미기" />
-      <Pressable
-        onPress={() => router.push("/skins")}
-        accessibilityRole="button"
-        accessibilityLabel="테마 보러 가기"
-        style={({ pressed }) => ({
-          flexDirection: "row", alignItems: "center", gap: 14, padding: 16, borderRadius: radius.lg, borderWidth: 2,
-          borderColor: c.line, backgroundColor: c.paper, ...raised(c.paperEdge, pressed, 5), ...(!pressed ? shadow(c, 2) : null),
-        })}
-      >
-        {/* 지금 테마의 그라데이션 견본 (클래식은 단색) */}
-        <View style={{ width: 58, height: 58, borderRadius: radius.md, overflow: "hidden", borderWidth: 1, borderColor: c.line2, flexDirection: "row" }}>
-          {[{ backgroundColor: c.bg, ...(c.grad.bg ? { experimental_backgroundImage: c.grad.bg } : null) },
-            { backgroundColor: c.slot, ...(c.grad.hero ? { experimental_backgroundImage: c.grad.hero } : null) },
-            { backgroundColor: c.accent, ...(c.grad.accent ? { experimental_backgroundImage: c.grad.accent } : null) }].map((st, i) => <View key={i} style={{ flex: 1, ...st }} />)}
-        </View>
-        <View style={{ flex: 1, gap: 2 }}>
-          <T size={19} weight="bold">테마</T>
-          <T size={13} color="ink2">지금 {themes.active.name}</T>
-          <T size={12} color="muted">앱 전체 색을 바꾸는 테마 4종</T>
-        </View>
-        <T size={22} color="muted">›</T>
-      </Pressable>
-      <Pressable
-        onPress={() => router.push("/titles")}
-        accessibilityRole="button"
-        accessibilityLabel="칭호 보러 가기"
-        style={({ pressed }) => ({
-          flexDirection: "row", alignItems: "center", gap: 14, padding: 16, borderRadius: radius.lg, borderWidth: 2,
-          borderColor: c.line, backgroundColor: c.paper, ...raised(c.paperEdge, pressed, 5), ...(!pressed ? shadow(c, 2) : null),
-        })}
-      >
-        <View style={{ width: 58, height: 58, borderRadius: radius.md, backgroundColor: c.chip, alignItems: "center", justifyContent: "center" }}>
-          <Icon name="medal" size={40} />
-        </View>
-        <View style={{ flex: 1, gap: 2 }}>
-          <T size={19} weight="bold">칭호</T>
-          <T size={13} color="ink2">{titleById(cos.title) ? `지금 "${titleById(cos.title)?.name}"` : "아직 단 칭호가 없어요"}</T>
-          <T size={12} color="muted">연속 기록 · 업적 보상 {TITLES.length}종 · 받은 칭호 {cos.titles.length}개</T>
-        </View>
-        <T size={22} color="muted">›</T>
-      </Pressable>
+          }
+          onPress={() => router.push("/cosmetics")}
+        />
+      </View>
 
       <SectionTitle title="요금제 비교" />
       <PlanCard
