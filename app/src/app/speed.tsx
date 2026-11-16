@@ -11,7 +11,7 @@ import { useApp } from "@/lib/app-state";
 import { speedQuestions, type ExamItem } from "@/lib/quiz";
 import { speedNow, finishPractice, finishSpeed, readSpeed, startSpeed, answerSpeed, speedItem, speedMessage, type SpeedQuestion, SPEED_DAILY_XP_CAP, SPEED_SEC, SPEED_XP_PER_CORRECT, type SpeedStore } from "@/lib/speed";
 import { sfx } from "@/lib/sfx";
-import { radius, raised, shadow, useColors } from "@/theme";
+import { radius, raised, screenBg, shadow, useColors } from "@/theme";
 import { answerText } from "./quiz";
 
 type Phase = "ready" | "loading" | "play" | "done";
@@ -129,7 +129,7 @@ export default function Speed() {
   // ───────── 준비 · 불러오는 중 ─────────
   if (phase === "loading") {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: c.bg, alignItems: "center", justifyContent: "center", gap: 14 }}>
+      <SafeAreaView style={{ flex: 1, ...screenBg(c), alignItems: "center", justifyContent: "center", gap: 14 }}>
         <ActivityIndicator size="large" color={c.accent} />
         <T size={17} weight="semibold">공부한 주제에서 문제를 고르고 있어요</T>
       </SafeAreaView>

@@ -11,7 +11,7 @@ import { useApp } from "@/lib/app-state";
 import { prefetchQuiz } from "@/lib/quiz";
 import { studyMinutesFor } from "@/lib/economy";
 import { domainWeakness, topicWeakness } from "@/lib/weakness";
-import { radius, useColors } from "@/theme";
+import { radius, screenBg, useColors } from "@/theme";
 
 const pct = (a: number): `${number}%` => `${Math.round(a * 100)}%`;
 const barColor = (a: number, c: ReturnType<typeof useColors>) => (a < 0.5 ? c.accent : a < 0.8 ? c.gold : c.success);
@@ -41,7 +41,7 @@ export default function Weakness() {
   };
 
   return (
-    <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: c.bg }}>
+    <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, ...screenBg(c) }}>
       <ScrollView contentContainerStyle={{ padding: 20, maxWidth: 640, width: "100%", alignSelf: "center", gap: 14 }}>
         <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
           <T size={26} weight="bold">약점 분석</T>

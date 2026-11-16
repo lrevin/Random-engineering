@@ -10,7 +10,7 @@ import { Badge, Btn, Card, Row, Screen, T } from "@/components/ui";
 import { useApp } from "@/lib/app-state";
 import { readExamStore, type ExamWrong } from "@/lib/exam";
 import { buildReview, collectWrongs, markDone, readDone, REVIEW_LENGTH, type DoneMap, type ReviewItem } from "@/lib/review";
-import { useColors } from "@/theme";
+import { screenBg, useColors } from "@/theme";
 import { answerText, isCorrect, QuestionView } from "./quiz";
 
 /**
@@ -64,7 +64,7 @@ function GuestReview() {
 
   if (loading) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: c.bg, alignItems: "center", justifyContent: "center", gap: 14, padding: 24 }}>
+      <SafeAreaView style={{ flex: 1, ...screenBg(c), alignItems: "center", justifyContent: "center", gap: 14, padding: 24 }}>
         <ActivityIndicator size="large" color={c.accent} />
         <T size={17} weight="semibold" center>틀렸던 문제를 변형하고 있어요</T>
         <T size={14} color="muted" center>같은 주제·같은 유형이지만 정답은 달라요.</T>

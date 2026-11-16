@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import { KakaoButton } from "@/components/KakaoButton";
-import { Image, useColorScheme, useWindowDimensions, View } from "react-native";
+import { Image, useWindowDimensions, View } from "react-native";
 import { Btn, Card, Screen, T } from "@/components/ui";
 import { APP_NAME, APP_SUBTITLE, APP_TAGLINE } from "@/config";
 import { useApp } from "@/lib/app-state";
@@ -18,7 +18,7 @@ export default function Welcome() {
   const markH = Math.min(width * 0.28, 120);
   const { startGuest } = useApp();
   const c = useColors();
-  const dark = useColorScheme() === "dark";
+  const dark = c.mode === "dark";
   const [err, setErr] = useState("");
   return (
     <Screen scroll contentStyle={{ flexGrow: 1, justifyContent: "space-between" }}>

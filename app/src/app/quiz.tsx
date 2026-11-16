@@ -16,7 +16,7 @@ import { calcRp, domainMastery, userLevel } from "@/lib/rank";
 import { sfx } from "@/lib/sfx";
 import { calcStreak } from "@/lib/stats";
 import type { WrongAnswer } from "@/lib/types";
-import { radius, raised, shadow, useColors } from "@/theme";
+import { radius, raised, screenBg, shadow, useColors } from "@/theme";
 import { Icon } from "@/components/Icon";
 
 export const isCorrect = (q: QuizQuestion, a: number | boolean | undefined) => a !== undefined && a === q.answer;
@@ -69,7 +69,7 @@ function QuizInner() {
 
   if (!quiz) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: c.bg, alignItems: "center", justifyContent: "center", gap: 14, padding: 24 }}>
+      <SafeAreaView style={{ flex: 1, ...screenBg(c), alignItems: "center", justifyContent: "center", gap: 14, padding: 24 }}>
         {failed ? (
           <>
             <T size={18} weight="semibold" center>문제를 불러오지 못했어요.</T>
@@ -172,7 +172,7 @@ export function QuestionView({ q, index, count, topicName, badges, saving, onQui
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: c.bg }} edges={["top", "bottom"]}>
+    <SafeAreaView style={{ flex: 1, ...screenBg(c) }} edges={["top", "bottom"]}>
       {/* 상단: 닫기 + 진행 막대 */}
       <Row gap={12} style={{ paddingHorizontal: 20, paddingTop: 8, flexWrap: "nowrap" }}>
         <Pressable onPress={onQuit} hitSlop={10} accessibilityRole="button" accessibilityLabel="그만두기">

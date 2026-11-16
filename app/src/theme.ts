@@ -1,72 +1,19 @@
 import { useColorScheme, type ViewStyle } from "react-native";
+import { useActiveThemeId } from "./lib/skins";
+import { paletteFor, type Palette } from "./themes";
 
-// 로고(슬롯머신)와 같은 색: 크림 배경 + 남색 기계 + 빨강 레버 + 노랑 불빛
-const light = {
-  bg: "#f2e6ce",
-  paper: "#fffaf0",
-  ink: "#1d2742",
-  ink2: "#46506b",
-  muted: "#857f74",
-  line: "#e6d6b6",
-  line2: "#d3bf98",
-  navy: "#1d2742",
-  navyDeep: "#0e1424",
-  navyInk: "#fffaf0",
-  accent: "#e0453a",
-  accentDeep: "#b02d26",
-  accentInk: "#ffffff",
-  accentSoft: "#fbe1da",
-  gold: "#f7b500",
-  goldDeep: "#c98f00",
-  goldSoft: "#fdefc2",
-  chip: "#ebdcbd",
-  flame: "#ec8a0c",
-  success: "#2f7d4f",
-  successSoft: "#dff0e4",
-  slot: "#1d2742",
-  slotWindow: "#fffaf0",
-  lever: "#1d2742",
-  slotEdge: "#0e1424",
-  paperEdge: "#d2bb8e",
-  successDeep: "#23633e",
-  shadow: "rgba(29, 39, 66, 0.16)",
-};
+// 색은 src/themes.ts. 기본(클래식)은 로고(슬롯머신)와 같은 색: 크림 배경 + 남색 기계 + 빨강 레버 + 노랑 불빛
+export type Colors = Palette;
 
-const dark: typeof light = {
-  bg: "#111829",
-  paper: "#1b2440",
-  ink: "#f6eedd",
-  ink2: "#c5bfb0",
-  muted: "#8d8fa2",
-  line: "#29345a",
-  line2: "#3a4672",
-  navy: "#f2e6ce",
-  navyDeep: "#b9a77f",
-  navyInk: "#1d2742",
-  accent: "#ef5a4c",
-  accentDeep: "#b03a2f",
-  accentInk: "#ffffff",
-  accentSoft: "#40232a",
-  gold: "#f7b500",
-  goldDeep: "#b88300",
-  goldSoft: "#3b321a",
-  chip: "#26304f",
-  flame: "#f39a2c",
-  success: "#5cc98a",
-  successSoft: "#1d3a2b",
-  slot: "#0a0f1d",
-  slotWindow: "#1b2440",
-  lever: "#3a4672",
-  slotEdge: "#05080f",
-  paperEdge: "#0b1120",
-  successDeep: "#3a9a63",
-  shadow: "rgba(0, 0, 0, 0.5)",
-};
-
-export type Colors = typeof light;
-
+/** 지금 테마의 색. 상점에서 고른 테마가 앱 전체에 적용되고, 클래식은 휴대폰 다크 모드를 따라감 */
 export function useColors(): Colors {
-  return useColorScheme() === "dark" ? dark : light;
+  const scheme = useColorScheme();
+  return paletteFor(useActiveThemeId(), scheme);
+}
+
+/** 화면 바탕: 테마에 그라데이션이 있으면 아주 옅게 깔고, 없으면 단색 */
+export function screenBg(c: Colors): ViewStyle {
+  return c.grad.bg ? { backgroundColor: c.bg, experimental_backgroundImage: c.grad.bg } : { backgroundColor: c.bg };
 }
 
 export const radius = { sm: 10, md: 14, lg: 22, pill: 999 };

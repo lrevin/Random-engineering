@@ -8,7 +8,7 @@ import { Badge, Card, Row, T } from "@/components/ui";
 import { DOMAINS } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { getLeaderboard, getLeaderboardHidden, leaderboardMessage, reportNickname, setLeaderboardHidden, type Leaderboard, type LeaderboardEntry } from "@/lib/leaderboard";
-import { radius, useColors } from "@/theme";
+import { radius, screenBg, useColors } from "@/theme";
 
 export default function LeaderboardScreen() {
   const { mode, prefs } = useApp();
@@ -77,7 +77,7 @@ export default function LeaderboardScreen() {
   }, [domain, mode, rev]);
 
   return (
-    <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: c.bg }}>
+    <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, ...screenBg(c) }}>
       <ScrollView contentContainerStyle={{ padding: 20, maxWidth: 640, width: "100%", alignSelf: "center", gap: 14 }}>
         <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
           <T size={26} weight="bold">분야별 랭킹</T>

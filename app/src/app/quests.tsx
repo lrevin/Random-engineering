@@ -10,7 +10,7 @@ import { Btn, Card, T, tap } from "@/components/ui";
 import { useApp } from "@/lib/app-state";
 import { RESTORE_COST_PER_DAY } from "@/lib/economy";
 import { PERIODS, untilEnd, type Period } from "@/lib/quests";
-import { radius, useColors } from "@/theme";
+import { radius, screenBg, useColors } from "@/theme";
 
 const ORDER: Period[] = ["day", "week", "month", "premium"];
 const RESET: Record<Period, string> = { day: "자정에 새 퀘스트", week: "월요일에 새 퀘스트", month: "1일에 새 퀘스트", premium: "월요일에 새 퀘스트" };
@@ -39,7 +39,7 @@ export default function Quests() {
 
   return (
     <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: def.color }}>
-      <ScrollView style={{ backgroundColor: c.bg }} contentContainerStyle={{ paddingBottom: 28 }}>
+      <ScrollView style={{ ...screenBg(c) }} contentContainerStyle={{ paddingBottom: 28 }}>
         {/* 위: 기간별 색 띠 + 탭 + 남은 시간 + 상자 */}
         <View style={{ backgroundColor: def.color, paddingHorizontal: 20, paddingTop: 14, paddingBottom: 64 }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
