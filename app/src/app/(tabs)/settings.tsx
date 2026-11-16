@@ -7,6 +7,8 @@ import { TimeStepper } from "@/components/TimeStepper";
 import { Btn, Card, Row, Screen, Segment, T, tap } from "@/components/ui";
 import { interestName } from "@/data";
 import { useApp } from "@/lib/app-state";
+import { useProfileLook } from "@/lib/profile-look";
+import { Avatar } from "@/components/ProfileLook";
 import { FREE_MAX_STUDY_MIN, PREMIUM_MAX_STUDY_MIN, studyMinutesFor } from "@/lib/economy";
 import { notificationsSupported, requestNotificationPermission } from "@/lib/notify";
 import { authErrorMessage } from "@/lib/auth";
@@ -109,6 +111,7 @@ const confirm = (title: string, msg: string, ok: string, run: () => void) =>
 export default function Settings() {
   const { prefs, updatePrefs, mode, email, signOut, deleteAccount, premium, xp, uid } = useApp();
   const c = useColors();
+  const look = useProfileLook();
   const [notice, setNotice] = useState("");
   const [sound, setSound] = useState(sfxEnabled());
   const [intro, setIntro] = useState(false);
@@ -145,8 +148,8 @@ export default function Settings() {
           backgroundColor: c.paper, ...raised(c.paperEdge, pressed), ...(!pressed ? shadow(c, 2) : null),
         })}
       >
-        <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: c.gold, borderWidth: 3, borderColor: c.goldSoft, alignItems: "center", justifyContent: "center" }}>
-          <T size={24} weight="bold" style={{ color: "#1d2742" }}>{(prefs.nickname || "나").slice(0, 1)}</T>
+        <View style={{ borderRadius: 31, borderWidth: 3, borderColor: c.goldSoft }}>
+          <Avatar id={look.avatar} name={prefs.nickname || "나"} size={56} />
         </View>
         <View style={{ flex: 1, gap: 2 }}>
           <T size={18} weight="bold" numberOfLines={1}>{prefs.nickname || "나"}</T>

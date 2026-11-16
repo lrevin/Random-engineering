@@ -250,3 +250,12 @@ adb reverse tcp:8788 tcp:8788                    # 안드로이드 에뮬레이�
 - weekly: 이번 주 월요일 0시(한국 시간, `since`)부터 쌓인 `xp_ledger.amount` + 끝난 스피드 퀴즈 `awarded_xp`. level: 같은 값을 누적으로 더하고 앱과 같은 공식으로 `level` 계산.
 - tier: 랭크 인정 기록(`rewardSql('rank')`)을 사람·분야별로 모아 앱과 같은 분야 랭크 기준(브론즈 0 · 실버 30 · 골드 100 · 플래티넘 250 · 다이아 500 · 엔지니어 1000점 + 주제 30개)으로 판정하고, 사람마다 가장 높은 분야(같으면 점수)로 줄 세운다. `tier`는 0(브론즈)~5(엔지니어).
 - 점수 0인 사람은 빠지고, 같은 점수는 같은 순위다. 랭킹 숨기기 · 신고 3명 닉네임 가림은 분야별 랭킹(`/leaderboard/:domain`)과 같다.
+
+## 유료 프로필 캐릭터 · 배경
+- 상품 id `skin:av-*`(캐릭터) · `skin:bg-*`(배경). 가격은 `api/mysql/purchase-policy.mjs` COSMETICS와 앱 `app/src/lib/profile-look.ts` LOOK_PRICES가 같아야 한다(앱 테스트가 비교).
+- DB 변경 없이 기존 `member_cosmetics`의 'skin' 칸에 보관만 한다. 사도 쓰던 테마는 그대로이고, `equip('skin', av-/bg-)`는 거절한다. 어떤 그림을 고를지는 앱이 휴대폰에 기억한다(다른 사람 화면에는 아직 안 보임).
+
+## 닉네임 변경 (PUT /me/profile)
+- 새로 정하거나 바꾸는 닉네임은 2~5자(`nickname_length`). 예전에 정한 긴 닉네임 그대로 다른 설정만 저장하는 건 허용한다.
+- 처음 프로필을 만들 때는 무료이고 횟수에 넣지 않는다. 이후 닉네임을 바꿀 때 첫 번째는 무료, 두 번째부터 톱니바퀴 50개(`insufficient_balance` 409). 응답에 `nicknameCharged`(이번에 쓴 톱니바퀴)를 함께 준다.
+- DB 변경 없음: 변경마다 `wallet_operations`(action='nickname_change')에 영수증을 남기고, 유료면 `wallets` 차감 + `wallet_transactions`(reason='nickname_change') 기록.

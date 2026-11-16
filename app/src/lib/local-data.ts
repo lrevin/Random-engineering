@@ -25,6 +25,7 @@ export const LOCAL_KEYS = {
   // ── 계정 · 설정
   mode: { key: "pg.mode", group: "account", desc: "둘러보기 / 로그인 상태", server: false },
   prefs: { key: "pg.prefs", group: "account", desc: "닉네임 · 관심 분야(자격증 포함) · 난이도 · 공부 시간 · 알림", server: true },
+  profileLook: { key: "pg.profileLook", group: "account", desc: "프로필 캐릭터 · 배경", server: false },
   onboarded: { key: "pg.onboarded", group: "account", desc: "처음 설정을 마쳤는지", server: false },
   uid: { key: "pg.uid", group: "account", desc: "친구 추가용 UID 8자리", server: true },
   records: { key: "pg.records", group: "account", desc: "공부 기록 (퀴즈 점수 · 경험치 · 오답)", server: true },

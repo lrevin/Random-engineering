@@ -1,6 +1,12 @@
 import { connect, transaction } from '../server/db.mjs';
 import { AuthError, normalizeEmail, passwordMatches } from '../server/auth.mjs';
+import { createHash, randomUUID } from 'node:crypto';
 import { nicknameAllowed } from '../server/nickname-policy.mjs';
+
+/** 새로 정하는 닉네임 길이 (기존에 길게 정한 닉네임은 그대로 둠) */
+export const NICK_MIN=2, NICK_MAX=5;
+/** 닉네임 변경: 첫 변경은 무료, 그다음부터 톱니바퀴 이만큼 */
+export const NICKNAME_CHANGE_COST=50;
 
 const asJson=v=>typeof v==='string'?JSON.parse(v):v;
 const profile=row=>({nickname:row.nickname,interests:asJson(row.interests),level:row.level,
@@ -17,6 +23,30 @@ function validate(value) {
   if(!nicknameAllowed(p.nickname)) throw new AuthError('nickname_not_allowed');
   return p;
 }
+/**
+ * 닉네임 변경 비용 정산 (같은 거래 안에서). 변경마다 wallet_operations에 'nickname_change' 영수증을 남겨
+ * 첫 변경(영수증 0개)은 무료, 이후는 톱니바퀴 차감 + wallet_transactions 기록. DB 구조는 그대로.
+ */
+async function chargeNicknameChange(db,userId){
+  let [[w]]=await db.execute('SELECT balance FROM wallets WHERE user_id=? FOR UPDATE',[userId]);
+  if(!w){
+    await db.execute('INSERT INTO wallets(user_id,balance) VALUES (?,30)',[userId]);
+    await db.execute("INSERT INTO wallet_transactions(user_id,amount,reason,request_id) VALUES (?,30,'starter','starter')",[userId]);
+    w={balance:30};
+  }
+  const [[done]]=await db.execute("SELECT COUNT(*) AS n FROM wallet_operations WHERE user_id=? AND action='nickname_change'",[userId]);
+  const cost=Number(done.n)>0?NICKNAME_CHANGE_COST:0;
+  if(Number(w.balance)<cost) throw new AuthError('insufficient_balance',409);
+  const requestId='nick-'+randomUUID();
+  if(cost){
+    await db.execute('UPDATE wallets SET balance=balance-? WHERE user_id=?',[cost,userId]);
+    await db.execute("INSERT INTO wallet_transactions(user_id,amount,reason,request_id) VALUES (?,?,'nickname_change',?)",[userId,-cost,requestId]);
+  }
+  await db.execute("INSERT INTO wallet_operations(user_id,request_id,request_hash,action,payload,result_json) VALUES (?,?,?,'nickname_change',?,?)",
+    [userId,requestId,createHash('sha256').update(requestId).digest(),JSON.stringify({cost}),JSON.stringify({charged:cost})]);
+  return cost;
+}
+
 export function createAccountService({auth,connectionFactory=connect}) {
   async function withDb(action) {const db=await connectionFactory();try{return await action(db);}finally{await db.end();}}
   async function withUser(header,action) {
@@ -43,14 +73,22 @@ export function createAccountService({auth,connectionFactory=connect}) {
           const [rows]=await db.execute(`SELECT id FROM categories WHERE is_active=1 AND id IN (${marks}) UNION SELECT id FROM certificates WHERE is_active=1 AND id IN (${marks})`,[...p.interests,...p.interests]);
           if(rows.length!==p.interests.length) throw new AuthError('invalid_interests');
         }
-        // 닉네임을 바꾸면 이전 닉네임에 대한 신고는 초기화
         const [[old]]=await db.execute('SELECT nickname FROM profiles WHERE user_id=?',[user.id]);
-        if(old && old.nickname!==p.nickname) await db.execute('DELETE FROM nickname_reports WHERE target_id=?',[user.id]);
+        const changed=!old||old.nickname!==p.nickname;
+        // 새로 정하는 닉네임만 2~5자 (예전에 정한 긴 닉네임으로 다른 설정을 저장하는 건 허용)
+        const len=[...p.nickname].length;
+        if(changed&&(len<NICK_MIN||len>NICK_MAX)) throw new AuthError('nickname_length');
+        let nicknameCharged=0;
+        if(old&&changed){
+          nicknameCharged=await chargeNicknameChange(db,user.id);
+          // 닉네임을 바꾸면 이전 닉네임에 대한 신고는 초기화
+          await db.execute('DELETE FROM nickname_reports WHERE target_id=?',[user.id]);
+        }
         await db.execute(`INSERT INTO profiles(user_id,nickname,interests,level,study_minutes,reminder_enabled,reminder_time)
           VALUES (?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE nickname=?,interests=?,level=?,study_minutes=?,reminder_enabled=?,reminder_time=?`,
           [user.id,p.nickname,JSON.stringify(p.interests),p.level,p.studyMinutes,p.reminderEnabled,p.reminderTime,
             p.nickname,JSON.stringify(p.interests),p.level,p.studyMinutes,p.reminderEnabled,p.reminderTime]);
-        return {profile:p};
+        return {profile:p,nicknameCharged};
       });
     },
     async requestDeletion(header) {

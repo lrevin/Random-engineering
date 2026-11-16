@@ -4,12 +4,15 @@ import { Icon } from "@/components/Icon";
 import { GearCount } from "@/components/TimeUpSheet";
 import { Row, Screen, T } from "@/components/ui";
 import { useApp } from "@/lib/app-state";
+import { PAID_AVATARS, PAID_BACKDROPS, useProfileLook } from "@/lib/profile-look";
+import { Avatar } from "@/components/ProfileLook";
 import { TITLES, titleById, useCosmetics, useThemes } from "@/lib/skins";
 import { inset, radius, raised, shadow, useColors } from "@/theme";
 
 /** 꾸미기 상점: 앱 전체 색을 바꾸는 테마 · 프로필에 다는 칭호 */
 export default function Cosmetics() {
-  const { gears } = useApp();
+  const { gears, prefs } = useApp();
+  const look = useProfileLook();
   const c = useColors();
   const themes = useThemes();
   const cos = useCosmetics();
@@ -44,6 +47,25 @@ export default function Cosmetics() {
           <T size={19} weight="bold">테마</T>
           <T size={13} color="ink2">지금 {themes.active.name}</T>
           <T size={12} color="muted">앱 전체 색을 바꾸는 테마 4종</T>
+        </View>
+        <T size={22} color="muted">›</T>
+      </Pressable>
+      <Pressable
+        onPress={() => router.push("/profile-edit")}
+        accessibilityRole="button"
+        accessibilityLabel="프로필 꾸미기"
+        style={({ pressed }) => ({
+          flexDirection: "row", alignItems: "center", gap: 14, padding: 16, borderRadius: radius.lg, borderWidth: 2,
+          borderColor: c.line, backgroundColor: c.paper, ...raised(c.paperEdge, pressed, 5), ...(!pressed ? shadow(c, 2) : null),
+        })}
+      >
+        <View style={{ width: 58, height: 58, borderRadius: 29, overflow: "hidden" }}>
+          <Avatar id={look.avatar} name={prefs.nickname || "나"} size={58} />
+        </View>
+        <View style={{ flex: 1, gap: 2 }}>
+          <T size={19} weight="bold">프로필 꾸미기</T>
+          <T size={13} color="ink2">캐릭터 · 배경 (무료 + 톱니바퀴 한정판)</T>
+          <T size={12} color="muted">톱니바퀴 캐릭터 {PAID_AVATARS.length}종 · 배경 {PAID_BACKDROPS.length}종</T>
         </View>
         <T size={22} color="muted">›</T>
       </Pressable>

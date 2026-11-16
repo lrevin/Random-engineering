@@ -1,6 +1,6 @@
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Pressable, ScrollView, Share, TextInput, View } from "react-native";
+import { Pressable, ScrollView, Share, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AchievementBadge, AchievementRow } from "@/components/Achievements";
 import { DomainIcon, Icon, TierIcon } from "@/components/Icon";
@@ -8,10 +8,11 @@ import { LevelBadge, TierBadge } from "@/components/Rank";
 import { ProgressBar } from "@/components/Quests";
 import { domainById } from "@/data";
 import { SectionTitle, StatGrid, StatTile } from "@/components/StatTile";
-import { Btn, Card, FONT, T, tap } from "@/components/ui";
+import { Btn, Card, T, tap } from "@/components/ui";
 import { ACHIEVEMENT_GROUPS, achievements, type AchievementExtra } from "@/lib/achievements";
 import { useApp } from "@/lib/app-state";
-import { authErrorMessage } from "@/lib/auth";
+import { useProfileLook } from "@/lib/profile-look";
+import { Avatar, ProfileBackdrop } from "@/components/ProfileLook";
 import { readExamStore } from "@/lib/exam";
 import { readDone } from "@/lib/review";
 import { titleById, useCosmetics } from "@/lib/skins";
@@ -22,21 +23,8 @@ import { calcStreak, isBattleRecord, isRecognizedStudy } from "@/lib/stats";
 import { radius, raised, screenBg, shadow, useColors } from "@/theme";
 
 /** 슬롯 릴 무늬 (프로필 위 남색 배경) */
-function ReelPattern() {
-  const cols = [0, 1, 2, 3, 4, 5, 6];
-  return (
-    <View style={{ position: "absolute", inset: 0, flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 6, opacity: 0.1 }} pointerEvents="none">
-      {cols.map((i) => (
-        <View key={i} style={{ gap: 10, marginTop: i % 2 ? -26 : -6 }}>
-          {[0, 1, 2, 3, 4].map((k) => <View key={k} style={{ width: 40, height: 46, borderRadius: 10, backgroundColor: "#fffaf0" }} />)}
-        </View>
-      ))}
-    </View>
-  );
-}
-
 export default function Profile() {
-  const { prefs, updatePrefs, uid, xp, records, keptDays, freezes, gears, questClaims } = useApp();
+  const { prefs, uid, xp, records, keptDays, freezes, gears, questClaims } = useApp();
   const c = useColors();
   const [friends, setFriends] = useState<number | null>(null);
 
@@ -46,27 +34,7 @@ export default function Profile() {
   }, []));
 
   const name = prefs.nickname || "나";
-  // 닉네임 바꾸기: 이름 옆 연필을 누르면 그 자리에서 고침
-  const [editing, setEditing] = useState(false);
-  const [nick, setNick] = useState("");
-  const [nickMsg, setNickMsg] = useState("");
-  const [saving, setSaving] = useState(false);
-  const startEdit = () => { tap(); setNick(prefs.nickname); setNickMsg(""); setEditing(true); };
-  const saveNick = async () => {
-    const n = nick.trim();
-    if (!n || n.length > 20) return setNickMsg("닉네임은 1~20자로 정해 주세요.");
-    if (n === prefs.nickname) return setEditing(false);
-    setSaving(true);
-    try {
-      await updatePrefs({ nickname: n });
-      setEditing(false);
-      setNickMsg("닉네임을 바꿨어요.");
-    } catch (e) {
-      setNickMsg(authErrorMessage(e));
-    } finally {
-      setSaving(false);
-    }
-  };
+  const look = useProfileLook();
   const lv = userLevel(xp);
   const { streak } = calcStreak(records, new Date(), keptDays);
   const ranks = useMemo(() => domainRanks(records), [records]);
@@ -102,23 +70,26 @@ export default function Profile() {
   return (
     <SafeAreaView edges={["top"]} style={{ flex: 1, ...screenBg(c) }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
-        {/* 위: 남색 배경 + 큰 프로필 그림 */}
-        <View style={{ height: 210, backgroundColor: "#1d2742", overflow: "hidden" }}>
-          <ReelPattern />
-          <View style={{ flexDirection: "row", justifyContent: "space-between", padding: 16 }}>
-            <Pressable onPress={() => router.back()} hitSlop={10} accessibilityRole="button" accessibilityLabel="닫기">
-              <Icon name="close" size={24} color="#fffaf0" />
+        {/* 위: 고른 배경 + 큰 프로필 캐릭터 */}
+        <View style={{ height: 210, overflow: "hidden" }}>
+          <ProfileBackdrop id={look.backdrop} />
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 14 }}>
+            <Pressable onPress={() => router.back()} hitSlop={10} accessibilityRole="button" accessibilityLabel="닫기"
+              style={{ width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(14,20,36,0.35)" }}>
+              <Icon name="close" size={20} color="#fffaf0" />
             </Pressable>
-            <Pressable onPress={() => router.navigate("/settings")} hitSlop={10} accessibilityRole="button" accessibilityLabel="설정">
-              <Icon name="gear" size={30} />
+            <Pressable onPress={() => { tap(); router.push("/profile-edit"); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="프로필 수정"
+              style={({ pressed }) => ({
+                flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 7, paddingLeft: 10, paddingRight: 13, borderRadius: radius.pill,
+                backgroundColor: pressed ? "rgba(14,20,36,0.55)" : "rgba(14,20,36,0.35)", borderWidth: 1, borderColor: "rgba(255,250,240,0.3)",
+              })}>
+              <Icon name="pencil" size={20} />
+              <T size={14} weight="semibold" style={{ color: "#fffaf0" }}>프로필 수정</T>
             </Pressable>
           </View>
           <View style={{ position: "absolute", bottom: -2, alignSelf: "center", alignItems: "center" }}>
-            <View style={{
-              width: 128, height: 128, borderRadius: 64, backgroundColor: "#f7b500", borderWidth: 6, borderColor: "#fffaf0",
-              alignItems: "center", justifyContent: "center", marginBottom: 14, boxShadow: "0px 6px 0px #c98f00",
-            }}>
-              <T size={56} weight="bold" style={{ color: "#1d2742", lineHeight: 66 }}>{name.slice(0, 1)}</T>
+            <View style={{ borderRadius: 70, borderWidth: 6, borderColor: "#fffaf0", marginBottom: 14, boxShadow: "0px 6px 0px rgba(0,0,0,0.22)" }}>
+              <Avatar id={look.avatar} name={name} size={116} />
             </View>
           </View>
         </View>
@@ -126,38 +97,7 @@ export default function Profile() {
         <View style={{ paddingHorizontal: 20, gap: 16, maxWidth: 640, width: "100%", alignSelf: "center" }}>
           {/* 이름 · UID */}
           <View style={{ alignItems: "center", gap: 6, marginTop: 10 }}>
-            {editing ? (
-              <View style={{ width: "100%", maxWidth: 360, gap: 10, alignItems: "stretch" }}>
-                <TextInput
-                  value={nick}
-                  onChangeText={setNick}
-                  maxLength={20}
-                  autoFocus
-                  returnKeyType="done"
-                  onSubmitEditing={() => { void saveNick(); }}
-                  placeholder="닉네임 (1~20자)"
-                  placeholderTextColor={c.muted}
-                  accessibilityLabel="닉네임"
-                  style={{
-                    textAlign: "center", fontSize: 22, fontFamily: FONT.bold, color: c.ink, backgroundColor: c.paper,
-                    borderWidth: 2, borderColor: c.accent, borderRadius: radius.md, paddingVertical: 10, paddingHorizontal: 14,
-                  }}
-                />
-                <View style={{ flexDirection: "row", gap: 8 }}>
-                  <Btn title="취소" size="md" variant="outline" onPress={() => { setEditing(false); setNickMsg(""); }} style={{ flex: 1 }} />
-                  <Btn title={saving ? "저장 중…" : "저장"} size="md" variant="primary" disabled={saving} onPress={() => { void saveNick(); }} style={{ flex: 1 }} />
-                </View>
-              </View>
-            ) : (
-              <Pressable onPress={startEdit} hitSlop={8} accessibilityRole="button" accessibilityLabel="닉네임 바꾸기"
-                style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 8, opacity: pressed ? 0.6 : 1 })}>
-                <T size={26} weight="bold">{name}</T>
-                <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: c.chip, borderWidth: 1, borderColor: c.line, alignItems: "center", justifyContent: "center" }}>
-                  <Icon name="pencil" size={22} />
-                </View>
-              </Pressable>
-            )}
-            {nickMsg ? <T size={14} weight="semibold" color={nickMsg.endsWith("바꿨어요.") ? "success" : "accent"} center>{nickMsg}</T> : null}
+            <T size={26} weight="bold">{name}</T>
             {activeTitle && <TitleBadge t={activeTitle} size={16} />}
             <T size={14} color="muted">
               @{uid || "--------"}{stats.since ? ` · ${stats.since.getFullYear()}년 ${stats.since.getMonth() + 1}월부터 공부 중` : ""}
