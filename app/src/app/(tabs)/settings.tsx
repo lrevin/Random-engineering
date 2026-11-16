@@ -4,18 +4,16 @@ import { useState, type ReactNode } from "react";
 import { Linking, Platform, Pressable, Switch, View } from "react-native";
 import { showDialog } from "@/components/Dialog";
 import { TimeStepper } from "@/components/TimeStepper";
-import { Btn, Card, Field, Row, Screen, Segment, T, tap } from "@/components/ui";
-import { inInterests, interestName, TOPICS } from "@/data";
+import { Btn, Card, Row, Screen, Segment, T, tap } from "@/components/ui";
+import { interestName } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { FREE_MAX_STUDY_MIN, PREMIUM_MAX_STUDY_MIN, studyMinutesFor } from "@/lib/economy";
 import { notificationsSupported, requestNotificationPermission } from "@/lib/notify";
 import { authErrorMessage } from "@/lib/auth";
 import { radius, raised, shadow, useColors } from "@/theme";
 import { Icon, type IconName } from "@/components/Icon";
-import { RankUp, type RankUpScene } from "@/components/RankUp";
 import { HomeIntro } from "@/components/HomeIntro";
 import { userLevel } from "@/lib/rank";
-import { unlockAllCosmetics } from "@/lib/skins";
 import { setSfxEnabled, sfx, sfxEnabled } from "@/lib/sfx";
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -109,19 +107,11 @@ const confirm = (title: string, msg: string, ok: string, run: () => void) =>
   showDialog({ title, message: msg, buttons: [{ text: "취소", style: "cancel" }, { text: ok, style: "destructive", onPress: run }] });
 
 export default function Settings() {
-  const { prefs, updatePrefs, mode, email, signOut, deleteAccount, premium, xp, uid, devPreviewRescue, devSeedRecords } = useApp();
+  const { prefs, updatePrefs, mode, email, signOut, deleteAccount, premium, xp, uid } = useApp();
   const c = useColors();
-  const [nick, setNick] = useState(prefs.nickname);
   const [notice, setNotice] = useState("");
   const [sound, setSound] = useState(sfxEnabled());
-  const [rankUpPreview, setRankUpPreview] = useState<RankUpScene[]>([]);
   const [intro, setIntro] = useState(false);
-
-  const saveNick = () => {
-    const n = nick.trim();
-    if (!n || n.length > 20) return setNotice("닉네임은 1~20자로 정해 주세요.");
-    updatePrefs({ nickname: n }).then(() => setNotice("닉네임을 바꿨어요.")).catch(() => setNotice("저장하지 못했어요."));
-  };
 
   const toggleReminder = async (on: boolean) => {
     if (on && !notificationsSupported) {
@@ -180,10 +170,6 @@ export default function Settings() {
       </Card>
 
       <Section title="계정">
-        <View style={{ paddingVertical: 12, gap: 8, borderBottomWidth: 1, borderBottomColor: c.line }}>
-          <Field label="닉네임" value={nick} onChangeText={setNick} maxLength={20} onSubmitEditing={saveNick} returnKeyType="done" />
-          {nick.trim() !== prefs.nickname && <Btn title="닉네임 저장" size="sm" variant="primary" onPress={saveNick} />}
-        </View>
         {mode === "user" ? (
           <Item icon="lock" label="로그인 계정" sub={email ?? ""} last />
         ) : (
@@ -241,24 +227,6 @@ export default function Settings() {
       </Section>
 
       <HomeIntro open={intro} onClose={() => setIntro(false)} />
-      {rankUpPreview.length > 0 && <RankUp scenes={rankUpPreview} onDone={() => setRankUpPreview([])} />}
-      {__DEV__ && (
-        <Section title="개발용 (출시 빌드에서는 안 보임)">
-          <Item label="연속 기록 복구 창 미리 보기" sub="어제·그제를 빠진 날로 보고 창을 띄워요" onPress={devPreviewRescue} />
-          <Item label="시험 기록 넣기" sub="어제까지 7일 연속 공부한 기록 7개 (관심 분야 주제)" onPress={() => {
-            if(mode!=="guest"){setNotice("시험 기록은 게스트 모드에서만 만들 수 있어요.");return;}
-            const ids = TOPICS.filter((t) => inInterests(t, prefs.interests)).slice(0, 7).map((t) => t.id);
-            devSeedRecords(ids);
-            setNotice(`시험 기록 ${ids.length}개를 넣었어요`);
-          }} />
-          <Item label="모든 테마 · 칭호 열기" sub="시연용: 이 휴대폰에 테마와 칭호를 전부 넣어요" onPress={() => { unlockAllCosmetics(); setNotice("테마와 칭호를 모두 열었어요"); }} />
-          <Item label="승급 연출 미리 보기" sub="레벨 업 → 주제 랭크 승급 연출을 차례로 보여 줘요" last onPress={() => setRankUpPreview([
-            { kind: "level", from: userLevel(xp).level, to: userLevel(xp).level + 1 },
-            { kind: "tier", from: 1, to: 2, topic: "트랜잭션 ACID" },
-          ])} />
-        </Section>
-      )}
-
       <Section title="정보">
         <Item icon="book" label="사용법 다시 보기" sub="뽑기 · 공부 · 퀴즈 · 퀘스트 · 상점 안내" onPress={() => setIntro(true)} />
         <Item icon="shield" label="개인정보처리방침" onPress={() => router.push("/privacy")} />
