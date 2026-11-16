@@ -20,12 +20,15 @@ import { radius, shadow, useColors } from "@/theme";
 import { DomainIcon, Icon, TierIcon } from "@/components/Icon";
 import { GearTarget } from "@/components/GearFly";
 import { useShownGears } from "@/lib/gear-fly";
+import { Avatar } from "@/components/ProfileLook";
+import { useProfileLook } from "@/lib/profile-look";
 
 type LevelFilter = "0" | "1" | "2" | "3"; // 0 = 전체
 
 export default function Home() {
   const { mode, catalogVersion, prefs, records, active, setActive, gears, updatePrefs, xp, keptDays, freezes, premium, uid } = useApp();
   const shownGears = useShownGears(gears);
+  const look = useProfileLook();
   const lv = userLevel(xp);
   // 처음 설정을 마치고 홈에 처음 오면 사용법 안내
   const [introFirst, doneIntro] = useHomeIntroFirstTime();
@@ -128,16 +131,24 @@ export default function Home() {
       <HomeIntro open={introFirst && !active} onClose={doneIntro} />
       {/* 레벨 + 연속 일수 + 톱니바퀴: 세 칸 모두 같은 높이, 위 줄(아이콘 22 · 숫자 18) / 아래 줄(설명 11) */}
       <Row gap={8} style={{ flexWrap: "nowrap", alignItems: "stretch" }}>
-        <HeaderTile onPress={() => router.push("/profile")} label="내 프로필" style={{ flex: 1, alignItems: "stretch" }}>
-          <View style={{ height: TOP_H, flexDirection: "row", alignItems: "center", gap: 4 }}>
-            <Icon name="star" size={22} />
-            <T size={18} weight="bold">{lv.level >= MAX_LEVEL ? "MAX" : `${lv.level}레벨`}</T>
+        {/* 내 프로필: 왼쪽 캐릭터 + 그 밑 닉네임 | 오른쪽 레벨 + 남은 XP, 그 밑 레벨 바 */}
+        <HeaderTile onPress={() => router.push("/profile")} label={`내 프로필, ${prefs.nickname || "나"}, ${lv.level}레벨`}
+          style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "flex-start", gap: 10, paddingHorizontal: 10 }}>
+          <View style={{ alignItems: "center", gap: 3, width: 58 }}>
+            <View style={{ borderRadius: 22, borderWidth: 2, borderColor: c.goldSoft }}>
+              <Avatar id={look.avatar} name={prefs.nickname || "나"} size={38} />
+            </View>
+            <T size={11} weight="semibold" color="ink2" numberOfLines={1} style={{ maxWidth: 58 }}>{prefs.nickname || "나"}</T>
           </View>
-          <View style={{ height: BOTTOM_H, flexDirection: "row", alignItems: "center", gap: 6 }}>
-            <View style={{ flex: 1, height: 6, borderRadius: 3, backgroundColor: c.chip, overflow: "hidden" }}>
+          <View style={{ flex: 1, gap: 6, justifyContent: "center" }}>
+            <Row gap={4} style={{ flexWrap: "nowrap" }}>
+              <Icon name="star" size={20} />
+              <T size={17} weight="bold">{lv.level >= MAX_LEVEL ? "MAX" : `${lv.level}레벨`}</T>
+            </Row>
+            <View style={{ height: 7, borderRadius: 4, backgroundColor: c.chip, overflow: "hidden" }}>
               <View style={{ width: `${Math.round(lv.progress * 100)}%`, height: "100%", backgroundColor: c.gold }} />
             </View>
-            <T size={11} color="muted">{lv.need ? `${lv.toNext.toLocaleString()} XP 남음` : "최고 레벨"}</T>
+            <T size={11} color="muted" numberOfLines={1}>{lv.need ? `${lv.toNext.toLocaleString()} XP 남음` : "최고 레벨"}</T>
           </View>
         </HeaderTile>
         <HeaderTile onPress={() => router.push("/shop")} label="연속 일수, 보호권 보기">

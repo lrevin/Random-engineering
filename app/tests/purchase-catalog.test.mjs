@@ -7,14 +7,20 @@ function load(url,deps){
  const source=fs.readFileSync(url,'utf8');const code=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
  const out={};new Function('exports','require',code)(out,key=>{assert.ok(Object.hasOwn(deps,key),'알 수 없는 의존성: '+key);return deps[key];});return out;
 }
-const skins=load(new URL('../src/lib/skins.ts',import.meta.url),{'@react-native-async-storage/async-storage':{},'./local-data':{LOCAL_KEYS:{skins:{key:'test'}}},react:{}});
+const skins=load(new URL('../src/lib/skins.ts',import.meta.url),{'@react-native-async-storage/async-storage':{},'./local-data':{LOCAL_KEYS:{skins:{key:'test'}}},react:{},'./profile-look':{applyServerLooks(){},resetProfileLook(){}}});
+const looks=load(new URL('../src/lib/profile-look.ts',import.meta.url),{'@react-native-async-storage/async-storage':{},'./local-data':{LOCAL_KEYS:{profileLook:{key:'test'}}},react:{}});
 const themes=load(new URL('../src/themes.ts',import.meta.url),{});
 
 test('앱 테마 가격이 서버 상품 정의와 일치 (칭호는 팔지 않음)',()=>{
  const policy=load(new URL('../../api/mysql/purchase-policy.mjs',import.meta.url),{'../server/auth.mjs':{AuthError:class extends Error{}}});
  const sold=skins.THEMES.filter(t=>t.price>0);
- assert.deepEqual(Object.keys(policy.COSMETICS).sort(),sold.map(t=>'skin:'+t.id).sort());
+ const paidLooks=Object.entries(looks.LOOK_PRICES);
+ assert.deepEqual(Object.keys(policy.COSMETICS).sort(),[...sold.map(t=>'skin:'+t.id),...paidLooks.map(([id])=>'skin:'+id)].sort());
  for(const t of sold)assert.equal(policy.COSMETICS['skin:'+t.id].price,t.price,t.id);
+ // 유료 프로필 그림: 가격이 서버와 같고, 서버는 장착하지 않고 보관만 함
+ for(const [id,price] of paidLooks){assert.equal(policy.COSMETICS['skin:'+id].price,price,id);assert.ok(policy.isProfileLook(id),id);}
+ assert.equal(policy.isProfileLook('sunset'),false);
+ assert.deepEqual([...looks.PAID_AVATARS,...looks.PAID_BACKDROPS].sort(),paidLooks.map(([id])=>id).sort());
 });
 
 test('파는 테마마다 색이 전부 있고, 강조 버튼 글자가 읽힐 만큼 대비가 됨',()=>{

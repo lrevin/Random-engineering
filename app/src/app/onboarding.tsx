@@ -10,6 +10,7 @@ import { Btn, Field, Row, Screen, T } from "@/components/ui";
 import { categoryById, domainById, isCertId, relatedFor } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { requestNotificationPermission } from "@/lib/notify";
+import { NICK_MAX, NICK_MIN, nicknameLengthOk } from "@/lib/profile-look";
 import type { Prefs } from "@/lib/types";
 import { useColors } from "@/theme";
 import { Icon } from "@/components/Icon";
@@ -41,7 +42,7 @@ export default function Onboarding() {
     setErr("");
     if (step === 0) {
       const n = nickname.trim();
-      if (n.length < 1 || n.length > 20) return setErr("닉네임은 1~20자로 정해 주세요.");
+      if (!nicknameLengthOk(n)) return setErr(`닉네임은 ${NICK_MIN}~${NICK_MAX}자로 정해 주세요.`);
       setNickname(n);
     }
     if (step === 1) {
@@ -110,7 +111,7 @@ export default function Onboarding() {
             <>
               <Icon name="slot" size={64} />
               <T size={26} weight="bold">반가워요!{"\n"}뭐라고 불러 드릴까요?</T>
-              <Field label="닉네임" value={nickname} onChangeText={setNickname} maxLength={20} placeholder="예: 공대생" autoFocus onSubmitEditing={next} returnKeyType="next" />
+              <Field label="닉네임" value={nickname} onChangeText={setNickname} maxLength={NICK_MAX} placeholder={`예: 공대생 (${NICK_MIN}~${NICK_MAX}자)`} autoFocus onSubmitEditing={next} returnKeyType="next" />
             </>
           )}
           {step === 1 && (
