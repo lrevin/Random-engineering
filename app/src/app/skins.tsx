@@ -1,14 +1,11 @@
 import { router } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, Text, useColorScheme, View } from "react-native";
 import { Icon } from "@/components/Icon";
 import { GearCount } from "@/components/TimeUpSheet";
-import { SectionTitle } from "@/components/StatTile";
 import { Badge, Btn, FONT, Row, Screen, T } from "@/components/ui";
 import { useApp } from "@/lib/app-state";
-import { achievements, type AchievementExtra } from "@/lib/achievements";
-import { readExamStore } from "@/lib/exam";
-import { addTheme, applyTheme, applyTitle, THEMES, TITLES, useCosmetics, useThemes, type ThemeDef, type TitleDef } from "@/lib/skins";
+import { addTheme, applyTheme, THEMES, useThemes, type ThemeDef } from "@/lib/skins";
 import { inset, radius, shadow, useColors } from "@/theme";
 import { paletteFor, type Palette } from "@/themes";
 
@@ -58,27 +55,13 @@ function ThemePreview({ p }: { p: Palette }) {
   );
 }
 
-/** 칭호 배지 (프로필 등에서도 씀) */
-export function TitleBadge({ t, size = 13 }: { t: TitleDef; size?: number }) {
-  return (
-    <View style={{ alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 4, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 3, backgroundColor: t.color, borderWidth: 1, borderColor: "rgba(255,255,255,0.28)" }}>
-      <Icon name="medal" size={size + 3} />
-      <T size={size} weight="bold" style={{ color: "#ffffff" }}>{t.name}</T>
-    </View>
-  );
-}
-
-/** 꾸미기: 앱 전체 색 테마(구매) + 칭호(보상으로 받은 것 달기) */
+/** 테마: 앱 전체 색을 바꾸는 테마 사기 · 바꾸기 (칭호는 titles.tsx) */
 export default function Skins() {
-  const { mode, walletNotice, refreshWallet, purchaseItem, equipCosmetic, gears, spendGears, records, xp, keptDays } = useApp();
+  const { mode, walletNotice, refreshWallet, purchaseItem, equipCosmetic, gears, spendGears } = useApp();
   const c = useColors();
   const scheme = useColorScheme();
   const { owned, active } = useThemes();
-  const cos = useCosmetics();
   const [notice, setNotice] = useState("");
-  const [extra, setExtra] = useState<AchievementExtra>({});
-  useEffect(() => { readExamStore().then((s) => setExtra({ exams: s.results })); }, []);
-  const ach = useMemo(() => achievements(records, xp, keptDays, extra), [records, xp, keptDays, extra]);
   useEffect(() => { if (mode === "user") void refreshWallet().catch(() => {}); }, [mode, refreshWallet]);
 
   const buy = async (t: ThemeDef) => {
@@ -90,18 +73,6 @@ export default function Skins() {
   const use = async (t: ThemeDef) => {
     if (mode === "user") { if (!await equipCosmetic("skin", t.id)) return; } else applyTheme(t.id);
     setNotice(`${t.name} 테마로 바꿨어요`);
-  };
-
-  /** 칭호를 쓸 수 있는지: 보상으로 받았거나 업적을 깼거나 */
-  const hasTitle = (t: TitleDef) => {
-    if (cos.titles.includes(t.id)) return true;
-    if (mode === "user") return false;
-    const src = t.source;
-    return src.kind === "achievement" && (ach.find((a) => a.id === src.id)?.stage ?? 0) >= src.stage;
-  };
-  const wearTitle = async (id: string | null) => {
-    if (mode === "user") { if (!await equipCosmetic("title", id)) return; } else applyTitle(id);
-    setNotice(id ? "칭호를 달았어요" : "칭호를 뗐어요");
   };
 
   const card = (t: ThemeDef) => {
@@ -162,36 +133,6 @@ export default function Skins() {
 
       {THEMES.map(card)}
 
-      <SectionTitle
-        title="칭호"
-        right={cos.title ? (
-          <Pressable onPress={() => { void wearTitle(null); }} hitSlop={8}>
-            <T size={13} color="accent" weight="semibold">칭호 떼기</T>
-          </Pressable>
-        ) : undefined}
-      />
-      <T size={13} color="muted">칭호는 연속 기록 보상과 업적으로 받아요.</T>
-      <View style={{ borderRadius: radius.lg, borderWidth: 2, borderColor: c.line, backgroundColor: c.paper, overflow: "hidden" }}>
-        {TITLES.map((t, i) => {
-          const has = hasTitle(t);
-          const on = cos.title === t.id;
-          return (
-            <View key={t.id} style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 14, borderTopWidth: i ? 1 : 0, borderTopColor: c.line, opacity: has ? 1 : 0.6 }}>
-              <View style={{ flex: 1, gap: 4, alignItems: "flex-start" }}>
-                <View style={{ alignSelf: "flex-start" }}><TitleBadge t={t} /></View>
-                <T size={12} color="muted">{t.desc}</T>
-              </View>
-              {on ? (
-                <Badge label="사용 중" tone="accent" />
-              ) : has ? (
-                <Btn title="달기" size="sm" variant="primary" onPress={() => { void wearTitle(t.id); }} />
-              ) : (
-                <Icon name="lock" size={20} color={c.muted} />
-              )}
-            </View>
-          );
-        })}
-      </View>
     </Screen>
   );
 }

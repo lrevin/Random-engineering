@@ -11,7 +11,7 @@ import { useApp } from "@/lib/app-state";
 import { BATTLE_TICKET_COST, EXAM_TICKET_COST, MAX_EXAM_TICKETS, FREE_BATTLE_TICKETS, FREE_EXAMS_PER_DAY, PREMIUM_BONUS_GEARS, FREE_MAX_STUDY_MIN, PREMIUM_MAX_STUDY_MIN, FREEZE_COST, MAX_BOUGHT_TICKETS, MAX_FREEZES } from "@/lib/economy";
 import { addExamTicket, readExamStore } from "@/lib/exam";
 import { addBoost, BOOST_COST, BOOST_MAX_MIN, BOOST_MIN, canStackBoost, fmtLeft, useBoost } from "@/lib/booster";
-import { useThemes } from "@/lib/skins";
+import { TITLES, titleById, useCosmetics, useThemes } from "@/lib/skins";
 import { inset, radius, raised, shadow, useColors } from "@/theme";
 
 /** 체크 표시 한 줄 */
@@ -87,6 +87,7 @@ export default function Shop() {
     setExamNotice("모의고사 1회권을 1개 샀어요");
   };
   const themes = useThemes();
+  const cos = useCosmetics();
   const boost = useBoost();
   const [boostNotice, setBoostNotice] = useState("");
   const boostFull = !canStackBoost();
@@ -247,6 +248,25 @@ export default function Shop() {
           <T size={19} weight="bold">테마</T>
           <T size={13} color="ink2">지금 {themes.active.name}</T>
           <T size={12} color="muted">앱 전체 색을 바꾸는 테마 4종</T>
+        </View>
+        <T size={22} color="muted">›</T>
+      </Pressable>
+      <Pressable
+        onPress={() => router.push("/titles")}
+        accessibilityRole="button"
+        accessibilityLabel="칭호 보러 가기"
+        style={({ pressed }) => ({
+          flexDirection: "row", alignItems: "center", gap: 14, padding: 16, borderRadius: radius.lg, borderWidth: 2,
+          borderColor: c.line, backgroundColor: c.paper, ...raised(c.paperEdge, pressed, 5), ...(!pressed ? shadow(c, 2) : null),
+        })}
+      >
+        <View style={{ width: 58, height: 58, borderRadius: radius.md, backgroundColor: c.chip, alignItems: "center", justifyContent: "center" }}>
+          <Icon name="medal" size={40} />
+        </View>
+        <View style={{ flex: 1, gap: 2 }}>
+          <T size={19} weight="bold">칭호</T>
+          <T size={13} color="ink2">{titleById(cos.title) ? `지금 "${titleById(cos.title)?.name}"` : "아직 단 칭호가 없어요"}</T>
+          <T size={12} color="muted">연속 기록 · 업적 보상 {TITLES.length}종 · 받은 칭호 {cos.titles.length}개</T>
         </View>
         <T size={22} color="muted">›</T>
       </Pressable>
