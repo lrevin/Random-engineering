@@ -15,6 +15,7 @@ import b_algo_3 from "./algo-3.json";
 import b_ar_const_1 from "./ar-const-1.json";
 import b_ar_env_1 from "./ar-env-1.json";
 import b_ar_plan_1 from "./ar-plan-1.json";
+import b_ar_struct_1 from "./ar-struct-1.json";
 import b_arch_1 from "./arch-1.json";
 import b_arch_2 from "./arch-2.json";
 import b_arch_3 from "./arch-3.json";
@@ -63,6 +64,7 @@ const FILES = [
   b_ar_const_1,
   b_ar_env_1,
   b_ar_plan_1,
+  b_ar_struct_1,
   b_arch_1,
   b_arch_2,
   b_arch_3,
