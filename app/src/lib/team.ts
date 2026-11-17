@@ -11,6 +11,8 @@ import { weekStartKst } from "./boss";
 export const TEAM_MIN = 2;
 export const TEAM_MAX = 4;
 export const TEAM_GOAL_PER_MEMBER = 150;
+/** 보상을 받으려면 팀에 들어온 뒤 이번 주에 이만큼은 보태야 함 (서버 team-policy.mjs 와 같아야 함) */
+export const TEAM_MIN_CONTRIBUTION = 50;
 export const TEAM_REWARD = { gears: 40, xp: 60 };
 export type TeamMode = "open" | "friends";
 
@@ -52,7 +54,7 @@ export function teamMessage(e: unknown) {
     team_invite_closed: "이미 끝난 초대예요.",
     team_required: "먼저 스터디 팀에 들어가 주세요.",
     team_goal_not_met: "아직 주간 목표를 채우지 못했어요.",
-    team_reward_no_xp: "이번 주에 공부해서 XP를 얻은 팀원만 보상을 받을 수 있어요.",
+    team_reward_no_xp: `팀에 들어온 뒤 이번 주에 XP를 ${TEAM_MIN_CONTRIBUTION} 이상 얻은 팀원만 보상을 받을 수 있어요.`,
     team_reward_claimed: "이번 주 보상은 이미 받았어요.",
     not_friends: "친구로 등록된 사람만 초대할 수 있어요.",
     unauthorized: "로그인 후 이용해 주세요.",

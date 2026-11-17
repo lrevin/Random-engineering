@@ -1,5 +1,8 @@
 // 문제·시각·활동 증거를 용도별로 판정한다. 과거 표시 실적과 신규 보상 자격을 분리한다.
 export const REWARD_POLICY_VERSION='general-v1';
+/** 서버가 문제를 내지 않은 기록(앱이 문제·답을 보냄)은 한국 날짜 하루에 이만큼만 XP·퀘스트를 인정.
+ * 문제 은행 정답이 앱 안에 있어서 만점 기록을 꾸며 계속 올리면 XP가 끝없이 나오던 것을 막음. 서버가 낸 공부(special-v1)는 제한 없음 */
+export const CLIENT_RECORD_DAILY_LIMIT=3;
 export function rewardEligibility(r){
  const battle=r.study_type==='battle',legacy=r.reward_status==='legacy_granted';
  const verified=r.verification_status==='server_verified'&&r.time_validation_status==='accepted';

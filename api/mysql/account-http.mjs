@@ -1,5 +1,5 @@
 import { AuthError } from '../server/auth.mjs';
-import { rateKey } from '../server/client-key.mjs';
+import { rateKey, overLimit } from '../server/client-key.mjs';
 import { readJsonBody } from '../server/auth-http.mjs';
 export function accountRoutes(service) {
   const hits=new Map();
@@ -10,11 +10,8 @@ export function accountRoutes(service) {
     if(!(pathname==='/me/profile'&&['GET','PUT'].includes(method) || pathname==='/me'&&method==='DELETE' || pathname==='/auth/cancel-deletion'&&method==='POST')) {
       reply(405,{error:'method_not_allowed'});return true;
     }
-    const now=Date.now();for(const [key,h] of hits)if(h.until<=now)hits.delete(key);
-    const key=`${rateKey(req)}:${pathname}:${method}`,hit=hits.get(key)??{until:now+60000,n:0};
-    if(hits.size>=10000&&!hits.has(key)){reply(429,{error:'rate_limited'});return true;}
-    hits.set(key,hit);hit.n++;
-    if(hit.n>(pathname==='/me/profile'?120:10)){reply(429,{error:'rate_limited'});return true;}
+    const key=`${rateKey(req)}:${pathname}:${method}`;
+    if(overLimit(hits,key,pathname==='/me/profile'?120:10)){reply(429,{error:'rate_limited'});return true;}
     try {
       if(pathname==='/me/profile') reply(200,method==='GET'?await service.getProfile(req.headers.authorization):await service.saveProfile(req.headers.authorization,await readJsonBody(req)));
       else if(pathname==='/me') reply(202,await service.requestDeletion(req.headers.authorization));

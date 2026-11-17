@@ -55,16 +55,20 @@ npm start                   # http://<이 PC IP>:8787
 
 ## 앱 연결
 
-`app/.env.local`에 서버 주소를 넣고 앱을 다시 시작합니다.
+앱은 이 서버를 직접 부르지 않습니다. 앱 → API 서버 `POST /me/quiz`(로그인한 회원만, 하루 30번 · 새로 만들기 10번) → 이 서버 순서예요.
+토큰이 앱 안에 들어가면 누구나 꺼내서 Claude 요금을 쓸 수 있기 때문입니다.
+
+API 서버(`api/server/.env`)에 넣습니다.
 
 ```
-EXPO_PUBLIC_QUIZ_SERVER_URL=http://192.168.0.10:8787
-EXPO_PUBLIC_QUIZ_SERVER_TOKEN=(서버 .env 의 QUIZ_TOKEN 과 같은 값, 안 쓰면 비워 둠)
+QUIZ_SERVER_URL=http://127.0.0.1:8787
+QUIZ_SERVER_TOKEN=(이 서버 .env 의 QUIZ_TOKEN 과 같은 값, 24자 이상 무작위)
 ```
 
-- **안드로이드 에뮬레이터:** `adb reverse tcp:8787 tcp:8787`을 하고 `http://127.0.0.1:8787`을 넣습니다.
-- **밖에서 접속:** 집 PC를 밖에서 쓰려면 공유기 포트포워딩이나 터널(cloudflared 등)이 필요합니다.
-- **토큰 주의:** `QUIZ_TOKEN`은 앱 안에 들어가므로 완전한 비밀은 아닙니다. 아무나 서버를 쓰지 못하게 막는 정도의 문이에요. 주제 목록에 없는 요청은 거절하고, IP마다 1분 30회로 제한합니다.
+- **같은 컴퓨터:** 이 서버는 기본으로 `127.0.0.1`에서만 받습니다.
+- **다른 컴퓨터:** `HOST=0.0.0.0`으로 열고, 방화벽에서 API 서버 주소만 8787 포트를 허용하세요.
+- **비회원(둘러보기):** AI 문제 없이 기본 문제 은행으로 풉니다.
+- 주제 목록에 없는 요청은 거절하고, IP마다 1분 30회, 새로 만들기(fresh)는 서버 전체에서 1분 20회(`QUIZ_FRESH_PER_MIN`)로 제한합니다.
 
 ## API
 
@@ -81,8 +85,9 @@ EXPO_PUBLIC_QUIZ_SERVER_TOKEN=(서버 .env 의 QUIZ_TOKEN 과 같은 값, 안 �
 |---|---|---|
 | `ANTHROPIC_API_KEY` | – | Claude API 키 (필수, 연습 모드면 없어도 됨) |
 | `QUIZ_MODEL` | `claude-opus-5-5` | 출제 모델 |
-| `PORT` / `HOST` | `8787` / `0.0.0.0` | 서버 주소 |
-| `QUIZ_TOKEN` | (없음) | 정하면 앱이 같은 값을 `x-quiz-token` 헤더로 보내야 함 |
+| `PORT` / `HOST` | `8787` / `127.0.0.1` | 서버 주소 |
+| `QUIZ_TOKEN` | (필수) | 24자 이상. API 서버가 같은 값을 `x-quiz-token` 헤더로 보냄 |
+| `QUIZ_FRESH_PER_MIN` | `20` | 그 자리에서 새로 만드는 요청을 서버 전체에서 1분에 몇 번까지 |
 | `QUIZ_WARM` | `0` | `1`이면 쉬는 동안 계속 출제 |
 | `QUIZ_POOL_TARGET` | `12` | 주제마다 미리 쌓아 둘 문제 수 |
 | `QUIZ_WARM_INTERVAL` | `30` | 계속 출제할 때 주제 사이 간격(초) |

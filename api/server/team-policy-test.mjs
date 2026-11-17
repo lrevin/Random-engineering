@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {TEAM_MIN,TEAM_MAX,TEAM_GOAL_PER_MEMBER,TEAM_REWARD,teamGoal,teamProgress,canClaimTeam,pickTeam,weekStartKst} from '../mysql/team-policy.mjs';
+import {TEAM_MIN,TEAM_MAX,TEAM_GOAL_PER_MEMBER,TEAM_REWARD,TEAM_MIN_CONTRIBUTION,teamGoal,teamProgress,canClaimTeam,pickTeam,weekStartKst} from '../mysql/team-policy.mjs';
 import {BOSS_QUESTIONS,CLEAR_HITS,BOSS_HIT,PLAYER_HP,PLAYER_HIT,BOSS_THEME,BOSS_THEME_ODDS,bossReward,rollBossTheme,bossQuestion,buildBoss,applyBossAnswer} from '../mysql/boss-policy.mjs';
 
 const mc=(q,answer=0)=>({type:'mc',q,choices:['a','b','c','d'],answer,explain:'e'});
@@ -13,10 +13,12 @@ test('팀은 2~4명, 주간 목표는 인원 × 150 XP (1명일 땐 2명 기준)
  const p=teamProgress([{weekXp:200},{weekXp:100}]);assert.deepEqual(p,{count:2,total:300,goal:300,active:true,done:true});
  assert.equal(teamProgress([{weekXp:200},{weekXp:99}]).done,false);
 });
-test('보상은 목표 달성 · 이번 주 XP 1 이상 · 아직 안 받은 팀원만',()=>{
+test('보상은 목표 달성 · 들어온 뒤 XP 50 이상 · 아직 안 받은 팀원만',()=>{
+ assert.equal(TEAM_MIN_CONTRIBUTION,50);
  const done=teamProgress([{weekXp:300},{weekXp:0}]);
  assert.equal(canClaimTeam(done,{weekXp:300},false),true);
  assert.equal(canClaimTeam(done,{weekXp:0},false),false);
+ assert.equal(canClaimTeam(done,{weekXp:49},false),false);assert.equal(canClaimTeam(done,{weekXp:50},false),true);
  assert.equal(canClaimTeam(done,{weekXp:300},true),false);
  assert.ok(TEAM_REWARD.gears<=100&&TEAM_REWARD.xp<=200);
 });
@@ -61,7 +63,7 @@ test('클리어 보상: 남은 체력이 많을수록 큼, 0.01% 전용 테마',
 test('앱 규칙 숫자가 서버와 같음',()=>{
  const team=readFileSync(new URL('../../app/src/lib/team.ts',import.meta.url),'utf8'),boss=readFileSync(new URL('../../app/src/lib/boss.ts',import.meta.url),'utf8');
  const num=(src,k)=>Number(new RegExp(`export const ${k} = (\\d+);`).exec(src)?.[1]);
- assert.equal(num(team,'TEAM_MIN'),TEAM_MIN);assert.equal(num(team,'TEAM_MAX'),TEAM_MAX);assert.equal(num(team,'TEAM_GOAL_PER_MEMBER'),TEAM_GOAL_PER_MEMBER);
+ assert.equal(num(team,'TEAM_MIN'),TEAM_MIN);assert.equal(num(team,'TEAM_MAX'),TEAM_MAX);assert.equal(num(team,'TEAM_GOAL_PER_MEMBER'),TEAM_GOAL_PER_MEMBER);assert.equal(num(team,'TEAM_MIN_CONTRIBUTION'),TEAM_MIN_CONTRIBUTION);
  assert.match(team,new RegExp(`TEAM_REWARD = \\{ gears: ${TEAM_REWARD.gears}, xp: ${TEAM_REWARD.xp} \\}`));
  for(const [k,v] of Object.entries({BOSS_QUESTIONS,CLEAR_HITS,BOSS_HIT,PLAYER_HP,PLAYER_HIT,BOSS_THEME_ODDS}))assert.equal(num(boss,k),v,k);
  assert.match(boss,new RegExp(`BOSS_THEME = "${BOSS_THEME}"`));

@@ -1,10 +1,10 @@
 import {AuthError} from '../server/auth.mjs';
-import { rateKey } from '../server/client-key.mjs';
+import { rateKey, overLimit } from '../server/client-key.mjs';
 import {readJsonBody} from '../server/auth-http.mjs';
 export function battleRoutes(service){const hits=new Map();return async(req,path,send)=>{
  if(path!=='/match'&&!path.startsWith('/battles'))return false;
  const reply=(status,body)=>send(status,body,{'Cache-Control':'no-store'}),time=Date.now(),key=rateKey(req);
- for(const[k,v]of hits)if(v.until<=time)hits.delete(k);const hit=hits.get(key)??{n:0,until:time+60000};if((hits.size>=10000&&!hits.has(key))||++hit.n>600){reply(429,{error:'rate_limited'});return true;}hits.set(key,hit);
+ if(overLimit(hits,key,600,time)){reply(429,{error:'rate_limited'});return true;}
  try{const m=req.method,h=req.headers.authorization,item=/^\/battles\/([0-9a-f-]+)(?:\/(answers|result|overtime|forfeit|study-skip))?$/.exec(path);
   if(path==='/match'&&m==='POST')reply(200,await service.join(h,await readJsonBody(req)));
   else if(path==='/match'&&m==='GET')reply(200,await service.match(h));
