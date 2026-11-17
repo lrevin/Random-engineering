@@ -283,3 +283,8 @@ adb reverse tcp:8788 tcp:8788                    # 안드로이드 에뮬레이�
 - 경로별 제한 표(`overLimit`)는 가득 차면 가장 오래된 칸을 버린다. 가득 찼다고 새 사용자를 막지 않는다.
 - 닉네임 가리기(신고 3명 이상)는 가입 7일이 지나고 서버가 인정한 공부 기록이 있는 활성 회원의 신고만 센다.
 - AdMob SSV는 `ADMOB_REWARDED_UNITS`가 필수다. 비어 있으면 `ad_units_not_configured`로 지급하지 않는다.
+- 로그인: 같은 이메일로 15분 동안 비밀번호를 10번 틀리면 IP와 상관없이 그 이메일 로그인이 `429 too_many_attempts`. 맞히면 초기화.
+- 카카오 계정 탈퇴 취소: `GET /auth/kakao/start?challenge=…&restore=1`로 다시 로그인하면(서명된 state에 담김) 탈퇴 신청 7일 이내 계정을 되살리고 로그인. 7일이 지났으면 `deletion_period_expired`.
+- 팀 '빈자리 채우기'는 열린 팀 후보 20개를 잠그지 않고 읽은 뒤 고른 팀 하나만 잠그고 자리를 다시 확인한다.
+- 꾸미기 구매는 이미 가진 것이면 잔액보다 먼저 `already_owned`. 같은 requestId 동시 요청은 영수증을 잠금 읽기로 확인해 재전송으로 처리한다.
+- V10__lavender_to_honey.sql: 판매 종료한 라벤더 드림(lavender)을 허니 레몬(honey)으로 바꿔 준다. 둘 다 가진 사람은 1200 톱니바퀴를 돌려준다(reason='theme_refund', request_id='refund:lavender').

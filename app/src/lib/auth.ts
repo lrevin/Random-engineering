@@ -28,6 +28,7 @@ export function authErrorMessage(error: unknown) {
     weak_password: "비밀번호는 8자 이상으로 정해 주세요.",
     unauthorized: "로그인이 만료됐어요. 다시 로그인해 주세요.",
     rate_limited: "요청이 너무 많아요. 잠시 후 다시 시도해 주세요.",
+    too_many_attempts: "비밀번호를 여러 번 틀렸어요. 15분 뒤에 다시 시도해 주세요.",
     network_error: "서버에 연결할 수 없어요. 인터넷 연결을 확인해 주세요.",
     database_unavailable: "서버에 잠시 연결할 수 없어요. 잠시 후 다시 시도해 주세요.",
     invalid_profile: "프로필 입력값을 확인해 주세요.",
