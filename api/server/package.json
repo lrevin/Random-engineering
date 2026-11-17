@@ -27,7 +27,8 @@
     "test:integration": "node --env-file-if-exists=.env ../mysql/certificate-validate.mjs",
     "admin:grant": "node --env-file-if-exists=.env ../mysql/admin-grant.mjs",
     "admin:recall": "node --env-file-if-exists=.env ../mysql/admin-recall.mjs",
-    "purchases:test": "node --env-file-if-exists=.env --test ../mysql/purchase-test.mjs"
+    "purchases:test": "node --env-file-if-exists=.env --test ../mysql/purchase-test.mjs",
+    "security:test": "node --env-file-if-exists=.env --test ../mysql/security-integration-test.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

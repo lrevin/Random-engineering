@@ -2,7 +2,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { TOPICS, type Topic } from "@/data";
 import { BANK_BUNDLED_FULL, QUIZ_BANK } from "@/data/quizbank";
 import { fetchBankQuestions } from "./api";
-import { mysqlAuth } from "./auth";
 
 /** 문제마다 어디서 왔는지: bank = 우리가 미리 만든 문제 · ai = 퀴즈 AI가 새로 만든 문제 · offline = 앱 데이터로 만든 연습 문제 */
 export type QuestionSource = "bank" | "ai" | "offline";
@@ -181,6 +180,8 @@ const aiCacheKey = (id: string) => `pg.quiz.ai2.${id}`;
  */
 async function fetchAiQuestions(topic: Topic, avoid: QuizQuestion[], fresh: boolean, count = AI_COUNT): Promise<QuizQuestion[]> {
   const body = { topicId: topic.id, count, avoid: avoid.map((q) => q.q).slice(0, 40), fresh };
+  // 로그인 모듈은 쓸 때만 불러옴 (기기 저장소를 쓰는 모듈이라, 이 파일을 쓰는 서버 테스트에서 미리 불러오지 않게)
+  const { mysqlAuth } = await import("./auth");
   if (mysqlAuth.getUserId()) {
     try {
       const data = await mysqlAuth.aiQuiz(body);

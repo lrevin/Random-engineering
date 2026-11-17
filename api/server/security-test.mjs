@@ -78,3 +78,17 @@ test('규칙이 코드에 들어 있음: 기록 하루 제한 · 보스전 검�
   assert.match(src('../mysql/team-service.mjs'), /GREATEST\(\?,m\.joined_at\)/);
   assert.match(src('../mysql/leaderboard-service.mjs'), /ru\.created_at<=DATE_SUB/);
 });
+
+test('로그인: 같은 이메일로 10번 틀리면 IP가 달라도 15분 동안 막힘, 맞히면 초기화', async () => {
+  const { authRoutes, LOGIN_FAIL_LIMIT } = await import('./auth-http.mjs');
+  const { AuthError } = await import('./auth.mjs');
+  let ok = false;
+  const route = authRoutes({ async login(b) { if (ok && b.password === 'right') return { ok: true }; throw new AuthError('invalid_credentials', 401); } }, { limits: { login: 1000 } });
+  const req = (email, password, ip) => { const data = Buffer.from(JSON.stringify({ email, password })); return { method: 'POST', headers: { 'content-type': 'application/json' }, socket: { remoteAddress: ip }, async *[Symbol.asyncIterator]() { yield data; } }; };
+  const call = async (...a) => { let out; await route(req(...a), '/auth/login', (s, b) => { out = [s, b]; }); return out; };
+  for (let i = 0; i < LOGIN_FAIL_LIMIT; i++) assert.equal((await call('Victim@x.com', 'w' + i, '10.0.0.' + i))[0], 401);
+  assert.deepEqual(await call('victim@x.com', 'w', '10.9.9.9'), [429, { error: 'too_many_attempts' }]);
+  assert.equal((await call('other@x.com', 'w', '10.9.9.9'))[0], 401, '다른 계정은 그대로');
+  ok = true;
+  assert.equal((await call('other@x.com', 'right', '10.9.9.9'))[0], 200);
+});

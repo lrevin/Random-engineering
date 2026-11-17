@@ -2,7 +2,6 @@ import { useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 import { CertPicker } from "@/components/CertPicker";
 import { DomainPicker } from "@/components/DomainPicker";
-import { InterestPicker } from "@/components/InterestPicker";
 import { LevelPicker } from "@/components/LevelPicker";
 import { RelatedPicker } from "@/components/RelatedPicker";
 import { TimeStepper } from "@/components/TimeStepper";
@@ -15,7 +14,9 @@ import type { Prefs } from "@/lib/types";
 import { useColors } from "@/theme";
 import { Icon } from "@/components/Icon";
 
+// 2번(세부 분야)은 더 이상 고르지 않음: 큰 분야를 고르면 그 분야의 세부 분야가 모두 들어감 (단계 번호는 그대로 두고 건너뜀)
 const STEPS = ["닉네임", "분야", "세부 분야", "자격증", "연관 분야", "난이도", "알림"];
+const SKIPPED = 2;
 const LAST = STEPS.length - 1;
 const domainOf = (category: string) => categoryById(category)?.domain;
 
@@ -46,20 +47,9 @@ export default function Onboarding() {
       setNickname(n);
     }
     if (step === 1) {
-      // 분야 없이 자격증만으로 공부할 수도 있음: 세부 분야 단계를 건너뛰고 자격증 단계로
-      if (!domains.length) {
-        setInterests([]);
-        return setStep(3);
-      }
-      // 고른 분야의 세부 분야만 남기고, 새로 고른 분야는 세부 분야를 모두 선택해 둠
-      const kept = interests.filter((id) => domains.includes(categoryById(id)?.domain ?? ""));
-      const added = domains
-        .filter((d) => !kept.some((id) => categoryById(id)?.domain === d))
-        .flatMap((d) => domainById(d)?.categories.map((x) => x.id) ?? []);
-      setInterests([...kept, ...added]);
-    }
-    if (step === 2) {
-      if (interests.length === 0) return setErr("세부 분야를 하나 이상 골라 주세요.");
+      // 고른 큰 분야의 세부 분야를 모두 넣고 자격증 단계로 (분야 없이 자격증만 해도 됨)
+      setInterests(domains.flatMap((d) => domainById(d)?.categories.map((x) => x.id) ?? []));
+      return setStep(3);
     }
     if (step === 3) {
       if (!interests.length && !certs.length) return setErr("공부할 분야가 없어요. 자격증을 하나 이상 고르거나, 이전으로 가서 분야를 골라 주세요.");
@@ -89,7 +79,7 @@ export default function Onboarding() {
   };
 
   const nextLabel =
-    step === 1 ? (domains.length ? `다음 (${domains.length}개 분야)` : "자격증만 할게요") : step === 2 ? `다음 (${interests.length}개 선택)`
+    step === 1 ? (domains.length ? `다음 (${domains.length}개 분야)` : "자격증만 할게요")
       : step === 3 ? (certs.length ? `다음 (자격증 ${certs.length}개)` : domains.length ? "준비 중인 자격증 없음" : "자격증을 골라 주세요")
       : step === 4 ? `다음 (연관 ${related.length}개 추가)` : "다음";
 
@@ -98,7 +88,7 @@ export default function Onboarding() {
       <Screen>
         {/* 진행 표시 */}
         <Row gap={5} style={{ flexWrap: "nowrap" }}>
-          {STEPS.map((s, i) => (
+          {STEPS.map((s, i) => i === SKIPPED ? null : (
             <View key={s} style={{ flex: 1, gap: 4 }}>
               <View style={{ height: 4, borderRadius: 2, backgroundColor: i <= step ? c.accent : c.line }} />
               <T size={11} color={i === step ? "accent" : "muted"} weight={i === step ? "semibold" : "regular"} numberOfLines={1}>{s}</T>
@@ -121,15 +111,6 @@ export default function Onboarding() {
                 <T color="ink2">여러 개 골라도 좋아요. 고른 분야에서 매일 랜덤 주제가 나와요. 자격증 시험만 준비한다면 고르지 않고 넘어가도 돼요.</T>
               </View>
               <DomainPicker value={domains} onChange={setDomains} />
-            </>
-          )}
-          {step === 2 && (
-            <>
-              <View style={{ gap: 4 }}>
-                <T size={26} weight="bold">세부 분야를 골라 주세요</T>
-                <T color="ink2">처음에는 모두 선택되어 있어요. 빼고 싶은 것만 눌러 끄세요.</T>
-              </View>
-              <InterestPicker value={interests} onChange={setInterests} domains={domains} />
             </>
           )}
           {step === 3 && (
@@ -174,7 +155,7 @@ export default function Onboarding() {
         {err ? <T color="accent">{err}</T> : null}
         {step < LAST ? (
           <Row style={{ flexWrap: "nowrap" }}>
-            {step > 0 && <Btn title="이전" onPress={() => { setErr(""); setStep(step === 5 && !relatedItems.length ? 3 : step === 3 && !domains.length ? 1 : step - 1); }} style={{ flex: 1 }} size="lg" />}
+            {step > 0 && <Btn title="이전" onPress={() => { setErr(""); setStep(step === 5 && !relatedItems.length ? 3 : step === 3 ? 1 : step - 1); }} style={{ flex: 1 }} size="lg" />}
             <Btn title={nextLabel} variant="primary" size="lg" onPress={next} style={{ flex: 2 }} />
           </Row>
         ) : (

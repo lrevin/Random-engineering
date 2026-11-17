@@ -1,5 +1,5 @@
 import { Pressable, View } from "react-native";
-import { CERTS, certTopics, isCertId } from "@/data";
+import { CERTS, isCertId } from "@/data";
 import { radius, raised, shadow, useColors } from "@/theme";
 import { T, tap } from "./ui";
 import { Icon } from "./Icon";
@@ -15,29 +15,24 @@ export function CertPicker({ value, onChange }: { value: string[]; onChange: (v:
     <View style={{ gap: 10 }}>
       {CERTS.map((cert) => {
         const on = value.includes(cert.id);
-        const n = certTopics(cert.id).length;
         return (
           <Pressable
             key={cert.id}
             accessibilityRole="checkbox"
             accessibilityState={{ checked: on }}
-            accessibilityLabel={`${cert.name}, ${cert.org}, 주제 ${n}개`}
+            accessibilityLabel={cert.name}
             onPress={() => { tap(); toggle(cert.id); }}
             style={({ pressed }) => ({
-              flexDirection: "row", alignItems: "center", gap: 12, padding: 14,
+              flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12, paddingHorizontal: 14,
               borderRadius: radius.lg, borderWidth: 2,
               borderColor: on ? c.accent : c.line2, backgroundColor: on ? c.accentSoft : c.paper,
               ...raised(on ? c.accentDeep : c.paperEdge, pressed),
               ...(!pressed ? shadow(c, 1) : null),
             })}
           >
-            <Icon name="medal" size={36} />
-            <View style={{ flex: 1, gap: 2 }}>
-              <T size={16} weight="bold">{cert.name}</T>
-              <T size={13} color="ink2">{cert.description}</T>
-              <T size={12} color="muted">{cert.org} · 주제 {n}개</T>
-              {on && <T size={12} color="muted">과목: {cert.subjects.map((s) => s.name).join(" · ")}</T>}
-            </View>
+            <Icon name="medal" size={28} />
+            {/* 자격증 이름만 (설명 · 기관 · 과목은 보여 주지 않음) */}
+            <T size={16} weight="bold" style={{ flex: 1 }}>{cert.name}</T>
             <View style={{
               width: 24, height: 24, borderRadius: 12, borderWidth: 1.5,
               borderColor: on ? c.accent : c.line2, backgroundColor: on ? c.accent : "transparent",

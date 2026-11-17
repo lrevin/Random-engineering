@@ -112,8 +112,13 @@ export function createTeamService({auth,connectionFactory=connect,now=()=>new Da
    if(mode==='friends'&&people.length<TEAM_MIN)throw new AuthError('team_need_friend',409);
    let team=null;
    if(mode==='open'){
-    const [open]=await db.execute("SELECT id,member_count FROM study_teams WHERE mode='open' AND member_count<=? FOR UPDATE",[TEAM_MAX-people.length]);
-    team=pickTeam(open,people.length,rand);
+    // 열린 팀 전부를 잠그면 사람이 많을 때 느려지므로, 후보 20개를 잠그지 않고 읽은 뒤 고른 팀 하나만 잠그고 자리를 다시 확인
+    let [open]=await db.execute("SELECT id,member_count FROM study_teams WHERE mode='open' AND member_count<=? ORDER BY RAND() LIMIT 20",[TEAM_MAX-people.length]);
+    while(!team&&open.length){
+     const pick=pickTeam(open,people.length,rand);if(!pick)break;
+     const [[locked]]=await db.execute("SELECT id,member_count FROM study_teams WHERE id=? AND mode='open' FOR UPDATE",[pick.id]);
+     if(locked&&Number(locked.member_count)+people.length<=TEAM_MAX)team=locked;else open=open.filter(t=>t.id!==pick.id);
+    }
    }
    if(!team){team={id:randomUUID()};await db.execute('INSERT INTO study_teams(id,mode,leader_id,member_count) VALUES (?,?,?,0)',[team.id,mode,id]);}
    await enter(db,team,people);

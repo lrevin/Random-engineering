@@ -59,7 +59,7 @@ export function createMemberService({auth,connectionFactory=connect,now=()=>new 
    const {requestId,action,payload={}}=body??{};
    if(typeof requestId!=='string'||!/^[a-zA-Z0-9:._-]{1,90}$/.test(requestId)||typeof action!=='string'||!payload||Array.isArray(payload)||typeof payload!=='object')throw new AuthError('invalid_operation',400);
    const digest=Buffer.from(hash({action,payload}),'hex');
-   const [[old]]=await db.execute('SELECT request_hash,result_json FROM wallet_operations WHERE user_id=? AND request_id=?',[id,requestId]);
+   const [[old]]=await db.execute('SELECT request_hash,result_json FROM wallet_operations WHERE user_id=? AND request_id=? FOR UPDATE',[id,requestId]);
    if(old){if(!old.request_hash.equals(digest))throw new AuthError('operation_conflict',409);return {...await wallet(db,id),replayed:true};}
    const value=await wallet(db,id),s=value.state;let amount=0;
    if(action==='buy_freeze'){if(s.freezes>=2)throw new AuthError('inventory_full',409);amount=-30;s.freezes++;}

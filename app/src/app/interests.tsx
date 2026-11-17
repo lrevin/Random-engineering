@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { ScrollView, View } from "react-native";
 import { CertPicker } from "@/components/CertPicker";
-import { InterestPicker } from "@/components/InterestPicker";
+import { InterestPicker, domainsOf } from "@/components/InterestPicker";
 import { Btn, Screen, T } from "@/components/ui";
 import { isCertId } from "@/data";
 import { useApp } from "@/lib/app-state";
@@ -35,7 +35,7 @@ export default function Interests() {
         <CertPicker value={value} onChange={setValue} />
       </ScrollView>
       {err ? <T color="accent">{err}</T> : null}
-      <Btn title={`저장 (분야 ${value.filter((id) => !isCertId(id)).length}개${value.some(isCertId) ? ` · 자격증 ${value.filter(isCertId).length}개` : ""})`} variant="primary" size="lg" onPress={save} />
+      <Btn title={`저장 (분야 ${domainsOf(value).length}개${value.some(isCertId) ? ` · 자격증 ${value.filter(isCertId).length}개` : ""})`} variant="primary" size="lg" onPress={save} />
       <Btn title="취소" variant="ghost" onPress={() => router.back()} />
     </Screen>
   );

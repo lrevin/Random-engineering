@@ -84,7 +84,8 @@ export function kakaoRoutes(auth, {
     if (route === 'start') {
       const challenge = query.get('challenge') ?? '';
       if (!/^[A-Za-z0-9_-]{43}$/.test(challenge)) { send(400, { error: 'bad_request' }); return true; }
-      const state = await new SignJWT({ c: challenge, n: b64url(randomBytes(12)) })
+      // restore=1: 탈퇴 신청한 계정을 되살리고 로그인 (state에 서명해 넣어서 중간에 못 바꿈)
+      const state = await new SignJWT({ c: challenge, n: b64url(randomBytes(12)), ...(query.get('restore') === '1' ? { r: 1 } : {}) })
         .setProtectedHeader({ alg: 'HS256' }).setIssuedAt().setExpirationTime('10m').sign(key);
       const url = new URL(`${KAUTH}/oauth/authorize`);
       url.search = new URLSearchParams({ client_id: restKey, redirect_uri: redirectUri, response_type: 'code', state }).toString();
@@ -95,13 +96,13 @@ export function kakaoRoutes(auth, {
     if (route === 'callback') {
       // 사용자가 취소하면 카카오가 error=access_denied 로 돌려보냄
       if (query.get('error')) { back(send, { error: query.get('error') === 'access_denied' ? 'cancelled' : 'kakao_failed' }); return true; }
-      let challenge;
-      try { ({ payload: { c: challenge } } = await jwtVerify(query.get('state') ?? '', key, { algorithms: ['HS256'] })); }
+      let challenge, restore = false;
+      try { const { payload } = await jwtVerify(query.get('state') ?? '', key, { algorithms: ['HS256'] }); challenge = payload.c; restore = payload.r === 1; }
       catch { back(send, { error: 'expired' }); return true; }
       const code = query.get('code');
       if (typeof challenge !== 'string' || !code || code.length > 512) { back(send, { error: 'bad_request' }); return true; }
       try {
-        const session = await auth.kakaoLogin(await kakaoUser(code));
+        const session = await auth.kakaoLogin({ ...(await kakaoUser(code)), restore });
         const once = b64url(randomBytes(32));
         codes.set(once, { session, challenge, until: now + codeSeconds * 1000 });
         back(send, { code: once });
