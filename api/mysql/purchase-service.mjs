@@ -1,5 +1,5 @@
 import {AuthError} from '../server/auth.mjs';
-import {productPrice,extendBoost,kstDay,instant,isProfileLook} from './purchase-policy.mjs';
+import {productPrice,extendBoost,kstDay,instant,isProfileLook,PREMIUM_THEMES} from './purchase-policy.mjs';
 export async function assetsState(db,id){
  await db.execute('INSERT IGNORE INTO member_assets(user_id) VALUES (?)',[id]);
  await db.execute("INSERT IGNORE INTO member_cosmetics(user_id,item_type,item_id,is_equipped,acquired_via) VALUES (?,'skin','classic',FALSE,'default')",[id]);
@@ -11,8 +11,13 @@ export async function assetsState(db,id){
  ownedSkins:items.filter(i=>i.item_type==='skin').map(i=>i.item_id),ownedTitles:items.filter(i=>i.item_type==='title').map(i=>i.item_id),
  activeSkin:items.find(i=>i.item_type==='skin'&&Number(i.is_equipped))?.item_id??'classic',activeTitle:items.find(i=>i.item_type==='title'&&Number(i.is_equipped))?.item_id??null};
 }
-export async function equip(db,id,type,item){
+export async function equip(db,id,type,item,{premium=false}={}){
  if(!['skin','title'].includes(type)||!(typeof item==='string'||(type==='title'&&item===null))||(type==='skin'&&isProfileLook(item)))throw new AuthError('invalid_operation',400);
+ // 프리미엄 전용 테마: 프리미엄인 동안만 장착, 처음 쓰면 보관함에 넣음
+ if(type==='skin'&&PREMIUM_THEMES.includes(item)){
+  if(!premium)throw new AuthError('premium_required',409);
+  await db.execute("INSERT IGNORE INTO member_cosmetics(user_id,item_type,item_id,is_equipped,acquired_via) VALUES (?,'skin',?,FALSE,'default')",[id,item]);
+ }
  if(item!==null){const [[owned]]=await db.execute('SELECT item_id FROM member_cosmetics WHERE user_id=? AND item_type=? AND item_id=?',[id,type,item]);if(!owned)throw new AuthError('not_owned',409);}
  await db.execute('UPDATE member_cosmetics SET is_equipped=FALSE WHERE user_id=? AND item_type=? AND is_equipped=TRUE',[id,type]);
  if(item!==null)await db.execute('UPDATE member_cosmetics SET is_equipped=TRUE WHERE user_id=? AND item_type=? AND item_id=?',[id,type,item]);

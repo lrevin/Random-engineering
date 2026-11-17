@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Pressable, View } from "react-native";
 import { Icon } from "@/components/Icon";
-import { TitleBadge } from "@/components/TitleBadge";
+import { RARITY_LABEL, rarityColors, TitleBadge } from "@/components/TitleBadge";
 import { Badge, Btn, Row, Screen, T } from "@/components/ui";
 import { useApp } from "@/lib/app-state";
 import { achievements, type AchievementExtra } from "@/lib/achievements";
@@ -34,8 +34,11 @@ export default function Titles() {
   };
 
   const current = titleById(cos.title);
-  const owned = TITLES.filter(hasTitle);
-  const locked = TITLES.filter((t) => !hasTitle(t));
+  // 높은 등급부터 (신화 → 전설 → 영웅 → 희귀)
+  const rank = { mythic: 0, legendary: 1, epic: 2, rare: 3 } as const;
+  const sorted = [...TITLES].sort((a, b) => rank[a.rarity] - rank[b.rarity]);
+  const owned = sorted.filter(hasTitle);
+  const locked = sorted.filter((t) => !hasTitle(t));
 
   const row = (t: TitleDef) => {
     const has = hasTitle(t);
@@ -46,11 +49,20 @@ export default function Titles() {
         borderColor: on ? c.accent : c.line, borderBottomWidth: 5, borderBottomColor: on ? c.accentDeep : c.paperEdge,
         backgroundColor: c.paper, ...shadow(c, 1),
       }}>
-        <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
-          <View style={{ flexShrink: 1, alignItems: "flex-start" }}><TitleBadge t={t} size={19} dim={!has} /></View>
-          {on ? <Badge label="사용 중" tone="accent" /> : !has ? <Icon name="lock" size={24} color={c.muted} /> : null}
-        </Row>
-        <T size={15} color={has ? "ink2" : "muted"}>{has ? t.desc : `${t.desc}을 이루면 받아요`}</T>
+        {/* 왼쪽 엠블럼 · 오른쪽 등급 · 이름 · 조건 */}
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <TitleBadge t={t} size={22} dim={!has} />
+          <View style={{ flex: 1, gap: 4 }}>
+            <Row gap={6} style={{ flexWrap: "nowrap" }}>
+              <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: radius.pill, backgroundColor: has ? rarityColors(c, t.rarity).bg : c.chip }}>
+                <T size={11} weight="bold" style={{ color: has ? rarityColors(c, t.rarity).ink : c.muted }}>{RARITY_LABEL[t.rarity]}</T>
+              </View>
+              {on ? <Badge label="사용 중" tone="accent" /> : !has ? <Icon name="lock" size={18} color={c.muted} /> : null}
+            </Row>
+            <T size={18} weight="bold" color={has ? "ink" : "muted"} numberOfLines={1}>{t.name}</T>
+            <T size={13} color={has ? "ink2" : "muted"}>{has ? t.desc : `받는 조건: ${t.desc}`}</T>
+          </View>
+        </View>
         {has && !on && <Btn title="이 칭호 달기" size="md" variant="primary" onPress={() => { void wear(t.id); }} />}
       </View>
     );
@@ -69,7 +81,12 @@ export default function Titles() {
       {/* 지금 단 칭호 */}
       <View style={{ alignItems: "center", gap: 12, padding: 22, borderRadius: radius.lg, backgroundColor: c.chip, borderWidth: 1, borderColor: c.line }}>
         <T size={14} color="muted" weight="semibold">지금 단 칭호</T>
-        {current ? <TitleBadge t={current} size={24} /> : <T size={18} weight="bold" color="muted">아직 단 칭호가 없어요</T>}
+        {current ? (
+          <>
+            <TitleBadge t={current} size={26} />
+            <T size={20} weight="bold">{current.name}</T>
+          </>
+        ) : <T size={18} weight="bold" color="muted">아직 단 칭호가 없어요</T>}
         {current && (
           <Pressable onPress={() => { void wear(null); }} hitSlop={8} accessibilityRole="button">
             <T size={14} color="accent" weight="semibold">칭호 떼기</T>

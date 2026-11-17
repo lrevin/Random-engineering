@@ -19,12 +19,14 @@ import { titleById, useCosmetics } from "@/lib/skins";
 import { TitleBadge } from "@/components/TitleBadge";
 import { domainRanks, userLevel } from "@/lib/rank";
 import { getFriends, socialEnabled } from "@/lib/social";
+import { getRanking } from "@/lib/leaderboard";
+import { weekXp } from "@/lib/report";
 import { calcStreak, isBattleRecord, isRecognizedStudy } from "@/lib/stats";
 import { radius, raised, screenBg, shadow, useColors } from "@/theme";
 
 /** 슬롯 릴 무늬 (프로필 위 남색 배경) */
 export default function Profile() {
-  const { prefs, uid, xp, records, keptDays, freezes, gears, questClaims } = useApp();
+  const { mode, prefs, uid, xp, records, keptDays, freezes, gears, questClaims } = useApp();
   const c = useColors();
   const [friends, setFriends] = useState<number | null>(null);
 
@@ -32,6 +34,14 @@ export default function Profile() {
     if (!socialEnabled) return;
     getFriends().then((s) => setFriends(s.friends.length)).catch(() => {});
   }, []));
+  // 이번 주 경험치: 회원은 서버 주간 랭킹 값(스피드런 포함), 아니면 이 휴대폰 기록으로 계산
+  const localWeekXp = useMemo(() => weekXp(records), [records]);
+  const [serverWeekXp, setServerWeekXp] = useState<number | null>(null);
+  useFocusEffect(useCallback(() => {
+    if (mode !== "user") { setServerWeekXp(null); return; }
+    getRanking("weekly", 1).then((r) => setServerWeekXp(r.me?.value ?? 0)).catch(() => setServerWeekXp(null));
+  }, [mode]));
+  const weekly = serverWeekXp ?? localWeekXp;
 
   const name = prefs.nickname || "나";
   const look = useProfileLook();
@@ -139,7 +149,7 @@ export default function Profile() {
           <SectionTitle title="학습 현황" />
           <StatGrid>
             <StatTile icon={<Icon name="flame" size={30} />} value={`${streak}일`} label="연속 공부" dim={!streak} />
-            <StatTile icon={<Icon name="bolt" size={30} />} value={`${xp.toLocaleString()} XP`} label="누적 경험치" />
+            <StatTile icon={<Icon name="bolt" size={30} />} value={`${weekly.toLocaleString()} XP`} label="이번 주 경험치" dim={!weekly} />
             <StatTile icon={<TierIcon index={Math.max(0, stats.best)} size={30} />} value={stats.engineers ? `${stats.engineers}개` : stats.best >= 0 ? ["브론즈", "실버", "골드", "플래티넘", "다이아", "엔지니어"][stats.best] : "-"} label={stats.engineers ? "엔지니어 랭크 분야" : "최고 분야 랭크"} dim={stats.best < 0} />
             <StatTile icon={<Icon name="gear" size={30} />} value={`${gears}개`} label={freezes ? `톱니바퀴 · 보호권 ${freezes}개` : "톱니바퀴"} />
           </StatGrid>

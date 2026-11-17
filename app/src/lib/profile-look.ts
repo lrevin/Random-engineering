@@ -8,15 +8,15 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSyncExternalStore } from "react";
 import { LOCAL_KEYS } from "./local-data";
 
-export const FREE_AVATARS = ["initial", "slotbot", "gear", "cat", "owl", "fox", "penguin", "robot", "bear"] as const;
+export const FREE_AVATARS = ["slotbot", "gear", "cat", "owl", "fox", "penguin", "robot", "bear", "frog"] as const;
 export const FREE_BACKDROPS = ["reel", "sunset", "night", "notebook", "circuit", "ocean", "chalk"] as const;
 /** 유료 상품 가격 (서버 api/mysql/purchase-policy.mjs COSMETICS와 같아야 함) */
 export const LOOK_PRICES = {
-  "av-astro": 900, "av-dragon": 1000, "av-slime": 800, "av-bunny": 800, "av-panda": 900, "av-phoenix": 1200,
+  "av-astro": 900, "av-dragon": 1000, "av-slime": 800, "av-bunny": 800, "av-panda": 900, "av-phoenix": 1200, "av-whale": 900, "av-hamster": 800, "av-unicorn": 1100,
   "bg-galaxy": 1400, "bg-sakura": 1100, "bg-aurora": 1300, "bg-neon": 1400, "bg-library": 1000,
 } as const;
 export type PaidLookId = keyof typeof LOOK_PRICES;
-export const PAID_AVATARS = ["av-astro", "av-dragon", "av-slime", "av-bunny", "av-panda", "av-phoenix"] as const;
+export const PAID_AVATARS = ["av-astro", "av-dragon", "av-slime", "av-bunny", "av-panda", "av-phoenix", "av-whale", "av-hamster", "av-unicorn"] as const;
 export const PAID_BACKDROPS = ["bg-galaxy", "bg-sakura", "bg-aurora", "bg-neon", "bg-library"] as const;
 
 export type AvatarId = (typeof FREE_AVATARS)[number] | (typeof PAID_AVATARS)[number];
@@ -34,7 +34,7 @@ export interface ProfileLook {
   /** 프로필 수정에서 닉네임을 바꾼 횟수 (첫 번째는 무료) */
   nickChanges: number;
 }
-const DEFAULT: ProfileLook = { avatar: "initial", backdrop: "reel", owned: [], nickChanges: 0 };
+const DEFAULT: ProfileLook = { avatar: "slotbot", backdrop: "reel", owned: [], nickChanges: 0 };
 
 // ───────── 닉네임 규칙 (서버 api/mysql/account-service.mjs와 같음) ─────────
 /** 새로 정하는 닉네임 길이 */
@@ -75,7 +75,7 @@ function load() {
       state = {
         owned,
         // 회원이 산 그림은 서버를 읽기 전이라 아직 모를 수 있으므로, 고른 것은 그대로 둠 (고를 때 소유를 확인함)
-        avatar: isAvatar(s.avatar) ? s.avatar : "initial",
+        avatar: isAvatar(s.avatar) ? s.avatar : "slotbot",
         backdrop: isBackdrop(s.backdrop) ? s.backdrop : "reel",
         nickChanges: typeof s.nickChanges === "number" && s.nickChanges >= 0 ? s.nickChanges : 0,
       };

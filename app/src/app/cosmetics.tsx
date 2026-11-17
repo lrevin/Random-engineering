@@ -6,7 +6,7 @@ import { Row, Screen, T } from "@/components/ui";
 import { useApp } from "@/lib/app-state";
 import { PAID_AVATARS, PAID_BACKDROPS, useProfileLook } from "@/lib/profile-look";
 import { Avatar } from "@/components/ProfileLook";
-import { TITLES, titleById, useCosmetics, useThemes } from "@/lib/skins";
+import { THEMES, TITLES, titleById, useCosmetics, useThemes } from "@/lib/skins";
 import { inset, radius, raised, shadow, useColors } from "@/theme";
 
 /** 꾸미기 상점: 앱 전체 색을 바꾸는 테마 · 프로필에 다는 칭호 */
@@ -46,7 +46,7 @@ export default function Cosmetics() {
         <View style={{ flex: 1, gap: 2 }}>
           <T size={19} weight="bold">테마</T>
           <T size={13} color="ink2">지금 {themes.active.name}</T>
-          <T size={12} color="muted">앱 전체 색을 바꾸는 테마 4종</T>
+          <T size={12} color="muted">앱 전체 색을 바꾸는 테마 {THEMES.length - 1}종</T>
         </View>
         <T size={22} color="muted">›</T>
       </Pressable>

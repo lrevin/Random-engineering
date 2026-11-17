@@ -86,10 +86,10 @@ test('회원 구매·사용과 보상은 실제 MySQL 트랜잭션으로 처리'
   await funds(2000);useSharedPool();
   try{
    const id=randomUUID(),before=(await wallet()).balance;
-   const result=await Promise.all([op('spend',{product:'skin:lavender'},id),op('spend',{product:'skin:lavender'},id)]);
-   assert(result.every(x=>x.assets.ownedSkins.includes('lavender')));assert.equal((await wallet()).balance,before-1200);
+   const result=await Promise.all([op('spend',{product:'skin:honey'},id),op('spend',{product:'skin:honey'},id)]);
+   assert(result.every(x=>x.assets.ownedSkins.includes('honey')));assert.equal((await wallet()).balance,before-1200);
    await Promise.all(Array.from({length:12},()=>wallet()));
-   await assert.rejects(op('spend',{product:'skin:lavender'}),{code:'already_owned'});
+   await assert.rejects(op('spend',{product:'skin:honey'}),{code:'already_owned'});
    assert.equal((await wallet()).balance,before-1200);
   }finally{await closeSharedPool();}
  });
