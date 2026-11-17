@@ -49,6 +49,7 @@ export const LOCAL_KEYS = {
   recall: { key: "pg.recall", group: "progress", desc: "주제별 마지막 복습 시각 (회원은 계정에 보관: progress-sync.ts)", server: true },
   certDates: { key: "pg.certDates", group: "progress", desc: "자격증별 시험일 (회원은 계정에 보관: progress-sync.ts)", server: true },
   speed: { key: "pg.speed", group: "progress", desc: "스피드 퀴즈 최고 기록 · 오늘 받은 경험치", server: true },
+  boss: { key: "pg.boss", group: "progress", desc: "둘러보기 오답 보스전: 이번 주 판 (주 1회 · 진행 상황)", server: false },
   // ── 이 휴대폰에만
   active: { key: "pg.active", group: "device", desc: "진행 중인 공부 · 퀴즈 (앱을 껐다 켜도 이어서)", server: false },
   examActive: { key: "pg.exam.active", group: "device", desc: "풀고 있는 모의고사 (이어 풀기)", server: false },

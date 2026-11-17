@@ -1,0 +1,5 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": { "modules": ["ThemeLauncherModule"] },
+  "android": { "modules": ["expo.modules.themelauncher.ThemeLauncherModule"] }
+}

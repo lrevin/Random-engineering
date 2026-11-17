@@ -154,7 +154,7 @@ export default function Friends() {
             <>
               <SectionTitle title={`받은 친구 신청 ${state.incoming.length}`} />
               {state.incoming.map((f) => (
-                <Card key={f.uid} style={{ flexDirection: "row", alignItems: "center", gap: 12, borderColor: c.accent, borderWidth: 1.5 }}>
+                <Card key={f.uid} style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
                   <Avatar name={f.nickname} uid={f.uid} />
                   <View style={{ flex: 1 }}>
                     <T size={16} weight="bold" numberOfLines={1}>{f.nickname}</T>

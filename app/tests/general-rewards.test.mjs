@@ -32,3 +32,12 @@ test('리포트·달력도 공통 자격을 사용하고 한국 날짜 경계가
   const day=report.monthCalendar([good,bad],[],2026,10,now).cells.find(c=>c?.key==='2026-11-16');assert.equal(day.count,1);assert.equal(day.today,true);
  }}finally{if(old===undefined)delete process.env.TZ;else process.env.TZ=old;}
 });
+
+test('프로필 주간 경험치는 이번 주(한국 월요일 0시부터) 기록 XP만 합산 (배틀 포함)',()=>{
+ const report=load('report',{'./stats':stats,'@/data':{domainById:()=>({name:'시험 분야'})}});
+ const now=new Date('2026-11-17T03:00:00Z');
+ const mon={...guest,rp:12,studiedAt:'2026-11-15T15:30:00Z',studyDate:'2026-11-16'};
+ const sun={...guest,rp:50,studiedAt:'2026-11-15T14:30:00Z',studyDate:'2026-11-15'};
+ const battle={...guest,rp:8,studyType:'battle',studiedAt:'2026-11-16T05:00:00Z',studyDate:'2026-11-16'};
+ assert.equal(report.weekXp([mon,sun,battle],now),20);
+});

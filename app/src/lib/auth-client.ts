@@ -105,7 +105,7 @@ export function createAuthClient(url: string, storage: SessionStorage, fetcher: 
   }
   return {
     getUserId() { return session?.user.id ?? null; },
-    async getSpeedStats(): Promise<{best:number;plays:number;day:string;xpToday:number;totalXp:number}> {return authorized("/me/speed/stats");},
+    async getSpeedStats(): Promise<{best:number;plays:number;day:string;xpToday:number;totalXp:number;bonusXp?:number}> {return authorized("/me/speed/stats");},
     async apiRequest(path: string, body?: unknown, method?: "GET" | "POST" | "PUT" | "DELETE") { return authorized(path, body, method); },
     async rewardStatus():Promise<RewardStatus>{return authorized('/me/rewards');},
     async issueActivity(body:{requestId:string;purpose:'study'|'recall'|'review'|'exam';topicId?:string;certId?:string;studySec?:number}):Promise<ServerActivity>{return authorized('/me/activities',body,'POST');},

@@ -127,8 +127,10 @@ export function createLeaderboardService({ auth, connectionFactory = connect, no
           const [rows] = await db.execute(
             `SELECT u.id AS user_id, ${name},
                (SELECT COALESCE(SUM(x.amount),0) FROM xp_ledger x WHERE x.user_id=u.id${w ? ' AND x.created_at>=?' : ''})
-               + (SELECT COALESCE(SUM(r.awarded_xp),0) FROM speed_runs r WHERE r.user_id=u.id AND r.status='completed'${w ? ' AND r.completed_at>=?' : ''}) AS xp
-             ${people}`, w ? [since, since, claims.sub] : [claims.sub]);
+               + (SELECT COALESCE(SUM(r.awarded_xp),0) FROM speed_runs r WHERE r.user_id=u.id AND r.status='completed'${w ? ' AND r.completed_at>=?' : ''})
+               + (SELECT COALESCE(SUM(b.reward_xp),0) FROM boss_runs b WHERE b.user_id=u.id AND b.status='cleared'${w ? ' AND b.finished_at>=?' : ''})
+               + (SELECT COALESCE(SUM(tr.reward_xp),0) FROM study_team_rewards tr WHERE tr.user_id=u.id${w ? ' AND tr.created_at>=?' : ''}) AS xp
+             ${people}`, w ? [since, since, since, since, claims.sub] : [claims.sub]);
           scored = rows.map((r) => ({ ...r, value: Math.max(0, Number(r.xp)) })).filter((r) => r.value > 0)
             .sort((a, b) => b.value - a.value);
         }

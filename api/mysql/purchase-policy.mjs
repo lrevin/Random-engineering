@@ -5,10 +5,12 @@ export const instant=v=>v instanceof Date?v:new Date(v.includes('T')?v:v.replace
 // 칭호는 연속 기록·업적 보상으로만 주고 팔지 않는다.
 // 유료 프로필 캐릭터(av-)·배경(bg-)도 같은 'skin' 칸에 보관만 하고 장착하지 않는다(테마 장착과 무관, 고른 그림은 앱이 기억). 화면: app/src/lib/profile-look.ts LOOK_PRICES
 export const COSMETICS={
- 'skin:sunset':{price:900},'skin:aurora':{price:900},'skin:lavender':{price:1200},'skin:midnight':{price:1800},
- 'skin:av-astro':{price:900},'skin:av-dragon':{price:1000},'skin:av-slime':{price:800},'skin:av-bunny':{price:800},'skin:av-panda':{price:900},'skin:av-phoenix':{price:1200},
+ 'skin:sunset':{price:900},'skin:aurora':{price:900},'skin:honey':{price:1200},'skin:midnight':{price:1200},'skin:matcha':{price:2000},'skin:obsidian':{price:2000},
+ 'skin:av-astro':{price:900},'skin:av-dragon':{price:1000},'skin:av-slime':{price:800},'skin:av-bunny':{price:800},'skin:av-panda':{price:900},'skin:av-phoenix':{price:1200},'skin:av-whale':{price:900},'skin:av-hamster':{price:800},'skin:av-unicorn':{price:1100},
  'skin:bg-galaxy':{price:1400},'skin:bg-sakura':{price:1100},'skin:bg-aurora':{price:1300},'skin:bg-neon':{price:1400},'skin:bg-library':{price:1000}
 };
+/** 프리미엄 멤버십 전용 테마: 팔지 않고, 프리미엄인 동안 장착할 수 있음 (화면: app/src/lib/skins.ts THEMES의 premium) */
+export const PREMIUM_THEMES=['prism'];
 /** 장착하지 않고 보관만 하는 프로필 그림 */
 export const isProfileLook=item=>typeof item==='string'&&/^(av|bg)-[a-z]+$/.test(item);
 export function productPrice(product,now){

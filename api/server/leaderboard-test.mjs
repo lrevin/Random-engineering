@@ -84,7 +84,7 @@ test('rankings: 주간 XP · 레벨은 점수 0 제외, 같은 점수는 같은 
   assert.equal(w.since, '2026-11-15T15:00:00.000Z');
   const [q, args] = calls[0];
   assert.match(q, /x\.created_at>=\?/); assert.match(q, /r\.completed_at>=\?/);
-  assert.deepEqual(args, ['2026-11-15 15:00:00.000', '2026-11-15 15:00:00.000', 'u2']);
+  assert.deepEqual(args, ['2026-11-15 15:00:00.000', '2026-11-15 15:00:00.000', '2026-11-15 15:00:00.000', '2026-11-15 15:00:00.000', 'u2']);
   assert.match(q, /leaderboard_hidden,0\)=0 OR u\.id=\?/); assert.match(q, /COALESCE\(rc\.n,0\)>=3 THEN '학습자'/);
   const l = await service.ranking('Bearer x', 'level', new URLSearchParams('limit=1'));
   assert.equal(l.entries.length, 2); assert.equal(l.entries[0].level, 3); assert.equal(l.me.rank, 1);

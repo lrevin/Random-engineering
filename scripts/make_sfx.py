@@ -82,3 +82,51 @@ save("coin_spill", mix((0, noise(0.22, a=0.02, curve=2.5, lp=6) * 0.18),
                          zip(rng.uniform(0, 0.2, 7), rng.choice([84, 86, 88, 91, 93], 7), rng.uniform(0.35, 0.7, 7))]), 0.5)
 save("coin_done", mix(*[(i * 0.05, tone(note(n), 0.5, "bell", r=.16) * (0.9 - i * 0.12)) for i, n in enumerate([91, 95, 98, 103])],
                       (0, noise(0.35, a=0.03, curve=2, lp=0) * 0.04)), 0.55)
+
+# 오답 보스전: 맞을 때 퍽 + 철컹(슬롯머신 몸통) · 틀렸을 때 악마 웃음 · 나타날 때 낮게 울림
+def biquad_bp(x, f, q):
+    """공명(포먼트) 하나: 2차 대역 통과"""
+    w = 2 * np.pi * f / SR; al = np.sin(w) / (2 * q); a0 = 1 + al
+    b0, b2, a1, a2 = al / a0, -al / a0, -2 * np.cos(w) / a0, (1 - al) / a0
+    y = np.zeros_like(x); x1 = x2 = y1 = y2 = 0.0
+    for i, v in enumerate(x):
+        o = b0 * v + b2 * x2 - a1 * y1 - a2 * y2
+        x2, x1, y2, y1 = x1, v, y1, o; y[i] = o
+    return y
+def saw(f, d):
+    tt = t(d); f = np.broadcast_to(f, tt.shape) if np.ndim(f) else np.full(tt.shape, f)
+    ph = np.cumsum(f) / SR; return 2 * (ph % 1) - 1
+def ha(f0, d, vowel=(750, 1150, 2500)):
+    """'하' 한 음절: 거친 성대 소리(톱니파 + 한 옥타브 아래) → 모음 포먼트, 앞에 'ㅎ' 숨소리"""
+    n = int(SR * d); tt = t(d)
+    pitch = f0 * (1 + 0.06 * np.exp(-tt * 18)) * (1 - 0.12 * tt / d)  # 처음에 살짝 높았다가 내려감
+    src = saw(pitch, d) + 0.7 * saw(pitch / 2, d) + 0.15 * rng.standard_normal(n)
+    src = np.tanh(src * 1.6)
+    voiced = sum(biquad_bp(src, f, q) * g for f, q, g in zip(vowel, (6, 8, 10), (1.0, 0.7, 0.25)))
+    e = np.minimum(1, tt / 0.025) * np.exp(-np.maximum(0, tt - 0.03) / (d * 0.45))
+    breath = biquad_bp(rng.standard_normal(int(SR * 0.05)), 1400, 1.2) * np.linspace(0.6, 0, int(SR * 0.05))
+    return mix((0, breath * 0.5), (0.02, voiced * e))
+def echo(y, gaps=((0.11, 0.35), (0.23, 0.18), (0.37, 0.08))):
+    return mix((0, y), *[(g, y * a) for g, a in gaps])
+def hi(f0, d, vowel=(380, 2200, 3000)):
+    """귀여운 '히' 한 음절: 높고 맑은 목소리(삼각파 + 사인), 끝이 살짝 올라감, 앞에 짧은 'ㅎ'"""
+    n = int(SR * d); tt = t(d)
+    pitch = f0 * (1 + 0.18 * (tt / d) ** 2) * (1 + 0.025 * np.sin(2 * np.pi * 9 * tt))
+    ph = 2 * np.pi * np.cumsum(pitch) / SR
+    src = 2 / np.pi * np.arcsin(np.sin(ph)) + 0.35 * np.sin(2 * ph) + 0.15 * np.sin(3 * ph)
+    voiced = sum(biquad_bp(src, f, q) * g for f, q, g in zip(vowel, (4, 6, 8), (1.0, 0.8, 0.3))) + src * 0.25
+    e = np.minimum(1, tt / 0.012) * np.exp(-np.maximum(0, tt - 0.02) / (d * 0.5))
+    breath = biquad_bp(rng.standard_normal(int(SR * 0.025)), 3000, 1.5) * np.linspace(0.4, 0, int(SR * 0.025))
+    return mix((0, breath * 0.35), (0.012, voiced * e))
+# 히히히힛: 통통 튀는 높은 웃음 (무섭지 않게, 메아리 없이 짧게)
+laugh = mix(*[(i * 0.105, hi(f, 0.095)) for i, f in enumerate([560, 640, 600, 690, 650])],
+            (0.56, hi(760, 0.2, (420, 2400, 3200)) * 1.05))
+save("boss_laugh", mix((0, laugh), (0.06, laugh * 0.12)), 0.6)
+save("boss_hit", mix((0, tone(np.linspace(150, 42, int(SR * .26)), .26, "sine", r=.07) * 1.0),
+                     (0, biquad_bp(rng.standard_normal(int(SR * .09)), 1800, 0.9) * env(int(SR * .09), 0.001, None, 5) * 0.9),
+                     (0.012, metal(330, 0.32, r=.1) * 0.45), (0.012, metal(523, 0.25, r=.06) * 0.25),
+                     (0.05, noise(0.05, lp=2) * 0.3)), 0.8)
+save("boss_appear", echo(mix((0, tone(note(33), 1.2, "square", a=0.15, r=.5) * 0.6), (0, tone(note(39), 1.2, "square", a=0.2, r=.5) * 0.45),
+                             (0, noise(1.0, a=0.3, curve=2, lp=8) * 0.35), (0.35, tone(note(57), 0.8, "tri", a=0.05, r=.25, vib=0.8) * 0.3),
+                             (0.35, tone(note(63), 0.8, "tri", a=0.05, r=.25, vib=0.8) * 0.25)), ((0.18, 0.3), (0.36, 0.12))), 0.7)
+print("boss ok")

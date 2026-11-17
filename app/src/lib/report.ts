@@ -50,6 +50,12 @@ export function weekStart(now = new Date(), offsetWeeks = 0) {
   return d;
 }
 
+/** 이번 주(월요일 0시, 한국 시간부터) 얻은 XP: 공부 · 배틀 기록의 XP 합 (서버 주간 랭킹과 같은 기준) */
+export function weekXp(records: StudyRecord[], now = new Date()) {
+  const start = weekStart(now);
+  return records.reduce((a, r) => (new Date(recordDay(r) + "T00:00:00+09:00") >= start ? a + Math.max(0, r.rp || 0) : a), 0);
+}
+
 export function weekReport(records: StudyRecord[], now = new Date(), offsetWeeks = 0): WeekReport {
   const start = weekStart(now, offsetWeeks);
   const end = new Date(start);

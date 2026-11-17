@@ -24,7 +24,7 @@ export function createMemberService({auth,connectionFactory=connect,now=()=>new 
   const [[r]]=await db.execute('SELECT friend_code FROM social_members WHERE user_id=?',[id]);return r.friend_code;
  }
  async function friends(db,id){
-  const [rows]=await db.execute(`SELECT f.status,f.requested_by,m.friend_code AS uid,p.nickname,(SELECT COALESCE(SUM(x.amount),0) FROM xp_ledger x WHERE x.user_id=m.user_id)+(SELECT COALESCE(SUM(s.awarded_xp),0) FROM speed_runs s WHERE s.user_id=m.user_id) AS xp,
+  const [rows]=await db.execute(`SELECT f.status,f.requested_by,m.friend_code AS uid,p.nickname,(SELECT COALESCE(SUM(x.amount),0) FROM xp_ledger x WHERE x.user_id=m.user_id)+(SELECT COALESCE(SUM(s.awarded_xp),0) FROM speed_runs s WHERE s.user_id=m.user_id)+(SELECT COALESCE(SUM(b.reward_xp),0) FROM boss_runs b WHERE b.user_id=m.user_id AND b.status='cleared') AS xp,
    m.last_seen_at>DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 30 SECOND) AS online FROM social_friendships f
    JOIN social_members m ON m.user_id=IF(f.user_low=?,f.user_high,f.user_low)
    JOIN users u ON u.id=m.user_id AND u.status='active' LEFT JOIN profiles p ON p.user_id=m.user_id
@@ -79,7 +79,7 @@ export function createMemberService({auth,connectionFactory=connect,now=()=>new 
     const [[claimed]]=await db.execute("SELECT id FROM wallet_transactions WHERE user_id=? AND request_id=?",[id,payload.key]);
     if(claimed)throw new AuthError('already_claimed',409);
    }
-   else if(action==='equip_cosmetic'){await equip(db,id,payload.type,payload.itemId);}
+   else if(action==='equip_cosmetic'){await equip(db,id,payload.type,payload.itemId,{premium:!!value.state.premium});}
    else if(action==='exam_start'){await startExam(db,id,payload,value,now());}
    else if(action==='spend'){
     amount=payload.product==='study_extend'?-10:await purchase(db,id,payload.product,value,now());
