@@ -99,20 +99,20 @@ const aurora: Palette = {
   },
 };
 
-// ───────── 라벤더 드림: 연보라 → 벚꽃 분홍. 몽글몽글한 파스텔 ─────────
-const lavender: Palette = {
+// ───────── 허니 레몬: 레몬빛 바탕에 꿀처럼 번지는 살구빛, 따뜻한 갈색 슬롯머신, 귤색 강조. 햇살 드는 오후 분위기 ─────────
+const honey: Palette = {
   mode: "light",
-  bg: "#f6f0ff", paper: "#fffcff", ink: "#2d2559", ink2: "#5b5288", muted: "#9089b3",
-  line: "#e6ddf7", line2: "#d3c5f0", navy: "#4b3b9a", navyDeep: "#322673", navyInk: "#fbf8ff",
-  accent: "#c94589", accentDeep: "#9e2f69", accentInk: "#ffffff", accentSoft: "#fce1ef",
-  gold: "#f6b93b", goldDeep: "#d0901a", goldSoft: "#fff1d3", chip: "#eee6fb", flame: "#f2853e",
-  success: "#2f9e77", successSoft: "#ddf4ea", successDeep: "#217a5b",
-  slot: "#4b3b9a", slotWindow: "#fffcff", lever: "#4b3b9a", slotEdge: "#322673", paperEdge: "#d8cbf0",
-  shadow: "rgba(75, 59, 154, 0.15)",
+  bg: "#fff8e3", paper: "#fffdf6", ink: "#3b2a14", ink2: "#6b5638", muted: "#97876a",
+  line: "#f2e6c4", line2: "#e6d4a3", navy: "#5a3a1c", navyDeep: "#3e2710", navyInk: "#fffaf0",
+  accent: "#d45d0e", accentDeep: "#a54707", accentInk: "#ffffff", accentSoft: "#ffe6cf",
+  gold: "#f5b70a", goldDeep: "#c98f00", goldSoft: "#fff1c4", chip: "#f7ecd0", flame: "#f07c1a",
+  success: "#3c8f4a", successSoft: "#e3f3dc", successDeep: "#2c6e38",
+  slot: "#5a3a1c", slotWindow: "#fffdf6", lever: "#5a3a1c", slotEdge: "#3e2710", paperEdge: "#e8d7a8",
+  shadow: "rgba(90, 58, 28, 0.15)",
   grad: {
-    bg: "linear-gradient(180deg, #f4edff 0%, #fdeff8 55%, #edf2ff 100%)",
-    accent: "linear-gradient(120deg, #8a5cf5 0%, #c94589 100%)",
-    hero: "linear-gradient(160deg, #7b5ce0 0%, #4b3b9a 60%, #3a2c7d 100%)",
+    bg: "linear-gradient(180deg, #fffbe2 0%, #fff3d2 55%, #ffe7d3 100%)",
+    accent: "linear-gradient(120deg, #e07812 0%, #d45d0e 55%, #bd490a 100%)",
+    hero: "linear-gradient(160deg, #7d5429 0%, #5a3a1c 58%, #43290f 100%)",
   },
 };
 
@@ -133,8 +133,78 @@ const midnight: Palette = {
   },
 };
 
+// ───────── 벚꽃 말차: 말차 초록 바탕 + 벚꽃 분홍 강조. 차분하고 산뜻한 봄 찻집 분위기 ─────────
+const matcha: Palette = {
+  mode: "light",
+  bg: "#f3f6ea", paper: "#fffdf7", ink: "#1f3324", ink2: "#4a5e4c", muted: "#879483",
+  line: "#e1e8d2", line2: "#cbd6b6", navy: "#2f5a3a", navyDeep: "#1e3f27", navyInk: "#fbfff6",
+  accent: "#d94c76", accentDeep: "#b03a60", accentInk: "#ffffff", accentSoft: "#fde3ea",
+  gold: "#e9b949", goldDeep: "#c2921f", goldSoft: "#fbf0cf", chip: "#e8eedb", flame: "#f08a3c",
+  success: "#3f8f4f", successSoft: "#e1f2dc", successDeep: "#2d6d3a",
+  slot: "#2f5a3a", slotWindow: "#fffdf7", lever: "#2f5a3a", slotEdge: "#1e3f27", paperEdge: "#d3dcc0",
+  shadow: "rgba(47, 90, 58, 0.15)",
+  grad: {
+    bg: "linear-gradient(180deg, #eff6e2 0%, #faf4ea 55%, #fdeef3 100%)",
+    accent: "linear-gradient(120deg, #f07a9b 0%, #d94c76 55%, #c2457a 100%)",
+    hero: "linear-gradient(160deg, #6a9a55 0%, #2f5a3a 58%, #1f4129 100%)",
+  },
+};
+
+// ───────── 옵시디언 골드: 흑요석 같은 검정 + 금빛 강조. 어두운 고급 테마 ─────────
+const obsidian: Palette = {
+  mode: "dark",
+  bg: "#0f0f12", paper: "#1a1a1f", ink: "#f5efe1", ink2: "#c9c0aa", muted: "#8f8878",
+  line: "#2a2a31", line2: "#3b3a43", navy: "#f0d9a0", navyDeep: "#b99a55", navyInk: "#17140c",
+  accent: "#e2b04a", accentDeep: "#a87d26", accentInk: "#1a1408", accentSoft: "#3a301a",
+  gold: "#ffd47a", goldDeep: "#d1a43c", goldSoft: "#3b3220", chip: "#24242b", flame: "#f59a3c",
+  success: "#6fd19a", successSoft: "#1b3326", successDeep: "#3f9f68",
+  slot: "#141418", slotWindow: "#1a1a1f", lever: "#4a4652", slotEdge: "#050507", paperEdge: "#08080a",
+  shadow: "rgba(0, 0, 0, 0.55)",
+  grad: {
+    bg: "linear-gradient(180deg, #111115 0%, #16141a 55%, #1e1911 100%)",
+    accent: "linear-gradient(120deg, #f7d986 0%, #e2b04a 50%, #c48c2c 100%)",
+    hero: "linear-gradient(160deg, #3a3224 0%, #18161c 55%, #0b0b0e 100%)",
+  },
+};
+
+// ───────── 프리즘 오팔 (프리미엄 전용): 오팔 보석처럼 분홍 · 라일락 · 하늘 · 민트가 은은하게 번지는 진줏빛 바탕,
+// 로열 인디고 슬롯머신, 홀로그램처럼 분홍 → 보라 → 파랑으로 흐르는 강조 버튼. 금빛은 왕관 · 톱니바퀴에만 ─────────
+const prism: Palette = {
+  mode: "light",
+  bg: "#f7f3ff", paper: "#fffdff", ink: "#221a4c", ink2: "#544a80", muted: "#8a83ad",
+  line: "#e9e2f8", line2: "#d8cdf1", navy: "#2a1f6e", navyDeep: "#191255", navyInk: "#fdfbff",
+  accent: "#7b3ff2", accentDeep: "#5726c7", accentInk: "#ffffff", accentSoft: "#efe5ff",
+  gold: "#f4b740", goldDeep: "#d1911a", goldSoft: "#fff2d8", chip: "#f0eafc", flame: "#ff7a5c",
+  success: "#169e78", successSoft: "#dbf5ec", successDeep: "#0f7c5d",
+  slot: "#2a1f6e", slotWindow: "#fffdff", lever: "#2a1f6e", slotEdge: "#191255", paperEdge: "#dccff3",
+  shadow: "rgba(42, 31, 110, 0.16)",
+  grad: {
+    bg: "linear-gradient(160deg, #fdeef8 0%, #f1ebff 34%, #e8f2ff 68%, #e9fbf4 100%)",
+    accent: "linear-gradient(115deg, #ff5fa2 0%, #a14cf5 42%, #5b6ff7 78%, #3f9bf5 100%)",
+    hero: "linear-gradient(155deg, #5a35b8 0%, #2a1f6e 48%, #1c2a78 100%)",
+  },
+};
+
+// ───────── 블러드 이클립스 (오답 보스전 클리어 전용 · 0.01%): 달이 해를 가린 순간의 검붉은 하늘,
+// 불꽃 코로나처럼 주황 → 진홍 → 자주로 타오르는 강조, 코로나의 옅은 금빛 슬롯머신 ─────────
+const eclipse: Palette = {
+  mode: "dark",
+  bg: "#120a10", paper: "#1d1119", ink: "#fbeee9", ink2: "#dcbfc3", muted: "#9d8088",
+  line: "#2f1b27", line2: "#452938", navy: "#ffe3c2", navyDeep: "#d9a877", navyInk: "#1d0f0c",
+  accent: "#ff4d5e", accentDeep: "#b81f3a", accentInk: "#ffffff", accentSoft: "#3f1621",
+  gold: "#ffc46b", goldDeep: "#e0913a", goldSoft: "#3a2418", chip: "#28161f", flame: "#ff7a3c",
+  success: "#6fd8a8", successSoft: "#17322a", successDeep: "#3fa77a",
+  slot: "#1a0d16", slotWindow: "#1d1119", lever: "#5a2a3e", slotEdge: "#070306", paperEdge: "#0a0408",
+  shadow: "rgba(0, 0, 0, 0.6)",
+  grad: {
+    bg: "linear-gradient(175deg, #1c0c15 0%, #120a10 45%, #1f0c13 80%, #2c0f10 100%)",
+    accent: "linear-gradient(115deg, #ffb35c 0%, #ff5a4e 40%, #e0245e 75%, #9b1b6a 100%)",
+    hero: "linear-gradient(160deg, #5c1a2e 0%, #26101d 50%, #0d060b 100%)",
+  },
+};
+
 /** 테마 id → 색 (클래식은 휴대폰 다크 모드에 따라 classicLight / classicDark) */
-export const PALETTES: Record<string, Palette> = { sunset, aurora, lavender, midnight };
+export const PALETTES: Record<string, Palette> = { sunset, aurora, honey, midnight, matcha, obsidian, prism, eclipse };
 
 export function paletteFor(themeId: string, scheme: string | null | undefined): Palette {
   return PALETTES[themeId] ?? (scheme === "dark" ? classicDark : classicLight);

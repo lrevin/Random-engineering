@@ -13,6 +13,8 @@ import { Btn, T } from "@/components/ui";
 import { installGlobalErrorReporter, reportClientError } from "@/lib/error-report";
 import { BattleWatcher } from "@/components/BattleWatcher";
 import { GearFlyLayer } from "@/components/GearFly";
+import { useThemeLauncher } from "@/lib/theme-launcher";
+import { setThemePremium, useActiveThemeId } from "@/lib/skins";
 import { noteTouch } from "@/lib/gear-fly";
 import { showDialog, DialogHost } from "@/components/Dialog";
 import { initAds } from "@/lib/ads";
@@ -45,11 +47,15 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
 }
 
 function RootNav() {
-  const { ready, mode, onboarded, walletNotice } = useApp();
+  const { ready, mode, onboarded, walletNotice, premium } = useApp();
+  // 프리미엄이 끝나면 프리미엄 전용 테마 대신 클래식으로
+  useEffect(() => { setThemePremium(premium); }, [premium]);
   const [catalogReady,setCatalogReady]=useState(false);
   const [,setCatalogRevision]=useState(0);
   useEffect(()=>{let alive=true;restoreCatalog().finally(()=>{if(alive)setCatalogReady(true);syncCatalog().then(changed=>{if(alive&&changed)setCatalogRevision(x=>x+1);}).catch(()=>{});});return()=>{alive=false;};},[]);
   const c = useColors();
+  // 홈 화면 아이콘 · 시작 화면도 지금 테마로 (앱이 백그라운드로 갈 때 바꿈)
+  useThemeLauncher(useActiveThemeId());
   useEffect(()=>{if(walletNotice)showDialog({title:"재화 안내",message:walletNotice,buttons:[{text:"확인"}]});},[walletNotice]);
   const [fontsLoaded, fontError] = useFonts({
     IBMPlexSansKR_400Regular, IBMPlexSansKR_500Medium, IBMPlexSansKR_600SemiBold, IBMPlexSansKR_700Bold,
@@ -93,6 +99,8 @@ function RootNav() {
           <Stack.Screen name="exam" options={flow} />
           <Stack.Screen name="recall" options={flow} />
           <Stack.Screen name="speed" options={flow} />
+          <Stack.Screen name="boss" options={flow} />
+          <Stack.Screen name="team" />
           <Stack.Screen name="report" options={{ presentation: "modal" }} />
           <Stack.Screen name="roadmap" options={{ presentation: "modal" }} />
           <Stack.Screen name="recent" options={{ presentation: "modal" }} />

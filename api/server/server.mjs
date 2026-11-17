@@ -5,6 +5,9 @@ import {createBattleService} from '../mysql/battle-service.mjs';
 import {battleRoutes} from '../mysql/battle-http.mjs';
 import {createSpeedService} from '../mysql/speed-service.mjs';
 import {speedRoutes} from '../mysql/speed-http.mjs';
+import {createTeamService} from '../mysql/team-service.mjs';
+import {teamRoutes} from '../mysql/team-http.mjs';
+import {createBossService} from '../mysql/boss-service.mjs';
 process.env.TZ = 'Asia/Seoul';
 import {createMemberService} from '../mysql/member-service.mjs';
 import {memberRoutes} from '../mysql/member-http.mjs';
@@ -31,6 +34,8 @@ export function createServer({ topics = loadTopics(), bank, store, auth, authLim
   const handleBattle=battles?battleRoutes(battles):null;
   const handleActivity=auth?activityRoutes(createActivityService({auth})):null;
   const handleSpeed=auth ? speedRoutes(createSpeedService({auth})) : null;
+  // 스터디 팀 · 오답 보스전
+  const handleTeam=auth ? teamRoutes(createTeamService({auth}),createBossService({auth})) : null;
   const handleMember=auth ? memberRoutes(createMemberService({auth})) : null;
   const handleAuth=auth ? authRoutes(auth,{limits:authLimits}) : null;
   // 카카오 로그인: KAKAO_REST_API_KEY, KAKAO_REDIRECT_URI 환경변수가 있을 때만 켜짐
@@ -69,6 +74,7 @@ export function createServer({ topics = loadTopics(), bank, store, auth, authLim
     if(handleActivity && await handleActivity(req,pathname,send)) return;
     if(handleBattle && await handleBattle(req,pathname,send)) return;
     if(handleSpeed && await handleSpeed(req,pathname,send)) return;
+    if(handleTeam && await handleTeam(req,pathname,send)) return;
     if(handleMember && await handleMember(req,pathname,send)) return;
     if(handleKakao && await handleKakao(req,pathname,send)) return;
     if(handleAds && await handleAds(req,pathname,send)) return;

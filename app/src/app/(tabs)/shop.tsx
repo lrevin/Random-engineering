@@ -9,7 +9,7 @@ import { GearCount } from "@/components/TimeUpSheet";
 import { Btn, Row, Screen, T, tap } from "@/components/ui";
 import { useApp } from "@/lib/app-state";
 import { BATTLE_TICKET_COST, EXAM_TICKET_COST, FREE_BATTLE_TICKETS, FREE_EXAMS_PER_DAY, PREMIUM_BONUS_GEARS, FREE_MAX_STUDY_MIN, PREMIUM_MAX_STUDY_MIN } from "@/lib/economy";
-import { TITLES } from "@/lib/skins";
+import { THEMES, TITLES } from "@/lib/skins";
 import { inset, radius, raised, shadow, useColors } from "@/theme";
 
 /** 상점 분류 버튼: 큰 그림 + 이름 + 설명, 누르면 그 상점으로 */
@@ -64,7 +64,7 @@ export default function Shop() {
         />
         <ShopDoor
           title="꾸미기 상점"
-          sub={`테마 4종\n칭호 ${TITLES.length}종`}
+          sub={`테마 ${THEMES.length - 1}종\n칭호 ${TITLES.length}종`}
           art={
             <View style={{ width: 64, height: 64, borderRadius: radius.md, overflow: "hidden", borderWidth: 1, borderColor: c.line2, flexDirection: "row" }}>
               {[{ backgroundColor: c.bg, ...(c.grad.bg ? { experimental_backgroundImage: c.grad.bg } : null) },
@@ -93,7 +93,7 @@ export default function Shop() {
                   <Btn title="취소" size="sm" onPress={() => setAskUpgrade(false)} style={{ flex: 1 }} />
                   <Btn title="시험용으로 켜기" disabled={mode === "user"} variant="accent" size="sm" onPress={async () => {
                     const got = await purchasePremium();
-                    setBonusNotice(got ? `결제 보너스로 톱니바퀴 ${got}개를 받았어요!` : "이번 달 결제 보너스는 이미 받았어요.");
+                    setBonusNotice(`${got ? `결제 보너스로 톱니바퀴 ${got}개를 받았어요!` : "이번 달 결제 보너스는 이미 받았어요."} 프리미엄 전용 테마 '프리즘 오팔'도 열렸어요.`);
                     setAskUpgrade(false);
                   }} style={{ flex: 1 }} />
                 </Row>
@@ -105,6 +105,7 @@ export default function Shop() {
         }
       >
         <Perk>결제하는 순간 톱니바퀴 {PREMIUM_BONUS_GEARS}개 지급</Perk>
+        <Perk>프리미엄 전용 테마 &apos;프리즘 오팔&apos; 바로 사용</Perk>
         <Perk>자격증 모의고사 무제한</Perk>
         <Perk>오답 다시 풀기 (틀린 문제를 변형해서 출제)</Perk>
         <Perk>로드맵에서 원하는 주제 골라 바로 공부</Perk>

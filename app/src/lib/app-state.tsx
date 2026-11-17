@@ -250,7 +250,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       try {const value=await mysqlAuth.walletOperation(request.id,action,payload);if(ownerRef.current!==owner)return false;applyWallet(value);await AsyncStorage.removeItem(key);setWalletNotice("");return true;}
       catch(e){if(e instanceof AuthApiError&&e.status>=400&&e.status<500)await AsyncStorage.removeItem(key);throw e;}
     }).catch((e:unknown)=>{
-      if(ownerRef.current===owner){const code=e instanceof AuthApiError?e.code:'';setWalletNotice(({inventory_full:'최대 보유량 또는 부스터 시간을 초과해요.',already_owned:'이미 소유한 상품이에요.',not_owned:'소유한 상품만 사용할 수 있어요.',not_in_season:'현재 판매 기간이 아니에요.',premium_unlimited:'프리미엄은 모의고사를 무제한 이용할 수 있어요.',exam_ticket_required:'모의고사 이용권이 필요해요.',insufficient_balance:'톱니바퀴가 부족해요.',verification_required:'서버의 광고·결제 확인을 준비하고 있어요.',product_not_available:'이 상품의 계정 저장을 준비하고 있어요.',operation_not_available:'이 기능의 서버 연결을 준비하고 있어요.',quest_not_complete:'서버에 저장된 학습 기록으로 보상 조건을 확인하지 못했어요.',already_claimed:'이미 받은 보상이에요.'} as Record<string,string>)[code]??'서버에 연결하지 못했어요. 다시 시도해 주세요.');}return false;
+      if(ownerRef.current===owner){const code=e instanceof AuthApiError?e.code:'';setWalletNotice(({inventory_full:'최대 보유량 또는 부스터 시간을 초과해요.',already_owned:'이미 소유한 상품이에요.',not_owned:'소유한 상품만 사용할 수 있어요.',not_in_season:'현재 판매 기간이 아니에요.',premium_unlimited:'프리미엄은 모의고사를 무제한 이용할 수 있어요.',premium_required:'뽑공 프리미엄 전용이에요.',exam_ticket_required:'모의고사 이용권이 필요해요.',insufficient_balance:'톱니바퀴가 부족해요.',verification_required:'서버의 광고·결제 확인을 준비하고 있어요.',product_not_available:'이 상품의 계정 저장을 준비하고 있어요.',operation_not_available:'이 기능의 서버 연결을 준비하고 있어요.',quest_not_complete:'서버에 저장된 학습 기록으로 보상 조건을 확인하지 못했어요.',already_claimed:'이미 받은 보상이에요.'} as Record<string,string>)[code]??'서버에 연결하지 못했어요. 다시 시도해 주세요.');}return false;
     });walletQueue.current=run;return run;
   }, [applyWallet]);
   const assetOperation=useCallback(async(action:string,payload:Record<string,unknown>)=>{
@@ -362,7 +362,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const refreshSpeedXp=useCallback(async()=>{
     const id=ownerRef.current;if(!id)return;
     const stats=await mysqlAuth.getSpeedStats();if(ownerRef.current!==id)return;
-    setSpeedXp(stats.totalXp);await writeJSON("pg.mysql.speed.xp."+id,stats.totalXp);
+    // 스피드 퀴즈 XP + 오답 보스전 XP (서버가 같이 보내 줌)
+    const extra=stats.totalXp+(stats.bonusXp??0);setSpeedXp(extra);await writeJSON("pg.mysql.speed.xp."+id,extra);
   },[]);
 
   const refreshApiProfile = useCallback(async () => {
