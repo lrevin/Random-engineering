@@ -36,12 +36,16 @@ const FILES = {
   coin7: require("../../assets/sfx/coin7.wav"),
   coin8: require("../../assets/sfx/coin8.wav"),
   coin_done: require("../../assets/sfx/coin_done.wav"),
+  /** 오답 보스전: 맞힐 때 보스가 맞는 소리 · 틀릴 때 보스 웃음 · 보스 등장 */
+  boss_hit: require("../../assets/sfx/boss_hit.wav"),
+  boss_laugh: require("../../assets/sfx/boss_laugh.wav"),
+  boss_appear: require("../../assets/sfx/boss_appear.wav"),
 } as const;
 export type SfxName = keyof typeof FILES;
 
 const KEY = "pg.sfx";
 /** 짧게 연달아 나는 소리는 여러 개를 돌려 가며 씀 (앞 소리가 안 끊기게) */
-const POOL: Partial<Record<SfxName, number>> = { reel: 3, tick: 2, count: 2, coin8: 2 };
+const POOL: Partial<Record<SfxName, number>> = { reel: 3, tick: 2, count: 2, coin8: 2, boss_hit: 2 };
 /** 도착 순서대로 높아지는 동전 소리 */
 export const COIN_STEPS = ["coin1", "coin2", "coin3", "coin4", "coin5", "coin6", "coin7", "coin8"] as const satisfies readonly SfxName[];
 
@@ -101,3 +105,44 @@ export function scheduleReelTicks(steps: number, duration: number, ease: (t: num
   }
   return () => timers.forEach(clearTimeout);
 }
+
+// ───────── 배경 음악 (오답 보스전): 반복 재생, 효과음 설정을 따라 꺼짐 ─────────
+const BGM = { boss: require("../../assets/sfx/boss_bgm.wav") } as const;
+let bgm: AudioPlayer | null = null;
+let bgmName: keyof typeof BGM | null = null;
+let bgmFade: ReturnType<typeof setInterval> | null = null;
+
+/** 배경 음악 켜기 (이미 같은 곡이면 그대로) */
+export function playBgm(name: keyof typeof BGM, volume = 0.45) {
+  bgmName = name;
+  if (!enabled) return;
+  try {
+    if (bgmFade) { clearInterval(bgmFade); bgmFade = null; }
+    if (!bgm) { bgm = createAudioPlayer(BGM[name]); bgm.loop = true; }
+    bgm.volume = volume;
+    bgm.play();
+  } catch { /* 소리 실패는 무시 */ }
+}
+/** 배경 음악 끄기 (짧게 줄이며 멈춤) */
+export function stopBgm(fadeMs = 400) {
+  bgmName = null;
+  const p = bgm;
+  if (!p) return;
+  if (bgmFade) clearInterval(bgmFade);
+  const start = p.volume, steps = Math.max(1, Math.round(fadeMs / 40));
+  let i = 0;
+  bgmFade = setInterval(() => {
+    i++;
+    try { p.volume = start * (1 - i / steps); } catch { /* 무시 */ }
+    if (i >= steps) {
+      if (bgmFade) clearInterval(bgmFade);
+      bgmFade = null;
+      try { p.pause(); p.seekTo(0).catch(() => {}); p.volume = start; } catch { /* 무시 */ }
+    }
+  }, 40);
+}
+// 설정에서 효과음을 끄면 배경 음악도 멈추고, 켜면 다시 (보스전 안일 때)
+onSfxChange((on) => {
+  if (!bgm) return;
+  try { if (on && bgmName) bgm.play(); else bgm.pause(); } catch { /* 무시 */ }
+});

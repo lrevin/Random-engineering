@@ -225,7 +225,7 @@ adb reverse tcp:8788 tcp:8788                    # 안드로이드 에뮬레이�
 | /me/wallet | GET | 기존 지갑 응답에 assets 추가. 모의고사권·한국 날짜 무료 사용·부스터 만료·소유/장착 목록 |
 | /me/wallet/operations | POST | 기존 requestId/action/payload 구조로 구매·장착·시험 시작. 같은 UUID·같은 내용은 재실행 없이 최신 지갑 반환 |
 
-- `action: spend`, `payload: {product}`: `exam_ticket`, `xp_boost`, `skin:<테마 id>`(sunset · aurora · lavender · midnight). 칭호는 팔지 않음(보상 전용). 기존 `study_extend`도 유지.
+- `action: spend`, `payload: {product}`: `exam_ticket`, `xp_boost`, `skin:<테마 id>`(sunset · aurora · honey · midnight · matcha · obsidian, 프리미엄 전용 prism은 팔지 않음). 칭호는 팔지 않음(보상 전용). 기존 `study_extend`도 유지.
 - 테마는 예전 슬롯머신 스킨 칸(`member_cosmetics.item_type='skin'`)에 저장한다. 기본 테마는 `classic`.
 - `action: equip_cosmetic`, `payload: {type: skin 또는 title, itemId}`. title의 itemId만 NULL 허용.
 - `action: exam_start`, `payload: {startId, certId}`. 앱은 startId를 requestId로 재사용. 서버가 무료 횟수·프리미엄·구매권을 판정한다.
@@ -259,3 +259,18 @@ adb reverse tcp:8788 tcp:8788                    # 안드로이드 에뮬레이�
 - 새로 정하거나 바꾸는 닉네임은 2~5자(`nickname_length`). 예전에 정한 긴 닉네임 그대로 다른 설정만 저장하는 건 허용한다.
 - 처음 프로필을 만들 때는 무료이고 횟수에 넣지 않는다. 이후 닉네임을 바꿀 때 첫 번째는 무료, 두 번째부터 톱니바퀴 50개(`insufficient_balance` 409). 응답에 `nicknameCharged`(이번에 쓴 톱니바퀴)를 함께 준다.
 - DB 변경 없음: 변경마다 `wallet_operations`(action='nickname_change')에 영수증을 남기고, 유료면 `wallets` 차감 + `wallet_transactions`(reason='nickname_change') 기록.
+
+## 스터디 팀 · 오답 보스전 (V9__study_teams.sql, 규칙 숫자는 team-policy.mjs · boss-policy.mjs)
+스터디 팀 (2~4명, 주제 상관없음, 한 사람은 한 팀에만):
+- `GET /me/team` 내 팀 · 이번 주 목표 진행 · 받은/보낸 초대.
+- `POST /me/team/invites {friendUids}` 친구(UID) 초대. 팀이 없으면 최대 3명, 팀이 있으면 빈자리만큼(`team_party_full`). 친구 아님 `not_friends`, 이미 다른 팀 `team_friend_joined`.
+- `POST /me/team/invites/{id}/(accept|decline|cancel)` 수락하면 초대한 사람에게 팀이 있으면 바로 그 팀에, 없으면 '같이 가기'로 대기.
+- `POST /me/team/create {mode}` 'open' = 나 + 수락한 친구가 다 들어가는 빈자리 팀에 무작위로(없으면 새 팀) · 'friends' = 친구끼리만(수락한 친구 1명 이상, `team_need_friend`).
+- `POST /me/team/leave` 나가기 (리더가 나가면 가장 먼저 들어온 사람이 리더, 아무도 없으면 팀 삭제).
+- `POST /me/team/claim` 주간 목표(팀원 이번 주 XP 합 ≥ 150 × 인원, 2명 이상) 달성 시 이번 주 XP를 얻은 팀원마다 한 번 톱니바퀴 40 · XP 60 (`study_team_rewards`, wallet reason='team_reward'). XP는 공부 · 스피드 퀴즈 · 보스전 XP를 합산하고, 팀 보상 XP는 목표 계산에서 뺀다.
+오답 보스전 (한 사람이 한 주에 한 판, `boss_runs` UNIQUE(user_id, week_start)):
+- `GET /me/boss` 이번 주 판 상태 · 관심 분야 · 전용 테마 보유 여부.
+- `POST /me/boss/runs {requestId}` 시작(이번 주 판이 진행 중이면 그 판). 문제 50개 = 내 관심 분야를 고른 사람들(profiles.interests 겹침)이 최근 60일 동안 그 분야 주제에서 많이 틀린 문제 순 + 모자라면 그 분야 문제 은행. 이미 끝냈으면 `boss_week_used`, 관심 분야 없음 `boss_no_interest`, 문제 30개 미만 `boss_not_ready`.
+- `POST /me/boss/runs/{id}/answers {position, answer}` 맞히면 보스 -10(300, 30번이면 클리어), 틀리면 내 체력 -5(20번이면 실패). 정답은 답한 뒤에만 보냄. 같은 자리 같은 답은 같은 결과.
+- 클리어 보상: 남은 체력 비율 k로 톱니바퀴 round(40+60k) · XP round(80+120k) (wallet reason='boss_reward'), 1/10000 확률로 테마 'eclipse'(member_cosmetics acquired_via='boss').
+- 보스전 · 팀 보상 XP는 랭킹(주간/레벨)과 `/me/speed/stats`의 `bonusXp`에 더해진다.

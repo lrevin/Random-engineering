@@ -16,7 +16,9 @@ export function createSpeedService({auth,connectionFactory=connect,now=()=>new D
  async function stats(db,id){
   const [[r]]=await db.execute(`SELECT COALESCE(MAX(correct_count),0) AS best,COUNT(*) AS plays,COALESCE(SUM(awarded_xp),0) AS totalXp,
    COALESCE(SUM(IF(reward_day=?,awarded_xp,0)),0) AS xpToday FROM speed_runs WHERE user_id=? AND status='completed'`,[day(now()),id]);
-  return {best:Number(r.best),plays:Number(r.plays),day:day(now()),xpToday:Number(r.xpToday),totalXp:Number(r.totalXp)};
+  // 오답 보스전 · 스터디 팀 보상 XP도 앱 총 XP에 더하도록 같이 보냄 (표가 없는 옛 DB면 0)
+  let bonusXp=0;try{const [[b]]=await db.execute("SELECT (SELECT COALESCE(SUM(reward_xp),0) FROM boss_runs WHERE user_id=? AND status='cleared')+(SELECT COALESCE(SUM(reward_xp),0) FROM study_team_rewards WHERE user_id=?) AS n",[id,id]);bonusXp=Number(b.n);}catch{}
+  return {best:Number(r.best),plays:Number(r.plays),day:day(now()),xpToday:Number(r.xpToday),totalXp:Number(r.totalXp),bonusXp};
  }
  async function finish(db,id,run){
   if(run.status==='completed')return {...json(run.result_json),store:await stats(db,id)};
