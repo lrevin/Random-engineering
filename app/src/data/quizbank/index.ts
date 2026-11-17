@@ -45,6 +45,7 @@ import b_db_3 from "./db-3.json";
 import b_ds_1 from "./ds-1.json";
 import b_ds_2 from "./ds-2.json";
 import b_ea_astro_1 from "./ea-astro-1.json";
+import b_ea_atmo_1 from "./ea-atmo-1.json";
 import b_net_1 from "./net-1.json";
 import b_net_2 from "./net-2.json";
 import b_net_3 from "./net-3.json";
@@ -115,6 +116,7 @@ const FILES = [
   b_ds_1,
   b_ds_2,
   b_ea_astro_1,
+  b_ea_atmo_1,
   b_net_1,
   b_net_2,
   b_net_3,
