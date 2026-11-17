@@ -54,6 +54,7 @@ import b_ee_electronics_1 from "./ee-electronics-1.json";
 import b_ee_power_1 from "./ee-power-1.json";
 import b_ee_semi_1 from "./ee-semi-1.json";
 import b_ee_signal_1 from "./ee-signal-1.json";
+import b_en_air_1 from "./en-air-1.json";
 import b_net_1 from "./net-1.json";
 import b_net_2 from "./net-2.json";
 import b_net_3 from "./net-3.json";
@@ -133,6 +134,7 @@ const FILES = [
   b_ee_power_1,
   b_ee_semi_1,
   b_ee_signal_1,
+  b_en_air_1,
   b_net_1,
   b_net_2,
   b_net_3,
