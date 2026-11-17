@@ -59,6 +59,7 @@ import b_en_energy_1 from "./en-energy-1.json";
 import b_en_waste_1 from "./en-waste-1.json";
 import b_en_water_1 from "./en-water-1.json";
 import b_ie_human_1 from "./ie-human-1.json";
+import b_ie_or_1 from "./ie-or-1.json";
 import b_net_1 from "./net-1.json";
 import b_net_2 from "./net-2.json";
 import b_net_3 from "./net-3.json";
@@ -143,6 +144,7 @@ const FILES = [
   b_en_waste_1,
   b_en_water_1,
   b_ie_human_1,
+  b_ie_or_1,
   b_net_1,
   b_net_2,
   b_net_3,
