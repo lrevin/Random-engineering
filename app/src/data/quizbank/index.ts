@@ -36,6 +36,7 @@ import b_che_transport_1 from "./che-transport-1.json";
 import b_che_unit_1 from "./che-unit-1.json";
 import b_cv_concrete_1 from "./cv-concrete-1.json";
 import b_cv_geo_1 from "./cv-geo-1.json";
+import b_cv_hydro_1 from "./cv-hydro-1.json";
 import b_db_1 from "./db-1.json";
 import b_db_2 from "./db-2.json";
 import b_db_3 from "./db-3.json";
@@ -102,6 +103,7 @@ const FILES = [
   b_che_unit_1,
   b_cv_concrete_1,
   b_cv_geo_1,
+  b_cv_hydro_1,
   b_db_1,
   b_db_2,
   b_db_3,
