@@ -16,12 +16,12 @@ test('certificate catalog and mixed profile interests on real MySQL',async t=>{
  const db=await connect();t.after(()=>db.end());
  const counts=async()=>{const list=[];for(const table of ['certificates','certificate_subjects','certificate_subject_items']){const [[r]]=await db.query('SELECT COUNT(*) AS n FROM '+table);list.push(Number(r.n));}return list;};
  await t.test('seed preserves all current app certificate IDs, order and subject content',()=>{
-  const exports={};const code=ts.transpileModule(fs.readFileSync(new URL('../../app/src/data/cert.ts',import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;vm.runInNewContext(code,{exports});assert.deepEqual(seed,JSON.parse(JSON.stringify(exports.CERTS)));assert.equal(seed.length,10);
+  const exports={};const code=ts.transpileModule(fs.readFileSync(new URL('../../app/src/data/cert.ts',import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;vm.runInNewContext(code,{exports});assert.deepEqual(seed,JSON.parse(JSON.stringify(exports.CERTS)));assert.equal(seed.length,29);
  });
  await t.test('import is repeatable and concurrent re-imports create no duplicates',async()=>{
   const before=await counts(),a=await connect(),b=await connect();
   try{await Promise.all([importCertificates(a),importCertificates(b)]);}finally{await a.end();await b.end();}
-  assert.deepEqual(await counts(),before);assert.equal(before[0],10);
+  assert.deepEqual(await counts(),before);assert.equal(before[0],seed.length);
  });
  await t.test('every subject and category/topic mapping round-trips in source order',async()=>{
   const [certs]=await db.query('SELECT * FROM certificates ORDER BY display_order');
@@ -62,8 +62,8 @@ test('certificate catalog and mixed profile interests on real MySQL',async t=>{
    assert.deepEqual(await client.saveProfile(certOnly),certOnly);
    const [categories]=await db.query('SELECT id FROM categories WHERE is_active=1 ORDER BY id');
    const full={...profile,interests:[...categories.map(c=>c.id),...seed.map(c=>c.id)]};
-   assert.equal(full.interests.length,90);assert.deepEqual(await client.saveProfile(full),full);
-   await assert.rejects(client.saveProfile({...full,interests:[...full.interests,'cert-limit-overflow']}),e=>e.code==='invalid_profile');
+   assert.equal(full.interests.length,categories.length+seed.length);assert.deepEqual(await client.saveProfile(full),full);
+   await assert.rejects(client.saveProfile({...full,interests:[...full.interests,...Array.from({length:151-full.interests.length},(_,i)=>'cert-limit-'+i)]}),e=>e.code==='invalid_profile');
    assert.deepEqual(await client.getProfile(),full); // Rejected update must preserve the saved 90 IDs.
    await client.saveProfile(profile);
    for(const interests of [['missing'],['ds',seed[0].id,'missing'],[seed[0].id,seed[0].id]])await assert.rejects(client.saveProfile({...profile,interests}));

@@ -15,7 +15,7 @@ function validate(value) {
   const p={nickname:value.nickname,interests:value.interests,level:value.level,studyMinutes:value.studyMinutes,
     reminderEnabled:value.reminderEnabled,reminderTime:value.reminderTime};
   if(typeof p.nickname!=='string' || !p.nickname.trim() || [...p.nickname.trim()].length>20 ||
-    !Array.isArray(p.interests) || p.interests.length>90 || p.interests.some(x=>typeof x!=='string'||!/^[a-z0-9_-]{1,32}$/.test(x)) ||
+    !Array.isArray(p.interests) || p.interests.length>150 || p.interests.some(x=>typeof x!=='string'||!/^[a-z0-9_-]{1,32}$/.test(x)) ||
     new Set(p.interests).size!==p.interests.length || !Number.isInteger(p.level)||p.level<0||p.level>3 ||
     !Number.isInteger(p.studyMinutes)||p.studyMinutes<1||p.studyMinutes>120 || typeof p.reminderEnabled!=='boolean' ||
     typeof p.reminderTime!=='string'||!/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(p.reminderTime)) throw new AuthError('invalid_profile');
