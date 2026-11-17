@@ -91,8 +91,10 @@ export function adRewardRoutes(service, { getKey = googleKeys(), adUnits = (proc
     // AdMob 콘솔의 "확인" 버튼은 user_id 없이 보냄 → 서명만 맞으면 200
     const userId = params.get('user_id') ?? '', tx = params.get('transaction_id') ?? '';
     if (!userId) { send(200, { ok: true, test: true }); return true; }
-    // ad_unit은 숫자 부분만 옴. 설정돼 있으면 우리 광고 단위만 인정
-    if (adUnits.length && !adUnits.some(u => u.endsWith('/' + params.get('ad_unit')))) { send(200, { ok: false, reason: 'unknown_ad_unit' }); return true; }
+    // ad_unit은 숫자 부분만 옴. 우리 광고 단위만 인정. 설정이 비어 있으면 지급하지 않음
+    // (다른 AdMob 계정도 자기 광고의 확인 주소를 우리 서버로 걸 수 있고, 그 요청도 구글 서명은 맞기 때문)
+    if (!adUnits.length) { console.error('AdMob SSV: ADMOB_REWARDED_UNITS 가 비어 있어서 지급하지 않음'); send(200, { ok: false, reason: 'ad_units_not_configured' }); return true; }
+    if (!adUnits.some(u => u.endsWith('/' + params.get('ad_unit')))) { send(200, { ok: false, reason: 'unknown_ad_unit' }); return true; }
     if (!UUID.test(userId) || !/^[A-Za-z0-9_-]{1,90}$/.test(tx)) { send(200, { ok: false, reason: 'bad_params' }); return true; }
     const result = await service.grant(userId, tx);
     send(200, { ok: result === 'granted', result });

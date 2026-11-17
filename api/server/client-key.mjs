@@ -30,3 +30,19 @@ export function rateKey(req) {
   const sub = tokenSubject(req);
   return sub ? `m:${sub}` : `ip:${clientIp(req)}`;
 }
+
+/**
+ * 분당 요청 세기. 넘었으면 true.
+ * 표가 가득 차면 새 사람을 막지 않고 가장 오래된 칸부터 버림
+ * (예전에는 가득 차면 모든 새 사용자가 429를 받아서, 가짜 토큰 1만 개로 1분 동안 서비스를 막을 수 있었음)
+ */
+export function overLimit(hits, key, limit, now = Date.now(), { windowMs = 60000, max = 10000 } = {}) {
+  let hit = hits.get(key);
+  if (hit && hit.until <= now) { hits.delete(key); hit = undefined; }
+  if (!hit) {
+    while (hits.size >= max) hits.delete(hits.keys().next().value);
+    hit = { until: now + windowMs, n: 0 };
+    hits.set(key, hit);
+  }
+  return ++hit.n > limit;
+}

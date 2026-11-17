@@ -5,14 +5,15 @@ import { T, tap } from "./ui";
 import { DomainIcon, Icon } from "./Icon";
 
 /** 듀오링고식 분야 고르기: 공학·과학으로 나눠 큰 카드 2열, 여러 개 선택 */
-export function DomainPicker({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+/** group을 주면 그 묶음(공학 · 과학)만 제목 없이 보여 줌 (관심 분야 화면의 탭) */
+export function DomainPicker({ value, onChange, group }: { value: string[]; onChange: (v: string[]) => void; group?: string }) {
   const toggle = (id: string) => onChange(value.includes(id) ? value.filter((x) => x !== id) : [...value, id]);
 
   return (
     <View style={{ gap: 18 }}>
-      {DOMAIN_GROUPS.map((g) => (
+      {DOMAIN_GROUPS.filter((g) => !group || g.id === group).map((g) => (
         <View key={g.id} style={{ gap: 10 }}>
-          <T size={15} weight="bold" color="ink2">{g.name}</T>
+          {!group && <T size={15} weight="bold" color="ink2">{g.name}</T>}
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
             {DOMAINS.filter((d) => d.available && d.group === g.id).map((d) => (
               <DomainCard key={d.id} d={d} on={value.includes(d.id)} onPress={() => toggle(d.id)} />

@@ -4,6 +4,14 @@ import { AuthError } from '../server/auth.mjs';
 
 /** 서로 다른 사용자 몇 명이 신고하면 랭킹에서 닉네임을 가리는지 */
 export const REPORT_MASK = 3;
+/** 닉네임 가리기에 세는 신고: 가입 7일이 지났고 서버가 인정한 공부 기록이 있는 활성 회원의 신고만
+ * (이메일 인증 없이 새 계정 여러 개를 만들어 남의 닉네임을 가리는 것 방지) */
+export const REPORTER_MIN_DAYS = 7;
+const REPORTS_SQL = `(SELECT r.target_id, COUNT(*) AS n FROM nickname_reports r
+  JOIN users ru ON ru.id=r.reporter_id AND ru.status='active' AND ru.created_at<=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL ${REPORTER_MIN_DAYS} DAY)
+  WHERE EXISTS(SELECT 1 FROM study_records sr JOIN quiz_attempts sa ON sa.id=sr.attempt_id WHERE sr.user_id=r.reporter_id
+   AND sa.verification_status='server_verified' AND sr.reward_status IN ('eligible','legacy_granted'))
+  GROUP BY r.target_id)`;
 const REASONS = ['offensive', 'spam', 'other'];
 
 /**
@@ -67,7 +75,7 @@ export function createLeaderboardService({ auth, connectionFactory = connect, no
              JOIN users u ON u.id=s.user_id AND u.status='active'
              LEFT JOIN profiles p ON p.user_id=s.user_id
              LEFT JOIN social_members m ON m.user_id=s.user_id
-             LEFT JOIN (SELECT target_id, COUNT(*) AS n FROM nickname_reports GROUP BY target_id) rc ON rc.target_id=s.user_id
+             LEFT JOIN ${REPORTS_SQL} rc ON rc.target_id=s.user_id
              WHERE s.domain=? AND ${rewardSql('leaderboard','s')} AND (COALESCE(p.leaderboard_hidden,0)=0 OR s.user_id=?)
              GROUP BY s.user_id, p.nickname, m.friend_code, rc.n
            ) ranked WHERE rnk<=? OR user_id=? ORDER BY rnk`,
@@ -101,7 +109,7 @@ export function createLeaderboardService({ auth, connectionFactory = connect, no
         const people = `FROM users u
              LEFT JOIN profiles p ON p.user_id=u.id
              LEFT JOIN social_members m ON m.user_id=u.id
-             LEFT JOIN (SELECT target_id, COUNT(*) AS n FROM nickname_reports GROUP BY target_id) rc ON rc.target_id=u.id
+             LEFT JOIN ${REPORTS_SQL} rc ON rc.target_id=u.id
              WHERE u.status='active' AND (COALESCE(p.leaderboard_hidden,0)=0 OR u.id=?)`;
         const name = `CASE WHEN COALESCE(rc.n,0)>=${REPORT_MASK} THEN '학습자' ELSE COALESCE(p.nickname,'학습자') END AS nickname, m.friend_code AS uid`;
         let scored;

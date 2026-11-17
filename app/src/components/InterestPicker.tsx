@@ -1,67 +1,20 @@
-import { Pressable, View } from "react-native";
-import { DOMAINS, TOPICS } from "@/data";
-import { radius, useColors } from "@/theme";
-import { Chip, Row, T, tap } from "./ui";
-import { DomainIcon } from "./Icon";
+import { DOMAINS, categoryById } from "@/data";
+import { DomainPicker } from "./DomainPicker";
 
-const countBy = (cat: string) => TOPICS.filter((t) => t.category === cat).length;
+/** 고른 관심 분야 id(세부 분야 · 자격증)에서 큰 분야 id만 (세부 분야가 하나라도 있으면 그 분야를 고른 것으로) */
+export const domainsOf = (value: string[]) => [...new Set(value.map((id) => categoryById(id)?.domain).filter((d): d is string => !!d))];
 
-/** 관심 분야 고르기 (회원가입·설정에서 함께 사용) */
-export function InterestPicker({ value, onChange, domains }: {
-  value: string[]; onChange: (v: string[]) => void;
-  /** 주면 이 분야들만 보여 줌 (온보딩에서 고른 분야) */
-  domains?: string[];
-}) {
-  const c = useColors();
-  const toggle = (id: string) => onChange(value.includes(id) ? value.filter((x) => x !== id) : [...value, id]);
-
-  return (
-    <View style={{ gap: 18 }}>
-      {DOMAINS.filter((d) => d.available && (!domains || domains.includes(d.id))).map((d) => {
-        const ids = d.categories.map((x) => x.id);
-        const all = ids.length > 0 && ids.every((id) => value.includes(id));
-        return (
-          <View key={d.id} style={{ gap: 10 }}>
-            <Row style={{ justifyContent: "space-between" }}>
-              <View style={{ flex: 1 }}>
-                <Row gap={8} style={{ flexWrap: "nowrap" }}>
-                  <DomainIcon id={d.id} size={26} />
-                  <T size={17} weight="bold">{d.name}</T>
-                </Row>
-                <T size={13} color="muted">{d.description}</T>
-              </View>
-              {d.available ? (
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => {
-                    tap();
-                    onChange(all ? value.filter((x) => !ids.includes(x)) : [...new Set([...value, ...ids])]);
-                  }}
-                  hitSlop={8}
-                >
-                  <T size={14} weight="semibold" color="accent">{all ? "전체 해제" : "전체 선택"}</T>
-                </Pressable>
-              ) : (
-                <View style={{ borderWidth: 1, borderColor: c.line2, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 2 }}>
-                  <T size={12} color="muted">준비 중</T>
-                </View>
-              )}
-            </Row>
-            {d.available && (
-              <Row gap={8}>
-                {d.categories.map((cat) => (
-                  <Chip
-                    key={cat.id}
-                    label={`${cat.name} ${countBy(cat.id)}`}
-                    selected={value.includes(cat.id)}
-                    onPress={() => toggle(cat.id)}
-                  />
-                ))}
-              </Row>
-            )}
-          </View>
-        );
-      })}
-    </View>
-  );
+/**
+ * 관심 분야 고르기 (설정 > 관심 분야). 세부 분야는 고르지 않고 항공우주공학 · 건축공학 같은 큰 분야만 고름.
+ * 큰 분야를 켜면 그 분야의 세부 분야를 모두 넣고, 끄면 모두 뺌. 자격증 id는 그대로 둠.
+ */
+export function InterestPicker({ value, onChange, group }: { value: string[]; onChange: (v: string[]) => void; group?: string }) {
+  const chosen = domainsOf(value);
+  const change = (next: string[]) => {
+    const added = next.filter((d) => !chosen.includes(d)), removed = chosen.filter((d) => !next.includes(d));
+    const cats = (d: string) => DOMAINS.find((x) => x.id === d)?.categories.map((c) => c.id) ?? [];
+    const drop = new Set(removed.flatMap(cats));
+    onChange([...new Set([...value.filter((id) => !drop.has(id)), ...added.flatMap(cats)])]);
+  };
+  return <DomainPicker value={chosen} onChange={change} group={group} />;
 }

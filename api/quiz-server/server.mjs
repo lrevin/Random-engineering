@@ -15,6 +15,7 @@
 // 실행: api/quiz-server/README.md
 
 import fs from "node:fs";
+import { timingSafeEqual } from "node:crypto";
 import http from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -22,11 +23,14 @@ import { distinct, generate, loadBank, loadTopics, MODEL, styleIssues } from "./
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 8787);
-const HOST = process.env.HOST || "0.0.0.0";
+// 기본은 이 PC에서만 받음. API 서버가 다른 컴퓨터에 있으면 HOST=0.0.0.0 으로 열고 방화벽으로 그 서버 주소만 허용
+const HOST = process.env.HOST || "127.0.0.1";
 const TOKEN = process.env.QUIZ_TOKEN || "";
 const BATCH = Number(process.env.QUIZ_BATCH || 8); // 한 번에 새로 만드는 문제 수 (검수에서 버려질 몫까지)
 const POOL_TARGET = Number(process.env.QUIZ_POOL_TARGET || 12); // 주제마다 미리 쌓아 둘 문제 수
 const WARM = process.env.QUIZ_WARM === "1";
+// 그 자리에서 새로 만드는 요청(fresh)은 서버 전체에서 1분에 이만큼까지 (넘으면 창고 문제로) → Claude 요금 상한
+const FRESH_PER_MIN = Number(process.env.QUIZ_FRESH_PER_MIN || 20);
 const WARM_INTERVAL = Number(process.env.QUIZ_WARM_INTERVAL || 30) * 1000;
 const POOL_DIR = path.join(HERE, "data", "pools");
 fs.mkdirSync(POOL_DIR, { recursive: true });
@@ -44,7 +48,12 @@ function readPool(id) {
     return [];
   }
 }
-const writePool = (id, pool) => fs.writeFileSync(poolFile(id), JSON.stringify(pool, null, 1));
+// 임시 파일에 다 쓴 뒤 바꿔 끼움 (쓰는 도중 꺼져도 창고 파일이 깨져서 통째로 사라지지 않게)
+const writePool = (id, pool) => {
+  const tmp = poolFile(id) + ".tmp";
+  fs.writeFileSync(tmp, JSON.stringify(pool, null, 1));
+  fs.renameSync(tmp, poolFile(id));
+};
 
 // 같은 주제를 동시에 두 번 만들지 않도록 주제별로 줄 세움
 const locks = new Map();
@@ -127,13 +136,9 @@ async function warmLoop() {
 }
 
 // ───────── HTTP ─────────
-const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "content-type, x-quiz-token",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-};
+// 앱·브라우저가 아니라 API 서버만 부르므로 CORS 허용 헤더는 두지 않음
 const send = (res, status, body) => {
-  res.writeHead(status, { ...CORS, "Content-Type": "application/json; charset=utf-8" });
+  res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
   res.end(JSON.stringify(body));
 };
 
@@ -141,18 +146,32 @@ const send = (res, status, body) => {
 const hits = new Map();
 function limited(ip) {
   const now = Date.now();
+  // 1분 지난 기록은 지움 (예전에는 한 번 온 주소가 계속 남아 메모리가 늘었음)
+  for (const [k, v] of hits) if (now - v.at(-1) >= 60000) hits.delete(k);
   const list = (hits.get(ip) ?? []).filter((t) => now - t < 60000);
   list.push(now);
   hits.set(ip, list);
   return list.length > 30;
 }
+let freshTimes = [];
+function allowFresh() {
+  const now = Date.now();
+  freshTimes = freshTimes.filter((t) => now - t < 60000);
+  if (freshTimes.length >= FRESH_PER_MIN) return false;
+  freshTimes.push(now);
+  return true;
+}
+const tokenOk = (value) => {
+  const a = Buffer.from(String(value ?? "")), b = Buffer.from(TOKEN);
+  return a.length === b.length && timingSafeEqual(a, b);
+};
 
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let data = "";
     req.on("data", (c) => {
       data += c;
-      if (data.length > 64 * 1024) reject(new Error("too large"));
+      if (data.length > 64 * 1024) { reject(new Error("too large")); req.destroy(); }
     });
     req.on("end", () => resolve(data));
     req.on("error", reject);
@@ -160,7 +179,6 @@ function readBody(req) {
 }
 
 const server = http.createServer(async (req, res) => {
-  if (req.method === "OPTIONS") return send(res, 204, {});
   const url = new URL(req.url, "http://x");
 
   if (req.method === "GET" && url.pathname === "/health") {
@@ -169,7 +187,7 @@ const server = http.createServer(async (req, res) => {
     return send(res, 200, { ok: true, model: process.env.QUIZ_MOCK === "1" ? "mock" : MODEL, topics: Object.keys(TOPICS).length, pools: pools.length, stocked, warm: WARM });
   }
   if (req.method !== "POST" || url.pathname !== "/quiz") return send(res, 404, { error: "not found" });
-  if (TOKEN && req.headers["x-quiz-token"] !== TOKEN) return send(res, 401, { error: "bad token" });
+  if (!tokenOk(req.headers["x-quiz-token"])) return send(res, 401, { error: "bad token" });
   if (limited(req.socket.remoteAddress ?? "")) return send(res, 429, { error: "rate limited" });
 
   let body;
@@ -181,8 +199,9 @@ const server = http.createServer(async (req, res) => {
   const id = String(body?.topicId ?? "");
   if (!TOPICS[id]) return send(res, 400, { error: "unknown topic" });
   const count = Math.min(7, Math.max(1, Number(body?.count) || 4));
-  const avoid = (Array.isArray(body?.avoid) ? body.avoid : []).slice(0, 40).map((s) => String(s).slice(0, 400));
-  const fresh = body?.fresh === true;
+  // 피할 문제 문장은 AI에게 그대로 보여 주므로 줄바꿈·제어 문자를 지워 한 줄로만 (지시문을 끼워 넣기 어렵게)
+  const avoid = (Array.isArray(body?.avoid) ? body.avoid : []).slice(0, 40).map((s) => String(s).replace(/[\u0000-\u001f\u007f]+/g, " ").slice(0, 400));
+  const fresh = body?.fresh === true && allowFresh();
 
   try {
     const { questions, fresh: madeNow } = await serve(id, count, avoid, fresh);
@@ -198,6 +217,10 @@ const server = http.createServer(async (req, res) => {
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const log = (m) => console.log(`[${new Date().toLocaleTimeString("ko-KR")}] ${m}`);
 
+if (!TOKEN || Buffer.byteLength(TOKEN) < 24) {
+  console.error("QUIZ_TOKEN 환경 변수(24자 이상)가 필요해요. API 서버 .env 의 QUIZ_SERVER_TOKEN 과 같은 값을 넣으세요.");
+  process.exit(1);
+}
 if (!process.env.ANTHROPIC_API_KEY && process.env.QUIZ_MOCK !== "1") {
   console.error("ANTHROPIC_API_KEY 환경 변수가 없어요. 키 없이 시험하려면 QUIZ_MOCK=1 로 켜세요.");
   process.exit(1);

@@ -55,7 +55,7 @@ test('kakao start → callback → exchange', async t => {
   assert.equal(back.protocol, 'ppobgong:');
   const code = back.searchParams.get('code');
   assert.ok(code);
-  assert.deepEqual(calls, [{ subject: '1234567890', email: 'A@b.com' }]);
+  assert.deepEqual(calls, [{ subject: '1234567890', email: 'A@b.com', restore: false }]);
 
   const post = body => fetch(`${base}/auth/kakao/exchange`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
   // verifier가 틀리면 거절되고 코드도 버려짐
@@ -84,4 +84,16 @@ test('kakao: 탈퇴 신청 중인 계정은 오류로 돌려보냄', async t => 
 
 test('kakao: 키가 없으면 꺼짐', () => {
   assert.equal(kakaoRoutes({}, { restKey: '', redirectUri: '' }), null);
+});
+
+test('kakao restore=1: 탈퇴 취소 요청이 서명된 state로 kakaoLogin까지 전달됨', async t => {
+  const { server, calls } = setup();
+  server.listen(0, '127.0.0.1'); await once(server, 'listening');
+  t.after(() => server.close());
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const challenge = challengeOf(randomBytes(32).toString('base64url'));
+  const start = await fetch(`${base}/auth/kakao/start?challenge=${challenge}&restore=1`, { redirect: 'manual' });
+  const state = new URL(start.headers.get('location')).searchParams.get('state');
+  await fetch(`${base}/auth/kakao/callback?code=good-code&state=${state}&restore=0`, { redirect: 'manual' });
+  assert.equal(calls[0].restore, true);
 });

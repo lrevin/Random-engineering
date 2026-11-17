@@ -23,7 +23,10 @@ export async function equip(db,id,type,item,{premium=false}={}){
  if(item!==null)await db.execute('UPDATE member_cosmetics SET is_equipped=TRUE WHERE user_id=? AND item_type=? AND item_id=?',[id,type,item]);
 }
 export async function purchase(db,id,product,value,now){
- const price=productPrice(product,now);if(value.balance<price)throw new AuthError('insufficient_balance',409);
+ const price=productPrice(product,now);
+ // 이미 가진 꾸미기면 잔액보다 먼저 알려 줌
+ if(product!=='exam_ticket'&&product!=='xp_boost'){const [type,item]=product.split(':');const [[owned]]=await db.execute('SELECT item_id FROM member_cosmetics WHERE user_id=? AND item_type=? AND item_id=?',[id,type,item]);if(owned)throw new AuthError('already_owned',409);}
+ if(value.balance<price)throw new AuthError('insufficient_balance',409);
  const a=value.assets;
  if(product==='exam_ticket'){
   if(value.state.premium)throw new AuthError('premium_unlimited',409);

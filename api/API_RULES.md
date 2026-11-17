@@ -135,6 +135,8 @@
 
 ## 4. 퀴즈 AI 서버 `POST /quiz`
 
+앱은 퀴즈 AI 서버를 직접 부르지 않는다. 로그인한 회원이 API 서버 `POST /me/quiz {topicId, count, avoid, fresh}`를 부르면 API 서버가 `QUIZ_SERVER_URL`에 `QUIZ_SERVER_TOKEN`을 붙여 대신 부른다 ([`api/server/quiz-proxy.mjs`](server/quiz-proxy.mjs)). 회원마다 하루 30번(`quiz_daily_limit`), 그중 새로 만들기(fresh)는 10번까지이고 넘으면 창고 문제만 준다. 비회원은 AI 문제 없이 푼다. 퀴즈 서버 토큰은 앱에 넣지 않는다.
+
 ### 퀴즈 한 번의 구성
 한 번 푸는 퀴즈는 **7문제 = AI가 새로 만든 4문제 + 미리 만든 문제 3개**입니다 ([`app/src/lib/quiz.ts`](../app/src/lib/quiz.ts) `buildQuiz`).
 AI 문제는 ① 퀴즈 AI 서버 → ② 휴대폰에 저장해 둔 AI 문제 순서로 받고, 모자라면 미리 만든 문제 → 오프라인 연습 문제로 채웁니다.
@@ -237,9 +239,10 @@ adb reverse tcp:8788 tcp:8788                    # 안드로이드 에뮬레이�
 
 - 기존 기록 API의 record 응답에 `rewardStatus`, `rewardReason`, `rewardPolicyVersion`, `timeValidationStatus`, `eligibility`를 추가한다. 새 공개 경로는 없다.
 - `rewardStatus`: `eligible`(정산), `held`(확인 대기), `ineligible`(개인 기록만), `legacy_granted`(기존 정산 보존). `rp=0`만으로 보류와 적격 0점 풀이를 구분하지 않는다.
-- `rewardReason`: `question_unverified`, `time_needs_review`, `outside_study_window`, 미분류 기존 기록은 `unclassified`. 문제·답안 위조는 보류로 저장하지 않고 기존 오류로 거절한다.
+- `rewardReason`: `question_unverified`, `time_needs_review`, `outside_study_window`, `client_daily_limit`, 미분류 기존 기록은 `unclassified`. 문제·답안 위조는 보류로 저장하지 않고 기존 오류로 거절한다.
 - `eligibility`는 recordAccepted / xpEligible / questEligible / timeQuestEligible / rankEligible / leaderboardEligible / studyDayEligible / repeatEligible / boostEligible / policyVersion을 포함한다. boostEligible은 문제·기록의 기본 후보 자격이며 실제 배율은 기존 구매·만료·수신 시각 검사 후 XP 계산에 반영한다.
 - 서버가 보관한 기본/대체 문제와 기존 전체 원본 대조를 통과한 기본 문제는 일반 XP 대상이다. 기기에서만 확인한 AI·대체 문제가 섞인 신규 제출은 기록만 보관하고 XP·일반 퀘스트·신규 랭크 기여를 인정하지 않는다. 시간 퀘스트에는 special-v1 서버 학습 단계로 확인한 시간만 사용하며 quiz_sec는 제외한다.
+- 서버가 문제를 내지 않은 기록(앱이 문제·답을 보낸 기록, special-v1이 아님)은 문제 은행 원본과 맞아도 한국 날짜 하루 3개(`CLIENT_RECORD_DAILY_LIMIT`)까지만 `eligible`, 그 뒤는 `ineligible`/`client_daily_limit`(기록만 보관). 문제 은행 정답이 앱 안에 있어서 만점 기록을 꾸며 계속 올리는 것을 막는다. 서버가 낸 공부(special-v1)는 제한하지 않는다.
 - 보류·미인정 기록도 `saved/results.ok`는 기록 저장 성공으로 응답할 수 있다. 원장이 없어도 조회·메모·숨김·동기화가 된다. 저장 성공은 보상 지급 성공과 다르다.
 - needs_review는 시간 경과·동일 ID 재전송만으로 해제되지 않는다. 서버 내부 `reassessHeld`는 저장된 증거가 승인된 뒤 같은 ID로 한 번만 정산한다. 이를 호출하는 공개 사용자 해제/관리자 HTTP API는 만들지 않았다.
 - 과거 지급은 legacy_granted로 원장·잔액·랭크 기여를 보존한다. 과거 미검증 기록은 새 퀘스트·반복/연속 보너스 입력으로 인정하지 않는다. 숨김/복원은 자격을 바꾸지 않는다. 배틀·스피드는 기존 전용 정산을 유지한다.
@@ -267,10 +270,21 @@ adb reverse tcp:8788 tcp:8788                    # 안드로이드 에뮬레이�
 - `POST /me/team/invites/{id}/(accept|decline|cancel)` 수락하면 초대한 사람에게 팀이 있으면 바로 그 팀에, 없으면 '같이 가기'로 대기.
 - `POST /me/team/create {mode}` 'open' = 나 + 수락한 친구가 다 들어가는 빈자리 팀에 무작위로(없으면 새 팀) · 'friends' = 친구끼리만(수락한 친구 1명 이상, `team_need_friend`).
 - `POST /me/team/leave` 나가기 (리더가 나가면 가장 먼저 들어온 사람이 리더, 아무도 없으면 팀 삭제).
-- `POST /me/team/claim` 주간 목표(팀원 이번 주 XP 합 ≥ 150 × 인원, 2명 이상) 달성 시 이번 주 XP를 얻은 팀원마다 한 번 톱니바퀴 40 · XP 60 (`study_team_rewards`, wallet reason='team_reward'). XP는 공부 · 스피드 퀴즈 · 보스전 XP를 합산하고, 팀 보상 XP는 목표 계산에서 뺀다.
+- `POST /me/team/claim` 주간 목표(팀원 이번 주 XP 합 ≥ 150 × 인원, 2명 이상) 달성 시 팀에 들어온 뒤 이번 주 XP를 50(`TEAM_MIN_CONTRIBUTION`) 이상 얻은 팀원마다 한 번 톱니바퀴 40 · XP 60 (`study_team_rewards`, wallet reason='team_reward'). XP는 공부 · 스피드 퀴즈 · 보스전 XP를 합산하되 이번 주 월요일 0시와 팀에 들어온 때 중 늦은 때부터만 세고(늦게 들어와 보상만 받아 가는 것 방지), 팀 보상 XP는 목표 계산에서 뺀다.
 오답 보스전 (한 사람이 한 주에 한 판, `boss_runs` UNIQUE(user_id, week_start)):
 - `GET /me/boss` 이번 주 판 상태 · 관심 분야 · 전용 테마 보유 여부.
-- `POST /me/boss/runs {requestId}` 시작(이번 주 판이 진행 중이면 그 판). 문제 50개 = 내 관심 분야를 고른 사람들(profiles.interests 겹침)이 최근 60일 동안 그 분야 주제에서 많이 틀린 문제 순 + 모자라면 그 분야 문제 은행. 이미 끝냈으면 `boss_week_used`, 관심 분야 없음 `boss_no_interest`, 문제 30개 미만 `boss_not_ready`.
+- `POST /me/boss/runs {requestId}` 시작(이번 주 판이 진행 중이면 그 판). 문제 50개 = 내 관심 분야를 고른 사람들(profiles.interests 겹침)이 최근 60일 동안 그 분야 주제에서 많이 틀린 문제 순(서버가 확인한 시도의 문제 은행 문제만, 문제 글은 DB 원본에서) + 모자라면 그 분야 문제 은행. 이미 끝냈으면 `boss_week_used`, 관심 분야 없음 `boss_no_interest`, 문제 30개 미만 `boss_not_ready`.
 - `POST /me/boss/runs/{id}/answers {position, answer}` 맞히면 보스 -10(300, 30번이면 클리어), 틀리면 내 체력 -5(20번이면 실패). 정답은 답한 뒤에만 보냄. 같은 자리 같은 답은 같은 결과.
 - 클리어 보상: 남은 체력 비율 k로 톱니바퀴 round(40+60k) · XP round(80+120k) (wallet reason='boss_reward'), 1/10000 확률로 테마 'eclipse'(member_cosmetics acquired_via='boss').
 - 보스전 · 팀 보상 XP는 랭킹(주간/레벨)과 `/me/speed/stats`의 `bonusXp`에 더해진다.
+
+## 요청 제한 · 신고 · 광고 (2026-11-17 보안 검토)
+- 모든 요청은 실제 주소(IP, Nginx가 붙인 X-Forwarded-For 마지막 값)마다 분당 `IP_RATE_LIMIT`(기본 1200)번까지 → `429 rate_limited`.
+- 경로별 제한 표(`overLimit`)는 가득 차면 가장 오래된 칸을 버린다. 가득 찼다고 새 사용자를 막지 않는다.
+- 닉네임 가리기(신고 3명 이상)는 가입 7일이 지나고 서버가 인정한 공부 기록이 있는 활성 회원의 신고만 센다.
+- AdMob SSV는 `ADMOB_REWARDED_UNITS`가 필수다. 비어 있으면 `ad_units_not_configured`로 지급하지 않는다.
+- 로그인: 같은 이메일로 15분 동안 비밀번호를 10번 틀리면 IP와 상관없이 그 이메일 로그인이 `429 too_many_attempts`. 맞히면 초기화.
+- 카카오 계정 탈퇴 취소: `GET /auth/kakao/start?challenge=…&restore=1`로 다시 로그인하면(서명된 state에 담김) 탈퇴 신청 7일 이내 계정을 되살리고 로그인. 7일이 지났으면 `deletion_period_expired`.
+- 팀 '빈자리 채우기'는 열린 팀 후보 20개를 잠그지 않고 읽은 뒤 고른 팀 하나만 잠그고 자리를 다시 확인한다.
+- 꾸미기 구매는 이미 가진 것이면 잔액보다 먼저 `already_owned`. 같은 requestId 동시 요청은 영수증을 잠금 읽기로 확인해 재전송으로 처리한다.
+- V10__lavender_to_honey.sql: 판매 종료한 라벤더 드림(lavender)을 허니 레몬(honey)으로 바꿔 준다. 둘 다 가진 사람은 1200 톱니바퀴를 돌려준다(reason='theme_refund', request_id='refund:lavender').

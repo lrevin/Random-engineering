@@ -28,8 +28,14 @@ import { leaderboardRoutes } from '../mysql/leaderboard-http.mjs';
 import { createProgressService } from '../mysql/progress-service.mjs';
 import { progressRoutes } from '../mysql/progress-http.mjs';
 import { clientErrorRoutes } from './client-errors.mjs';
+import { quizProxyRoutes } from './quiz-proxy.mjs';
+import { clientIp, overLimit } from './client-key.mjs';
 
-export function createServer({ topics = loadTopics(), bank, store, auth, authLimits, battleService, battleSweep=true, kakao } = {}) {
+export function createServer({ topics = loadTopics(), bank, store, auth, authLimits, battleService, battleSweep=true, kakao, quiz, ipLimit=Number(process.env.IP_RATE_LIMIT || 1200) } = {}) {
+  // 퀴즈 AI 서버 대신 부르기 (로그인 회원만, 하루 횟수 제한). QUIZ_SERVER_URL, QUIZ_SERVER_TOKEN 이 있을 때만 켜짐
+  const handleQuiz=auth ? quizProxyRoutes(auth,quiz) : null;
+  // 전체 요청을 실제 주소(IP)마다 분당 ipLimit번까지: 경로별 제한은 토큰 속 회원 id로 세서, 가짜 토큰을 바꿔 가며 보내면 피할 수 있음
+  const ipHits=new Map();
   const battles=auth?(battleService??createBattleService({auth})):null;
   const handleBattle=battles?battleRoutes(battles):null;
   const handleActivity=auth?activityRoutes(createActivityService({auth})):null;
@@ -67,6 +73,7 @@ export function createServer({ topics = loadTopics(), bank, store, auth, authLim
       res.end(status === 204 || status === 304 ? undefined : JSON.stringify(body));
     };
     if (req.method === 'OPTIONS') return send(204);
+    if (overLimit(ipHits, clientIp(req), ipLimit)) return send(429, { error: 'rate_limited' }, { 'Retry-After': '60' });
     let pathname;
     try { pathname = decodeURIComponent(new URL(req.url, 'http://local').pathname).replace(/^\/api(?=\/)/, ''); }
     catch { return send(400, { error: 'bad_request' }); }
@@ -83,6 +90,7 @@ export function createServer({ topics = loadTopics(), bank, store, auth, authLim
     if(handleRecords && await handleRecords(req,pathname,send)) return;
     if(handleLeaderboard && await handleLeaderboard(req,pathname,send)) return;
     if(handleProgress && await handleProgress(req,pathname,send)) return;
+    if(handleQuiz && await handleQuiz(req,pathname,send)) return;
     if(await handleClientErrors(req,pathname,send)) return;
     if (req.method === 'GET' && pathname === '/health') return send(200, {...await store.health(),auth:auth?'mysql':'not_implemented',profile:auth?'mysql':'not_implemented',accountDeletion:auth?'mysql':'not_implemented',records:auth?'mysql':'not_implemented',kakao:!!handleKakao});
     if(req.method==='GET' && pathname==='/catalog' && store.catalog){const data=await store.catalog();const etag=`"${hash(data)}"`;if(req.headers['if-none-match']===etag)return send(304,undefined,{ETag:etag});return send(200,{...data,version:hash(data)},{ETag:etag});}

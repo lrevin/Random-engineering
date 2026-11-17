@@ -10,6 +10,7 @@ import {weekStartKst} from './team-policy.mjs';
 import {BOSS_QUESTIONS,CLEAR_HITS,BOSS_HIT,PLAYER_HP,POOL_DAYS,BOSS_THEME,BOSS_THEME_ODDS,bossReward,rollBossTheme,buildBoss,applyBossAnswer} from './boss-policy.mjs';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const json=v=>typeof v==='string'?JSON.parse(v):v;
+const snap=r=>({type:r.type,q:r.body,choices:r.choices==null?undefined:json(r.choices),answer:json(r.answer),explain:r.explanation});
 
 /** 주제 t가 관심 분야(? = JSON 배열, 두 번 넣음)에 드는지: 세부 분야 id 또는 자격증 id */
 const TOPIC_IN=`(JSON_CONTAINS(?,JSON_QUOTE(t.category_id)) OR EXISTS(SELECT 1 FROM certificate_subject_items ci JOIN certificate_subjects cs ON cs.id=ci.subject_id
@@ -25,19 +26,23 @@ export function createBossService({auth,connectionFactory=connect,now=()=>new Da
  /** 관심 분야가 겹치는 사람들이 많이 틀린 문제 (문제 id, 없으면 문제 글로 묶음) */
  async function hot(db,mine){
   const list=JSON.stringify(mine),since=new Date(now().getTime()-POOL_DAYS*864e5);
-  const [rows]=await db.execute(`SELECT ANY_VALUE(i.question_snapshot) AS snap,ANY_VALUE(t.name_ko) AS topic,SUM(i.is_correct=0) AS wrong,COUNT(*) AS total
-   FROM quiz_attempt_items i JOIN quiz_attempts a ON a.id=i.attempt_id JOIN topics t ON t.id=COALESCE(i.topic_id,a.topic_id) JOIN profiles p ON p.user_id=a.user_id
-   WHERE i.is_correct IS NOT NULL AND COALESCE(i.answered_at,a.completed_at)>=? AND JSON_OVERLAPS(p.interests,?) AND ${TOPIC_IN}
-   GROUP BY COALESCE(i.question_id,SHA2(JSON_UNQUOTE(JSON_EXTRACT(i.question_snapshot,'$.q')),256))
-   HAVING wrong>0 ORDER BY wrong DESC,wrong/total DESC LIMIT 200`,[since,list,list,list]);
-  return rows.map(r=>({snapshot:json(r.snap),topic:r.topic,wrong:Number(r.wrong)}));
+  // 서버가 확인한 시도의 문제 은행 문제만 셈. 문제 글은 앱이 보낸 기록이 아니라 DB 원본(question_details)에서 꺼냄
+  // (검증 안 된 기록에 아무 글이나 넣어 다른 사람 보스전에 띄우는 것 방지)
+  const [rows]=await db.execute(`SELECT ANY_VALUE(d.type) AS type,ANY_VALUE(d.body) AS body,ANY_VALUE(d.choices) AS choices,ANY_VALUE(d.answer) AS answer,ANY_VALUE(d.explanation) AS explanation,
+    ANY_VALUE(t.name_ko) AS topic,SUM(i.is_correct=0) AS wrong,COUNT(*) AS total
+   FROM quiz_attempt_items i JOIN quiz_attempts a ON a.id=i.attempt_id JOIN questions q ON q.id=i.question_id JOIN question_details d ON d.question_id=q.id
+   JOIN topics t ON t.id=q.topic_id JOIN profiles p ON p.user_id=a.user_id
+   WHERE a.verification_status='server_verified' AND q.status='published' AND d.type IN ('mc','ox') AND i.is_correct IS NOT NULL
+    AND COALESCE(i.answered_at,a.completed_at)>=? AND JSON_OVERLAPS(p.interests,?) AND ${TOPIC_IN}
+   GROUP BY q.id HAVING wrong>0 ORDER BY wrong DESC,wrong/total DESC LIMIT 200`,[since,list,list,list]);
+  return rows.map(r=>({snapshot:snap(r),topic:r.topic,wrong:Number(r.wrong)}));
  }
  /** 모자란 만큼 채울 그 분야 문제 은행 문제 */
  async function fill(db,mine){
   const list=JSON.stringify(mine);
   const [rows]=await db.execute(`SELECT d.type,d.body,d.choices,d.answer,d.explanation,t.name_ko AS topic FROM questions q JOIN question_details d ON d.question_id=q.id JOIN topics t ON t.id=q.topic_id
    WHERE q.status='published' AND d.type IN ('mc','ox') AND ${TOPIC_IN} ORDER BY RAND() LIMIT 150`,[list,list]);
-  return rows.map(r=>({topic:r.topic,snapshot:{type:r.type,q:r.body,choices:r.choices==null?undefined:json(r.choices),answer:json(r.answer),explain:r.explanation}}));
+  return rows.map(r=>({topic:r.topic,snapshot:snap(r)}));
  }
  async function thisWeek(db,id){const [[r]]=await db.execute('SELECT * FROM boss_runs WHERE user_id=? AND week_start=?',[id,week()]);return r??null;}
  const runView=run=>{

@@ -2,7 +2,7 @@
 // - 2~4명, 주제 상관없음. 한 사람은 한 팀에만, 나가기 전까지 계속 같은 팀
 // - 꾸리기: 친구를 먼저 초대 → '빈자리 채우기'(모르는 사람을 받는 팀에 같이 들어가거나 새로 만듦) 또는 '친구끼리만'(수락한 친구가 1명 이상)
 // - 팀이 있을 때도 빈자리가 있으면 친구를 초대할 수 있고, 수락하면 바로 들어옴
-// - 주간 목표: 팀원 XP 합이 (150 × 인원) 이상이면, 이번 주 XP를 얻은 팀원마다 톱니바퀴 40 · XP 60을 한 번 받음
+// - 주간 목표: 팀원 XP 합(팀에 들어온 뒤만)이 (150 × 인원) 이상이면, 들어온 뒤 XP를 50 이상 보탠 팀원마다 톱니바퀴 40 · XP 60을 한 번 받음
 import {randomUUID,randomInt} from 'node:crypto';
 import {connect,transaction} from '../server/db.mjs';
 import {AuthError} from '../server/auth.mjs';
@@ -11,10 +11,11 @@ import {TEAM_MIN,TEAM_MAX,TEAM_MODES,TEAM_REWARD,teamProgress,canClaimTeam,pickT
 const CODE=/^[A-Z0-9]{8}$/;
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
-/** 이번 주 XP (한국 월요일 0시부터): 공부 · 스피드 퀴즈 · 오답 보스전. 팀 보상 XP는 목표 계산에서 뺌 */
-export const WEEK_XP_SQL=`(SELECT COALESCE(SUM(x.amount),0) FROM xp_ledger x WHERE x.user_id=m.user_id AND x.created_at>=?)
- +(SELECT COALESCE(SUM(r.awarded_xp),0) FROM speed_runs r WHERE r.user_id=m.user_id AND r.status='completed' AND r.completed_at>=?)
- +(SELECT COALESCE(SUM(b.reward_xp),0) FROM boss_runs b WHERE b.user_id=m.user_id AND b.status='cleared' AND b.finished_at>=?)`;
+/** 이번 주 XP (한국 월요일 0시와 팀에 들어온 때 중 늦은 때부터): 공부 · 스피드 퀴즈 · 오답 보스전. 팀 보상 XP는 목표 계산에서 뺌
+ * 들어오기 전 XP는 세지 않음 (다 찬 팀에 늦게 들어와 보상만 받아 가는 것 방지) */
+export const WEEK_XP_SQL=`(SELECT COALESCE(SUM(x.amount),0) FROM xp_ledger x WHERE x.user_id=m.user_id AND x.created_at>=GREATEST(?,m.joined_at))
+ +(SELECT COALESCE(SUM(r.awarded_xp),0) FROM speed_runs r WHERE r.user_id=m.user_id AND r.status='completed' AND r.completed_at>=GREATEST(?,m.joined_at))
+ +(SELECT COALESCE(SUM(b.reward_xp),0) FROM boss_runs b WHERE b.user_id=m.user_id AND b.status='cleared' AND b.finished_at>=GREATEST(?,m.joined_at))`;
 
 export function createTeamService({auth,connectionFactory=connect,now=()=>new Date(),rand=randomInt}={}){
  async function member(header,action){
@@ -111,8 +112,13 @@ export function createTeamService({auth,connectionFactory=connect,now=()=>new Da
    if(mode==='friends'&&people.length<TEAM_MIN)throw new AuthError('team_need_friend',409);
    let team=null;
    if(mode==='open'){
-    const [open]=await db.execute("SELECT id,member_count FROM study_teams WHERE mode='open' AND member_count<=? FOR UPDATE",[TEAM_MAX-people.length]);
-    team=pickTeam(open,people.length,rand);
+    // 열린 팀 전부를 잠그면 사람이 많을 때 느려지므로, 후보 20개를 잠그지 않고 읽은 뒤 고른 팀 하나만 잠그고 자리를 다시 확인
+    let [open]=await db.execute("SELECT id,member_count FROM study_teams WHERE mode='open' AND member_count<=? ORDER BY RAND() LIMIT 20",[TEAM_MAX-people.length]);
+    while(!team&&open.length){
+     const pick=pickTeam(open,people.length,rand);if(!pick)break;
+     const [[locked]]=await db.execute("SELECT id,member_count FROM study_teams WHERE id=? AND mode='open' FOR UPDATE",[pick.id]);
+     if(locked&&Number(locked.member_count)+people.length<=TEAM_MAX)team=locked;else open=open.filter(t=>t.id!==pick.id);
+    }
    }
    if(!team){team={id:randomUUID()};await db.execute('INSERT INTO study_teams(id,mode,leader_id,member_count) VALUES (?,?,?,0)',[team.id,mode,id]);}
    await enter(db,team,people);

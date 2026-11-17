@@ -24,11 +24,10 @@ export interface QuizSet {
 export const QUIZ_LENGTH = 7;
 export const AI_COUNT = 4;
 
-/** 퀴즈 AI 서버 (api/quiz-server). 개인 PC 등에서 계속 켜 두는 출제 AI. 실패하면 저장된 AI 문제·기본 문제·대체 연습 문제 사용 */
-const QUIZ_SERVER_URL = (process.env.EXPO_PUBLIC_QUIZ_SERVER_URL ?? "").replace(/\/+$/, "");
-const QUIZ_SERVER_TOKEN = process.env.EXPO_PUBLIC_QUIZ_SERVER_TOKEN ?? "";
-// 새로 만들기 + 검수 2번까지 기다리는 시간 (공부 시작을 누른 즉시 시작하므로 보통 공부하는 동안 끝남)
-const AI_TIMEOUT_MS = 150000;
+/**
+ * 퀴즈 AI 서버(api/quiz-server)는 API 서버 POST /me/quiz 를 거쳐서만 부름 (로그인한 회원만, 하루 횟수 제한).
+ * 퀴즈 서버 주소·토큰은 앱에 넣지 않음 (앱 안의 값은 누구나 꺼낼 수 있음). 실패하면 저장된 AI 문제·기본 문제·대체 연습 문제 사용
+ */
 
 // ───────── 검증 ─────────
 function isQuestion(x: unknown): x is QuizQuestion {
@@ -174,33 +173,18 @@ export const offlineQuiz = (topic: Topic): QuizSet => ({
 // 말투 규칙(2026-10)이 생기기 전에 저장한 문제는 쓰지 않도록 키에 버전을 붙임
 const aiCacheKey = (id: string) => `pg.quiz.ai2.${id}`;
 
-async function postJson(url: string, body: unknown): Promise<unknown> {
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), AI_TIMEOUT_MS);
-  try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...(QUIZ_SERVER_TOKEN ? { "x-quiz-token": QUIZ_SERVER_TOKEN } : {}) },
-      body: JSON.stringify(body),
-      signal: ctrl.signal,
-    });
-    if (!res.ok) throw new Error(`quiz server ${res.status}`);
-    return await res.json();
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
 /**
  * 퀴즈 AI에게 새 문제를 받아 옴. 미리 만든 문제(avoid)를 함께 보내서 비슷하지 않은 새 유형으로 만들게 함.
  * fresh면 그 자리에서 새로 만들고 2번 검수한 문제를 받음 (공부 시작을 누른 즉시). 서버는 검수를 통과한 문제만 줌.
- * 별도 퀴즈 AI 서버를 호출하며 실패하면 빈 배열을 반환해 캐시·기본 문제로 보충
+ * 로그인한 회원만 API 서버를 거쳐 부르고, 비회원이거나 실패하면 빈 배열을 반환해 캐시·기본 문제로 보충
  */
 async function fetchAiQuestions(topic: Topic, avoid: QuizQuestion[], fresh: boolean, count = AI_COUNT): Promise<QuizQuestion[]> {
   const body = { topicId: topic.id, count, avoid: avoid.map((q) => q.q).slice(0, 40), fresh };
-  if (QUIZ_SERVER_URL) {
+  // 로그인 모듈은 쓸 때만 불러옴 (기기 저장소를 쓰는 모듈이라, 이 파일을 쓰는 서버 테스트에서 미리 불러오지 않게)
+  const { mysqlAuth } = await import("./auth");
+  if (mysqlAuth.getUserId()) {
     try {
-      const data = await postJson(`${QUIZ_SERVER_URL}/quiz`, body);
+      const data = await mysqlAuth.aiQuiz(body);
       const qs = validQuestions((data as { questions?: unknown } | null)?.questions);
       if (qs.length) return qs;
     } catch {

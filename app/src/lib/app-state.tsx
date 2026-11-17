@@ -124,7 +124,7 @@ interface AppStateValue {
   startGuest(): Promise<void>;
   signUp(email: string, password: string): Promise<{ needsConfirm: boolean }>;
   signIn(email: string, password: string): Promise<void>;
-  signInKakao(): Promise<boolean>;
+  signInKakao(restore?: boolean): Promise<boolean>;
   signOut(): Promise<void>;
   cancelDeletion(email: string, password: string): Promise<void>;
   refreshRecords(): Promise<void>;
@@ -551,8 +551,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [loadApiAccount]);
 
   /** 카카오 로그인 (처음이면 계정이 새로 생기고 처음 설정 화면으로). 취소하면 false */
-  const signInKakao = useCallback(async () => {
-    const s = await kakaoSignIn();
+  const signInKakao = useCallback(async (restore = false) => {
+    const s = await kakaoSignIn(restore);
     if (!s) return false;
     await loadApiAccount(s);
     return true;

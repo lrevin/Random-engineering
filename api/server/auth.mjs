@@ -93,14 +93,20 @@ export function createAuth({ secret=process.env.JWT_SECRET, connectionFactory=co
      * 같은 이메일의 기존 이메일 계정과 자동으로 합치지 않는다 (남의 계정을 가로채는 일을 막기 위해).
      * subject와 email은 서버가 카카오 API에서 직접 받은 값만 넘겨야 한다.
      */
-    async kakaoLogin({subject,email=null}) {
+    async kakaoLogin({subject,email=null,restore=false}) {
       if(typeof subject!=='string' || !/^[0-9]{1,20}$/.test(subject)) throw new AuthError('bad_request');
       const mail=typeof email==='string' && email.length<=254 ? email.trim().toLowerCase() : null;
       return withDb(db=>transaction(db,async()=>{
         const [[identity]]=await db.execute("SELECT user_id FROM auth_identities WHERE provider='kakao' AND provider_subject=? FOR UPDATE",[subject]);
         if(identity) {
-          const [[user]]=await db.execute('SELECT id,status,auth_version FROM users WHERE id=? FOR UPDATE',[identity.user_id]);
+          const [[user]]=await db.execute('SELECT id,status,auth_version,deletion_requested_at>DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 7 DAY) AS cancellable FROM users WHERE id=? FOR UPDATE',[identity.user_id]);
           if(!user) throw new AuthError('invalid_credentials',401);
+          // 탈퇴 신청 7일 안에 '탈퇴 취소 후 로그인'으로 다시 카카오 로그인하면 되살림 (이메일 계정의 cancelDeletion과 같은 규칙)
+          if(user.status==='deleting'&&restore){
+            if(!Number(user.cancellable)) throw new AuthError('deletion_period_expired',409);
+            await db.execute("UPDATE users SET status='active',deletion_requested_at=NULL WHERE id=?",[user.id]);
+            user.status='active';
+          }
           if(user.status==='deleting') throw new AuthError('account_deleting',401);
           if(user.status!=='active') throw new AuthError('invalid_credentials',401);
           if(mail) await db.execute("UPDATE auth_identities SET email=? WHERE provider='kakao' AND provider_subject=?",[mail,subject]);
