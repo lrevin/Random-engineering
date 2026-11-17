@@ -1,4 +1,4 @@
-import {rewardEligibility,rewardSql,initialRewardState,REWARD_POLICY_VERSION} from './reward-eligibility.mjs';
+import {rewardEligibility,rewardSql,initialRewardState,REWARD_POLICY_VERSION,CLIENT_RECORD_DAILY_LIMIT} from './reward-eligibility.mjs';
 import {gradeIssued} from './special-reward-policy.mjs';
 import {issuedItems} from './reward-evidence.mjs';
 import {instant} from './purchase-policy.mjs';
@@ -118,7 +118,11 @@ export function createRecordService({auth,connectionFactory=connect,now=()=>new 
       const verification=canonicalItems?'server_verified':await verifyBankItems(db,p.topicId,p.items);
       const received=now(),studied=new Date(p.studiedAt),future=studied-received>300000;
       const studyDate=!future&&received-studied<=30*86400000?day(new Date(Math.min(studied.getTime(),received.getTime()))):null;
-      const reward=initialRewardState({verification,timeStatus:future?'needs_review':'accepted',studyDate});
+      let reward=initialRewardState({verification,timeStatus:future?'needs_review':'accepted',studyDate});
+      if(!canonicalItems&&reward.status==='eligible'){
+       const [[client]]=await db.execute("SELECT COUNT(*) AS n FROM study_records r JOIN quiz_attempts a ON a.id=r.attempt_id WHERE r.user_id=? AND r.study_date=? AND r.study_type='study' AND r.reward_status='eligible' AND a.rule_version<>'special-v1'",[user.id,studyDate]);
+       if(Number(client.n)>=CLIENT_RECORD_DAILY_LIMIT)reward={status:'ineligible',reason:'client_daily_limit'};
+      }
       const xp=reward.status==='eligible'?await settledXp(db,user,topic,p.score,p.total,studied,studyDate,received,!!canonicalItems,p.items):{total:0,parts:[],streak:0,multiplier:1,eligibilityPolicyVersion:REWARD_POLICY_VERSION};
       const seq=await nextSeq(db,user,state);
       if(canonicalItems)await db.execute("UPDATE quiz_attempts SET status='completed',completed_at=?,quiz_sec=? WHERE id=?",[studied,Math.max(0,Math.floor((studied-instant(issued.study_ended_at))/1000)),p.attemptId]);

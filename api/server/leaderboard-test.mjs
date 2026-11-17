@@ -103,7 +103,7 @@ test('rankings: 분야 랭크는 사람마다 가장 높은 분야로, 랭크 �
     { user_id: 'u2', domain: 'cs', points: '35', topics: '2' },   // 실버 35
     { user_id: 'u3', domain: 'me', points: '150', topics: '5' },  // 골드 150
   ];
-  const service = createLeaderboardService({ auth: fakeAuth('u2'), connectionFactory: async () => rankDb((sql) => [sql.includes('FROM study_records') ? doms : users]) });
+  const service = createLeaderboardService({ auth: fakeAuth('u2'), connectionFactory: async () => rankDb((sql) => [sql.includes('FROM study_records') && !sql.includes('nickname_reports') ? doms : users]) });
   const r = await service.ranking('Bearer x', 'tier', new URLSearchParams());
   assert.deepEqual(r.entries.map((e) => [e.rank, e.nickname, e.tier, e.domain, e.value]), [[1, '다', 2, 'me', 150], [2, '가', 2, 'ee', 120], [3, '나', 1, 'cs', 35]]);
   assert.equal(r.me.rank, 3);

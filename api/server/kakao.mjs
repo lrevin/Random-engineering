@@ -2,7 +2,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { SignJWT, jwtVerify } from 'jose';
 import { AuthError } from './auth.mjs';
 import { readJsonBody } from './auth-http.mjs';
-import { clientIp } from './client-key.mjs';
+import { clientIp, overLimit } from './client-key.mjs';
 
 /**
  * 카카오 로그인 (서버가 카카오와 직접 주고받는 방식, PKCE 비슷하게 앱을 묶음)
@@ -43,14 +43,8 @@ export function kakaoRoutes(auth, {
   const back = (send, params) => redirect(send, `${appRedirect}?${new URLSearchParams(params)}`);
   const sweep = now => {
     for (const [k, v] of codes) if (v.until <= now) codes.delete(k);
-    for (const [k, v] of hits) if (v.until <= now) hits.delete(k);
   };
-  const limited = (req, route, now) => {
-    const k = `${clientIp(req)}:${route}`;
-    const hit = hits.get(k) ?? { until: now + 60000, count: 0 };
-    hit.count++; hits.set(k, hit);
-    return hits.size > 10000 || hit.count > (limits[route] ?? 30);
-  };
+  const limited = (req, route, now) => overLimit(hits, `${clientIp(req)}:${route}`, limits[route] ?? 30, now);
 
   async function kakaoUser(code) {
     const form = new URLSearchParams({ grant_type: 'authorization_code', client_id: restKey, redirect_uri: redirectUri, code });

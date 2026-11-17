@@ -39,8 +39,8 @@ export function createAuthClient(url: string, storage: SessionStorage, fetcher: 
     await write;
     if (expected === epoch) for (const listener of listeners) listener(value);
   }
-  async function request(path: string, body?: unknown, token?: string, method?: "GET" | "POST" | "PUT" | "DELETE") {
-    const ctrl = new AbortController(), timeout = setTimeout(() => ctrl.abort(), 10000);
+  async function request(path: string, body?: unknown, token?: string, method?: "GET" | "POST" | "PUT" | "DELETE", timeoutMs = 10000) {
+    const ctrl = new AbortController(), timeout = setTimeout(() => ctrl.abort(), timeoutMs);
     try {
       const response = await fetcher(`${url}${path}`, {
         method: method ?? (body === undefined ? "GET" : "POST"),
@@ -93,18 +93,20 @@ export function createAuthClient(url: string, storage: SessionStorage, fetcher: 
       throw error;
     }
   }
-  async function authorized(path: string, body?: unknown, method?: "GET" | "POST" | "PUT" | "DELETE") {
+  async function authorized(path: string, body?: unknown, method?: "GET" | "POST" | "PUT" | "DELETE", timeoutMs?: number) {
     const version = epoch;
     const current = await ensure(false);
-    try { const result = await request(path, body, current.accessToken, method); if (version !== epoch) throw new AuthApiError("session_changed"); return result; }
+    try { const result = await request(path, body, current.accessToken, method, timeoutMs); if (version !== epoch) throw new AuthApiError("session_changed"); return result; }
     catch (error) {
       if (!(error instanceof AuthApiError) || error.status !== 401 || version !== epoch) throw error;
       const next = await refresh();
-      const result = await request(path, body, next.accessToken, method); if (version !== epoch) throw new AuthApiError("session_changed"); return result;
+      const result = await request(path, body, next.accessToken, method, timeoutMs); if (version !== epoch) throw new AuthApiError("session_changed"); return result;
     }
   }
   return {
     getUserId() { return session?.user.id ?? null; },
+    /** 퀴즈 AI 새 문제 (API 서버가 퀴즈 AI 서버를 대신 부름, 새로 만들고 검수까지 기다리므로 오래 걸림) */
+    async aiQuiz(body: { topicId: string; count: number; avoid: string[]; fresh: boolean }): Promise<{ questions: unknown; fresh: number }> { return authorized("/me/quiz", body, "POST", 150000); },
     async getSpeedStats(): Promise<{best:number;plays:number;day:string;xpToday:number;totalXp:number;bonusXp?:number}> {return authorized("/me/speed/stats");},
     async apiRequest(path: string, body?: unknown, method?: "GET" | "POST" | "PUT" | "DELETE") { return authorized(path, body, method); },
     async rewardStatus():Promise<RewardStatus>{return authorized('/me/rewards');},
