@@ -826,5 +826,877 @@
         ]
       }
     ]
+  },
+  {
+    "id": "cert-adsp",
+    "name": "데이터분석 준전문가 (ADsP)",
+    "org": "한국데이터산업진흥원",
+    "description": "데이터 이해 · 분석 기획 · 분석 기초",
+    "subjects": [
+      {
+        "name": "데이터 이해",
+        "items": [
+          "ai-27",
+          "ai-28",
+          "db-01",
+          "db-24"
+        ]
+      },
+      {
+        "name": "데이터 분석 기획",
+        "items": [
+          "ai-01",
+          "ai-02",
+          "ai-03",
+          "ai-19",
+          "ai-20"
+        ]
+      },
+      {
+        "name": "데이터 분석",
+        "items": [
+          "ma-prob",
+          "ai-05",
+          "ai-06",
+          "ai-07",
+          "ai-08",
+          "ai-11",
+          "ai-12",
+          "ai-13",
+          "ai-21"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cert-cppg",
+    "name": "개인정보관리사 (CPPG)",
+    "org": "한국CPO포럼",
+    "description": "개인정보 보호 제도 · 관리 · 보호 조치",
+    "subjects": [
+      {
+        "name": "개인정보보호의 이해",
+        "items": [
+          "sec-01",
+          "sec-29",
+          "sec-63",
+          "sec-64",
+          "sec-65",
+          "sec-66"
+        ]
+      },
+      {
+        "name": "개인정보 라이프사이클 관리",
+        "items": [
+          "sec-24",
+          "sec-26",
+          "sec-61",
+          "sec-66",
+          "db-12",
+          "db-20"
+        ]
+      },
+      {
+        "name": "개인정보의 보호조치",
+        "items": [
+          "sec-08",
+          "sec-09",
+          "sec-11",
+          "sec-16",
+          "sec-17",
+          "sec-21",
+          "sec-23",
+          "sec-38",
+          "sec-39",
+          "sec-40",
+          "sec-48",
+          "sec-49",
+          "sec-50"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cert-infocom",
+    "name": "정보통신기사",
+    "org": "한국방송통신전파진흥원",
+    "description": "통신 전송 · 네트워크 · 정보통신 설비",
+    "subjects": [
+      {
+        "name": "정보전송일반",
+        "items": [
+          "ee-comm",
+          "ee-signal-01",
+          "ee-signal-05",
+          "ee-signal-07"
+        ]
+      },
+      {
+        "name": "정보통신기기",
+        "items": [
+          "net-14",
+          "net-15",
+          "net-16",
+          "arch-20",
+          "arch-21"
+        ]
+      },
+      {
+        "name": "정보통신네트워크",
+        "items": [
+          "net-01",
+          "net-02",
+          "net-03",
+          "net-04",
+          "net-05",
+          "net-06",
+          "net-07",
+          "net-08",
+          "net-09",
+          "net-10",
+          "net-11",
+          "net-12",
+          "net-13",
+          "net-14",
+          "net-15",
+          "net-16",
+          "net-17",
+          "net-18",
+          "net-19",
+          "net-20",
+          "net-21",
+          "net-22",
+          "net-23",
+          "net-24",
+          "net-25"
+        ]
+      },
+      {
+        "name": "컴퓨터일반",
+        "items": [
+          "arch-01",
+          "arch-02",
+          "arch-06",
+          "arch-13",
+          "arch-14",
+          "os-01",
+          "os-05",
+          "os-17"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cert-elec",
+    "name": "전기기사",
+    "org": "한국산업인력공단",
+    "description": "전기자기학 · 전력 · 전기기기 · 회로 · 제어",
+    "subjects": [
+      {
+        "name": "전기자기학",
+        "items": [
+          "ph-em"
+        ]
+      },
+      {
+        "name": "전력공학",
+        "items": [
+          "ee-power-02",
+          "ee-power-03",
+          "ee-power-07",
+          "ee-power-09",
+          "ee-power-10"
+        ]
+      },
+      {
+        "name": "전기기기",
+        "items": [
+          "ee-power-01",
+          "ee-power-04",
+          "ee-power-05",
+          "ee-power-06",
+          "ee-power-08"
+        ]
+      },
+      {
+        "name": "회로이론 및 제어공학",
+        "items": [
+          "ee-circuit",
+          "ee-control"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cert-elec-i",
+    "name": "전기산업기사",
+    "org": "한국산업인력공단",
+    "description": "전기기사보다 범위가 좁은 실무 중심 시험",
+    "subjects": [
+      {
+        "name": "전기자기학",
+        "items": [
+          "ph-em-01",
+          "ph-em-02",
+          "ph-em-03",
+          "ph-em-04",
+          "ph-em-05",
+          "ph-em-07",
+          "ph-em-08"
+        ]
+      },
+      {
+        "name": "전력공학",
+        "items": [
+          "ee-power-02",
+          "ee-power-03",
+          "ee-power-07"
+        ]
+      },
+      {
+        "name": "전기기기",
+        "items": [
+          "ee-power-01",
+          "ee-power-04",
+          "ee-power-05",
+          "ee-power-06"
+        ]
+      },
+      {
+        "name": "회로이론",
+        "items": [
+          "ee-circuit-01",
+          "ee-circuit-02",
+          "ee-circuit-03",
+          "ee-circuit-05",
+          "ee-circuit-06",
+          "ee-circuit-07",
+          "ee-circuit-08"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cert-electronics",
+    "name": "전자기사",
+    "org": "한국산업인력공단",
+    "description": "전자회로 · 디지털 · 전자기학 · 회로이론",
+    "subjects": [
+      {
+        "name": "전자디지털회로",
+        "items": [
+          "ee-electronics",
+          "ee-semi-03",
+          "ee-semi-05",
+          "ee-semi-06",
+          "ee-semi-07",
+          "theory-02",
+          "theory-03",
+          "theory-04",
+          "arch-04",
+          "arch-05"
+        ]
+      },
+      {
+        "name": "전자계산기일반",
+        "items": [
+          "arch-01",
+          "arch-02",
+          "arch-03",
+          "arch-06",
+          "arch-08",
+          "arch-09",
+          "arch-10",
+          "arch-11",
+          "arch-13",
+          "arch-14"
+        ]
+      },
+      {
+        "name": "전자기학",
+        "items": [
+          "ph-em"
+        ]
+      },
+      {
+        "name": "회로이론",
+        "items": [
+          "ee-circuit",
+          "ee-signal-03",
+          "ee-signal-04",
+          "ee-signal-06"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cert-mech",
+    "name": "일반기계기사",
+    "org": "한국산업인력공단",
+    "description": "재료역학 · 열역학 · 유체역학 · 기계재료 · 기계제작",
+    "subjects": [
+      {
+        "name": "재료역학",
+        "items": [
+          "me-solid"
+        ]
+      },
+      {
+        "name": "기계열역학",
+        "items": [
+          "me-thermo"
+        ]
+      },
+      {
+        "name": "기계유체역학",
+        "items": [
+          "me-fluid"
+        ]
+      },
+      {
+        "name": "기계재료 및 유압기기",
+        "items": [
+          "mt-mech-01",
+          "mt-mech-02",
+          "mt-mech-03",
+          "mt-mech-04",
+          "mt-mech-07",
+          "mt-types-01",
+          "mt-types-02",
+          "mt-types-03",
+          "mt-phase-04",
+          "mt-phase-06",
+          "mt-phase-10"
+        ]
+      },
+      {
+        "name": "기계제작법 및 기계동력학",
+        "items": [
+          "me-mfg",
+          "me-dynamics",
+          "me-design"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cert-chem",
+    "name": "화공기사",
+    "org": "한국산업인력공단",
+    "description": "공업합성 · 반응운전 · 단위공정 · 공정제어",
+    "subjects": [
+      {
+        "name": "공업합성",
+        "items": [
+          "ch-organic-01",
+          "ch-organic-02",
+          "ch-organic-03",
+          "ch-organic-08",
+          "che-reaction-06"
+        ]
+      },
+      {
+        "name": "반응운전",
+        "items": [
+          "che-reaction",
+          "che-thermo"
+        ]
+      },
+      {
+        "name": "단위공정관리",
+        "items": [
+          "che-unit",
+          "che-transport"
+        ]
+      },
+      {
+        "name": "화공계측제어",
+        "items": [
+          "che-process"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cert-civil",
+    "name": "토목기사",
+    "org": "한국산업인력공단",
+    "description": "응용역학 · 측량 · 수리 · 콘크리트 · 토질 · 상하수도",
+    "subjects": [
+      {
+        "name": "응용역학",
+        "items": [
+          "cv-struct"
+        ]
+      },
+      {
+        "name": "측량학",
+        "items": [
+          "cv-transport-01",
+          "cv-transport-02",
+          "cv-transport-03",
+          "cv-transport-04",
+          "cv-transport-05"
+        ]
+      },
+      {
+        "name": "수리학 및 수문학",
+        "items": [
+          "cv-hydro"
+        ]
+      },
+      {
+        "name": "철근콘크리트 및 강구조",
+        "items": [
+          "cv-concrete"
+        ]
+      },
+      {
+        "name": "토질 및 기초",
+        "items": [
+          "cv-geo"
+        ]
+      },
+      {
+        "name": "상하수도공학",
+        "items": [
+          "en-water-01",
+          "en-water-02",
+          "en-water-04",
+          "en-water-05",
+          "en-water-08"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cert-arch",
+    "name": "건축기사",
+    "org": "한국산업인력공단",
+    "description": "건축계획 · 시공 · 구조 · 설비",
+    "subjects": [
+      {
+        "name": "건축계획",
+        "items": [
+          "ar-plan"
+        ]
+      },
+      {
+        "name": "건축시공",
+        "items": [
+          "ar-const"
+        ]
+      },
+      {
+        "name": "건축구조",
+        "items": [
+          "ar-struct"
+        ]
+      },
+      {
+        "name": "건축설비",
+        "items": [
+          "ar-env"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cert-safety",
+    "name": "산업안전기사",
+    "org": "한국산업인력공단",
+    "description": "안전관리 · 인간공학 · 기계·전기·화학·건설 안전",
+    "subjects": [
+      {
+        "name": "안전관리론",
+        "items": [
+          "ie-human-02",
+          "ie-human-07"
+        ]
+      },
+      {
+        "name": "인간공학 및 위험성 평가·관리",
+        "items": [
+          "ie-human-01",
+          "ie-human-03",
+          "ie-human-04",
+          "ie-human-05",
+          "ie-human-06",
+          "ie-human-08",
+          "ie-human-09",
+          "ie-human-10",
+          "ie-quality-10"
+        ]
+      },
+      {
+        "name": "기계·기구 및 설비 안전",
+        "items": [
+          "me-design-01",
+          "me-design-03",
+          "me-design-04",
+          "me-mfg-01",
+          "me-mfg-02",
+          "me-mfg-04"
+        ]
+      },
+      {
+        "name": "전기설비 안전",
+        "items": [
+          "ee-power-01",
+          "ee-power-02",
+          "ee-power-03"
+        ]
+      },
+      {
+        "name": "화학설비 안전",
+        "items": [
+          "che-process-01",
+          "che-process-07"
+        ]
+      },
+      {
+        "name": "건설공사 안전",
+        "items": [
+          "ar-const-01",
+          "ar-const-05",
+          "cv-geo-09",
+          "cv-geo-10"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cert-quality",
+    "name": "품질경영기사",
+    "org": "한국산업인력공단",
+    "description": "실험계획 · 통계적 품질관리 · 생산 · 신뢰성",
+    "subjects": [
+      {
+        "name": "실험계획법",
+        "items": [
+          "ie-quality-06",
+          "ie-quality-07",
+          "ie-quality-09"
+        ]
+      },
+      {
+        "name": "통계적 품질관리",
+        "items": [
+          "ie-quality-01",
+          "ie-quality-04",
+          "ie-quality-05",
+          "ie-quality-08",
+          "ma-prob-06",
+          "ma-prob-07",
+          "ma-prob-08",
+          "ma-prob-09"
+        ]
+      },
+      {
+        "name": "생산시스템",
+        "items": [
+          "ie-prod"
+        ]
+      },
+      {
+        "name": "신뢰성관리",
+        "items": [
+          "ie-quality-10",
+          "ie-human-08"
+        ]
+      },
+      {
+        "name": "품질경영",
+        "items": [
+          "ie-quality-02",
+          "ie-quality-03"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cert-air",
+    "name": "대기환경기사",
+    "org": "한국산업인력공단",
+    "description": "대기오염 개론 · 연소 · 방지 기술 · 측정",
+    "subjects": [
+      {
+        "name": "대기오염 개론",
+        "items": [
+          "en-air-01",
+          "en-air-02",
+          "en-air-03",
+          "en-air-04",
+          "en-air-08",
+          "en-air-10",
+          "ea-atmo-01",
+          "ea-atmo-02",
+          "ea-atmo-10"
+        ]
+      },
+      {
+        "name": "연소공학",
+        "items": [
+          "che-thermo-01",
+          "che-thermo-02",
+          "me-thermo-01",
+          "me-thermo-03"
+        ]
+      },
+      {
+        "name": "대기오염 방지기술",
+        "items": [
+          "en-air-05",
+          "en-air-06",
+          "en-air-07",
+          "en-air-09"
+        ]
+      },
+      {
+        "name": "대기오염 공정시험기준",
+        "items": [
+          "ch-analytic-02",
+          "ch-analytic-03",
+          "ch-analytic-04"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cert-water",
+    "name": "수질환경기사",
+    "org": "한국산업인력공단",
+    "description": "수질오염 개론 · 상하수도 · 방지 기술 · 측정",
+    "subjects": [
+      {
+        "name": "수질오염 개론",
+        "items": [
+          "en-water-01",
+          "en-water-02",
+          "en-water-03",
+          "en-water-07",
+          "lf-eco-02",
+          "lf-eco-06",
+          "lf-eco-10"
+        ]
+      },
+      {
+        "name": "상하수도 계획",
+        "items": [
+          "cv-hydro-02",
+          "cv-hydro-05",
+          "cv-hydro-06"
+        ]
+      },
+      {
+        "name": "수질오염 방지기술",
+        "items": [
+          "en-water-04",
+          "en-water-05",
+          "en-water-06",
+          "en-water-08",
+          "en-water-09",
+          "en-water-10"
+        ]
+      },
+      {
+        "name": "수질오염 공정시험기준",
+        "items": [
+          "ch-analytic-01",
+          "ch-analytic-03",
+          "ch-analytic-05"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cert-solar",
+    "name": "신재생에너지발전설비기사 (태양광)",
+    "org": "한국산업인력공단",
+    "description": "태양광 발전 설비 설계 · 시공 · 운영",
+    "subjects": [
+      {
+        "name": "태양광 발전 기획",
+        "items": [
+          "en-energy-01",
+          "en-energy-10",
+          "ee-semi-01",
+          "ee-semi-03",
+          "ee-semi-04"
+        ]
+      },
+      {
+        "name": "태양광 발전 설계·시공",
+        "items": [
+          "en-energy-01",
+          "en-energy-05",
+          "en-energy-06",
+          "en-energy-08",
+          "ee-power-03",
+          "ee-power-08"
+        ]
+      },
+      {
+        "name": "태양광 발전 운영",
+        "items": [
+          "en-energy-06",
+          "en-energy-08",
+          "ee-power-02",
+          "ee-power-07"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cert-aero",
+    "name": "항공기사",
+    "org": "한국산업인력공단",
+    "description": "항공역학 · 항공기 구조 · 추진 · 비행",
+    "subjects": [
+      {
+        "name": "항공역학",
+        "items": [
+          "ae-aero"
+        ]
+      },
+      {
+        "name": "항공기 계통·비행",
+        "items": [
+          "ae-flight"
+        ]
+      },
+      {
+        "name": "항공기 구조",
+        "items": [
+          "ae-flight-07",
+          "ae-flight-08",
+          "ae-flight-10",
+          "me-solid-01",
+          "me-solid-03",
+          "me-solid-08",
+          "me-solid-09"
+        ]
+      },
+      {
+        "name": "항공기 추진",
+        "items": [
+          "ae-prop"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cert-biomed",
+    "name": "의공기사",
+    "org": "한국산업인력공단",
+    "description": "의료기기 · 의용전자 · 생체 계측",
+    "subjects": [
+      {
+        "name": "의공학 개론",
+        "items": [
+          "lf-physio-02",
+          "lf-physio-04",
+          "lf-physio-05",
+          "bm-biomed-06",
+          "bm-biomed-10"
+        ]
+      },
+      {
+        "name": "의용전자",
+        "items": [
+          "ee-electronics-01",
+          "ee-electronics-04",
+          "ee-electronics-06",
+          "ee-circuit-01",
+          "ee-circuit-02",
+          "ee-circuit-08"
+        ]
+      },
+      {
+        "name": "의료기기",
+        "items": [
+          "bm-biomed"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cert-bio",
+    "name": "바이오화학제품제조기사",
+    "org": "한국산업인력공단",
+    "description": "생물공정 · 미생물 · 분석 · 품질",
+    "subjects": [
+      {
+        "name": "생화학·미생물",
+        "items": [
+          "bm-biotech",
+          "lf-cell-01",
+          "lf-cell-02",
+          "lf-cell-09"
+        ]
+      },
+      {
+        "name": "생물공정",
+        "items": [
+          "bm-process"
+        ]
+      },
+      {
+        "name": "유전공학",
+        "items": [
+          "bm-genetic-01",
+          "bm-genetic-02",
+          "bm-genetic-03",
+          "bm-genetic-05",
+          "bm-genetic-07"
+        ]
+      },
+      {
+        "name": "분석",
+        "items": [
+          "ch-analytic-02",
+          "ch-analytic-03",
+          "ch-analytic-04"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cert-metal",
+    "name": "금속재료기사",
+    "org": "한국산업인력공단",
+    "description": "금속 조직 · 재료 시험 · 열처리",
+    "subjects": [
+      {
+        "name": "금속재료",
+        "items": [
+          "mt-types",
+          "mt-crystal"
+        ]
+      },
+      {
+        "name": "금속조직",
+        "items": [
+          "mt-phase"
+        ]
+      },
+      {
+        "name": "재료시험",
+        "items": [
+          "mt-mech",
+          "mt-analysis"
+        ]
+      },
+      {
+        "name": "금속열처리·가공",
+        "items": [
+          "me-mfg-03",
+          "me-mfg-04",
+          "me-mfg-05",
+          "me-mfg-08",
+          "me-mfg-10"
+        ]
+      }
+    ]
   }
 ]

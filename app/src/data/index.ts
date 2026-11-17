@@ -21,7 +21,7 @@ import type { CategoryDef, Domain, Level, LevelNum, RawTopic, Topic } from "./ty
 
 export * from "./types";
 export { RELATED, relatedFor } from "./related";
-export { CERTS, certById, isCertId, type CertDef } from "./cert";
+export { CERTS, CERT_GROUPS, certById, isCertId, type CertDef } from "./cert";
 
 export const LEVEL_NAMES: Record<LevelNum, Level> = { 1: "기초", 2: "중급", 3: "심화" };
 const LEVEL_BY_NAME: Record<string, LevelNum> = { 기초: 1, 중급: 2, 심화: 3 };
