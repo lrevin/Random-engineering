@@ -24,7 +24,7 @@ test('일반 보상 실제 DB: 자격·증거·중복·과거 지급·숨김',as
  const make=(patch={})=>({id:randomUUID(),topicId:'ds-01',memo:'일반 보상 검사',studySec:900,score:7,total:7,studiedAt:clock.toISOString(),items:bank.slice(0,7).map(q=>({question:{...q,src:'bank'},answer:q.answer})),...patch});
  const upload=async p=>{const x=(await service.upload(h,{records:[p]})).results[0];assert.equal(x.ok,true,JSON.stringify(x));return x.record;};
  const awards=async record=>Number((await db.execute("SELECT COUNT(*) AS n FROM xp_ledger WHERE source_record_id=? AND event_type='award'",[record.id]))[0][0].n);
- t.after(async()=>{for(const uid of users)await db.execute("UPDATE users SET status='deleting',deletion_requested_at=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 8 DAY) WHERE id=?",[uid]);await purgeExpiredAccounts({onlyUserIds:users});await db.end();});
+ t.after(async()=>{for(const uid of users)await db.execute("UPDATE users SET status='deleting',deletion_requested_at=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 31 DAY) WHERE id=?",[uid]);await purgeExpiredAccounts({onlyUserIds:users});await db.end();});
  let unverified,verified,legacy,zero;
  await t.test('미검증은 원장 없이 보관·조회·동기화하고 위조 자격은 무시',async()=>{
   const p=make({rewardStatus:'eligible',eligibility:{questEligible:true}});p.items[0].question.src='ai';

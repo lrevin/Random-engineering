@@ -28,7 +28,7 @@ test('특수 보상·출제 증거·학습 단계·숨김 실제 MySQL 통합',a
   const response=await records.upload(h,{records:[body]});assert.equal(response.results[0].ok,true,JSON.stringify(response));return {record:response.results[0].record,body};
  };
  const premium=async()=>{const w=await members.wallet(h);w.state.premium=true;await db.execute('INSERT INTO wallet_operations(user_id,request_id,request_hash,action,payload,result_json) VALUES (?,?,?,?,?,?)',[a.user.id,randomUUID(),Buffer.from(hash({premium:true}),'hex'),'admin_grant','{}',JSON.stringify(w)]);};
- t.after(async()=>{for(const id of users)await db.execute("UPDATE users SET status='deleting',deletion_requested_at=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 8 DAY) WHERE id=?",[id]);await purgeExpiredAccounts({onlyUserIds:users});await db.end();});
+ t.after(async()=>{for(const id of users)await db.execute("UPDATE users SET status='deleting',deletion_requested_at=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 31 DAY) WHERE id=?",[id]);await purgeExpiredAccounts({onlyUserIds:users});await db.end();});
  let topicId,firstRecord,firstBody;
  await t.test('인증·후보 없음·프로필 설정 후 최초 배정',async()=>{
   await assert.rejects(activity.status(''),{code:'unauthorized'});assert.equal((await activity.status(h)).daily.topicId,null);

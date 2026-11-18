@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
-import { confirmChallenge } from "@/components/challenge";
+import { confirmChallenge, pokeAndTell } from "@/components/challenge";
 import { FriendAvatar } from "@/components/FriendAvatar";
 import { Icon } from "@/components/Icon";
 import { LevelBadge } from "@/components/Rank";
@@ -30,10 +30,8 @@ export default function FriendScreen() {
   const [info, setInfo] = useState<FriendInfo | null>(null);
   const [err, setErr] = useState("");
 
-  useEffect(() => {
-    if (!uid) return;
-    getFriendInfo(uid).then(setInfo).catch((e) => setErr(socialMessage(e)));
-  }, [uid]);
+  const load = () => { if (uid) getFriendInfo(uid).then(setInfo).catch((e) => setErr(socialMessage(e))); };
+  useEffect(load, [uid]);
 
   const title = titleById(info?.title);
   const games = info ? info.versus.wins + info.versus.losses + info.versus.draws : 0;
@@ -81,6 +79,13 @@ export default function FriendScreen() {
 
           <Btn title="1:1 배틀 신청" variant="primary" size="lg" icon={<Icon name="swords" size={22} color="#ffffff" />}
             onPress={() => confirmChallenge(info)} />
+          {/* 콕 찌르기: 오늘 공부 안 한 친구에게만, 하루 1번 */}
+          <Btn
+            title={info.studiedToday ? "오늘은 이미 공부했어요" : info.pokedToday ? "오늘은 콕 찔렀어요" : "콕 찌르기 (공부하러 오라고 알림)"}
+            icon={<Icon name="bell" size={20} color={c.ink} />}
+            disabled={info.studiedToday || info.pokedToday}
+            onPress={() => pokeAndTell(info, load)}
+          />
         </>
       )}
     </Screen>
