@@ -7,7 +7,7 @@ export interface RewardStatus {
 }
 export interface ServerActivity {
  id:string;purpose:'study'|'recall'|'exam'|'review';status:'issued'|'completed'|'abandoned';topicId:string|null;certId:string|null;
- startedAt:string;studyEndedAt:string|null;completedAt:string|null;allowedSec:number;studySec:number;quizSec:number|null;paused:boolean;
+ startedAt:string;studyEndedAt:string|null;completedAt:string|null;allowedSec:number;studySec:number;quizSec:number|null;paused:boolean;quizFixedAt?:string|null;
  items:{position:number;topicId:string;subject?:number;subjectName?:string;question:QuizQuestion}[];
  answers:(number|boolean|null)[];
  result:{score:number;total:number;pass?:boolean;subjects?:{name:string;score:number;total:number}[]}|null;

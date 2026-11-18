@@ -50,7 +50,7 @@ function QuizInner() {
         await mysqlAuth.issueActivity({requestId:id,purpose:'study',topicId:topic.id,studySec:0});
         const value=await mysqlAuth.activityEvent(id,'quiz',id);
         setActive(x=>x?{...x,serverTracking:true}:x);
-        return {source:value.items.some(i=>i.question.src==='offline')?'offline' as const:'bank' as const,questions:value.items.map(i=>i.question)};
+        return {source:value.items.some(i=>i.question.src==='ai')?'ai' as const:value.items.some(i=>i.question.src==='offline')?'offline' as const:'bank' as const,questions:value.items.map(i=>i.question)};
       }
       return loadQuiz(topic);
     };

@@ -58,6 +58,28 @@ test('MySQL profiles and seven-day account deletion',async t=>{
   r=await request('/me/profile',{method:'PUT',token:a.accessToken,body:{...profile,nickname:'수정 이름',reminderEnabled:false,level:3}});
   assert.equal(r.status,200);assert.equal(r.data.nicknameCharged,0);
  });
+ await t.test('테마 구매 후 닉네임 변경해도 지갑 상태·자산을 보존하고 최신 revision을 반환한다',async()=>{
+  const c=await signup('wallet'),token=c.accessToken;
+  assert.equal((await request('/me/profile',{method:'PUT',token,body:{...profile,nickname:'변경전'}})).status,200);
+  await request('/me/wallet',{token});
+  await db.execute('UPDATE wallets SET balance=3000 WHERE user_id=?',[c.user.id]);
+  for(const body of [{action:'buy_freeze'},{action:'buy_battle_ticket'},{action:'spend',payload:{product:'skin:honey'}}]){
+   assert.equal((await request('/me/wallet/operations',{method:'POST',token,body:{requestId:randomUUID(),...body}})).status,200);
+  }
+  const before=(await request('/me/wallet',{token})).data;
+  const changed=await request('/me/profile',{method:'PUT',token,body:{...profile,nickname:'변경후'}});
+  assert.equal(changed.status,200);assert.equal(changed.data.nicknameCharged,0);
+  const result=await request('/me/wallet',{token});assert.equal(result.status,200);
+  assert.deepEqual(result.data.state,before.state);assert.deepEqual(result.data.assets,before.assets);assert.equal(result.data.balance,before.balance);
+  assert(BigInt(result.data.revision)>BigInt(before.revision));
+  const paid=await request('/me/profile',{method:'PUT',token,body:{...profile,nickname:'재변경'}});assert.equal(paid.status,200);assert.equal(paid.data.nicknameCharged,50);
+  const after=(await request('/me/wallet',{token})).data;assert.equal(after.balance,before.balance-50);assert.deepEqual(after.state,before.state);assert.deepEqual(after.assets,before.assets);
+ });
+ await t.test('지갑 상태 이력이 없는 최초 닉네임 변경 후에도 지갑을 조회한다',async()=>{
+  const c=await signup('empty-wallet'),token=c.accessToken;
+  for(const nickname of ['첫이름','새이름'])assert.equal((await request('/me/profile',{method:'PUT',token,body:{...profile,nickname}})).status,200);
+  const result=await request('/me/wallet',{token});assert.equal(result.status,200);assert.equal(result.data.balance,30);assert.equal(result.data.state.freeTickets,2);assert.equal(result.data.state.freezes,0);assert(BigInt(result.data.revision)>0n);
+ });
  await t.test('invalid profile rejected and existing profile remains unchanged',async()=>{
   for(const change of [{nickname:'  '},{nickname:'가'.repeat(21)},{interests:['ds','ds']},{interests:['missing-category']},{level:4},{level:1.5},{studyMinutes:0},{studyMinutes:121},{reminderEnabled:1},{reminderTime:'25:00'}]){
    assert.equal((await request('/me/profile',{method:'PUT',token:a.accessToken,body:{...profile,...change}})).status,400);
