@@ -22,6 +22,7 @@ import { GearTarget } from "@/components/GearFly";
 import { useShownGears } from "@/lib/gear-fly";
 import { Avatar } from "@/components/ProfileLook";
 import { useProfileLook } from "@/lib/profile-look";
+import { compactNumber } from "@/lib/responsive";
 
 type LevelFilter = "0" | "1" | "2" | "3"; // 0 = 전체
 
@@ -143,18 +144,18 @@ export default function Home() {
           <View style={{ flex: 1, gap: 6, justifyContent: "center" }}>
             <Row gap={4} style={{ flexWrap: "nowrap" }}>
               <Icon name="star" size={20} />
-              <T size={17} weight="bold">{lv.level >= MAX_LEVEL ? "MAX" : `${lv.level}레벨`}</T>
+              <T size={17} weight="bold" numberOfLines={1} adjustsFontSizeToFit style={{ flexShrink: 1 }}>{lv.level >= MAX_LEVEL ? "MAX" : `${lv.level}레벨`}</T>
             </Row>
             <View style={{ height: 7, borderRadius: 4, backgroundColor: c.chip, overflow: "hidden" }}>
               <View style={{ width: `${Math.round(lv.progress * 100)}%`, height: "100%", backgroundColor: c.gold }} />
             </View>
-            <T size={11} color="muted" numberOfLines={1}>{lv.need ? `${lv.toNext.toLocaleString()} XP 남음` : "최고 레벨"}</T>
+            <T size={11} color="muted" numberOfLines={1} adjustsFontSizeToFit>{lv.need ? `${compactNumber(lv.toNext)} XP 남음` : "최고 레벨"}</T>
           </View>
         </HeaderTile>
         <HeaderTile onPress={() => router.push("/shop")} label="연속 일수, 보호권 보기">
           <View style={{ height: TOP_H, flexDirection: "row", alignItems: "center", gap: 4 }}>
             <Icon name="flame" size={22} style={{ opacity: streak ? 1 : 0.4 }} />
-            <T size={18} weight="bold" color={streak ? "flame" : "muted"}>{streak}</T>
+            <T size={18} weight="bold" color={streak ? "flame" : "muted"} numberOfLines={1}>{streak}</T>
             {freezes > 0 && <><Icon name="shield" size={22} style={{ marginLeft: 6 }} /><T size={18} weight="bold" color="ink2">{freezes}</T></>}
           </View>
           <T size={11} color="muted" style={{ height: BOTTOM_H, lineHeight: BOTTOM_H }}>연속 일수{freezes > 0 ? " · 보호권" : ""}</T>
@@ -163,7 +164,7 @@ export default function Home() {
           <GearTarget>
             <View style={{ height: TOP_H, flexDirection: "row", alignItems: "center", gap: 4 }}>
               <Icon name="gear" size={22} />
-              <T size={18} weight="bold">{shownGears.toLocaleString()}</T>
+              <T size={18} weight="bold" numberOfLines={1} adjustsFontSizeToFit style={{ flexShrink: 1 }}>{compactNumber(shownGears)}</T>
             </View>
           </GearTarget>
           <T size={11} color="muted" style={{ height: BOTTOM_H, lineHeight: BOTTOM_H }}>톱니바퀴 ›</T>
@@ -236,7 +237,8 @@ export default function Home() {
               )}
             </Animated.View>
           ) : (
-            <T size={17} color="muted" center>{emptyText}</T>
+            // 줄을 정해 둔 안내 문구: 좁은 폰에서 단어 중간이 끊기지 않게 글자를 줄여서 맞춤
+            <T size={17} color="muted" center numberOfLines={emptyText.split("\n").length} adjustsFontSizeToFit>{emptyText}</T>
           )}
         </Slot>
 

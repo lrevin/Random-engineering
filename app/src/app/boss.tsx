@@ -1,7 +1,7 @@
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Animated, Easing, Platform, Pressable, ScrollView, View } from "react-native";
+import { ActivityIndicator, Animated, Easing, Platform, Pressable, ScrollView, useWindowDimensions, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { BossArt, type BossMood } from "@/components/BossArt";
 import { Icon } from "@/components/Icon";
@@ -28,11 +28,11 @@ const LINE = "rgba(255,255,255,0.14)";
 /** 체력 막대 */
 function Bar({ value, max, color, grad, label }: { value: number; max: number; color: string; grad: string; label: string }) {
   return (
-    <View style={{ gap: 4, alignSelf: "stretch" }}>
-      <View style={{ height: 14, borderRadius: 7, backgroundColor: "rgba(0,0,0,0.45)", borderWidth: 1, borderColor: LINE, overflow: "hidden" }}>
+    <View style={{ gap: 2, alignSelf: "stretch" }}>
+      <T size={11} weight="bold" style={{ color: SUB }}>{label}</T>
+      <View style={{ height: 10, borderRadius: 5, backgroundColor: "rgba(0,0,0,0.45)", borderWidth: 1, borderColor: LINE, overflow: "hidden" }}>
         <View style={{ width: `${Math.max(0, (value / max) * 100)}%`, height: "100%", backgroundColor: color, experimental_backgroundImage: grad }} />
       </View>
-      <T size={12} weight="bold" style={{ color: SUB }}>{label}</T>
     </View>
   );
 }
@@ -41,6 +41,8 @@ function Bar({ value, max, color, grad, label }: { value: number; max: number; c
 export default function Boss() {
   const { mode, records, prefs, claimQuest, applyBattleXp, refreshWallet, refreshSpeedXp } = useApp();
   const member = mode === "user";
+  // 보스 크기를 화면 높이에 맞춤: 보스 · 체력 · 문제 · 보기 · 다음 버튼이 스크롤 없이 한 화면에 들어오게
+  const { height } = useWindowDimensions();
   const engine = useMemo(() => (member ? serverBoss() : localBoss(records, prefs.interests)), [member]); // eslint-disable-line react-hooks/exhaustive-deps
   const [info, setInfo] = useState<BossStatus | null>(null);
   const [run, setRun] = useState<BossRun | null>(null);
@@ -203,7 +205,7 @@ export default function Boss() {
             <T size={24} weight="bold" style={{ color: INK }}>오답 보스전</T>
             {close}
           </Row>
-          {bossView(220)}
+          {bossView(Math.round(Math.max(120, Math.min(220, height * 0.2))))}
           {info?.interests.length ? (
             <Row gap={6} style={{ justifyContent: "center" }}>
               {info.interests.slice(0, 4).map((id) => (
@@ -244,11 +246,14 @@ export default function Boss() {
               이번 주 보스전은 이미 했어요{info.run?.status === "cleared" ? " (처치 성공)" : ""}. 다음 주 월요일에 새 보스가 나타나요.
             </T>
           ) : null}
-          {info && !used ? (
-            <Btn title={resume ? "이어서 싸우기" : "보스에게 도전하기"} variant="accent" size="lg" loading={busy} icon={<Icon name="swords" size={22} />} onPress={begin} />
-          ) : null}
-          {info ? <T size={12} center style={{ color: SUB }}>{info.week.start.slice(5).replace("-", "/")} ~ {info.week.end.slice(5).replace("-", "/")} 보스</T> : null}
         </ScrollView>
+        {/* 시작 버튼은 화면 아래에 고정 (작은 폰에서도 스크롤 없이 바로 누름) */}
+        {info ? (
+          <View style={{ paddingHorizontal: 18, paddingTop: 8, paddingBottom: 8, gap: 6 }}>
+            {!used ? <Btn title={resume ? "이어서 싸우기" : "보스에게 도전하기"} variant="accent" size="lg" loading={busy} icon={<Icon name="swords" size={22} />} onPress={begin} /> : null}
+            <T size={12} center style={{ color: SUB }}>{info.week.start.slice(5).replace("-", "/")} ~ {info.week.end.slice(5).replace("-", "/")} 보스</T>
+          </View>
+        ) : null}
       </SafeAreaView>
     );
   }
@@ -260,7 +265,7 @@ export default function Boss() {
       <SafeAreaView style={{ flex: 1, backgroundColor: "#160409", experimental_backgroundImage: BG }} edges={["top", "bottom"]}>
         <ScrollView contentContainerStyle={{ padding: 18, gap: 14 }}>
           <Row style={{ justifyContent: "flex-end" }}>{close}</Row>
-          <BossArt size={200} mood={won ? "down" : "laugh"} />
+          <BossArt size={Math.round(Math.max(120, Math.min(200, height * 0.2)))} mood={won ? "down" : "laugh"} />
           <T size={28} weight="bold" center style={{ color: INK }}>{won ? "보스 처치!" : "보스가 버텼어요"}</T>
           <T size={14} center style={{ color: SUB }}>
             {won ? `체력 ${run.playerHp}을 남기고 이겼어요.` : `${run.position}문제까지 버텼어요. 틀린 문제를 복습하고 다음 주에 다시 도전해요.`}
@@ -292,9 +297,13 @@ export default function Boss() {
   // ───────── 싸우는 중 ─────────
   const q = run.question;
   const misses = shown ? Math.round((100 - shown.playerHp) / PLAYER_HIT) : 0;
+  const needNext = !!last && (!last.correct || last.status !== "issued");
+  // 틀려서 해설이 나오면 보스를 조금 더 작게 (해설 · 다음 버튼 자리)
+  const fightBoss = Math.round(Math.max(88, Math.min(150, height * (needNext ? 0.12 : 0.16))));
+  const next = () => { setRun(last); setLast(null); setPicked(null); };
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#160409", experimental_backgroundImage: BG }} edges={["top", "bottom"]}>
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 10, flexGrow: 1 }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 14, paddingTop: 10, paddingBottom: 10, gap: 8, flexGrow: 1 }}>
         <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
           {close}
           <T size={14} weight="bold" style={{ color: INK }}>{Math.min(run.position + 1, run.total)} / {run.total}</T>
@@ -302,51 +311,59 @@ export default function Boss() {
         </Row>
 
         {/* 보스 (위) */}
-        {bossView(190)}
-        {shown ? <Bar value={shown.bossHp} max={shown.bossMaxHp} color="#ff3b2f" grad="linear-gradient(90deg, #ffb35c 0%, #ff3b2f 55%, #a3122a 100%)" label={`오답 보스 체력 ${shown.bossHp} / ${shown.bossMaxHp}`} /> : null}
-        {shown ? <Bar value={shown.playerHp} max={100} color="#36c27a" grad="linear-gradient(90deg, #2fb36f 0%, #8be37a 100%)" label={`내 체력 ${shown.playerHp} / 100`} /> : null}
+        {bossView(fightBoss)}
+        {shown ? (
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <View style={{ flex: 3 }}><Bar value={shown.bossHp} max={shown.bossMaxHp} color="#ff3b2f" grad="linear-gradient(90deg, #ffb35c 0%, #ff3b2f 55%, #a3122a 100%)" label={`보스 ${shown.bossHp} / ${shown.bossMaxHp}`} /></View>
+            <View style={{ flex: 2 }}><Bar value={shown.playerHp} max={100} color="#36c27a" grad="linear-gradient(90deg, #2fb36f 0%, #8be37a 100%)" label={`내 체력 ${shown.playerHp}`} /></View>
+          </View>
+        ) : null}
 
         {/* 문제 (보스 밑) */}
-        <View style={{ gap: 8, padding: 14, borderRadius: radius.lg, backgroundColor: "rgba(255,248,240,0.96)", borderWidth: 2, borderColor: "#1b0509", borderBottomWidth: 5, marginTop: 4 }}>
+        <View style={{ gap: 6, paddingHorizontal: 12, paddingVertical: 10, borderRadius: radius.lg, backgroundColor: "rgba(255,248,240,0.96)", borderWidth: 2, borderColor: "#1b0509", borderBottomWidth: 4, marginTop: 2 }}>
           <Row gap={6}>
             {q?.topic ? <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: radius.pill, backgroundColor: "#f3dcd6" }}><T size={11} weight="bold" style={{ color: "#7a0b1f" }}>{q.topic}</T></View> : null}
             {q && q.wrong > 0 ? <T size={11} weight="semibold" style={{ color: "#a3122a" }}>{member ? `같은 분야 사람들이 ${q.wrong}번 틀린 문제` : `내가 ${q.wrong}번 틀린 문제`}</T> : null}
           </Row>
-          <T size={18} weight="bold" style={{ color: "#1b0509", lineHeight: 26 }}>{q?.q ?? last?.question?.q}</T>
+          <T size={16} weight="bold" style={{ color: "#1b0509", lineHeight: 23 }}>{q?.q ?? last?.question?.q}</T>
         </View>
 
-        <View style={{ gap: 8 }}>
+        <View style={{ gap: 6 }}>
           {(q?.choices ?? []).map((ch, i) => {
             const isAnswer = !!last && i === last.answer;
             const isWrongPick = !!last && !last.correct && i === picked;
             return (
               <Pressable key={i} onPress={() => answer(i)} disabled={!!last || busy} accessibilityRole="button" accessibilityLabel={`${i + 1}번 ${ch}`}
                 style={({ pressed }) => ({
-                  flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 12, paddingHorizontal: 12, borderRadius: radius.md, borderWidth: 2,
+                  flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 9, paddingHorizontal: 11, borderRadius: radius.md, borderWidth: 2,
                   borderColor: isAnswer ? "#36c27a" : isWrongPick ? "#ff3b2f" : LINE,
                   backgroundColor: isAnswer ? "rgba(54,194,122,0.22)" : isWrongPick ? "rgba(255,59,47,0.22)" : PANEL,
-                  borderBottomWidth: pressed && !last ? 2 : 4, transform: [{ translateY: pressed && !last ? 2 : 0 }],
+                  borderBottomWidth: pressed && !last ? 2 : 3, transform: [{ translateY: pressed && !last ? 2 : 0 }],
                 })}>
-                <View style={{ width: 26, height: 26, borderRadius: 7, backgroundColor: "rgba(0,0,0,0.35)", alignItems: "center", justifyContent: "center" }}>
-                  <T size={13} weight="bold" style={{ color: INK }}>{i + 1}</T>
+                <View style={{ width: 24, height: 24, borderRadius: 7, backgroundColor: "rgba(0,0,0,0.35)", alignItems: "center", justifyContent: "center" }}>
+                  <T size={12} weight="bold" style={{ color: INK }}>{i + 1}</T>
                 </View>
-                <T size={15} style={{ flex: 1, color: INK }} numberOfLines={3}>{ch}</T>
+                <T size={14} style={{ flex: 1, color: INK, lineHeight: 20 }} numberOfLines={3}>{ch}</T>
               </Pressable>
             );
           })}
         </View>
 
         {notice ? <T size={13} style={{ color: "#ff9a8a" }}>{notice}</T> : null}
-        {last && (!last.correct || last.status !== "issued") ? (
-          <View style={{ gap: 8, padding: 12, borderRadius: radius.md, backgroundColor: PANEL, borderWidth: 1, borderColor: LINE }}>
-            <T size={14} weight="bold" style={{ color: last.correct ? "#8be37a" : "#ff9a8a" }}>
+        {needNext && last ? (
+          <View style={{ gap: 4, paddingHorizontal: 12, paddingVertical: 9, borderRadius: radius.md, backgroundColor: PANEL, borderWidth: 1, borderColor: LINE }}>
+            <T size={13} weight="bold" style={{ color: last.correct ? "#8be37a" : "#ff9a8a" }}>
               {last.correct ? "마지막 일격!" : last.status === "failed" ? "체력이 다 떨어졌어요" : `보스가 비웃어요 · 내 체력 -${PLAYER_HIT}`}
             </T>
-            {!last.correct && last.explain ? <T size={13} style={{ color: SUB, lineHeight: 19 }}>{last.explain}</T> : null}
-            <Btn title={last.status === "issued" ? "다음 문제" : "결과 보기"} variant="accent" onPress={() => { setRun(last); setLast(null); setPicked(null); }} />
+            {!last.correct && last.explain ? <T size={12} style={{ color: SUB, lineHeight: 17 }}>{last.explain}</T> : null}
           </View>
         ) : null}
       </ScrollView>
+      {needNext && last ? (
+        <View style={{ paddingHorizontal: 14, paddingTop: 6, paddingBottom: 10 }}>
+          <Btn title={last.status === "issued" ? "다음 문제" : "결과 보기"} variant="accent" onPress={next} />
+        </View>
+      ) : null}
     </SafeAreaView>
   );
 }

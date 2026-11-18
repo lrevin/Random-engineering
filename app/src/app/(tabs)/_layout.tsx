@@ -16,6 +16,8 @@ export default function TabLayout() {
         tabBarInactiveTintColor: c.muted,
         tabBarStyle: { backgroundColor: c.paper, borderTopWidth: 0, elevation: 0, height: 64 + bottomPadding, paddingTop: 6, paddingBottom: bottomPadding },
         tabBarLabelStyle: { fontFamily: FONT.medium, fontSize: 12, lineHeight: 20, includeFontPadding: false },
+        // 아래 탭 글자는 휴대폰 글자 크기를 따르지 않음 (크게 하면 탭 칸을 넘쳐서 잘림)
+        tabBarAllowFontScaling: false,
         sceneStyle: { ...screenBg(c) },
       }}
     >
