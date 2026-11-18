@@ -24,7 +24,7 @@ test('친구 1:1 배틀 신청: 실제 MySQL', async (t) => {
     return { id: s.user.id, h, uid };
   };
   t.after(async () => {
-    for (const id of users) await db.execute("UPDATE users SET status='deleting',deletion_requested_at=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 8 DAY) WHERE id=?", [id]);
+    for (const id of users) await db.execute("UPDATE users SET status='deleting',deletion_requested_at=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 31 DAY) WHERE id=?", [id]);
     await purgeExpiredAccounts({ onlyUserIds: users }); await db.end();
   });
   const a = await signup('신청자'), b = await signup('받는이'), stranger = await signup('남');

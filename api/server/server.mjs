@@ -32,9 +32,15 @@ import { quizProxyRoutes } from './quiz-proxy.mjs';
 import { createPush } from './push.mjs';
 import { createSubscriptionService } from '../mysql/subscription-service.mjs';
 import { subscriptionRoutes } from '../mysql/subscription-http.mjs';
+import { createMailer } from './mailer.mjs';
+import { createPasswordReset, passwordResetRoutes } from './password-reset.mjs';
+import { createNotifier } from '../mysql/notifier-service.mjs';
+import { purgeExpiredAccounts } from '../mysql/account-service.mjs';
 import { clientIp, overLimit } from './client-key.mjs';
 
-export function createServer({ topics = loadTopics(), bank, store, auth, authLimits, battleService, battleSweep=true, kakao, quiz, ipLimit=Number(process.env.IP_RATE_LIMIT || 1200), push = auth ? createPush() : null, subscriptions = auth ? createSubscriptionService({ auth }) : null, renewEveryMs = 10 * 60 * 1000 } = {}) {
+export function createServer({ topics = loadTopics(), bank, store, auth, authLimits, battleService, battleSweep=true, kakao, quiz, ipLimit=Number(process.env.IP_RATE_LIMIT || 1200), push = auth ? createPush() : null, subscriptions = auth ? createSubscriptionService({ auth }) : null, renewEveryMs = 10 * 60 * 1000, passwordReset = auth ? createPasswordReset({ mailer: createMailer() }) : null, notifier = auth && push ? createNotifier({ push }) : null, purgeEveryMs = 60 * 60 * 1000 } = {}) {
+  // 비밀번호 찾기 (메일 설정 SMTP_* 이 있을 때만)
+  const handlePasswordReset=passwordReset ? passwordResetRoutes(passwordReset) : null;
   // 뽑공 프리미엄 월 구독 (토스페이먼츠 자동결제). TOSS_CLIENT_KEY · TOSS_SECRET_KEY 가 있을 때만 결제가 켜짐
   const handleSubscription=subscriptions ? subscriptionRoutes(subscriptions) : null;
   // 퀴즈 AI 서버 대신 부르기 (로그인 회원만, 하루 횟수 제한). QUIZ_SERVER_URL, QUIZ_SERVER_TOKEN 이 있을 때만 켜짐
@@ -92,6 +98,7 @@ export function createServer({ topics = loadTopics(), bank, store, auth, authLim
     if(handleMember && await handleMember(req,pathname,send)) return;
     if(handleKakao && await handleKakao(req,pathname,send)) return;
     if(handleAds && await handleAds(req,pathname,send)) return;
+    if(handlePasswordReset && await handlePasswordReset(req,pathname,send)) return;
     if(handleAuth && await handleAuth(req,pathname,send)) return;
     if(handleAccount && await handleAccount(req,pathname,send)) return;
     if(handleRecords && await handleRecords(req,pathname,send)) return;
@@ -119,7 +126,13 @@ export function createServer({ topics = loadTopics(), bank, store, auth, authLim
   // 결제일이 된 구독 자동결제 (토스 키가 있을 때만)
   let renewing=false,renewTimer;
   server.on('listening',()=>{if(subscriptions?.enabled&&renewEveryMs)renewTimer=setInterval(async()=>{if(renewing)return;renewing=true;try{await subscriptions.renewDue();}catch(e){console.error('Subscription renew: '+safeError(e));}finally{renewing=false;}},renewEveryMs).unref();});
-  server.on('close',()=>{clearInterval(timer);clearInterval(renewTimer);});
+  // 예약 알림(주간 리포트 · 팀 응원) 10분마다 · 탈퇴 30일 지난 계정 정리 1시간마다
+  let notifyTimer,purgeTimer,purging=false;
+  server.on('listening',()=>{
+    if(notifier&&renewEveryMs)notifyTimer=setInterval(()=>{notifier.tick().catch(()=>{});},renewEveryMs).unref();
+    if(auth&&purgeEveryMs)purgeTimer=setInterval(async()=>{if(purging)return;purging=true;try{await subscriptions?.releaseDeleted?.();const r=await purgeExpiredAccounts();if(r.deleted)console.log(`Purged accounts: ${r.deleted}`);}catch(e){console.error('Account purge: '+safeError(e));}finally{purging=false;}},purgeEveryMs).unref();
+  });
+  server.on('close',()=>{clearInterval(timer);clearInterval(renewTimer);clearInterval(notifyTimer);clearInterval(purgeTimer);});
   return server;
 }
 

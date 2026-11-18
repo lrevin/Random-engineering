@@ -119,6 +119,7 @@ function RootNav() {
         </Stack.Protected>
         <Stack.Protected guard={mode !== "user"}>
           <Stack.Screen name="login" options={{ presentation: "modal" }} />
+          <Stack.Screen name="forgot-password" options={{ presentation: "modal" }} />
           <Stack.Screen name="signup" options={{ presentation: "modal" }} />
         </Stack.Protected>
         <Stack.Screen name="privacy" options={{ presentation: "modal" }} />

@@ -19,7 +19,7 @@ import {purgeExpiredAccounts} from './account-service.mjs';
 test('MySQL learning record integration',async t=>{
  const db=await connect(),auth=createAuth({secret:randomBytes(48).toString('hex')}),server=createServer({store:databaseStore(db),auth});
  server.listen(0,'127.0.0.1');await once(server,'listening');const base=`http://127.0.0.1:${server.address().port}`,users=[];
- t.after(async()=>{server.closeAllConnections();await new Promise(r=>server.close(r));for(const id of users)await db.execute("UPDATE users SET status='deleting',deletion_requested_at=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 8 DAY) WHERE id=?",[id]);await purgeExpiredAccounts({onlyUserIds:users});await db.end();});
+ t.after(async()=>{server.closeAllConnections();await new Promise(r=>server.close(r));for(const id of users)await db.execute("UPDATE users SET status='deleting',deletion_requested_at=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 31 DAY) WHERE id=?",[id]);await purgeExpiredAccounts({onlyUserIds:users});await db.end();});
  const req=async(path,method='GET',body,token)=>{const r=await fetch(base+path,{method,headers:{'Content-Type':'application/json',...(token?{Authorization:`Bearer ${token}`}:{})},body:body===undefined?undefined:JSON.stringify(body)});return {status:r.status,data:r.status===204?null:await r.json()};};
  const signup=async()=>{const r=await req('/auth/signup','POST',{email:`records-${randomUUID()}@example.com`,password:'Records-Test-42!'});assert.equal(r.status,201);users.push(r.data.user.id);return r.data;};
  const a=await signup(),b=await signup();const token=a.accessToken,header=`Bearer ${token}`;

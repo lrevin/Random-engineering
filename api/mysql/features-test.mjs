@@ -14,7 +14,7 @@ test('authenticated friends, authoritative wallet, catalog and original-question
  const db=await connect(),auth=createAuth({secret:randomBytes(48).toString('base64url')}),members=createMemberService({auth});
  const server=createServer({store:databaseStore(db),auth});server.listen(0,'127.0.0.1');await once(server,'listening');
  const url='http://127.0.0.1:'+server.address().port,users=[];
- t.after(async()=>{server.closeAllConnections();await new Promise(r=>server.close(r));for(const u of users)await db.execute("UPDATE users SET status='deleting',deletion_requested_at=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 8 DAY) WHERE id=?",[u.user.id]);await purgeExpiredAccounts({onlyUserIds:users.map(u=>u.user.id)});await db.end();});
+ t.after(async()=>{server.closeAllConnections();await new Promise(r=>server.close(r));for(const u of users)await db.execute("UPDATE users SET status='deleting',deletion_requested_at=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 31 DAY) WHERE id=?",[u.user.id]);await purgeExpiredAccounts({onlyUserIds:users.map(u=>u.user.id)});await db.end();});
  const signup=async()=>{const u=await auth.signup({email:'feature-'+randomUUID()+'@example.com',password:'Password!123'});users.push(u);return u;};
  const a=await signup(),b=await signup(),ha='Bearer '+a.accessToken,hb='Bearer '+b.accessToken;
  await t.test('no trusted x-pg headers; bearer token is required',async()=>{

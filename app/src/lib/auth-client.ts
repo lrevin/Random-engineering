@@ -28,6 +28,8 @@ export class AuthApiError extends Error {
 /** Pure client; platform token storage is injected. */
 export function createAuthClient(url: string, storage: SessionStorage, fetcher: typeof fetch = fetch) {
   let session: AuthSession | null = null, epoch = 0;
+  /** 마지막 로그인이 탈퇴 신청을 철회했는지 (한 번 읽으면 지워짐) */
+  let restoredFlag = false;
   let refreshTask: Promise<AuthSession> | null = null;
   let writes = Promise.resolve();
   const listeners = new Set<(value: AuthSession | null) => void>();
@@ -56,7 +58,8 @@ export function createAuthClient(url: string, storage: SessionStorage, fetcher: 
       throw new AuthApiError("network_error");
     } finally { clearTimeout(timeout); }
   }
-  function parse(data: { accessToken?: unknown; refreshToken?: unknown; expiresIn?: unknown; user?: AuthSession["user"] }): AuthSession {
+  function parse(data: { accessToken?: unknown; refreshToken?: unknown; expiresIn?: unknown; user?: AuthSession["user"]; restored?: unknown }): AuthSession {
+    if (data?.restored === true) restoredFlag = true;
     if (typeof data?.accessToken !== "string" || typeof data.refreshToken !== "string" || typeof data.expiresIn !== "number" ||
       data.expiresIn <= 0 || typeof data.user?.id !== "string") throw new AuthApiError("invalid_response");
     return { accessToken: data.accessToken, refreshToken: data.refreshToken, expiresAt: Date.now() + data.expiresIn * 1000, user: data.user };
@@ -105,6 +108,11 @@ export function createAuthClient(url: string, storage: SessionStorage, fetcher: 
   }
   return {
     getUserId() { return session?.user.id ?? null; },
+    /** 방금 로그인으로 탈퇴 신청이 철회됐는지 (한 번만 true) */
+    takeRestored() { const v = restoredFlag; restoredFlag = false; return v; },
+    /** 비밀번호 찾기: 가입한 이메일이면 6자리 코드를 메일로 (가입 여부는 알려 주지 않음) */
+    async forgotPassword(email: string) { await request("/auth/password/forgot", { email }); },
+    async resetPassword(email: string, code: string, password: string) { await request("/auth/password/reset", { email, code, password }); },
     /** 퀴즈 AI 새 문제 (API 서버가 퀴즈 AI 서버를 대신 부름, 새로 만들고 검수까지 기다리므로 오래 걸림) */
     async aiQuiz(body: { topicId: string; count: number; avoid: string[]; fresh: boolean }): Promise<{ questions: unknown; fresh: number }> { return authorized("/me/quiz", body, "POST", 150000); },
     async getSpeedStats(): Promise<{best:number;plays:number;day:string;xpToday:number;totalXp:number;bonusXp?:number}> {return authorized("/me/speed/stats");},

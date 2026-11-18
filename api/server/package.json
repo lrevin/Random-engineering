@@ -30,11 +30,13 @@
     "purchases:test": "node --env-file-if-exists=.env --test ../mysql/purchase-test.mjs",
     "security:test": "node --env-file-if-exists=.env --test ../mysql/security-integration-test.mjs",
     "friend-battle:test": "node --env-file-if-exists=.env --test ../mysql/friend-battle-test.mjs",
-    "subscription:test": "node --env-file-if-exists=.env --test ../mysql/subscription-test.mjs"
+    "subscription:test": "node --env-file-if-exists=.env --test ../mysql/subscription-test.mjs",
+    "account-notify:test": "node --env-file-if-exists=.env --test ../mysql/account-notify-test.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "jose": "^6.2.15",
-    "mysql2": "^3.24.6"
+    "mysql2": "^3.24.6",
+    "nodemailer": "10.3.1"
   }
 }

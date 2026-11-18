@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { showDialog } from "./Dialog";
-import { challengeFriend, respondChallenge, socialMessage, type Challenge } from "@/lib/social";
+import { challengeFriend, pokeFriend, respondChallenge, socialMessage, type Challenge } from "@/lib/social";
 
 /** 친구에게 1:1 배틀 신청 (확인 창 → 신청). 접속 안 한 친구는 서버가 휴대폰 알림을 보냄 */
 export function confirmChallenge(f: { uid: string; nickname: string; online?: boolean }, onSent?: () => void) {
@@ -47,4 +47,11 @@ export function askChallenge(c: Challenge, onDone?: () => void) {
       },
     ],
   });
+}
+
+/** 콕 찌르기 (결과를 창으로 알려 줌) */
+export function pokeAndTell(f: { uid: string; nickname: string }, onDone?: () => void) {
+  pokeFriend(f.uid)
+    .then((r) => { onDone?.(); showDialog({ icon: "bell", title: `${f.nickname}님을 콕 찔렀어요`, message: r.notified ? "오늘 공부하러 오라고 휴대폰 알림을 보냈어요." : "친구의 휴대폰 알림이 꺼져 있어서 바로 전하지 못했어요. 오늘은 다시 찌를 수 없어요." }); })
+    .catch((e) => showDialog({ icon: "warning", title: "콕 찌르지 못했어요", message: socialMessage(e) }));
 }
