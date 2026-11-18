@@ -19,7 +19,7 @@ test('회원 구매·사용과 보상은 실제 MySQL 트랜잭션으로 처리'
  const op=(action,payload={},requestId=randomUUID(),header=h)=>members.operate(header,{action,payload,requestId});
  const wallet=()=>members.wallet(h);
  const funds=async n=>{await wallet();await db.execute('UPDATE wallets SET balance=? WHERE user_id=?',[n,a.user.id]);};
- t.after(async()=>{for(const id of users)await db.execute("UPDATE users SET status='deleting',deletion_requested_at=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 8 DAY) WHERE id=?",[id]);await purgeExpiredAccounts({onlyUserIds:users});await db.end();});
+ t.after(async()=>{for(const id of users)await db.execute("UPDATE users SET status='deleting',deletion_requested_at=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 31 DAY) WHERE id=?",[id]);await purgeExpiredAccounts({onlyUserIds:users});await db.end();});
  await t.test('인증·기본 자산·계정 격리',async()=>{
   await assert.rejects(members.wallet(''),{code:'unauthorized'});const w=await wallet();assert.equal(w.assets.examTickets,0);assert.deepEqual(w.assets.ownedSkins,['classic']);assert.equal(w.assets.activeSkin,'classic');assert.equal((await members.wallet(hb)).assets.examTickets,0);
  });

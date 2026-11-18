@@ -114,7 +114,8 @@ test('MySQL authentication HTTP and app login persistence',async t=>{
     await db.execute("UPDATE users SET status='deleting',deletion_requested_at=UTC_TIMESTAMP(3) WHERE id=?",[s.user.id]);
     assert.equal((await me(next.data.accessToken)).status,401);
     assert.equal((await post('refresh',{refreshToken:next.data.refreshToken})).status,401);
-    assert.equal((await post('login',{email:s.user.email,password:pass})).status,401);
+    // 탈퇴 신청 후 30일 안에 다시 로그인하면 철회 (실제 탈퇴 신청은 auth_version 을 올려 예전 토큰을 끊음 — account-test 에서 확인)
+    const back=await post('login',{email:s.user.email,password:pass});assert.equal(back.status,200);assert.equal(back.data.restored,true);
   });
   await t.test('expired sessions cannot refresh',async()=>{
     const s=await make('expired');

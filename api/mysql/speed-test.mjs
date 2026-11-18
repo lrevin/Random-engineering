@@ -16,7 +16,7 @@ test('speed quiz issuance, authoritative answers, durable XP and account isolati
  const a=await signup(),b=await signup(),ha='Bearer '+a.accessToken,hb='Bearer '+b.accessToken;
  let clock=new Date();const speed=createSpeedService({auth,now:()=>new Date(clock)}),records=createRecordService({auth});
  const server=createServer({store:databaseStore(db),auth});server.listen(0,'127.0.0.1');await once(server,'listening');const base='http://127.0.0.1:'+server.address().port;
- t.after(async()=>{server.closeAllConnections();await new Promise(r=>server.close(r));for(const id of users)await db.execute("UPDATE users SET status='deleting',deletion_requested_at=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 8 DAY) WHERE id=?",[id]);await purgeExpiredAccounts({onlyUserIds:users});await db.end();});
+ t.after(async()=>{server.closeAllConnections();await new Promise(r=>server.close(r));for(const id of users)await db.execute("UPDATE users SET status='deleting',deletion_requested_at=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 31 DAY) WHERE id=?",[id]);await purgeExpiredAccounts({onlyUserIds:users});await db.end();});
  const bank=await databaseStore(db).questions('ds-01');
  const seed={id:randomUUID(),topicId:'ds-01',memo:'학습',studySec:900,score:7,total:7,studiedAt:new Date().toISOString(),items:bank.slice(0,7).map(q=>({question:{...q,src:'bank'},answer:q.answer}))};
  assert.equal((await records.upload(ha,{records:[seed]})).saved,1);

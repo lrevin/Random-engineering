@@ -34,9 +34,9 @@ test('MySQL schema, direct import, HTTP reads, constraints and transactions', as
       const next=await pool.getConnection();const [[after]]=await next.query('SELECT CONNECTION_ID() AS id');next.release();assert.notEqual(String(after.id),String(before.id));
     }finally{publicServer.closeAllConnections();await new Promise(resolve=>publicServer.close(resolve));await pool.end();}
   });
-  await t.test('all 43 current business tables exist; removed study columns are absent', async () => {
+  await t.test('all 49 current business tables exist; removed study columns are absent', async () => {
     const [tables] = await db.query('SHOW TABLES');
-    assert.equal(tables.filter(row=>Object.values(row)[0]!=='flyway_schema_history').length, 43);
+    assert.equal(tables.filter(row=>Object.values(row)[0]!=='flyway_schema_history').length, 49);
     const [columns] = await db.query('SHOW COLUMNS FROM study_records');
     for (const name of ['verification_status','quiz_source','xp_rule_version','wrong']) {
       assert.ok(!columns.some(c => c.Field === name), name);

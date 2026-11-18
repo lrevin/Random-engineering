@@ -29,7 +29,7 @@ test('LLM 실제 DB: 큐·발급·채점·보상·JSON 가져오기',async t=>{
  const job=id=>db.execute('SELECT * FROM quiz_jobs WHERE id=?',[id]).then(([r])=>r[0]);
  const issue=topicId=>activity.issue(h,{requestId:randomUUID(),purpose:'study',topicId,studySec:60});
  t.after(async()=>{
-  for(const id of users)await db.execute("UPDATE users SET status='deleting',deletion_requested_at=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 8 DAY) WHERE id=?",[id]);await purgeExpiredAccounts({onlyUserIds:users});
+  for(const id of users)await db.execute("UPDATE users SET status='deleting',deletion_requested_at=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 31 DAY) WHERE id=?",[id]);await purgeExpiredAccounts({onlyUserIds:users});
   for(const id of bankJobs){await db.execute('DELETE d FROM question_details d JOIN questions q ON q.id=d.question_id WHERE q.generation_job_id=?',[id]);await db.execute('DELETE FROM questions WHERE generation_job_id=?',[id]);await db.execute('DELETE FROM quiz_jobs WHERE id=?',[id]);}
   for(const id of topics){await db.execute('DELETE d FROM question_details d JOIN questions q ON q.id=d.question_id WHERE q.topic_id=?',[id]);await db.execute('DELETE FROM questions WHERE topic_id=?',[id]);await db.execute('DELETE FROM quiz_jobs WHERE topic_id=?',[id]);await db.execute('DELETE FROM topics WHERE id=?',[id]);}await db.end();
  });

@@ -30,20 +30,31 @@ import { createProgressService } from '../mysql/progress-service.mjs';
 import { progressRoutes } from '../mysql/progress-http.mjs';
 import { clientErrorRoutes } from './client-errors.mjs';
 import { quizProxyRoutes } from './quiz-proxy.mjs';
+import { createPush } from './push.mjs';
+import { createSubscriptionService } from '../mysql/subscription-service.mjs';
+import { subscriptionRoutes } from '../mysql/subscription-http.mjs';
+import { createMailer } from './mailer.mjs';
+import { createPasswordReset, passwordResetRoutes } from './password-reset.mjs';
+import { createNotifier } from '../mysql/notifier-service.mjs';
+import { purgeExpiredAccounts } from '../mysql/account-service.mjs';
 import { clientIp, overLimit } from './client-key.mjs';
 
-export function createServer({ topics = loadTopics(), bank, store, auth, authLimits, battleService, battleSweep=true, kakao, quiz, ipLimit=Number(process.env.IP_RATE_LIMIT || 1200) } = {}) {
-  // 이전 직접 AI 요청은 인증 후 학습 발급 경로로 안내한다. 실제 호출은 영속 작업 처리기가 담당.
+export function createServer({ topics = loadTopics(), bank, store, auth, authLimits, battleService, battleSweep=true, kakao, quiz, ipLimit=Number(process.env.IP_RATE_LIMIT || 1200), push = auth ? createPush() : null, subscriptions = auth ? createSubscriptionService({ auth }) : null, renewEveryMs = 10 * 60 * 1000, passwordReset = auth ? createPasswordReset({ mailer: createMailer() }) : null, notifier = auth && push ? createNotifier({ push }) : null, purgeEveryMs = 60 * 60 * 1000 } = {}) {
+  // 비밀번호 찾기 (메일 설정 SMTP_* 이 있을 때만)
+  const handlePasswordReset=passwordReset ? passwordResetRoutes(passwordReset) : null;
+  // 뽑공 프리미엄 월 구독 (토스페이먼츠 자동결제). TOSS_CLIENT_KEY · TOSS_SECRET_KEY 가 있을 때만 결제가 켜짐
+  const handleSubscription=subscriptions ? subscriptionRoutes(subscriptions) : null;
+  // 이전 직접 AI 경로는 학습 발급 경로로 안내한다. 생성 요청은 영속 작업 처리기가 담당.
   const handleQuiz=auth ? quizProxyRoutes(auth,quiz) : null;
   // 전체 요청을 실제 주소(IP)마다 분당 ipLimit번까지: 경로별 제한은 토큰 속 회원 id로 세서, 가짜 토큰을 바꿔 가며 보내면 피할 수 있음
   const ipHits=new Map();
-  const battles=auth?(battleService??createBattleService({auth})):null;
+  const battles=auth?(battleService??createBattleService({auth,push})):null;
   const handleBattle=battles?battleRoutes(battles):null;
   const handleActivity=auth?activityRoutes(createActivityService({auth})):null;
   const handleSpeed=auth ? speedRoutes(createSpeedService({auth})) : null;
   // 스터디 팀 · 오답 보스전
   const handleTeam=auth ? teamRoutes(createTeamService({auth}),createBossService({auth})) : null;
-  const handleMember=auth ? memberRoutes(createMemberService({auth})) : null;
+  const handleMember=auth ? memberRoutes(createMemberService({auth,push})) : null;
   const handleAuth=auth ? authRoutes(auth,{limits:authLimits}) : null;
   // 카카오 로그인: KAKAO_REST_API_KEY, KAKAO_REDIRECT_URI 환경변수가 있을 때만 켜짐
   const handleKakao=auth ? kakaoRoutes(auth,kakao) : null;
@@ -71,8 +82,10 @@ export function createServer({ topics = loadTopics(), bank, store, auth, authLim
       'Access-Control-Expose-Headers': 'etag', 'Content-Type': 'application/json; charset=utf-8' };
     const send = (status, body, extra = {}) => {
       res.writeHead(status, { ...headers, ...extra });
-      res.end(status === 204 || status === 304 ? undefined : JSON.stringify(body));
+      res.end(status === 204 || status === 304 || body === undefined ? undefined : JSON.stringify(body));
     };
+    // HTML 같은 JSON이 아닌 응답 (결제 페이지)
+    const raw = (status, text, extra = {}) => { res.writeHead(status, extra); res.end(text); };
     if (req.method === 'OPTIONS') return send(204);
     if (overLimit(ipHits, clientIp(req), ipLimit)) return send(429, { error: 'rate_limited' }, { 'Retry-After': '60' });
     let pathname;
@@ -86,12 +99,14 @@ export function createServer({ topics = loadTopics(), bank, store, auth, authLim
     if(handleMember && await handleMember(req,pathname,send)) return;
     if(handleKakao && await handleKakao(req,pathname,send)) return;
     if(handleAds && await handleAds(req,pathname,send)) return;
+    if(handlePasswordReset && await handlePasswordReset(req,pathname,send)) return;
     if(handleAuth && await handleAuth(req,pathname,send)) return;
     if(handleAccount && await handleAccount(req,pathname,send)) return;
     if(handleRecords && await handleRecords(req,pathname,send)) return;
     if(handleLeaderboard && await handleLeaderboard(req,pathname,send)) return;
     if(handleProgress && await handleProgress(req,pathname,send)) return;
     if(handleQuiz && await handleQuiz(req,pathname,send)) return;
+    if(handleSubscription && await handleSubscription(req,pathname,send,raw)) return;
     if(await handleClientErrors(req,pathname,send)) return;
     if (req.method === 'GET' && pathname === '/health') return send(200, {...await store.health(),auth:auth?'mysql':'not_implemented',profile:auth?'mysql':'not_implemented',accountDeletion:auth?'mysql':'not_implemented',records:auth?'mysql':'not_implemented',kakao:!!handleKakao});
     if(req.method==='GET' && pathname==='/catalog' && store.catalog){const data=await store.catalog();const etag=`"${hash(data)}"`;if(req.headers['if-none-match']===etag)return send(304,undefined,{ETag:etag});return send(200,{...data,version:hash(data)},{ETag:etag});}
@@ -109,7 +124,16 @@ export function createServer({ topics = loadTopics(), bank, store, auth, authLim
   });
   let sweeping=false,timer;
   server.on('listening',()=>{if(battles&&battleSweep)timer=setInterval(async()=>{if(sweeping)return;sweeping=true;try{await battles.sweep();}catch(e){console.error('Battle sweep: '+safeError(e));}finally{sweeping=false;}},5000).unref();});
-  server.on('close',()=>clearInterval(timer));
+  // 결제일이 된 구독 자동결제 (토스 키가 있을 때만)
+  let renewing=false,renewTimer;
+  server.on('listening',()=>{if(subscriptions?.enabled&&renewEveryMs)renewTimer=setInterval(async()=>{if(renewing)return;renewing=true;try{await subscriptions.renewDue();}catch(e){console.error('Subscription renew: '+safeError(e));}finally{renewing=false;}},renewEveryMs).unref();});
+  // 예약 알림(주간 리포트 · 팀 응원) 10분마다 · 탈퇴 30일 지난 계정 정리 1시간마다
+  let notifyTimer,purgeTimer,purging=false;
+  server.on('listening',()=>{
+    if(notifier&&renewEveryMs)notifyTimer=setInterval(()=>{notifier.tick().catch(()=>{});},renewEveryMs).unref();
+    if(auth&&purgeEveryMs)purgeTimer=setInterval(async()=>{if(purging)return;purging=true;try{await subscriptions?.releaseDeleted?.();const r=await purgeExpiredAccounts();if(r.deleted)console.log(`Purged accounts: ${r.deleted}`);}catch(e){console.error('Account purge: '+safeError(e));}finally{purging=false;}},purgeEveryMs).unref();
+  });
+  server.on('close',()=>{clearInterval(timer);clearInterval(renewTimer);clearInterval(notifyTimer);clearInterval(purgeTimer);});
   return server;
 }
 

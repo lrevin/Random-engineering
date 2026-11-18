@@ -2,6 +2,7 @@ import {router, useLocalSearchParams} from "expo-router";
 import {useCallback, useEffect, useRef, useState} from "react";
 import {ActivityIndicator, AppState, Pressable, View} from "react-native";
 import {showDialog} from "@/components/Dialog";
+import {confirmChallenge} from "@/components/challenge";
 import {StudyReader, type ReaderPage} from "@/components/StudyReader";
 import {TopicLinks} from "@/components/TopicLinks";
 import {Badge, Btn, Card, levelTone, Row, Screen, T} from "@/components/ui";
@@ -212,6 +213,8 @@ export default function BattleScreen(){
    {!voided&&<T size={13} color="muted" center>진 사람 누적 경험치의 5% (최대 {battleXpTransfer(1e9)} XP) · 본 문제 정답만 분야 랭크에 반영</T>}
   </Card>
   {b.recordId&&<Btn title="문항별 풀이 기록 보기" onPress={()=>router.push({pathname:"/record/[id]",params:{id:b.recordId!}})}/>}
+  {/* 친구 배틀이 끝나면 바로 다시 신청 */}
+  {b.kind==="friend"&&other&&<Btn title={`${other.nickname}님과 다시 붙기`} variant="accent" size="lg" icon={<Icon name="swords" size={22} color="#ffffff"/>} onPress={()=>confirmChallenge({uid:other.uid,nickname:other.nickname,online:true})}/>}
   {errorLine}{leaveBtn}
  </Screen>;
 }

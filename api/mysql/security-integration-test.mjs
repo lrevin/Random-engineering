@@ -18,7 +18,7 @@ test('보안 수정: 실제 MySQL', async (t) => {
   const db = await connect(), auth = createAuth({ secret: randomBytes(48).toString('base64url') }), users = [];
   const signup = async () => { const s = await auth.signup({ email: randomUUID() + '@example.com', password: 'Password!123' }); users.push(s.user.id); return s; };
   t.after(async () => {
-    for (const id of users) await db.execute("UPDATE users SET status='deleting',deletion_requested_at=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 8 DAY) WHERE id=?", [id]);
+    for (const id of users) await db.execute("UPDATE users SET status='deleting',deletion_requested_at=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 31 DAY) WHERE id=?", [id]);
     await purgeExpiredAccounts({ onlyUserIds: users }); await db.end();
   });
   // 문제 은행이 넉넉한 세부 분야 하나
@@ -59,7 +59,7 @@ test('보안 수정: 실제 MySQL', async (t) => {
     const run = await createBossService({ auth }).start(h, { requestId: randomUUID() });
     assert.equal(run.status, 'issued'); assert.ok(run.total >= 30);
     const [[row]] = await db.execute('SELECT questions FROM boss_runs WHERE id=?', [run.runId]);
-    assert.ok(!json(row.questions).some((q) => q.q.startsWith('광고')), '꾸민 문제 없음');
+    assert.ok(!json(row.questions).some((q) => q.q.includes('evil.example')), '꾸민 문제 없음');
   });
 
   await t.test('스터디 팀: 들어온 뒤 XP만 세고 목표 전에는 보상 없음 (SQL 실행)', async () => {

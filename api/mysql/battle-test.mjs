@@ -16,7 +16,7 @@ test('durable battle matching, clocks, shared records, tickets and XP on real My
  const config={auth,now:()=>new Date(clock),studySec:2,quizSec:3,startDelaySec:1,roundSec:2,maxGapMs:Infinity};
  const engine=createBattleService(config),members=createMemberService({auth,now:()=>new Date(clock)}),records=createRecordService({auth,now:()=>new Date(clock)});
  const server=createServer({store:databaseStore(db),auth,battleService:engine,battleSweep:false});server.listen(0,'127.0.0.1');await once(server,'listening');const base='http://127.0.0.1:'+server.address().port;
- t.after(async()=>{server.closeAllConnections();await new Promise(r=>server.close(r));for(const u of users)await db.execute("UPDATE users SET status='deleting',deletion_requested_at=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 8 DAY) WHERE id=?",[u.id]);await purgeExpiredAccounts({onlyUserIds:users.map(u=>u.id)});await db.end();});
+ t.after(async()=>{server.closeAllConnections();await new Promise(r=>server.close(r));for(const u of users)await db.execute("UPDATE users SET status='deleting',deletion_requested_at=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 31 DAY) WHERE id=?",[u.id]);await purgeExpiredAccounts({onlyUserIds:users.map(u=>u.id)});await db.end();});
  async function account(interests=['ds']){const s=await auth.signup({email:'battle-'+randomUUID()+'@example.com',password:'Password!123'}),u={id:s.user.id,header:'Bearer '+s.accessToken};users.push(u);await db.execute('INSERT INTO profiles(user_id,nickname,interests) VALUES (?,?,?)',[u.id,'배틀회원',JSON.stringify(interests)]);await members.me(u.header);return u;}
  const a=await account(),b=await account(),c=await account(['ee-nonexistent']);
  const bank=await databaseStore(db).questions('ds-01');

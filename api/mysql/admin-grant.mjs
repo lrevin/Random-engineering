@@ -47,7 +47,7 @@ export async function adminGrant({ code, gears, premium }, { connectionFactory =
         await db.execute("INSERT INTO wallet_transactions(user_id,amount,reason,request_id) VALUES (?,?,'admin_grant',?)", [id, gears - value.balance, requestId]);
         value.balance = gears;
       }
-      const state = { ...value.state, ...(premium === null ? {} : { premium }) };
+      const state = { ...value.state, ...(premium === null ? {} : { premium, grantedPremium: premium }) };
       const payload = { gears, premium };
       await db.execute('INSERT INTO wallet_operations(user_id,request_id,request_hash,action,payload,result_json) VALUES (?,?,?,?,?,?)',
         [id, requestId, createHash('sha256').update(JSON.stringify(payload)).digest(), 'admin_grant', JSON.stringify(payload), JSON.stringify({ balance: value.balance, state })]);

@@ -118,7 +118,7 @@
 - 마일스톤은 최고 연속 7/30/100일에 30/100/300개와 지정 스킨·칭호를 최초 1회 함께 지급한다. 자동 장착하지 않는다.
 - 수동 특수 보상은 기존 `POST /me/wallet/operations`의 `quest`로 처리한다. 키는 `daily-topic:YYYY-MM-DD`, `streak-milestone:7/30/100`, 기존 프리미엄 `quest:p<주 시작 날짜>:<id>`다. 완료 증거 없는 `recall:*` 수동 요청은 거절한다.
 - 프리미엄 주간 실적은 검증된 시험 채점·오답 해결·서버 학습 30분·정상 배틀 완료만 사용한다. 수령 시 프리미엄을 확인하고 같은 주 가입 전 실적도 인정한다. V6 진행 JSON은 증거가 아니다.
-- 기본 은행 부족분은 서버 기준 재료·시드·생성 버전으로 재현하고 발급 스냅샷만 남긴다. 일반 학습 AI 원본은 V11 생성 작업·문제 은행을 통해 연결하며, 실제 LLM 서버 연결·운영 적재는 별도 적용한다.
+- 기본 은행 부족분은 서버 기준 재료·시드·생성 버전으로 재현하고 발급 스냅샷만 남긴다. 일반 학습 AI 원본은 V14 생성 작업·문제 은행을 통해 연결하며, 기존 운영 DB는 LLM V11 선적용 상태이므로 V14 번호 정합화 후 통합 배포한다. 실제 LLM 연결 검증은 별도다.
 - 학습 인정 시간은 정지 구간 제외·승인 시간 상한의 서버 값과 앱 보고의 작은 값이며, 퀴즈 시간은 앱 종료/백그라운드를 포함한 전체 경과다. 퀴즈 시간으로 보상을 판정하지 않는다.
 - 구버전 APK는 숨김 필터가 없어 숨김 기록을 다시 표시할 수 있으므로 새 앱과 함께 배포한다. 기록 숨김은 답안·XP·통계·랭크·연속일·보상 증거를 유지한다. 스냅샷/변경 피드는 숨김을 포함하며 기본 목록과 최근 화면에서만 제외한다. 탈퇴 후 실제 삭제와 구분한다.
 - 일일/주간 미수령은 기간 종료 시 닫히며 마일스톤은 기한이 없다. 서버 성공 후 응답만 유실된 완료 요청은 원래 완료 시각·결과를 재전송으로 반환한다. 장기 오프라인 특수 보상은 별도 보류한다.
@@ -133,7 +133,7 @@
 
 ---
 
-## 4. 강의실 LLM 연결·일반 학습 출제 (V11, 로컬 구현)
+## 4. 강의실 LLM 연결·일반 학습 출제 (V14, 통합 코드 기준)
 
 - 앱은 기존 `POST /me/activities`로 일반 학습을 시작한다. 서버가 `quiz_jobs`를 만들거나 같은 주제의 활성 작업을 공유하고 즉시 응답한다. 재진입·같은 요청 UUID는 새 작업을 만들지 않는다.
 - 실제 연결 확인은 운영 적용 단계에서 `npm run ai:health`로 명시적으로 실행한다. 구현 검사는 가짜 HTTP 서버만 사용한다.
@@ -276,3 +276,20 @@ adb reverse tcp:8788 tcp:8788                    # 안드로이드 에뮬레이�
 - 팀 '빈자리 채우기'는 열린 팀 후보 20개를 잠그지 않고 읽은 뒤 고른 팀 하나만 잠그고 자리를 다시 확인한다.
 - 꾸미기 구매는 이미 가진 것이면 잔액보다 먼저 `already_owned`. 같은 requestId 동시 요청은 영수증을 잠금 읽기로 확인해 재전송으로 처리한다.
 - V10__lavender_to_honey.sql: 판매 종료한 라벤더 드림(lavender)을 허니 레몬(honey)으로 바꿔 준다. 둘 다 가진 사람은 1200 톱니바퀴를 돌려준다(reason='theme_refund', request_id='refund:lavender').
+
+## 뽑공 프리미엄 월 구독 (V12__subscriptions.sql, 규칙 숫자는 subscription-policy.mjs)
+토스페이먼츠 카드 자동결제(빌링). 월 4,900원, 결제가 될 때마다 톱니바퀴 300. 서버 환경변수 `TOSS_CLIENT_KEY` · `TOSS_SECRET_KEY`가 없으면 꺼짐(`available:false`, `billing_unavailable`).
+- `GET /me/subscription` 상태: none · active(매달 결제) · canceled(해지, 기간 끝까지 프리미엄) · past_due(결제 실패, 다시 시도 중, 프리미엄 꺼짐) · ended. 다음 결제일 · 가린 카드 번호. 빌링키는 앱에 보내지 않는다.
+- `POST /me/subscription/checkout` → `{path}`: 결제 페이지 `/billing/start?t=`(20분 서명 토큰). 이미 구독 중 `already_subscribed`, 해지했지만 기간이 남음 `subscription_canceled`.
+- 결제 페이지는 토스 SDK v2 `requestBillingAuth({method:"CARD"})` → 토스가 `/billing/success?authKey&customerKey`로 보냄 → 서버가 빌링키 발급(`POST /v1/billing/authorizations/issue`) → 첫 달 결제(`POST /v1/billing/{billingKey}`) → `ppobgong://billing?result=success|cancel|fail&code=`로 앱에 돌려보냄. 첫 결제가 거절되면 빌링키를 지운다.
+- `POST /me/subscription/cancel` 해지(다음 결제 안 함), `POST /me/subscription/resume` 해지 취소(기간이 남고 카드가 그대로일 때).
+- API 서버가 10분마다(`GET_LOCK`으로 한 번만) 결제일이 된 구독을 결제한다. 주문번호는 기간 시작 시각 + 시도 번호라 같은 달을 두 번 결제하지 않는다. 거절이면 하루 뒤 다시, 3번째 실패면 종료. 토스 응답을 못 받으면(시간 초과 · 5xx) 실패로 치지 않고 같은 주문번호로 `GET /v1/payments/orders/{orderId}` 확인 후 처리한다. 기간이 끝난 해지 구독은 종료하고 빌링키를 삭제(`DELETE /v1/billing/{billingKey}`)한다.
+- 프리미엄 = 운영자가 켠 값(`grantedPremium`) 또는 기간이 남은 구독(`wallet-state.mjs`). 결제 기록은 `subscription_payments`, 톱니바퀴는 `wallet_transactions(reason='premium_bonus', request_id='sub:'+주문번호)`.
+
+## 비밀번호 찾기 · 회원 탈퇴 · 콕 찌르기 · 예약 알림 (V13__password_reset_notifications.sql)
+- `POST /auth/password/forgot {email}`: 항상 `{ok:true}`(가입 여부를 알리지 않음). 이메일 계정이면 6자리 코드를 메일로(해시로만 저장, 15분, 같은 이메일 1시간 5번까지). 메일 설정(SMTP_*)이 없으면 `mail_unavailable`.
+- `POST /auth/password/reset {email, code, password}`: 코드가 맞으면 비밀번호 변경 + `auth_version` 올림 + 모든 세션 끊김. 틀리면 `invalid_reset_code`, 5번 틀리거나 15분 지나면 `reset_code_expired`.
+- 회원 탈퇴(`DELETE /me`): 30일 유예(`DELETION_GRACE_DAYS`). 신청하면 바로 로그아웃 · 구독 다음 결제 멈춤 · 스터디 팀에서 빠짐 · 푸시 토큰 삭제. 30일 안에 이메일 또는 카카오로 다시 로그인하면 탈퇴 철회(로그인 응답 `restored:true`). 30일이 지나면 로그인 `deletion_period_expired`, API 서버가 1시간마다 정보를 지움(토스 빌링키도 삭제).
+- `POST /social/friends/:uid/poke`: 오늘(한국 날짜) 공부 안 한 친구에게 푸시 "OO님이 콕 찔렀어요". 친구마다 하루 1번(`already_poked`), 이미 공부했으면 `friend_studied_today`. 친구 정보에 `studiedToday` · `pokedToday`.
+- 예약 알림(10분마다, `GET_LOCK`): 일요일 19~22시 주간 공부 리포트(알림 켠 회원), 토 · 일 18~22시 주간 목표 절반 이상인 스터디 팀 응원. `notification_log(kind,ref,period)`로 한 번만.
+- 친구 배틀 결과 화면에 "다시 붙기"(같은 친구에게 바로 배틀 신청).
