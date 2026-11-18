@@ -62,6 +62,7 @@ import b_ie_human_1 from "./ie-human-1.json";
 import b_ie_or_1 from "./ie-or-1.json";
 import b_ie_prod_1 from "./ie-prod-1.json";
 import b_ie_quality_1 from "./ie-quality-1.json";
+import b_lf_cell_1 from "./lf-cell-1.json";
 import b_net_1 from "./net-1.json";
 import b_net_2 from "./net-2.json";
 import b_net_3 from "./net-3.json";
@@ -149,6 +150,7 @@ const FILES = [
   b_ie_or_1,
   b_ie_prod_1,
   b_ie_quality_1,
+  b_lf_cell_1,
   b_net_1,
   b_net_2,
   b_net_3,
