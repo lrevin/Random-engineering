@@ -51,14 +51,14 @@ try {
   const sql = fs.readFileSync(new URL('./migrations/V1__initial_schema.sql', import.meta.url), 'utf8').replace(/^\s*--.*$/gm, '');
   for (const statement of sql.split(';').map(s => s.trim()).filter(Boolean)) await db.query(statement);
   await runFlyway('baseline', {database: legacy, baselineVersion: '1'}); await migrate(legacy);
-  const expected = await definition(fresh); assert.equal(Object.keys(expected).length, 36);
+  const expected = await definition(fresh); assert.equal(Object.keys(expected).length, 49);
   assert.deepEqual(await definition(replay), expected); assert.deepEqual(await definition(legacy), expected);
   await assert.rejects(run(['setup-db.mjs', '--existing-empty'], {MYSQL_DATABASE: fresh}), /subprocess failed/);
   assert.deepEqual(await definition(fresh), expected);
   await migrate(fresh); assert.deepEqual(await definition(fresh), expected);
   await db.query('USE `' + fresh + '`');
   const [history] = await db.query('SELECT version,success FROM flyway_schema_history WHERE version IS NOT NULL ORDER BY installed_rank');
-  assert.deepEqual(history.map(r => [r.version, Number(r.success)]), Array.from({length:8},(_,i)=>[String(i+1),1]));
+  assert.deepEqual(history.map(r => [r.version, Number(r.success)]), Array.from({length:14},(_,i)=>[String(i+1),1]));
   // V7 운영 형태의 기존 회원·구매·일반/배틀 풀이를 보존하며 V8로 올린다.
   const upgrade=await create('v7data'),oldTarget=process.env.FLYWAY_TARGET;
   process.env.FLYWAY_TARGET='7';
@@ -89,12 +89,12 @@ try {
   const [[granted]]=await db.execute("SELECT COUNT(*) AS n,SUM(rp) AS xp FROM study_records WHERE user_id=? AND reward_status='legacy_granted'",[owner]);assert.equal(Number(granted.n),2);assert.equal(Number(granted.xp),20);
   const [[ledger]]=await db.execute('SELECT SUM(amount) AS n FROM xp_ledger WHERE user_id=?',[owner]);assert.equal(Number(ledger.n),20);
   await migrate(upgrade);console.log('PASS: V7 회원·지갑·구매권·부스터·장착·기존 풀이 보존 및 V8 분류/주제 보완·반복 적용');
-  console.log('PASS: fresh db:setup, refusal to reset populated DB, fresh migrate, V1 baseline→V2, repeated migrate and Flyway history (36 business tables).');
+  console.log('PASS: fresh db:setup, refusal to reset populated DB, fresh migrate, V1 baseline→V2, repeated migrate and Flyway history (49 business tables).');
   await db.query('USE `'+fresh+'`');
   await importBank(db); console.log('Certificate seed:', JSON.stringify(await importCertificates(db)));
   await run(['--test', '--test-concurrency=1', 'test.mjs', 'db-test.mjs', 'auth-test.mjs',
     '../mysql/account-test.mjs', '../mysql/record-test.mjs', '../mysql/certificate-test.mjs',
-    '../mysql/migrate.test.mjs', '../mysql/features-test.mjs', '../mysql/speed-test.mjs', '../mysql/battle-test.mjs', '../mysql/purchase-test.mjs', '../mysql/special-reward-test.mjs', '../mysql/general-reward-test.mjs', '../../app/tests/mysql-mode.test.mjs', '../../app/tests/catalog.test.mjs', '../../app/tests/quest-time.test.mjs'], {MYSQL_DATABASE: fresh});
+    '../mysql/migrate.test.mjs', '../mysql/features-test.mjs', '../mysql/speed-test.mjs', '../mysql/battle-test.mjs', '../mysql/purchase-test.mjs', '../mysql/special-reward-test.mjs', '../mysql/general-reward-test.mjs', '../mysql/security-integration-test.mjs', '../mysql/llm-integration-test.mjs', '../mysql/friend-battle-test.mjs', '../mysql/subscription-test.mjs', '../mysql/account-notify-test.mjs', '../../app/tests/mysql-mode.test.mjs', '../../app/tests/catalog.test.mjs', '../../app/tests/quest-time.test.mjs'], {MYSQL_DATABASE: fresh});
 } finally {
   for (const name of made) {
     assert(name.startsWith(prefix + '_') && /^[a-z0-9_]+$/.test(name));
