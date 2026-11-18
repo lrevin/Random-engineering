@@ -87,6 +87,7 @@ function quiz(fetchBankQuestions,cache=new Map(),bundled=[{...q,q:'내장 문제
  return load('quiz',{
   '@react-native-async-storage/async-storage':{__esModule:true,default:{getItem:async key=>cache.get(key)??null,setItem:async(key,value)=>cache.set(key,value)}},
   '@/data':{TOPICS:[]},'@/data/quizbank':{QUIZ_BANK:{'ds-01':bundled},BANK_BUNDLED_FULL:full},'./api':{fetchBankQuestions},
+  './auth':{mysqlAuth:{getUserId:()=>null}},
  });
 }
 test('full bundled bank works without network and ignores old domain downloads',async()=>{
@@ -177,6 +178,7 @@ function stateHarness() {
   // 저장 키 목록은 실제 모듈을 그대로 씀 (지우기도 같은 가짜 저장소에서)
   './local-data':load('local-data',{'@react-native-async-storage/async-storage':{__esModule:true,default:storage}}),
   './kakao-login':{kakaoSignIn:async()=>null},
+  './social':{unregisterPush:async()=>{}},
   './progress-sync':{syncProgress:async()=>{}},
   './stats':{dateKey:()=> '2026-11-13'},'./notify':{cancelAllNotifications:async()=>{},rescheduleReminders:async()=>{}},
   './auth':{mysqlAuth:auth},'./auth-client':authClient,'./record-sync':{syncMySqlRecords,enqueueRecordOperation},

@@ -36,20 +36,10 @@ function fakeReq(body, auth = 'Bearer ok') {
 }
 const auth = { async me(h) { if (h !== 'Bearer ok') { const { AuthError } = await import('./auth.mjs'); throw new AuthError('unauthorized', 401); } return { user: { id: 'u1' } }; } };
 
-test('퀴즈 AI는 로그인 회원만, 토큰은 서버가 붙이고, 하루 횟수 · 새로 만들기 횟수 제한', async () => {
-  assert.equal(quizProxyRoutes(auth, { url: 'http://q', token: '' }), null, '토큰 없으면 꺼짐');
-  const sent = [];
-  const fetcher = async (url, init) => { sent.push([url, init.headers['x-quiz-token'], JSON.parse(init.body)]); return { ok: true, json: async () => ({ questions: [{ q: 'a' }], fresh: 1 }) }; };
-  const route = quizProxyRoutes(auth, { url: 'http://q/', token: 'secret-token', fetcher, now: () => new Date('2026-11-17T03:00:00Z') });
-  const call = async (body, h) => { let out; await route(fakeReq(body, h), '/me/quiz', (s, b) => { out = [s, b]; }); return out; };
-  assert.equal((await call({ topicId: 'os-01' }, 'Bearer bad'))[0], 401);
-  assert.equal((await call({ topicId: '../x' }))[0], 400);
-  assert.deepEqual(await call({ topicId: 'os-01', count: 4, avoid: ['x'], fresh: true }), [200, { questions: [{ q: 'a' }], fresh: 1 }]);
-  assert.deepEqual(sent[0], ['http://q/quiz', 'secret-token', { topicId: 'os-01', count: 4, avoid: ['x'], fresh: true }]);
-  for (let i = 1; i < QUIZ_DAILY_LIMIT; i++) await call({ topicId: 'os-01', fresh: true });
-  assert.equal(sent.filter(([, , b]) => b.fresh).length, QUIZ_FRESH_DAILY_LIMIT, '새로 만들기는 하루 한도까지만');
-  assert.deepEqual(await call({ topicId: 'os-01' }), [429, { error: 'quiz_daily_limit' }]);
-  assert.equal(sent.length, QUIZ_DAILY_LIMIT);
+test('이전 AI 직접 요청은 회원 인증 후 학습 발급 경로로 안내하고 LLM을 중복 호출하지 않음',async()=>{
+ const sent=[];const route=quizProxyRoutes(auth,{url:'http://q',token:'test',fetcher:()=>sent.push(1)});
+ let out;await route(fakeReq({topicId:'ds-01'},'Bearer bad'),'/me/quiz',(s,b)=>out=[s,b]);assert.equal(out[0],401);
+ await route(fakeReq({topicId:'ds-01'}),'/me/quiz',(s,b)=>out=[s,b]);assert.deepEqual(out,[409,{error:'quiz_activity_required'}]);assert.equal(sent.length,0);
 });
 
 test('앱에는 퀴즈 서버 토큰이 없음', () => {

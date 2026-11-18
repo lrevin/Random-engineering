@@ -1,0 +1,40 @@
+-- 일반 학습의 AI 생성 작업과 불변 문제 은행 연결. V1~V10은 변경하지 않는다.
+CREATE TABLE quiz_jobs (
+ id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL PRIMARY KEY,
+ topic_id VARCHAR(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+ status VARCHAR(16) NOT NULL DEFAULT 'queued',
+ requested_count SMALLINT UNSIGNED NOT NULL DEFAULT 4,
+ accepted_count SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+ attempt_count SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+ available_at DATETIME(3) NOT NULL,
+ deadline_at DATETIME(3) NOT NULL,
+ worker_id VARCHAR(80) NULL,
+ lease_token CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NULL,
+ lease_expires_at DATETIME(3) NULL,
+ request_spec JSON NOT NULL,
+ result_summary JSON NULL,
+ response_hash BINARY(32) NULL,
+ created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+ started_at DATETIME(3) NULL,
+ finished_at DATETIME(3) NULL,
+ updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+ active_slot TINYINT GENERATED ALWAYS AS (IF(status IN ('queued','running'),1,NULL)) STORED,
+ UNIQUE KEY jobs_active(topic_id,active_slot),
+ KEY jobs_queue(status,available_at,created_at),
+ KEY jobs_lease(status,lease_expires_at),
+ FOREIGN KEY(topic_id) REFERENCES topics(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+ CONSTRAINT jobs_status_ck CHECK(status IN ('queued','running','succeeded','partial','failed','cancelled')),
+ CONSTRAINT jobs_count_ck CHECK(requested_count BETWEEN 1 AND 4 AND accepted_count<=requested_count),
+ CONSTRAINT jobs_json_ck CHECK(JSON_TYPE(request_spec)='OBJECT' AND (result_summary IS NULL OR JSON_TYPE(result_summary)='OBJECT')),
+ CONSTRAINT jobs_deadline_ck CHECK(deadline_at>created_at),
+ CONSTRAINT jobs_lease_ck CHECK(status<>'running' OR (worker_id IS NOT NULL AND lease_token IS NOT NULL AND lease_expires_at IS NOT NULL)),
+ CONSTRAINT jobs_finish_ck CHECK((status IN ('queued','running') AND finished_at IS NULL) OR (status IN ('succeeded','partial','failed','cancelled') AND finished_at IS NOT NULL))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+ALTER TABLE questions ADD generation_job_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NULL,
+ ADD KEY questions_generation(generation_job_id),
+ ADD FOREIGN KEY(generation_job_id) REFERENCES quiz_jobs(id) ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE quiz_attempts ADD generation_job_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NULL,
+ ADD quiz_fixed_at DATETIME(3) NULL,
+ ADD KEY attempts_generation(generation_job_id),
+ ADD FOREIGN KEY(generation_job_id) REFERENCES quiz_jobs(id) ON DELETE RESTRICT ON UPDATE RESTRICT;
+UPDATE quiz_attempts SET quiz_fixed_at=study_ended_at WHERE purpose='study' AND study_ended_at IS NOT NULL;

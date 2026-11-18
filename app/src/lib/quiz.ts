@@ -24,10 +24,7 @@ export interface QuizSet {
 export const QUIZ_LENGTH = 7;
 export const AI_COUNT = 4;
 
-/**
- * 퀴즈 AI 서버(api/quiz-server)는 API 서버 POST /me/quiz 를 거쳐서만 부름 (로그인한 회원만, 하루 횟수 제한).
- * 퀴즈 서버 주소·토큰은 앱에 넣지 않음 (앱 안의 값은 누구나 꺼낼 수 있음). 실패하면 저장된 AI 문제·기본 문제·대체 연습 문제 사용
- */
+// 회원의 AI 생성·출제는 서버 activity 경로에서 관리한다. 이 파일은 게스트·로컬 보충용이다.
 
 // ───────── 검증 ─────────
 function isQuestion(x: unknown): x is QuizQuestion {
@@ -173,27 +170,6 @@ export const offlineQuiz = (topic: Topic): QuizSet => ({
 // 말투 규칙(2026-10)이 생기기 전에 저장한 문제는 쓰지 않도록 키에 버전을 붙임
 const aiCacheKey = (id: string) => `pg.quiz.ai2.${id}`;
 
-/**
- * 퀴즈 AI에게 새 문제를 받아 옴. 미리 만든 문제(avoid)를 함께 보내서 비슷하지 않은 새 유형으로 만들게 함.
- * fresh면 그 자리에서 새로 만들고 2번 검수한 문제를 받음 (공부 시작을 누른 즉시). 서버는 검수를 통과한 문제만 줌.
- * 로그인한 회원만 API 서버를 거쳐 부르고, 비회원이거나 실패하면 빈 배열을 반환해 캐시·기본 문제로 보충
- */
-async function fetchAiQuestions(topic: Topic, avoid: QuizQuestion[], fresh: boolean, count = AI_COUNT): Promise<QuizQuestion[]> {
-  const body = { topicId: topic.id, count, avoid: avoid.map((q) => q.q).slice(0, 40), fresh };
-  // 로그인 모듈은 쓸 때만 불러옴 (기기 저장소를 쓰는 모듈이라, 이 파일을 쓰는 서버 테스트에서 미리 불러오지 않게)
-  const { mysqlAuth } = await import("./auth");
-  if (mysqlAuth.getUserId()) {
-    try {
-      const data = await mysqlAuth.aiQuiz(body);
-      const qs = validQuestions((data as { questions?: unknown } | null)?.questions);
-      if (qs.length) return qs;
-    } catch {
-      // 서버가 꺼져 있으면 다음 방법으로
-    }
-  }
-  return [];
-}
-
 async function readAiCache(topicId: string): Promise<QuizQuestion[]> {
   try {
     const raw = await AsyncStorage.getItem(aiCacheKey(topicId));
@@ -202,13 +178,6 @@ async function readAiCache(topicId: string): Promise<QuizQuestion[]> {
     return [];
   }
 }
-/** 받은 AI 문제는 이 휴대폰에도 모아 둠 (오프라인일 때 다시 씀, 최대 30개) */
-async function saveAiCache(topicId: string, qs: QuizQuestion[]) {
-  const prev = await readAiCache(topicId);
-  const merged = distinct([...qs, ...prev]).slice(0, 30);
-  AsyncStorage.setItem(aiCacheKey(topicId), JSON.stringify(merged)).catch(() => {});
-}
-
 // ───────── MySQL 기본 문제 조회 및 기기 캐시 ─────────
 const bankCacheKey = (id: string) => `pg.mysql.bank.${id}`;
 const BANK_CACHE_MS = 7 * 24 * 60 * 60 * 1000;
@@ -232,18 +201,15 @@ export async function bankQuestions(topicId: string): Promise<QuizQuestion[]> {
 }
 
 // ───────── 한 번 풀 퀴즈 만들기 ─────────
-async function buildQuiz(topic: Topic, fresh: boolean, seen: string[] = []): Promise<QuizSet> {
+async function buildQuiz(topic: Topic, seen: string[] = []): Promise<QuizSet> {
   const all = distinct((await bankQuestions(topic.id)).map((q) => ({ ...q, src: "bank" as const })));
   // 다시 공부: 전에 풀었던 문제(seen)와 비슷한 건 빼고 새 문제 위주로 (남는 게 모자라면 전체에서)
   const seenQs: QuizQuestion[] = seen.map((q) => ({ type: "ox", q, answer: true, explain: "" }));
   const unseen = distinct(all, seenQs);
   const bank = unseen.length >= QUIZ_LENGTH - AI_COUNT ? unseen : all;
 
-  // AI 문제: 미리 만든 문제와 비슷하면 버림
-  let ai: QuizQuestion[] = distinct(await fetchAiQuestions(topic, [...bank, ...seenQs], fresh), [...bank, ...seenQs]).map((q) => ({ ...q, src: "ai" as const }));
-  if (ai.length) saveAiCache(topic.id, ai).catch(() => {});
-  else ai = distinct(shuffle(await readAiCache(topic.id)), bank).map((q) => ({ ...q, src: "ai" as const }));
-  ai = pickQuestions(ai, AI_COUNT);
+  // 기존 기기 AI 캐시만 재사용하며 서버에 새 생성을 요청하지 않는다.
+  const ai = pickQuestions(distinct(shuffle(await readAiCache(topic.id)), [...bank, ...seenQs]).map((q) => ({ ...q, src: "ai" as const })), AI_COUNT);
 
   // 나머지는 미리 만든 문제로 채우고, 그래도 모자라면 오프라인 연습 문제로
   const picked = [...ai, ...pickQuestions(distinct(bank, ai), QUIZ_LENGTH - ai.length)];
@@ -260,44 +226,38 @@ const PREPARED_TTL = 3 * 60 * 60 * 1000;
 
 /**
  * 이번에 풀 퀴즈를 가져옵니다. 공부 시작 때 만들기 시작한 게 있으면 그것을,
- * 없으면(퀴즈 다시 풀기 등) 서버에 쌓인 검수 통과 문제로 새 조합을 만듭니다.
+ * 없으면 내장 은행·기존 기기 캐시로 새 조합을 만듭니다.
  */
 export function loadQuiz(topic: Topic): Promise<QuizSet> {
   const ready = prepared.get(topic.id);
   prepared.delete(topic.id);
-  if (ready && Date.now() - ready.at < PREPARED_TTL) return ready.p.catch(() => buildQuiz(topic, false));
-  return buildQuiz(topic, false);
+  if (ready && Date.now() - ready.at < PREPARED_TTL) return ready.p.catch(() => buildQuiz(topic));
+  return buildQuiz(topic);
 }
 
-/**
- * 공부 시작을 누른 즉시 AI 문제 만들기를 시작 (만든 직후 서버가 2번 검수).
- * 주제를 뽑기만 하고 다시 뽑는 경우에는 AI를 부르지 않아 비용이 들지 않음.
- * 같은 주제로 이미 시작했으면 다시 만들지 않음 (공부 화면에서도 불러도 됨).
- */
+/** 게스트·로컬 보충용 퀴즈를 미리 조합한다. 실시간 AI 요청·토큰은 사용하지 않는다. */
 export const prefetchQuiz = (topic: Topic, seen: string[] = []) => {
   const ready = prepared.get(topic.id);
   if (ready && Date.now() - ready.at < PREPARED_TTL && !seen.length) return;
-  const p = buildQuiz(topic, true, seen);
+  const p = buildQuiz(topic, seen);
   p.catch(() => {});
   prepared.set(topic.id, { at: Date.now(), p });
 };
 
-// ───────── 배틀 문제: 전부 AI가 새로 만들고 2번 검수한 문제 ─────────
+// ───────── 게스트 배틀 보충 문제 ─────────
 /** 배틀 본 문제 수 · 연장전에 한 번에 만드는 문제 수 */
 export const BATTLE_QUIZ_LENGTH = 5;
 export const OVERTIME_BATCH = 2;
 
 /**
- * 배틀용 AI 문제 count개. 퀴즈 AI 서버에 fresh로 요청해 그 자리에서 만들고 2번 검수한 문제만 받음.
+ * 게스트 배틀 보충 count개. 실시간 LLM은 호출하지 않고 기존 기기 AI 캐시·내장 은행을 사용.
  * avoid(이미 낸 배틀 문제 · 문제 은행)와 비슷한 문제는 버림.
  * AI 서버가 꺼져 있으면 이 휴대폰에 모아 둔 AI 문제 → 문제 은행 → 연습 문제 순으로 채워 배틀이 멈추지 않게 함.
  */
 export async function battleQuestions(topic: Topic, count: number, avoid: QuizQuestion[] = []): Promise<QuizQuestion[]> {
   const bank = distinct((await bankQuestions(topic.id)).map((q) => ({ ...q, src: "bank" as const })));
   const against = [...avoid, ...bank];
-  let ai = distinct(await fetchAiQuestions(topic, against, true, count), against).map((q) => ({ ...q, src: "ai" as const }));
-  if (ai.length) saveAiCache(topic.id, ai).catch(() => {});
-  if (ai.length < count) ai = [...ai, ...distinct(shuffle(await readAiCache(topic.id)), [...against, ...ai]).map((q) => ({ ...q, src: "ai" as const }))];
+  const ai = distinct(shuffle(await readAiCache(topic.id)), against).map((q) => ({ ...q, src: "ai" as const }));
   let out = pickQuestions(ai, count);
   if (out.length < count) out = [...out, ...pickQuestions(distinct(bank, [...avoid, ...out]), count - out.length)];
   if (out.length < count) out = [...out, ...pickQuestions(distinct(offlineQuestions(topic), [...avoid, ...out]), count - out.length)];
