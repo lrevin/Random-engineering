@@ -80,6 +80,7 @@ import b_mt_analysis_1 from "./mt-analysis-1.json";
 import b_mt_crystal_1 from "./mt-crystal-1.json";
 import b_mt_mech_1 from "./mt-mech-1.json";
 import b_mt_phase_1 from "./mt-phase-1.json";
+import b_mt_types_1 from "./mt-types-1.json";
 import b_net_1 from "./net-1.json";
 import b_net_2 from "./net-2.json";
 import b_net_3 from "./net-3.json";
@@ -185,6 +186,7 @@ const FILES = [
   b_mt_crystal_1,
   b_mt_mech_1,
   b_mt_phase_1,
+  b_mt_types_1,
   b_net_1,
   b_net_2,
   b_net_3,
