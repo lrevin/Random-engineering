@@ -76,6 +76,7 @@ import b_me_fluid_1 from "./me-fluid-1.json";
 import b_me_mfg_1 from "./me-mfg-1.json";
 import b_me_solid_1 from "./me-solid-1.json";
 import b_me_thermo_1 from "./me-thermo-1.json";
+import b_mt_analysis_1 from "./mt-analysis-1.json";
 import b_net_1 from "./net-1.json";
 import b_net_2 from "./net-2.json";
 import b_net_3 from "./net-3.json";
@@ -177,6 +178,7 @@ const FILES = [
   b_me_mfg_1,
   b_me_solid_1,
   b_me_thermo_1,
+  b_mt_analysis_1,
   b_net_1,
   b_net_2,
   b_net_3,
