@@ -1,7 +1,9 @@
-import { useFocusEffect } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { Pressable, Share, TextInput, View } from "react-native";
+import { askChallenge, confirmChallenge } from "@/components/challenge";
 import { showDialog } from "@/components/Dialog";
+import { FriendAvatar } from "@/components/FriendAvatar";
 import { Icon } from "@/components/Icon";
 import { LevelBadge } from "@/components/Rank";
 import { SectionTitle } from "@/components/StatTile";
@@ -9,30 +11,12 @@ import { Btn, Card, FONT, Row, Screen, T, tap } from "@/components/ui";
 import { useApp } from "@/lib/app-state";
 import { userLevel } from "@/lib/rank";
 import {
-  getFriends, removeFriend, requestFriend, respondFriend, socialEnabled, socialMessage,
-  type FriendsState,
+  getFriends, getInbox, removeFriend, requestFriend, respondChallenge, respondFriend, socialEnabled, socialMessage,
+  type Challenge, type FriendsState,
 } from "@/lib/social";
 import { inset, radius, raised, shadow, useColors } from "@/theme";
 
 const EMPTY: FriendsState = { friends: [], incoming: [], outgoing: [] };
-const AVATAR_COLORS = ["#3d6fd8", "#e0453a", "#2f8f5b", "#a05bd1", "#e07a1f", "#16a39a", "#d14d8b"];
-
-/** 닉네임 첫 글자 동그라미 (UID마다 색이 정해짐) + 접속 중 점 */
-function Avatar({ name, uid, size = 44, online, me }: { name: string; uid: string; size?: number; online?: boolean; me?: boolean }) {
-  const c = useColors();
-  const color = me ? "#f7b500" : AVATAR_COLORS[[...uid].reduce((a, ch) => a + ch.charCodeAt(0), 0) % AVATAR_COLORS.length];
-  return (
-    <View style={{ width: size, height: size }}>
-      <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: color, alignItems: "center", justifyContent: "center" }}>
-        <T size={Math.round(size * 0.42)} weight="bold" style={{ color: me ? "#1d2742" : "#ffffff", lineHeight: Math.round(size * 0.55) }}>{name.slice(0, 1)}</T>
-      </View>
-      {online !== undefined && (
-        <View style={{ position: "absolute", right: -1, bottom: -1, width: size * 0.32, height: size * 0.32, borderRadius: size, borderWidth: 2.5, borderColor: c.paper, backgroundColor: online ? c.success : c.line2 }} />
-      )}
-    </View>
-  );
-}
-
 export default function Friends() {
   const { uid, prefs, xp } = useApp();
   const c = useColors();
@@ -41,18 +25,42 @@ export default function Friends() {
   const [notice, setNotice] = useState<{ text: string; ok: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
   const [offline, setOffline] = useState(false);
+  // 친구와 주고받은 1:1 배틀 신청 (대기 중인 것)
+  const [challenges, setChallenges] = useState<{ incoming: Challenge[]; outgoing: Challenge[] }>({ incoming: [], outgoing: [] });
+  const [now, setNow] = useState(() => Date.now());
 
   const refresh = useCallback(() => {
     if (!socialEnabled) return;
     getFriends().then((s) => { setState(s); setOffline(false); }).catch(() => setOffline(true));
+    getInbox().then((i) => setChallenges({ incoming: i.incoming ?? [], outgoing: i.outgoing ?? [] })).catch(() => {});
   }, []);
 
   // 이 탭을 보는 동안 5초마다 새로고침 (접속 중 표시 · 새 친구 신청)
   useFocusEffect(useCallback(() => {
     refresh();
     const t = setInterval(refresh, 5000);
-    return () => clearInterval(t);
+    // 배틀 신청 남은 시간 표시용 1초 갱신
+    const s = setInterval(() => setNow(Date.now()), 1000);
+    return () => { clearInterval(t); clearInterval(s); };
   }, [refresh]));
+
+  /** 친구를 누르면: 정보 보기 · 1:1 배틀 신청 */
+  const openFriend = (f: { uid: string; nickname: string; level: number; online: boolean }) => {
+    tap();
+    showDialog({
+      title: f.nickname,
+      message: `${f.level}레벨 · ${f.online ? "접속 중" : "접속 안 함"}`,
+      buttons: [
+        { text: "정보 보기", onPress: () => router.push({ pathname: "/friend", params: { uid: f.uid } }) },
+        { text: "1:1 배틀 신청", onPress: () => setTimeout(() => confirmChallenge(f, refresh), 250) },
+        { text: "닫기", style: "cancel" },
+      ],
+    });
+  };
+  const left = (c: Challenge) => {
+    const sec = Math.max(0, Math.round((Date.parse(c.expiresAt) - now) / 1000));
+    return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
+  };
 
   const run = async (fn: () => Promise<FriendsState>, ok: string) => {
     setBusy(true);
@@ -103,7 +111,7 @@ export default function Friends() {
       {/* 내 UID 카드 */}
       <View style={{ borderRadius: radius.lg, overflow: "hidden", backgroundColor: "#1d2742", ...shadow(c, 2) }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 14, padding: 18 }}>
-          <Avatar name={myName} uid={uid} size={56} me />
+          <FriendAvatar name={myName} uid={uid} size={56} me />
           <View style={{ flex: 1, gap: 2 }}>
             <T size={13} style={{ color: "#9aa3c0" }}>내 UID · 친구에게 알려 주세요</T>
             <T size={26} weight="bold" selectable style={{ color: "#fffaf0", letterSpacing: 3 }}>{uid}</T>
@@ -149,13 +157,35 @@ export default function Friends() {
             )}
           </Card>
 
+          {/* 1:1 배틀 신청 (받은 것 · 보낸 것) */}
+          {challenges.incoming.map((ch) => (
+            <Card key={ch.id} accent style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+              <Icon name="swords" size={30} color={c.accent} />
+              <View style={{ flex: 1 }}>
+                <T size={15} weight="bold" numberOfLines={2}>{ch.friend.nickname}님이 1:1 배틀을 신청했어요</T>
+                <T size={12} color="muted">{left(ch)} 안에 수락하면 바로 시작</T>
+              </View>
+              <Btn title="보기" size="sm" variant="accent" onPress={() => askChallenge(ch, refresh)} />
+            </Card>
+          ))}
+          {challenges.outgoing.map((ch) => (
+            <Card key={ch.id} style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+              <Icon name="clock" size={28} color={c.ink2} />
+              <View style={{ flex: 1 }}>
+                <T size={15} weight="bold" numberOfLines={2}>{ch.friend.nickname}님에게 배틀 신청 중</T>
+                <T size={12} color="muted">수락을 기다려요 · {left(ch)} 남음</T>
+              </View>
+              <Btn title="취소" size="sm" variant="ghost" onPress={() => respondChallenge(ch.id, "cancel").then(refresh).catch((e) => setNotice({ text: socialMessage(e), ok: false }))} />
+            </Card>
+          ))}
+
           {/* 받은 친구 신청 */}
           {state.incoming.length > 0 && (
             <>
               <SectionTitle title={`받은 친구 신청 ${state.incoming.length}`} />
               {state.incoming.map((f) => (
                 <Card key={f.uid} style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                  <Avatar name={f.nickname} uid={f.uid} />
+                  <FriendAvatar name={f.nickname} uid={f.uid} />
                   <View style={{ flex: 1 }}>
                     <T size={16} weight="bold" numberOfLines={1}>{f.nickname}</T>
                     <T size={12} color="muted">{f.level}레벨 · {f.uid}</T>
@@ -182,15 +212,16 @@ export default function Friends() {
                 <Pressable
                   key={f.uid}
                   disabled={f.me}
+                  onPress={() => openFriend(f)}
                   onLongPress={() => askRemove(f.uid, f.nickname)}
-                  accessibilityHint={f.me ? undefined : "길게 누르면 친구에서 뺄 수 있어요"}
+                  accessibilityHint={f.me ? undefined : "누르면 정보 보기 · 1:1 배틀 신청, 길게 누르면 친구에서 뺄 수 있어요"}
                   style={({ pressed }) => ({
                     flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12, paddingHorizontal: 14,
                     backgroundColor: f.me ? c.successSoft : pressed ? c.chip : c.paper, borderTopWidth: i ? 1 : 0, borderTopColor: c.line,
                   })}
                 >
                   <T size={17} weight="bold" color={f.me ? "success" : i < 3 ? "accent" : "ink2"} style={{ width: 22, textAlign: "center" }}>{i + 1}</T>
-                  <Avatar name={f.nickname} uid={f.uid} online={f.me ? undefined : f.online} me={f.me} />
+                  <FriendAvatar name={f.nickname} uid={f.uid} online={f.me ? undefined : f.online} me={f.me} />
                   <View style={{ flex: 1 }}>
                     <T size={16} weight="bold" color={f.me ? "success" : "ink"} numberOfLines={1}>{f.nickname}{f.me ? " (나)" : ""}</T>
                     <T size={12} color="muted">{f.me ? "나" : f.online ? "접속 중" : "접속 안 함"}</T>
@@ -201,7 +232,7 @@ export default function Friends() {
               ))}
             </View>
           )}
-          {state.friends.length > 0 && <T size={12} color="muted" center>친구를 길게 누르면 친구에서 뺄 수 있어요.</T>}
+          {state.friends.length > 0 && <T size={12} color="muted" center>친구를 누르면 정보 보기 · 1:1 배틀 신청, 길게 누르면 친구에서 뺄 수 있어요.</T>}
         </>
       )}
     </Screen>

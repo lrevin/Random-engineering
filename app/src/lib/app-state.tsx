@@ -11,6 +11,7 @@ import { resetBoost, applyServerBoost } from "./booster";
 import { resetSkins, applyServerCosmetics } from "./skins";
 import { dateKey } from "./stats";
 import { cancelAllNotifications, rescheduleReminders } from "./notify";
+import { unregisterPush } from "./social";
 import { mysqlAuth } from "./auth";
 import { kakaoSignIn } from "./kakao-login";
 import { syncProgress } from "./progress-sync";
@@ -563,6 +564,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const id = ownerRef.current;
     if (id) await syncProgress(id, () => ownerRef.current === id).catch(() => {});
     await archiveApiAccount();
+    // 이 기기로 이 계정의 배틀 신청 알림이 더 오지 않게
+    await unregisterPush();
     try { await mysqlAuth.signOut(); } catch { /* Clear local login even when offline. */ }
     await clearLocal();
   }, [archiveApiAccount, clearLocal]);

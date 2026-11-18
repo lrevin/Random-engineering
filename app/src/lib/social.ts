@@ -72,8 +72,8 @@ export interface Battle {
   reason?: string;
   recordId?: string | null;
   id: string;
-  /** random = 서버의 공통 관심 주제 랜덤 매칭 배틀 */
-  kind?: "random";
+  /** random = 서버의 공통 관심 주제 랜덤 매칭 배틀 · friend = 친구에게 신청한 1:1 배틀 */
+  kind?: "random" | "friend";
   status: BattleStatus;
   from: { uid: string; nickname: string };
   to: { uid: string; nickname: string };
@@ -101,6 +101,31 @@ export interface Battle {
   outcome: { winner: string | null; xp: number } | null;
   /** 서버 시각 (휴대폰 시계가 달라도 같은 순간에 시작하도록 보정) */
   serverNow: string;
+}
+
+/** 친구에게 보낸 · 받은 1:1 배틀 신청 */
+export interface Challenge {
+  id: string;
+  status: "pending" | "accepted" | "declined" | "canceled" | "expired";
+  direction: "incoming" | "outgoing";
+  friend: { uid: string | null; nickname: string };
+  createdAt: string;
+  expiresAt: string;
+  battleId: string | null;
+}
+
+/** 친구 정보 보기 */
+export interface FriendInfo {
+  uid: string;
+  nickname: string;
+  level: number;
+  xp: number;
+  weekXp: number;
+  online: boolean;
+  lastSeenAt: string | null;
+  title: string | null;
+  /** 나와 둘이 겨룬 배틀 (내 기준) */
+  versus: { wins: number; losses: number; draws: number };
 }
 
 export class SocialError extends Error {
@@ -155,6 +180,9 @@ export function socialMessage(e: unknown) {
     busy: "이미 진행 중인 배틀이 있어요.",
     opponent_busy: "상대가 다른 배틀을 하고 있어요.",
     not_pending: "이미 끝났거나 취소된 배틀이에요.",
+    challenge_pending: "이미 보낸 배틀 신청이 있어요. 상대의 답을 기다려 주세요.",
+    challenge_incoming: "상대가 먼저 배틀을 신청했어요. 받은 신청을 확인해 주세요.",
+    questions_unavailable: "배틀 문제를 준비하지 못했어요. 잠시 후 다시 시도해 주세요.",
   } as Record<string, string>)[code] ?? "문제가 생겼어요. 잠시 후 다시 시도해 주세요.";
 }
 
@@ -167,7 +195,26 @@ export const respondFriend = (uid: string, accept: boolean) =>
 export const removeFriend = (uid: string) => call<FriendsState>("DELETE", `/social/friends/${uid}`);
 
 // 배틀의 시간·답안·승패·XP는 서버가 결정합니다.
-export const getInbox = () => call<{ incoming: Battle[]; current: Battle | null }>("GET", "/battles/inbox");
+export const getInbox = () => call<{ incoming: Challenge[]; outgoing?: Challenge[]; current: Battle | null }>("GET", "/battles/inbox");
+export const getFriendInfo = (uid: string) => call<FriendInfo>("GET", `/social/friends/${uid}`);
+/** 친구에게 1:1 배틀 신청 (배틀권 1장 예약, 10분 안에 수락 안 하면 반환). notified: 접속 안 한 친구에게 휴대폰 알림을 보냄 */
+export const challengeFriend = (uid: string) => call<{ challenge: Challenge; notified: boolean }>("POST", "/battles/challenges", { uid, requestId: Crypto.randomUUID() });
+export const respondChallenge = (id: string, action: "accept" | "decline" | "cancel") =>
+  call<{ challenge: Challenge; battle: Battle | null }>("POST", `/battles/challenges/${id}/${action}`, {});
+
+// ───────── 푸시 알림 토큰 (이 기기) ─────────
+let pushToken: string | null = null;
+export async function registerPush(token: string, platform: string) {
+  await call("POST", "/me/push-token", { token, platform });
+  pushToken = token;
+}
+/** 로그아웃 전에: 이 기기로 다른 사람의 알림이 오지 않게 */
+export async function unregisterPush() {
+  if (!pushToken) return;
+  const token = pushToken;
+  pushToken = null;
+  await call("DELETE", "/me/push-token", { token }).catch(() => {});
+}
 export const getBattle = (id: string) => call<Battle>("GET", `/battles/${id}`);
 export const getBattleHistory = () => call<{battles: Battle[]}>("GET", "/battles/history");
 export const setStudySkip = (id: string, agree: boolean) => call<Battle>("POST", `/battles/${id}/study-skip`, {agree});
