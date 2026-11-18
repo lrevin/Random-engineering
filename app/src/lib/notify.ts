@@ -39,7 +39,35 @@ async function ensureChannels() {
     importance: Notifications.AndroidImportance.MAX,
     vibrationPattern: [0, 250, 150, 250],
   });
+  await Notifications.setNotificationChannelAsync("battle", {
+    name: "배틀 신청",
+    importance: Notifications.AndroidImportance.HIGH,
+    vibrationPattern: [0, 250, 150, 250],
+  });
   channelsReady = true;
+}
+
+/**
+ * 원격 푸시용 Expo 푸시 토큰. 알림 권한이 없거나 EAS 프로젝트(app.json extra.eas.projectId)가 아직 없으면 null.
+ * 안드로이드에서 실제로 받으려면 FCM 설정(google-services.json · EAS의 FCM 키)도 있어야 함.
+ */
+export async function getPushToken(): Promise<string | null> {
+  if (!enabled) return null;
+  try {
+    if (!(await requestNotificationPermission())) return null;
+    const projectId = (Constants.expoConfig?.extra as { eas?: { projectId?: string } } | undefined)?.eas?.projectId ?? Constants.easConfig?.projectId;
+    if (!projectId) return null;
+    return (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+  } catch {
+    return null;
+  }
+}
+
+/** 알림을 눌러 앱을 열었을 때 (data 를 넘겨줌) */
+export function onNotificationTap(fn: (data: Record<string, unknown>) => void) {
+  if (!enabled) return () => {};
+  const sub = Notifications.addNotificationResponseReceivedListener((r) => fn((r.notification.request.content.data ?? {}) as Record<string, unknown>));
+  return () => sub.remove();
 }
 
 export async function requestNotificationPermission(): Promise<boolean> {
@@ -142,11 +170,11 @@ export async function cancelAllNotifications() {
 }
 
 /** 지금 바로 알림 (배틀 신청이 왔을 때). 알림을 못 쓰는 환경(웹 · 안드로이드 Expo Go)에서는 아무것도 안 함 */
-export async function notifyNow(title: string, body: string) {
+export async function notifyNow(title: string, body: string, data: Record<string, unknown> = {}) {
   if (!enabled || !(await requestNotificationPermission())) return;
   await ensureChannels();
   await Notifications.scheduleNotificationAsync({
-    content: { title, body, sound: true, data: { kind: "battle" } },
-    trigger: Platform.OS === "android" ? { channelId: "timer" } as never : null,
+    content: { title, body, sound: true, data: { kind: "battle", ...data } },
+    trigger: Platform.OS === "android" ? { channelId: "battle" } as never : null,
   });
 }

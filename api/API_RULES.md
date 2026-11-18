@@ -288,3 +288,12 @@ adb reverse tcp:8788 tcp:8788                    # 안드로이드 에뮬레이�
 - 팀 '빈자리 채우기'는 열린 팀 후보 20개를 잠그지 않고 읽은 뒤 고른 팀 하나만 잠그고 자리를 다시 확인한다.
 - 꾸미기 구매는 이미 가진 것이면 잔액보다 먼저 `already_owned`. 같은 requestId 동시 요청은 영수증을 잠금 읽기로 확인해 재전송으로 처리한다.
 - V10__lavender_to_honey.sql: 판매 종료한 라벤더 드림(lavender)을 허니 레몬(honey)으로 바꿔 준다. 둘 다 가진 사람은 1200 톱니바퀴를 돌려준다(reason='theme_refund', request_id='refund:lavender').
+
+## 뽑공 프리미엄 월 구독 (V12__subscriptions.sql, 규칙 숫자는 subscription-policy.mjs)
+토스페이먼츠 카드 자동결제(빌링). 월 4,900원, 결제가 될 때마다 톱니바퀴 300. 서버 환경변수 `TOSS_CLIENT_KEY` · `TOSS_SECRET_KEY`가 없으면 꺼짐(`available:false`, `billing_unavailable`).
+- `GET /me/subscription` 상태: none · active(매달 결제) · canceled(해지, 기간 끝까지 프리미엄) · past_due(결제 실패, 다시 시도 중, 프리미엄 꺼짐) · ended. 다음 결제일 · 가린 카드 번호. 빌링키는 앱에 보내지 않는다.
+- `POST /me/subscription/checkout` → `{path}`: 결제 페이지 `/billing/start?t=`(20분 서명 토큰). 이미 구독 중 `already_subscribed`, 해지했지만 기간이 남음 `subscription_canceled`.
+- 결제 페이지는 토스 SDK v2 `requestBillingAuth({method:"CARD"})` → 토스가 `/billing/success?authKey&customerKey`로 보냄 → 서버가 빌링키 발급(`POST /v1/billing/authorizations/issue`) → 첫 달 결제(`POST /v1/billing/{billingKey}`) → `ppobgong://billing?result=success|cancel|fail&code=`로 앱에 돌려보냄. 첫 결제가 거절되면 빌링키를 지운다.
+- `POST /me/subscription/cancel` 해지(다음 결제 안 함), `POST /me/subscription/resume` 해지 취소(기간이 남고 카드가 그대로일 때).
+- API 서버가 10분마다(`GET_LOCK`으로 한 번만) 결제일이 된 구독을 결제한다. 주문번호는 기간 시작 시각 + 시도 번호라 같은 달을 두 번 결제하지 않는다. 거절이면 하루 뒤 다시, 3번째 실패면 종료. 토스 응답을 못 받으면(시간 초과 · 5xx) 실패로 치지 않고 같은 주문번호로 `GET /v1/payments/orders/{orderId}` 확인 후 처리한다. 기간이 끝난 해지 구독은 종료하고 빌링키를 삭제(`DELETE /v1/billing/{billingKey}`)한다.
+- 프리미엄 = 운영자가 켠 값(`grantedPremium`) 또는 기간이 남은 구독(`wallet-state.mjs`). 결제 기록은 `subscription_payments`, 톱니바퀴는 `wallet_transactions(reason='premium_bonus', request_id='sub:'+주문번호)`.

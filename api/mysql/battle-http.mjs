@@ -6,7 +6,10 @@ export function battleRoutes(service){const hits=new Map();return async(req,path
  const reply=(status,body)=>send(status,body,{'Cache-Control':'no-store'}),time=Date.now(),key=rateKey(req);
  if(overLimit(hits,key,600,time)){reply(429,{error:'rate_limited'});return true;}
  try{const m=req.method,h=req.headers.authorization,item=/^\/battles\/([0-9a-f-]+)(?:\/(answers|result|overtime|forfeit|study-skip))?$/.exec(path);
-  if(path==='/match'&&m==='POST')reply(200,await service.join(h,await readJsonBody(req)));
+  const ch=/^\/battles\/challenges\/([0-9a-f-]+)\/(accept|decline|cancel)$/.exec(path);
+  if(path==='/battles/challenges'&&m==='POST')reply(200,await service.challenge(h,await readJsonBody(req)));
+  else if(ch&&m==='POST')reply(200,await service.respond(h,ch[1],ch[2]));
+  else if(path==='/match'&&m==='POST')reply(200,await service.join(h,await readJsonBody(req)));
   else if(path==='/match'&&m==='GET')reply(200,await service.match(h));
   else if(path==='/match'&&m==='DELETE')reply(200,await service.leave(h,await readJsonBody(req)));
   else if(path==='/battles/inbox'&&m==='GET')reply(200,await service.inbox(h));

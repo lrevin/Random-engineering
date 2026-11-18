@@ -11,6 +11,8 @@
 | POST `/social/friends/requests` `{uid}` | 신청. 서로 신청하면 즉시 친구 |
 | POST `/social/friends/requests/:uid/accept` 또는 `/decline` | 받은 신청 수락·거절 |
 | DELETE `/social/friends/:uid` | 관계 삭제 |
+| GET `/social/friends/:uid` | 친구 정보 보기: 닉네임 · 레벨 · 누적/이번 주 XP · 접속 상태 · 장착 칭호 · 나와의 배틀 전적. 친구가 아니면 404 |
+| POST `/me/push-token` `{token, platform}` | 이 기기의 Expo 푸시 토큰 등록 (DELETE 는 해제, 로그아웃할 때) |
 
 ## 매칭·진행
 
@@ -19,7 +21,9 @@
 | POST `/match` `{requestId: UUID}` | 배틀권 예약과 대기열 등록. 같은 UUID 재시도는 중복 차감하지 않음 |
 | GET `/match` | 대기 상태·매칭된 배틀. 대기 중 접속 표시 갱신 |
 | DELETE `/match` `{entryId}` | 해당 대기만 취소·반환. 이미 매칭되면 배틀 반환 |
-| GET `/battles/inbox` | 현재 배틀. 직접 초대는 제공하지 않아 incoming은 빈 배열 |
+| GET `/battles/inbox` | 현재 배틀 + 대기 중인 친구 배틀 신청(incoming 받은 것 · outgoing 보낸 것). 부를 때마다 접속 표시 갱신 |
+| POST `/battles/challenges` `{uid, requestId}` | 친구에게 1:1 배틀 신청. 친구 사이 · 둘 다 다른 배틀/대기 없음. 신청한 사람의 배틀권 예약, 10분 뒤 만료(반환). 친구가 30초 넘게 접속 안 했으면 휴대폰 푸시 "OO님에게 1:1 배틀 신청이 왔어요." (`notified`: 실제로 보냈는지) |
+| POST `/battles/challenges/:id/accept` · `/decline` · `/cancel` | 받은 사람 수락 · 거절, 보낸 사람 취소. 수락하면 받은 사람 배틀권을 쓰고 바로 배틀 시작(kind 'friend', 관심 주제가 겹치면 그중, 아니면 둘 중 누구의 주제든). 거절 · 취소 · 만료는 신청한 사람 배틀권 반환 |
 | GET `/battles/history` | 본인 최근 완료·무효 배틀 최대 50개 |
 | GET `/battles/:id` | 서버 단계·시간·본인 저장 답안·결과 |
 | POST `/battles/:id/study-skip` `{agree:boolean}` | 학습 중 동의·취소를 명시적으로 저장. 두 명 모두 동의하면 즉시 같은 퀴즈 시작 |
@@ -46,4 +50,4 @@ DB 프로필의 공통 관심 분야·자격증 연결 주제에서 매칭한다
 - API 프로세스는 5초마다 진행을 정리한다. 출제·계정 문제 또는 퀴즈 시작 이후 처리 공백이 30초를 초과한 서버 장애 감지 시 무효·권 반환·XP 미반영한다. 개인 통신 장애와 구분한다.
 - 무료권은 한국 시각 월 2개, 구매권은 50 톱니바퀴/보유 5개까지 구매. 이전 달 무료권 반환은 새 달 한도를 늘리지 않는다. 반환된 구매권은 유실 방지를 위해 구매 한도를 일시 초과할 수 있다.
 
-친구 지정 초대·푸시 알림·자동 상대 봇·AI 실연동은 미구현이다. 현재 구현의 검증은 로컬 임시 DB 기준이며 운영 EC2/RDS 적용과 실제 두 기기 시험은 별도다.
+자동 상대 봇·AI 실연동은 미구현이다. 친구 배틀 신청 · 푸시는 V11__friend_battle_push.sql (battle_challenges · push_tokens). 현재 구현의 검증은 로컬 임시 DB 기준이며 운영 EC2/RDS 적용과 실제 두 기기 시험은 별도다.

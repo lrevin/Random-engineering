@@ -6,9 +6,11 @@ import {connect,transaction} from '../server/db.mjs';
 import {AuthError} from '../server/auth.mjs';
 import {planStreakRescue} from './policy/economy.mjs';
 import {hash} from '../shared/question-store.mjs';
+import {weekStartKst} from './team-policy.mjs';
+const levelOf=xp=>Math.min(100,Math.max(1,Math.floor((-45+Math.sqrt(2025+20*Math.max(0,Number(xp))))/10)+1));
 const parse=v=>typeof v==='string'?JSON.parse(v):v;
 const code=()=>Array.from(randomBytes(8),b=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[b%32]).join('');
-export function createMemberService({auth,connectionFactory=connect,now=()=>new Date()}) {
+export function createMemberService({auth,connectionFactory=connect,now=()=>new Date(),push=null}) {
  async function member(header,action){
   const claims=await auth.verifyAccess(header),db=await connectionFactory();
   try{return await transaction(db,async()=>{
@@ -53,6 +55,35 @@ export function createMemberService({auth,connectionFactory=connect,now=()=>new 
     else await db.execute('DELETE FROM social_friendships WHERE user_low=? AND user_high=?',pair);
    }else await db.execute('DELETE FROM social_friendships WHERE user_low=? AND user_high=?',pair);
    return friends(db,id);
+  }),
+  /** 친구 정보 보기: 친구 사이일 때만 (아니면 없는 사용자처럼 404) */
+  friendInfo:(header,friendCode)=>member(header,async(db,id)=>{
+   await identity(db,id);
+   if(!/^[A-Z2-9]{8}$/.test(friendCode??''))throw new AuthError('not_found',404);
+   const [[t]]=await db.execute("SELECT m.user_id,m.friend_code,m.last_seen_at,p.nickname FROM social_members m JOIN users u ON u.id=m.user_id AND u.status='active' LEFT JOIN profiles p ON p.user_id=m.user_id WHERE m.friend_code=?",[friendCode]);
+   if(!t||t.user_id===id)throw new AuthError('not_found',404);
+   const [lo,hi]=[id,t.user_id].sort(),[[f]]=await db.execute("SELECT 1 AS ok FROM social_friendships WHERE user_low=? AND user_high=? AND status='accepted'",[lo,hi]);
+   if(!f)throw new AuthError('not_found',404);
+   const since=new Date(new Date(weekStartKst(now())+'T00:00:00Z').getTime()-9*3600e3);
+   const [[x]]=await db.execute(`SELECT (SELECT COALESCE(SUM(amount),0) FROM xp_ledger WHERE user_id=?)+(SELECT COALESCE(SUM(awarded_xp),0) FROM speed_runs WHERE user_id=?)+(SELECT COALESCE(SUM(reward_xp),0) FROM boss_runs WHERE user_id=? AND status='cleared') AS total,
+    (SELECT COALESCE(SUM(amount),0) FROM xp_ledger WHERE user_id=? AND created_at>=?)+(SELECT COALESCE(SUM(awarded_xp),0) FROM speed_runs WHERE user_id=? AND status='completed' AND completed_at>=?)+(SELECT COALESCE(SUM(reward_xp),0) FROM boss_runs WHERE user_id=? AND status='cleared' AND finished_at>=?) AS week`,
+    [t.user_id,t.user_id,t.user_id,t.user_id,since,t.user_id,since,t.user_id,since]);
+   const [[title]]=await db.execute("SELECT item_id FROM member_cosmetics WHERE user_id=? AND item_type='title' AND is_equipped=TRUE",[t.user_id]);
+   const [[me]]=await db.execute('SELECT friend_code FROM social_members WHERE user_id=?',[id]);
+   const [games]=await db.execute("SELECT state_json FROM battles WHERE status='finished' AND ((user_a=? AND user_b=?) OR (user_a=? AND user_b=?)) ORDER BY created_at DESC LIMIT 200",[id,t.user_id,t.user_id,id]);
+   const versus={wins:0,losses:0,draws:0};
+   for(const g of games){const w=parse(g.state_json)?.outcome?.winner;if(!w)versus.draws++;else if(w===me.friend_code)versus.wins++;else versus.losses++;}
+   const total=Math.max(0,Number(x.total));
+   return {uid:t.friend_code,nickname:t.nickname??'학습자',level:levelOf(total),xp:total,weekXp:Math.max(0,Number(x.week)),
+    online:!!t.last_seen_at&&now().getTime()-new Date(String(t.last_seen_at).replace(' ','T')+'Z').getTime()<30000,lastSeenAt:t.last_seen_at?new Date(String(t.last_seen_at).replace(' ','T')+'Z').toISOString():null,
+    title:title?.item_id??null,versus};
+  }),
+  /** 이 기기의 푸시 알림 토큰 등록 · 해제 (로그아웃할 때 해제) */
+  pushToken:(header,body,remove=false)=>member(header,async(db,id)=>{
+   if(!push)return {ok:false};
+   if(remove){await push.unregister(db,id,body?.token);return {ok:true};}
+   if(!(await push.register(db,id,body?.token,body?.platform)))throw new AuthError('invalid_request',400);
+   return {ok:true};
   }),
   wallet:header=>member(header,wallet),
   operate:(header,body)=>member(header,async(db,id)=>{
