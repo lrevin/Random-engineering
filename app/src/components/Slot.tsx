@@ -195,7 +195,7 @@ export function SlotReel({ names, duration = 2300, onDone }: { names: string[]; 
         <Animated.View style={{ position: "absolute", left: 0, right: 0, top: 0, transform: [{ translateY: y }] }}>
           {list.map((n, i) => (
             <View key={i} style={{ height: ITEM_H, alignItems: "center", justifyContent: "center", paddingHorizontal: 24 }}>
-              <Text numberOfLines={1} adjustsFontSizeToFit style={{ fontFamily: FONT.bold, fontSize: 30, color: c.ink, letterSpacing: -0.8 }}>{n}</Text>
+              <Text numberOfLines={1} adjustsFontSizeToFit maxFontSizeMultiplier={1.2} style={{ fontFamily: FONT.bold, fontSize: 30, color: c.ink, letterSpacing: -0.8 }}>{n}</Text>
             </View>
           ))}
         </Animated.View>

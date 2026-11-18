@@ -15,7 +15,7 @@ const MUTED = "#9aa3c0";
 
 function Label({ children, size = 16, color = INK, bold, center = true }: { children: React.ReactNode; size?: number; color?: string; bold?: boolean; center?: boolean }) {
   return (
-    <Text style={{ fontFamily: bold ? FONT.bold : FONT.medium, fontSize: size, lineHeight: Math.round(size * 1.3), color, textAlign: center ? "center" : "left" }}>
+    <Text maxFontSizeMultiplier={1.2} style={{ fontFamily: bold ? FONT.bold : FONT.medium, fontSize: size, lineHeight: Math.round(size * 1.3), color, textAlign: center ? "center" : "left" }}>
       {children}
     </Text>
   );

@@ -35,14 +35,14 @@ export function ThemePreview({ p }: { p: Palette }) {
       {/* 카드 + 버튼 */}
       <View style={{ flex: 1, gap: 9, justifyContent: "center" }}>
         <View style={{ backgroundColor: p.paper, borderRadius: 12, borderWidth: 1, borderColor: p.line, borderBottomWidth: 3, borderBottomColor: p.paperEdge, padding: 10, gap: 6 }}>
-          <Text style={{ fontFamily: FONT.bold, fontSize: 13, color: p.ink }}>오늘의 주제</Text>
-          <Text style={{ fontFamily: FONT.regular, fontSize: 11, color: p.ink2 }}>트랜잭션 ACID</Text>
+          <Text maxFontSizeMultiplier={1.2} style={{ fontFamily: FONT.bold, fontSize: 13, color: p.ink }}>오늘의 주제</Text>
+          <Text maxFontSizeMultiplier={1.2} style={{ fontFamily: FONT.regular, fontSize: 11, color: p.ink2 }}>트랜잭션 ACID</Text>
           <View style={{ height: 6, borderRadius: 3, backgroundColor: p.chip, overflow: "hidden" }}>
             <View style={{ width: "64%", height: "100%", borderRadius: 3, backgroundColor: p.success }} />
           </View>
         </View>
         <View style={{ ...grad(p.accent, p.grad.accent), borderRadius: 12, borderBottomWidth: 3, borderBottomColor: p.accentDeep, paddingVertical: 8, alignItems: "center" }}>
-          <Text style={{ fontFamily: FONT.semibold, fontSize: 12, color: p.accentInk }}>주제 뽑기</Text>
+          <Text maxFontSizeMultiplier={1.2} style={{ fontFamily: FONT.semibold, fontSize: 12, color: p.accentInk }}>주제 뽑기</Text>
         </View>
       </View>
     </View>

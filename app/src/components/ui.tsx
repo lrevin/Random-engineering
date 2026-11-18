@@ -7,6 +7,10 @@ import {
 import { SafeAreaView, type Edge } from "react-native-safe-area-context";
 import { inset, radius, raised, screenBg, shadow, useColors } from "@/theme";
 import { Icon } from "./Icon";
+import { MAX_FONT_SCALE, useScale } from "@/lib/responsive";
+
+/** 글자 크기를 화면 폭 · 시스템 글자 크기에 맞춤 (lib/responsive.ts) */
+const fit = (size: number, k: number) => Math.round(size * k * 2) / 2;
 
 export const FONT = {
   regular: "IBMPlexSansKR_400Regular",
@@ -29,11 +33,13 @@ type TProps = TextProps & {
 /** 앱 전체에서 쓰는 글자 컴포넌트 (한글 폰트 적용) */
 export function T({ size = 16, weight = "regular", color = "ink", center, style, ...rest }: TProps) {
   const c = useColors();
+  const fs = fit(size, useScale().text);
   return (
     <Text
+      maxFontSizeMultiplier={MAX_FONT_SCALE}
       {...rest}
       style={[
-        { fontFamily: FONT[weight], fontSize: size, lineHeight: Math.round(size * 1.45), color: c[color] },
+        { fontFamily: FONT[weight], fontSize: fs, lineHeight: Math.round(fs * 1.45), color: c[color] },
         center && { textAlign: "center" },
         style,
       ]}
@@ -60,8 +66,9 @@ export function Btn({ title, onPress, variant = "outline", size = "md", disabled
   // 슬롯머신 버튼처럼 아래쪽이 두꺼운 입체 버튼 (누르면 내려감)
   const under = { primary: c.navyDeep, accent: c.accentDeep, outline: c.paperEdge, ghost: "transparent", premium: "#55309a" }[variant];
   const depth = variant === "ghost" ? 0 : variant === "outline" ? 4 : 5;
-  const pad = { sm: [7, 14], md: [12, 20], lg: [17, 28] }[size];
-  const fs = { sm: 14, md: 16, lg: 19 }[size];
+  const k = useScale();
+  const pad = { sm: [7, 14], md: [12, 20], lg: [17, k.narrow ? 20 : 28] }[size];
+  const fs = fit({ sm: 14, md: 16, lg: 19 }[size], k.text);
   return (
     <Pressable
       accessibilityRole="button"
@@ -82,7 +89,7 @@ export function Btn({ title, onPress, variant = "outline", size = "md", disabled
       ]}
     >
       {loading ? <ActivityIndicator color={fg} /> : icon}
-      <Text style={{ color: fg, fontFamily: FONT.semibold, fontSize: fs }}>{title}</Text>
+      <Text maxFontSizeMultiplier={MAX_FONT_SCALE} numberOfLines={2} style={{ color: fg, fontFamily: FONT.semibold, fontSize: fs, textAlign: "center", flexShrink: 1 }}>{title}</Text>
     </Pressable>
   );
 }
@@ -92,6 +99,7 @@ export const PILL_FILL: ViewStyle = { flex: 1, height: 54, paddingHorizontal: 12
 
 export function Chip({ label, selected, onPress, disabled, fill, icon }: { label: string; selected?: boolean; onPress?: () => void; disabled?: boolean; fill?: boolean; icon?: ReactNode }) {
   const c = useColors();
+  const k = useScale().text;
   return (
     <Pressable
       accessibilityRole="checkbox"
@@ -112,7 +120,8 @@ export function Chip({ label, selected, onPress, disabled, fill, icon }: { label
       <Text
         numberOfLines={1}
         adjustsFontSizeToFit
-        style={{ fontFamily: fill ? FONT.semibold : FONT.medium, fontSize: fill ? 16 : 15, color: selected ? c.navyInk : c.ink2 }}
+        maxFontSizeMultiplier={MAX_FONT_SCALE}
+        style={{ fontFamily: fill ? FONT.semibold : FONT.medium, fontSize: fit(fill ? 16 : 15, k), color: selected ? c.navyInk : c.ink2, flexShrink: 1 }}
       >
         {label}
       </Text>
@@ -124,6 +133,7 @@ export function Chip({ label, selected, onPress, disabled, fill, icon }: { label
 /** 고르기 버튼 줄. fill이면 칸을 똑같이 나눠 가로를 꽉 채움 */
 export function Segment<V extends string>({ options, value, onChange, fill }: { options: { value: V; label: string }[]; value: V; onChange: (v: V) => void; fill?: boolean }) {
   const c = useColors();
+  const k = useScale();
   return (
     <View style={{ flexDirection: "row", borderRadius: radius.md, backgroundColor: c.chip, padding: 3, gap: 2, ...inset(c) }}>
       {options.map((o) => {
@@ -135,13 +145,13 @@ export function Segment<V extends string>({ options, value, onChange, fill }: { 
             accessibilityState={{ selected: on }}
             onPress={() => { tap(); onChange(o.value); }}
             style={{
-              paddingVertical: fill ? 9 : 6, paddingHorizontal: 13, borderRadius: radius.md - 3,
+              paddingVertical: fill ? 9 : 6, paddingHorizontal: k.narrow ? 8 : 13, borderRadius: radius.md - 3,
               ...(fill ? { flex: 1, alignItems: "center" as const } : null),
               backgroundColor: on ? c.navy : "transparent", borderBottomWidth: 3, borderBottomColor: on ? c.navyDeep : "transparent",
               ...(on ? shadow(c, 1) : null),
             }}
           >
-            <Text numberOfLines={1} style={{ fontFamily: on && fill ? FONT.semibold : FONT.medium, fontSize: fill ? 15 : 14, color: on ? c.navyInk : c.ink2 }}>{o.label}</Text>
+            <Text numberOfLines={1} adjustsFontSizeToFit maxFontSizeMultiplier={MAX_FONT_SCALE} style={{ fontFamily: on && fill ? FONT.semibold : FONT.medium, fontSize: fit(fill ? 15 : 14, k.text), color: on ? c.navyInk : c.ink2 }}>{o.label}</Text>
           </Pressable>
         );
       })}
@@ -171,7 +181,7 @@ export function Badge({ label, tone = "plain", icon }: { label: string; tone?: "
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: bg, borderRadius: radius.pill, paddingLeft: icon ? 4 : 10, paddingRight: 10, paddingVertical: 2, borderWidth: tone === "outline" ? 1 : 0, borderColor: c.line2 }}>
       {icon}
-      <Text style={{ fontFamily: FONT.medium, fontSize: 13, color: fg }}>{label}</Text>
+      <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={{ fontFamily: FONT.medium, fontSize: 13, color: fg }}>{label}</Text>
     </View>
   );
 }
@@ -188,6 +198,7 @@ export function Field({ label, error, ...props }: TextInputProps & { label: stri
       <T size={14} weight="semibold" color="ink2">{label}</T>
       <View style={{ justifyContent: "center" }}>
         <TextInput
+          maxFontSizeMultiplier={MAX_FONT_SCALE}
           placeholderTextColor={c.muted}
           {...props}
           secureTextEntry={secret && !shown}
@@ -222,7 +233,9 @@ export function Screen({ children, scroll, edges = ["top", "bottom"], contentSty
   children: ReactNode; scroll?: boolean; edges?: Edge[]; contentStyle?: StyleProp<ViewStyle>;
 }) {
   const c = useColors();
-  const inner = [{ paddingHorizontal: 20, paddingVertical: 16, gap: 16, maxWidth: 640, width: "100%" as const, alignSelf: "center" as const }, contentStyle];
+  // 좁은 폰(360dp 등)은 옆 여백을 줄여 내용이 덜 잘리게
+  const { narrow } = useScale();
+  const inner = [{ paddingHorizontal: narrow ? 14 : 20, paddingVertical: 16, gap: narrow ? 14 : 16, maxWidth: 640, width: "100%" as const, alignSelf: "center" as const }, contentStyle];
   return (
     <SafeAreaView edges={edges} style={{ flex: 1, ...screenBg(c) }}>
       {scroll ? (
