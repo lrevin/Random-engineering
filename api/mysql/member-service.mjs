@@ -7,6 +7,7 @@ import {AuthError} from '../server/auth.mjs';
 import {planStreakRescue} from './policy/economy.mjs';
 import {hash} from '../shared/question-store.mjs';
 import {weekStartKst} from './team-policy.mjs';
+const kstDay=d=>new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(d);
 const levelOf=xp=>Math.min(100,Math.max(1,Math.floor((-45+Math.sqrt(2025+20*Math.max(0,Number(xp))))/10)+1));
 const parse=v=>typeof v==='string'?JSON.parse(v):v;
 const code=()=>Array.from(randomBytes(8),b=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[b%32]).join('');
@@ -73,11 +74,32 @@ export function createMemberService({auth,connectionFactory=connect,now=()=>new 
    const [games]=await db.execute("SELECT state_json FROM battles WHERE status='finished' AND ((user_a=? AND user_b=?) OR (user_a=? AND user_b=?)) ORDER BY created_at DESC LIMIT 200",[id,t.user_id,t.user_id,id]);
    const versus={wins:0,losses:0,draws:0};
    for(const g of games){const w=parse(g.state_json)?.outcome?.winner;if(!w)versus.draws++;else if(w===me.friend_code)versus.wins++;else versus.losses++;}
-   const total=Math.max(0,Number(x.total));
-   return {uid:t.friend_code,nickname:t.nickname??'학습자',level:levelOf(total),xp:total,weekXp:Math.max(0,Number(x.week)),
+   const total=Math.max(0,Number(x.total)),today=kstDay(now());
+   const [[studied]]=await db.execute('SELECT 1 AS ok FROM study_records WHERE user_id=? AND study_date=? LIMIT 1',[t.user_id,today]);
+   let poked=false;try{const [[p]]=await db.execute("SELECT 1 AS ok FROM notification_log WHERE kind='poke' AND ref=? AND period=?",[`${id}:${t.user_id}`,today]);poked=!!p;}catch(e){if(e.code!=='ER_NO_SUCH_TABLE')throw e;}
+   return {studiedToday:!!studied,pokedToday:poked,uid:t.friend_code,nickname:t.nickname??'학습자',level:levelOf(total),xp:total,weekXp:Math.max(0,Number(x.week)),
     online:!!t.last_seen_at&&now().getTime()-new Date(String(t.last_seen_at).replace(' ','T')+'Z').getTime()<30000,lastSeenAt:t.last_seen_at?new Date(String(t.last_seen_at).replace(' ','T')+'Z').toISOString():null,
     title:title?.item_id??null,versus};
   }),
+  /** 콕 찌르기: 오늘 아직 공부 안 한 친구에게 알림 (친구마다 하루 1번) */
+  poke:async(header,friendCode)=>{
+   const r=await member(header,async(db,id)=>{
+    if(!/^[A-Z2-9]{8}$/.test(friendCode??''))throw new AuthError('not_found',404);
+    const [[t]]=await db.execute("SELECT m.user_id FROM social_members m JOIN users u ON u.id=m.user_id AND u.status='active' WHERE m.friend_code=?",[friendCode]);
+    if(!t||t.user_id===id)throw new AuthError('not_found',404);
+    const [lo,hi]=[id,t.user_id].sort(),[[f]]=await db.execute("SELECT 1 AS ok FROM social_friendships WHERE user_low=? AND user_high=? AND status='accepted'",[lo,hi]);
+    if(!f)throw new AuthError('not_friends',409);
+    const today=kstDay(now());
+    const [[studied]]=await db.execute('SELECT 1 AS ok FROM study_records WHERE user_id=? AND study_date=? LIMIT 1',[t.user_id,today]);
+    if(studied)throw new AuthError('friend_studied_today',409);
+    const [ins]=await db.execute("INSERT IGNORE INTO notification_log(kind,ref,period,user_id) VALUES ('poke',?,?,?)",[`${id}:${t.user_id}`,today,id]);
+    if(!ins.affectedRows)throw new AuthError('already_poked',409);
+    const [[me]]=await db.execute('SELECT nickname FROM profiles WHERE user_id=?',[id]);
+    return {to:t.user_id,nickname:me?.nickname??'친구'};
+   });
+   const sent=push?await push.send(r.to,{title:'콕!',body:`${r.nickname}님이 콕 찔렀어요. 오늘 공부 한 판 어때요?`,data:{type:'poke'},channelId:'reminders'}):0;
+   return {ok:true,notified:sent>0};
+  },
   /** 이 기기의 푸시 알림 토큰 등록 · 해제 (로그아웃할 때 해제) */
   pushToken:(header,body,remove=false)=>member(header,async(db,id)=>{
    if(!push)return {ok:false};

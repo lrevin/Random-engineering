@@ -1,30 +1,29 @@
-import { AuthApiError } from "@/lib/auth-client";
 import { router } from "expo-router";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, View } from "react-native";
 import { KakaoButton } from "@/components/KakaoButton";
 import { Btn, Field, Screen, T } from "@/components/ui";
+import { showDialog } from "@/components/Dialog";
 import { useApp } from "@/lib/app-state";
-import { authErrorMessage } from "@/lib/auth";
+import { authErrorMessage, mysqlAuth } from "@/lib/auth";
 
 export default function Login() {
-  const { signIn, cancelDeletion } = useApp();
+  const { signIn } = useApp();
   const [email, setEmail] = useState("");
   const [pw, setPw] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
-  const [pendingDeletion, setPendingDeletion] = useState(false);
 
-  const submit = async (cancel = false) => {
+  const submit = async () => {
     if (!email.trim() || !pw) return setErr("이메일과 비밀번호를 입력해 주세요.");
     setBusy(true);
     setErr("");
     try {
-      if(cancel) await cancelDeletion(email,pw);
-      else await signIn(email, pw); // 성공하면 화면 보호 규칙에 따라 자동으로 이동
+      await signIn(email, pw); // 성공하면 화면 보호 규칙에 따라 자동으로 이동
+      // 탈퇴 신청 후 30일 안에 다시 로그인하면 탈퇴가 철회됨
+      if (mysqlAuth.takeRestored()) showDialog({ icon: "check", title: "다시 오신 걸 환영해요", message: "탈퇴 신청이 취소됐어요. 기록과 설정이 그대로 남아 있어요." });
     } catch (e) {
       setErr(authErrorMessage(e));
-      setPendingDeletion(e instanceof AuthApiError && e.code === "account_deleting");
     } finally {
       setBusy(false);
     }
@@ -38,7 +37,7 @@ export default function Login() {
         <Field label="비밀번호" value={pw} onChangeText={setPw} secureTextEntry autoComplete="current-password" textContentType="password" onSubmitEditing={() => submit()} />
         {err ? <T color="accent">{err}</T> : null}
         <Btn title="로그인" variant="primary" size="lg" onPress={() => submit()} loading={busy} />
-        {pendingDeletion && <Btn title="탈퇴 신청 취소 후 로그인" variant="ghost" onPress={() => submit(true)} loading={busy} />}
+        <Btn title="비밀번호를 잊었어요" variant="ghost" size="sm" onPress={() => router.push("/forgot-password")} />
         <T size={13} color="muted" center>또는</T>
         <KakaoButton onError={setErr} />
         <View style={{ alignItems: "center", gap: 4 }}>

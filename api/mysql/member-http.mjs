@@ -13,6 +13,7 @@ export function memberRoutes(service){const hits=new Map();return async(req,path
   else if(path==='/social/friends/requests'&&m==='POST')reply(200,await service.friend(h,String((await readJsonBody(req)).uid??'').toUpperCase(),'request'));
   else if(/^\/social\/friends\/requests\/[A-Z2-9]{8}\/(accept|decline)$/.test(path)&&m==='POST'){const p=path.split('/');reply(200,await service.friend(h,p[4],p[5]));}
   else if(/^\/social\/friends\/[A-Z2-9]{8}$/.test(path)&&m==='GET')reply(200,await service.friendInfo(h,path.split('/')[3]));
+  else if(/^\/social\/friends\/[A-Z2-9]{8}\/poke$/.test(path)&&m==='POST')reply(200,await service.poke(h,path.split('/')[3]));
   else if(path==='/me/push-token'&&(m==='POST'||m==='DELETE'))reply(200,await service.pushToken(h,await readJsonBody(req),m==='DELETE'));
   else if(/^\/social\/friends\/[A-Z2-9]{8}$/.test(path)&&m==='DELETE')reply(200,await service.friend(h,path.split('/')[3],'remove'));
   else if(path==='/me/wallet'&&m==='GET')reply(200,await service.wallet(h));

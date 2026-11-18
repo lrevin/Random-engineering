@@ -68,19 +68,18 @@ test('MySQL profiles and seven-day account deletion',async t=>{
  await t.test('deletion marks only caller, revokes sessions and blocks old access immediately',async()=>{
   const second=await request('/auth/login',{method:'POST',body:{email:a.user.email,password}});
   pending=await request('/me',{method:'DELETE',token:a.accessToken,body:{userId:b.user.id}});assert.equal(pending.status,202);
-  assert.equal(pending.data.status,'deleting');assert.equal(new Date(pending.data.deleteAfter)-new Date(pending.data.deletionRequestedAt),7*86400000);
+  assert.equal(pending.data.status,'deleting');assert.equal(new Date(pending.data.deleteAfter)-new Date(pending.data.deletionRequestedAt),30*86400000);
   const [[user]]=await db.execute('SELECT status,auth_version FROM users WHERE id=?',[a.user.id]);assert.equal(user.status,'deleting');assert.equal(user.auth_version,2);
   for(const token of [a.accessToken,second.data.accessToken])assert.equal((await request('/auth/me',{token})).status,401);
   assert.equal((await request('/auth/refresh',{method:'POST',body:{refreshToken:second.data.refreshToken}})).status,401);
   assert.equal((await request('/me/profile',{token:a.accessToken})).status,401);
   assert.equal((await request('/auth/me',{token:b.accessToken})).status,200);
  });
- await t.test('cancellation needs password, restores profile but never revives old tokens',async()=>{
+ await t.test('30일 안에 다시 로그인하면 탈퇴 철회 (비밀번호 필요, 예전 토큰은 살아나지 않음)',async()=>{
   assert.equal((await request('/auth/cancel-deletion',{method:'POST',body:{email:a.user.email,password:'Wrong-Test-42!'}})).status,401);
-  assert.equal((await request('/auth/login',{method:'POST',body:{email:a.user.email,password}})).data.error,'account_deleting');
-  assert.equal((await request('/auth/cancel-deletion',{method:'POST',body:{email:a.user.email,password}})).status,200);
+  assert.equal((await request('/auth/login',{method:'POST',body:{email:a.user.email,password:'Wrong-Test-42!'}})).status,401);
+  const login=await request('/auth/login',{method:'POST',body:{email:a.user.email,password}});assert.equal(login.status,200);assert.equal(login.data.restored,true);
   assert.equal((await request('/auth/me',{token:a.accessToken})).status,401);
-  const login=await request('/auth/login',{method:'POST',body:{email:a.user.email,password}});assert.equal(login.status,200);
   assert.equal((await request('/me/profile',{token:login.data.accessToken})).data.profile.nickname,'수정 이름');
   const [[user]]=await db.execute('SELECT deletion_requested_at FROM users WHERE id=?',[a.user.id]);assert.equal(user.deletion_requested_at,null);
  });
@@ -88,8 +87,9 @@ test('MySQL profiles and seven-day account deletion',async t=>{
  await t.test('cleanup keeps accounts before deadline; expired cancellation is refused',async()=>{
   await request('/me',{method:'DELETE',token:expiring.accessToken});
   assert.equal((await purgeExpiredAccounts({onlyUserIds:[expiring.user.id]})).deleted,0);
-  await db.execute('UPDATE users SET deletion_requested_at=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 8 DAY) WHERE id=?',[expiring.user.id]);
+  await db.execute('UPDATE users SET deletion_requested_at=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 31 DAY) WHERE id=?',[expiring.user.id]);
   assert.equal((await request('/auth/cancel-deletion',{method:'POST',body:{email:expiring.user.email,password}})).status,409);
+  assert.equal((await request('/auth/login',{method:'POST',body:{email:expiring.user.email,password}})).data.error,'deletion_period_expired');
  });
  const attempt=randomUUID(),record=randomUUID();
  await t.test('cleanup rolls back on failure, then deletes dependent data in FK order',async()=>{

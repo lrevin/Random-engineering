@@ -124,6 +124,9 @@ export interface FriendInfo {
   online: boolean;
   lastSeenAt: string | null;
   title: string | null;
+  /** 오늘(한국 날짜) 공부했는지 · 내가 오늘 콕 찔렀는지 */
+  studiedToday: boolean;
+  pokedToday: boolean;
   /** 나와 둘이 겨룬 배틀 (내 기준) */
   versus: { wins: number; losses: number; draws: number };
 }
@@ -183,6 +186,8 @@ export function socialMessage(e: unknown) {
     challenge_pending: "이미 보낸 배틀 신청이 있어요. 상대의 답을 기다려 주세요.",
     challenge_incoming: "상대가 먼저 배틀을 신청했어요. 받은 신청을 확인해 주세요.",
     questions_unavailable: "배틀 문제를 준비하지 못했어요. 잠시 후 다시 시도해 주세요.",
+    friend_studied_today: "친구가 오늘은 이미 공부했어요!",
+    already_poked: "오늘은 이미 콕 찔렀어요. 내일 다시 찔러 주세요.",
   } as Record<string, string>)[code] ?? "문제가 생겼어요. 잠시 후 다시 시도해 주세요.";
 }
 
@@ -197,6 +202,8 @@ export const removeFriend = (uid: string) => call<FriendsState>("DELETE", `/soci
 // 배틀의 시간·답안·승패·XP는 서버가 결정합니다.
 export const getInbox = () => call<{ incoming: Challenge[]; outgoing?: Challenge[]; current: Battle | null }>("GET", "/battles/inbox");
 export const getFriendInfo = (uid: string) => call<FriendInfo>("GET", `/social/friends/${uid}`);
+/** 콕 찌르기: 오늘 아직 공부 안 한 친구에게 알림 (친구마다 하루 1번) */
+export const pokeFriend = (uid: string) => call<{ ok: true; notified: boolean }>("POST", `/social/friends/${uid}/poke`, {});
 /** 친구에게 1:1 배틀 신청 (배틀권 1장 예약, 10분 안에 수락 안 하면 반환). notified: 접속 안 한 친구에게 휴대폰 알림을 보냄 */
 export const challengeFriend = (uid: string) => call<{ challenge: Challenge; notified: boolean }>("POST", "/battles/challenges", { uid, requestId: Crypto.randomUUID() });
 export const respondChallenge = (id: string, action: "accept" | "decline" | "cancel") =>

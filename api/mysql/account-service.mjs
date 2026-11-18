@@ -1,5 +1,5 @@
 import { connect, transaction } from '../server/db.mjs';
-import { AuthError, normalizeEmail, passwordMatches } from '../server/auth.mjs';
+import { AuthError, normalizeEmail, passwordMatches, DELETION_GRACE_DAYS } from '../server/auth.mjs';
 import { createHash, randomUUID } from 'node:crypto';
 import { nicknameAllowed } from '../server/nickname-policy.mjs';
 
@@ -45,6 +45,18 @@ async function chargeNicknameChange(db,userId){
   await db.execute("INSERT INTO wallet_operations(user_id,request_id,request_hash,action,payload,result_json) VALUES (?,?,?,'nickname_change',?,?)",
     [userId,requestId,createHash('sha256').update(requestId).digest(),JSON.stringify({cost}),JSON.stringify({charged:cost})]);
   return cost;
+}
+
+
+/** 스터디 팀에서 빠짐 (team-service leave 와 같은 규칙) */
+async function leaveTeam(db,id){
+  const [[t]]=await db.execute('SELECT t.* FROM study_team_members m JOIN study_teams t ON t.id=m.team_id WHERE m.user_id=? FOR UPDATE',[id]);
+  await db.execute("UPDATE study_team_invites SET status='canceled' WHERE (leader_id=? OR invitee_id=?) AND status IN ('pending','accepted')",[id,id]);
+  if(!t) return;
+  await db.execute('DELETE FROM study_team_members WHERE user_id=?',[id]);
+  const [[next]]=await db.execute('SELECT user_id FROM study_team_members WHERE team_id=? ORDER BY joined_at,user_id LIMIT 1',[t.id]);
+  if(!next) await db.execute('DELETE FROM study_teams WHERE id=?',[t.id]);
+  else await db.execute('UPDATE study_teams SET member_count=member_count-1,leader_id=? WHERE id=?',[t.leader_id===id?next.user_id:t.leader_id,t.id]);
 }
 
 export function createAccountService({auth,connectionFactory=connect}) {
@@ -94,11 +106,15 @@ export function createAccountService({auth,connectionFactory=connect}) {
     async requestDeletion(header) {
       return withUser(header,async(db,user)=>{
         await db.execute("UPDATE users SET status='deleting',deletion_requested_at=UTC_TIMESTAMP(3),auth_version=auth_version+1 WHERE id=?",[user.id]);
+        // 탈퇴 신청하면 다음 달 자동결제를 멈춤 (남은 기간 프리미엄은 30일 안에 돌아오면 그대로) · 스터디 팀에서 빠짐 · 이 계정으로 푸시 안 보냄
+        try{await db.execute("UPDATE subscriptions SET status='canceled',canceled_at=UTC_TIMESTAMP(3),next_charge_at=NULL WHERE user_id=? AND status='active'",[user.id]);}catch(e){if(e.code!=='ER_NO_SUCH_TABLE')throw e;}
+        try{await leaveTeam(db,user.id);}catch(e){if(e.code!=='ER_NO_SUCH_TABLE')throw e;}
+        try{await db.execute('DELETE FROM push_tokens WHERE user_id=?',[user.id]);}catch(e){if(e.code!=='ER_NO_SUCH_TABLE')throw e;}
         await db.execute('UPDATE auth_sessions SET revoked_at=COALESCE(revoked_at,UTC_TIMESTAMP(3)) WHERE user_id=?',[user.id]);
         await db.execute(`UPDATE refresh_tokens t JOIN auth_sessions s ON s.id=t.session_id
           SET t.revoked_at=COALESCE(t.revoked_at,UTC_TIMESTAMP(3)) WHERE s.user_id=?`,[user.id]);
         const [[row]]=await db.execute(`SELECT DATE_FORMAT(deletion_requested_at,'%Y-%m-%dT%H:%i:%s.%fZ') AS requested,
-          DATE_FORMAT(DATE_ADD(deletion_requested_at,INTERVAL 7 DAY),'%Y-%m-%dT%H:%i:%s.%fZ') AS due FROM users WHERE id=?`,[user.id]);
+          DATE_FORMAT(DATE_ADD(deletion_requested_at,INTERVAL ${DELETION_GRACE_DAYS} DAY),'%Y-%m-%dT%H:%i:%s.%fZ') AS due FROM users WHERE id=?`,[user.id]);
         return {status:'deleting',deletionRequestedAt:row.requested,deleteAfter:row.due};
       });
     },
@@ -108,7 +124,7 @@ export function createAccountService({auth,connectionFactory=connect}) {
         const [[identity]]=await db.execute("SELECT user_id,password_hash FROM auth_identities WHERE provider='email' AND provider_subject=?",[email]);
         if(!identity||!await passwordMatches(body.password,identity.password_hash)) throw new AuthError('invalid_credentials',401);
         return transaction(db,async()=>{
-          const [[user]]=await db.execute(`SELECT id,status,deletion_requested_at>DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 7 DAY) AS cancellable FROM users WHERE id=? FOR UPDATE`,[identity.user_id]);
+          const [[user]]=await db.execute(`SELECT id,status,deletion_requested_at>DATE_SUB(UTC_TIMESTAMP(3),INTERVAL ${DELETION_GRACE_DAYS} DAY) AS cancellable FROM users WHERE id=? FOR UPDATE`,[identity.user_id]);
           const [[current]]=await db.execute("SELECT password_hash FROM auth_identities WHERE user_id=? AND provider='email'",[identity.user_id]);
           if(!user||current?.password_hash!==identity.password_hash) throw new AuthError('invalid_credentials',401);
           if(user.status==='active') return {cancelled:true};
@@ -122,18 +138,19 @@ export function createAccountService({auth,connectionFactory=connect}) {
 }
 
 // Run by an operator/scheduler, never exposed as a public HTTP endpoint.
-export async function purgeExpiredAccounts({connectionFactory=connect,limit=100,onlyUserIds}={}) {
+// 탈퇴 신청 후 30일(DELETION_GRACE_DAYS)이 지난 계정의 정보를 지움. API 서버가 1시간마다 부름 (server.mjs)
+export async function purgeExpiredAccounts({connectionFactory=connect,limit=100,onlyUserIds,graceDays=DELETION_GRACE_DAYS}={}) {
   if(!Number.isInteger(limit)||limit<1||limit>1000) throw new Error('invalid purge limit');
   if(onlyUserIds && (!Array.isArray(onlyUserIds)||!onlyUserIds.length)) return {deleted:0};
   const db=await connectionFactory();
   try {
     const restriction=onlyUserIds?` AND id IN (${onlyUserIds.map(()=>'?').join(',')})`:'';
     const [candidates]=await db.execute(`SELECT id FROM users WHERE status='deleting'
-      AND deletion_requested_at<=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 7 DAY)${restriction} ORDER BY deletion_requested_at,id LIMIT ${limit}`,onlyUserIds??[]);
+      AND deletion_requested_at<=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL ${Number(graceDays)} DAY)${restriction} ORDER BY deletion_requested_at,id LIMIT ${limit}`,onlyUserIds??[]);
     let deleted=0;
     for(const candidate of candidates) {
       deleted+=await transaction(db,async()=>{
-        const [[user]]=await db.execute(`SELECT id,status,deletion_requested_at<=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 7 DAY) AS due FROM users WHERE id=? FOR UPDATE`,[candidate.id]);
+        const [[user]]=await db.execute(`SELECT id,status,deletion_requested_at<=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL ${Number(graceDays)} DAY) AS due FROM users WHERE id=? FOR UPDATE`,[candidate.id]);
         if(!user||user.status!=='deleting'||!Number(user.due)) return 0;
         await db.execute('DELETE FROM study_records WHERE user_id=?',[user.id]);
         await db.execute('UPDATE quiz_attempt_items i JOIN quiz_attempts a ON a.id=i.attempt_id SET i.source_attempt_id=NULL,i.source_position=NULL WHERE a.user_id=?',[user.id]);

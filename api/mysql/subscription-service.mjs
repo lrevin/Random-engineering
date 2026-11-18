@@ -10,6 +10,7 @@ import { connect, transaction } from '../server/db.mjs';
 import { AuthError } from '../server/auth.mjs';
 import { createToss } from '../server/toss.mjs';
 import { walletState } from './wallet-state.mjs';
+import { DELETION_GRACE_DAYS } from '../server/auth.mjs';
 import { SUB_PRICE, SUB_BONUS_GEARS, SUB_MAX_ATTEMPTS, SUB_RETRY_MS, SUB_ORDER_NAME, addMonth, orderIdFor, effectiveStatus } from './subscription-policy.mjs';
 
 const instant = (v) => (v == null ? null : new Date(v instanceof Date ? v : String(v).includes('T') ? v : String(v).replace(' ', 'T') + 'Z'));
@@ -158,6 +159,14 @@ export function createSubscriptionService({ auth, toss = createToss(), clientKey
       await db.execute("UPDATE subscriptions SET status='active',canceled_at=NULL,next_charge_at=current_period_end WHERE user_id=?", [id]);
       return view(await row(db, id));
     }),
+    /** 탈퇴 유예가 끝나 곧 지워질 계정의 토스 빌링키를 먼저 삭제 (계정 정리 직전에 부름) */
+    async releaseDeleted() {
+      if (!toss) return 0;
+      const rows = await withDb(async (db) => (await db.execute(`SELECT s.user_id,s.billing_key FROM subscriptions s JOIN users u ON u.id=s.user_id
+        WHERE u.status='deleting' AND u.deletion_requested_at<=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL ${DELETION_GRACE_DAYS} DAY) AND s.billing_key IS NOT NULL`))[0]);
+      for (const r of rows) { await removeKey(r.billing_key); await withDb((db) => db.execute('UPDATE subscriptions SET billing_key=NULL WHERE user_id=?', [r.user_id])); }
+      return rows.length;
+    },
     /** 결제일이 된 구독 자동결제 · 기간이 끝난 해지 구독 정리 (API 서버가 10분마다, 서버 여러 대여도 한 번만) */
     async renewDue({ limit = 50 } = {}) {
       const lockDb = await connectionFactory();

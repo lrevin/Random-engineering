@@ -297,3 +297,11 @@ adb reverse tcp:8788 tcp:8788                    # 안드로이드 에뮬레이�
 - `POST /me/subscription/cancel` 해지(다음 결제 안 함), `POST /me/subscription/resume` 해지 취소(기간이 남고 카드가 그대로일 때).
 - API 서버가 10분마다(`GET_LOCK`으로 한 번만) 결제일이 된 구독을 결제한다. 주문번호는 기간 시작 시각 + 시도 번호라 같은 달을 두 번 결제하지 않는다. 거절이면 하루 뒤 다시, 3번째 실패면 종료. 토스 응답을 못 받으면(시간 초과 · 5xx) 실패로 치지 않고 같은 주문번호로 `GET /v1/payments/orders/{orderId}` 확인 후 처리한다. 기간이 끝난 해지 구독은 종료하고 빌링키를 삭제(`DELETE /v1/billing/{billingKey}`)한다.
 - 프리미엄 = 운영자가 켠 값(`grantedPremium`) 또는 기간이 남은 구독(`wallet-state.mjs`). 결제 기록은 `subscription_payments`, 톱니바퀴는 `wallet_transactions(reason='premium_bonus', request_id='sub:'+주문번호)`.
+
+## 비밀번호 찾기 · 회원 탈퇴 · 콕 찌르기 · 예약 알림 (V13__password_reset_notifications.sql)
+- `POST /auth/password/forgot {email}`: 항상 `{ok:true}`(가입 여부를 알리지 않음). 이메일 계정이면 6자리 코드를 메일로(해시로만 저장, 15분, 같은 이메일 1시간 5번까지). 메일 설정(SMTP_*)이 없으면 `mail_unavailable`.
+- `POST /auth/password/reset {email, code, password}`: 코드가 맞으면 비밀번호 변경 + `auth_version` 올림 + 모든 세션 끊김. 틀리면 `invalid_reset_code`, 5번 틀리거나 15분 지나면 `reset_code_expired`.
+- 회원 탈퇴(`DELETE /me`): 30일 유예(`DELETION_GRACE_DAYS`). 신청하면 바로 로그아웃 · 구독 다음 결제 멈춤 · 스터디 팀에서 빠짐 · 푸시 토큰 삭제. 30일 안에 이메일 또는 카카오로 다시 로그인하면 탈퇴 철회(로그인 응답 `restored:true`). 30일이 지나면 로그인 `deletion_period_expired`, API 서버가 1시간마다 정보를 지움(토스 빌링키도 삭제).
+- `POST /social/friends/:uid/poke`: 오늘(한국 날짜) 공부 안 한 친구에게 푸시 "OO님이 콕 찔렀어요". 친구마다 하루 1번(`already_poked`), 이미 공부했으면 `friend_studied_today`. 친구 정보에 `studiedToday` · `pokedToday`.
+- 예약 알림(10분마다, `GET_LOCK`): 일요일 19~22시 주간 공부 리포트(알림 켠 회원), 토 · 일 18~22시 주간 목표 절반 이상인 스터디 팀 응원. `notification_log(kind,ref,period)`로 한 번만.
+- 친구 배틀 결과 화면에 "다시 붙기"(같은 친구에게 바로 배틀 신청).

@@ -4,6 +4,16 @@ import { SignJWT, jwtVerify } from 'jose';
 import { connect, transaction } from './db.mjs';
 
 const ISSUER = 'ppobgong-api', AUDIENCE = 'ppobgong-app';
+/** 회원 탈퇴 유예 기간: 이 기간 안에 다시 로그인하면 탈퇴가 철회되고, 지나면 서버가 정보를 지움 (account-service purgeExpiredAccounts) */
+export const DELETION_GRACE_DAYS = 30;
+/** 탈퇴 신청 중인 계정이 다시 로그인하면: 유예 기간 안이면 되살림(restored), 지났으면 거절 */
+async function restoreIfDeleting(db, user) {
+  if (user.status !== 'deleting') return false;
+  if (!Number(user.cancellable)) throw new AuthError('deletion_period_expired', 409);
+  await db.execute("UPDATE users SET status='active',deletion_requested_at=NULL WHERE id=?", [user.id]);
+  user.status = 'active';
+  return true;
+}
 /** 운영자 도구 전용: 회원 한 명의 짧은 로그인 토큰 (EC2의 JWT_SECRET 필요, 앱·API로는 노출되지 않음) */
 export async function adminAccessToken(user, secret = process.env.JWT_SECRET, seconds = 120) {
   if (typeof secret !== 'string' || Buffer.byteLength(secret) < 32) throw new Error('JWT_SECRET must contain at least 32 bytes');
@@ -79,12 +89,13 @@ export function createAuth({ secret=process.env.JWT_SECRET, connectionFactory=co
         const matches=await bcrypt.compare(plain,identity?.password_hash ?? await dummy);
         if(!identity || !matches) throw new AuthError('invalid_credentials',401);
         return transaction(db,async()=>{
-          const [[user]]=await db.execute('SELECT id,status,auth_version FROM users WHERE id=? FOR UPDATE',[identity.user_id]);
+          const [[user]]=await db.execute(`SELECT id,status,auth_version,deletion_requested_at>DATE_SUB(UTC_TIMESTAMP(3),INTERVAL ${DELETION_GRACE_DAYS} DAY) AS cancellable FROM users WHERE id=? FOR UPDATE`,[identity.user_id]);
           const [[current]]=await db.execute("SELECT password_hash FROM auth_identities WHERE user_id=? AND provider='email'",[identity.user_id]);
           if(!user || current?.password_hash!==identity.password_hash) throw new AuthError('invalid_credentials',401);
-          if(user.status==='deleting') throw new AuthError('account_deleting',401);
+          // 탈퇴 신청 후 30일 안에 다시 로그인하면 탈퇴 철회
+          const restored=await restoreIfDeleting(db,user);
           if(user.status!=='active') throw new AuthError('invalid_credentials',401);
-          return newSession(db,user,email);
+          return {...await newSession(db,user,email),...(restored?{restored:true}:{})};
         });
       });
     },
@@ -99,18 +110,14 @@ export function createAuth({ secret=process.env.JWT_SECRET, connectionFactory=co
       return withDb(db=>transaction(db,async()=>{
         const [[identity]]=await db.execute("SELECT user_id FROM auth_identities WHERE provider='kakao' AND provider_subject=? FOR UPDATE",[subject]);
         if(identity) {
-          const [[user]]=await db.execute('SELECT id,status,auth_version,deletion_requested_at>DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 7 DAY) AS cancellable FROM users WHERE id=? FOR UPDATE',[identity.user_id]);
+          const [[user]]=await db.execute(`SELECT id,status,auth_version,deletion_requested_at>DATE_SUB(UTC_TIMESTAMP(3),INTERVAL ${DELETION_GRACE_DAYS} DAY) AS cancellable FROM users WHERE id=? FOR UPDATE`,[identity.user_id]);
           if(!user) throw new AuthError('invalid_credentials',401);
-          // 탈퇴 신청 7일 안에 '탈퇴 취소 후 로그인'으로 다시 카카오 로그인하면 되살림 (이메일 계정의 cancelDeletion과 같은 규칙)
-          if(user.status==='deleting'&&restore){
-            if(!Number(user.cancellable)) throw new AuthError('deletion_period_expired',409);
-            await db.execute("UPDATE users SET status='active',deletion_requested_at=NULL WHERE id=?",[user.id]);
-            user.status='active';
-          }
-          if(user.status==='deleting') throw new AuthError('account_deleting',401);
+          // 탈퇴 신청 후 30일 안에 다시 카카오 로그인하면 탈퇴 철회 (restore 값은 예전 앱 호환용, 이제 항상 철회)
+          void restore;
+          const restored=await restoreIfDeleting(db,user);
           if(user.status!=='active') throw new AuthError('invalid_credentials',401);
           if(mail) await db.execute("UPDATE auth_identities SET email=? WHERE provider='kakao' AND provider_subject=?",[mail,subject]);
-          return {...await newSession(db,user,mail),isNew:false};
+          return {...await newSession(db,user,mail),isNew:false,...(restored?{restored:true}:{})};
         }
         const user={id:randomUUID(),auth_version:1};
         await db.execute('INSERT INTO users(id) VALUES (?)',[user.id]);

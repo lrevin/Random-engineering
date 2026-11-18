@@ -1,7 +1,7 @@
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { Pressable, Share, TextInput, View } from "react-native";
-import { askChallenge, confirmChallenge } from "@/components/challenge";
+import { askChallenge, confirmChallenge, pokeAndTell } from "@/components/challenge";
 import { showDialog } from "@/components/Dialog";
 import { FriendAvatar } from "@/components/FriendAvatar";
 import { Icon } from "@/components/Icon";
@@ -53,6 +53,7 @@ export default function Friends() {
       buttons: [
         { text: "정보 보기", onPress: () => router.push({ pathname: "/friend", params: { uid: f.uid } }) },
         { text: "1:1 배틀 신청", onPress: () => setTimeout(() => confirmChallenge(f, refresh), 250) },
+        { text: "콕 찌르기", onPress: () => setTimeout(() => pokeAndTell(f), 250) },
         { text: "닫기", style: "cancel" },
       ],
     });
@@ -214,7 +215,7 @@ export default function Friends() {
                   disabled={f.me}
                   onPress={() => openFriend(f)}
                   onLongPress={() => askRemove(f.uid, f.nickname)}
-                  accessibilityHint={f.me ? undefined : "누르면 정보 보기 · 1:1 배틀 신청, 길게 누르면 친구에서 뺄 수 있어요"}
+                  accessibilityHint={f.me ? undefined : "누르면 정보 보기 · 1:1 배틀 신청 · 콕 찌르기, 길게 누르면 친구에서 뺄 수 있어요"}
                   style={({ pressed }) => ({
                     flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12, paddingHorizontal: 14,
                     backgroundColor: f.me ? c.successSoft : pressed ? c.chip : c.paper, borderTopWidth: i ? 1 : 0, borderTopColor: c.line,
@@ -232,7 +233,7 @@ export default function Friends() {
               ))}
             </View>
           )}
-          {state.friends.length > 0 && <T size={12} color="muted" center>친구를 누르면 정보 보기 · 1:1 배틀 신청, 길게 누르면 친구에서 뺄 수 있어요.</T>}
+          {state.friends.length > 0 && <T size={12} color="muted" center>친구를 누르면 정보 보기 · 배틀 신청 · 콕 찌르기, 길게 누르면 친구에서 뺄 수 있어요.</T>}
         </>
       )}
     </Screen>
