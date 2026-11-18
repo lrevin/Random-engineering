@@ -66,6 +66,7 @@ import b_lf_cell_1 from "./lf-cell-1.json";
 import b_lf_eco_1 from "./lf-eco-1.json";
 import b_lf_genetics_1 from "./lf-genetics-1.json";
 import b_lf_physio_1 from "./lf-physio-1.json";
+import b_ma_calc_1 from "./ma-calc-1.json";
 import b_net_1 from "./net-1.json";
 import b_net_2 from "./net-2.json";
 import b_net_3 from "./net-3.json";
@@ -157,6 +158,7 @@ const FILES = [
   b_lf_eco_1,
   b_lf_genetics_1,
   b_lf_physio_1,
+  b_ma_calc_1,
   b_net_1,
   b_net_2,
   b_net_3,
