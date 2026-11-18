@@ -7,11 +7,11 @@
 | 구성 | 무엇 | 담당 | 어디 |
 |---|---|---|---|
 | API 서버 | Node.js + TypeScript, EC2에서 상시 구동 — 회원가입·로그인(JWT), 프로필·기록 저장, 문제 은행 | 서버(강건우) | `api/server/` · 동작 견본은 [`mock-server/`](mock-server) |
-| 퀴즈 AI 서버 | Node, 같은 EC2에서 상시 구동 — AI 문제 출제 + 2번 검수, 주제별 문제 창고 | 서버(강건우) · 출제 지침(김주안) | [`quiz-server/`](quiz-server) |
-| 데이터베이스 | AWS RDS MySQL 8.0 — API 서버만 접속 | DB(김창원) | [`mysql/schema.sql`](mysql/schema.sql) |
-| 앞단 | Nginx + Let's Encrypt HTTPS — `/api/*` → API 서버, `/quiz` → 퀴즈 AI 서버 | 서버(강건우) | EC2 설정 |
+| 퀴즈 AI 서버 | 강의실 PC LLM을 SSH 역방향 터널로 연결 — EC2가 생성 작업·문제 은행 관리 | 서버(강건우) · 출제 지침(김주안) | [`quiz-server/`](quiz-server) |
+| 데이터베이스 | AWS RDS MySQL 8.4 — API 서버만 접속 | DB(김창원) | [`mysql/migrations/`](mysql/migrations/) |
+| 앞단 | Nginx + Let's Encrypt HTTPS → API 서버. 강의실 `/quiz`는 EC2 내부 터널로만 호출 | 서버(강건우) | EC2 설정 |
 
-앱은 두 서버를 모두 `fetch`로 부르며, 호출 코드는 [`app/src/lib/auth-client.ts`](../app/src/lib/auth-client.ts)(인증·프로필·기록)와 [`app/src/lib/api.ts`](../app/src/lib/api.ts)(문제 은행)와 [`app/src/lib/quiz.ts`](../app/src/lib/quiz.ts)(퀴즈)에만 둡니다. **화면 파일에서 직접 서버를 부르지 않습니다.**
+앱은 EC2 API 서버만 호출하며, 호출 코드는 [`app/src/lib/auth-client.ts`](../app/src/lib/auth-client.ts)(인증·프로필·기록)와 [`app/src/lib/api.ts`](../app/src/lib/api.ts)(문제 은행)와 [`app/src/lib/quiz.ts`](../app/src/lib/quiz.ts)(퀴즈)에만 둡니다. **화면 파일에서 직접 서버를 부르지 않습니다.**
 
 ---
 
@@ -118,7 +118,7 @@
 - 마일스톤은 최고 연속 7/30/100일에 30/100/300개와 지정 스킨·칭호를 최초 1회 함께 지급한다. 자동 장착하지 않는다.
 - 수동 특수 보상은 기존 `POST /me/wallet/operations`의 `quest`로 처리한다. 키는 `daily-topic:YYYY-MM-DD`, `streak-milestone:7/30/100`, 기존 프리미엄 `quest:p<주 시작 날짜>:<id>`다. 완료 증거 없는 `recall:*` 수동 요청은 거절한다.
 - 프리미엄 주간 실적은 검증된 시험 채점·오답 해결·서버 학습 30분·정상 배틀 완료만 사용한다. 수령 시 프리미엄을 확인하고 같은 주 가입 전 실적도 인정한다. V6 진행 JSON은 증거가 아니다.
-- 기본 은행 부족분은 서버 기준 재료·시드·생성 버전으로 재현하고 발급 스냅샷만 남긴다. AI 원본 연계·LLM 검수는 보류이며 새 회원 서버 출제는 기본/대체 문제를 사용한다.
+- 기본 은행 부족분은 서버 기준 재료·시드·생성 버전으로 재현하고 발급 스냅샷만 남긴다. 일반 학습 AI 원본은 V11 생성 작업·문제 은행을 통해 연결하며, 실제 LLM 서버 연결·운영 적재는 별도 적용한다.
 - 학습 인정 시간은 정지 구간 제외·승인 시간 상한의 서버 값과 앱 보고의 작은 값이며, 퀴즈 시간은 앱 종료/백그라운드를 포함한 전체 경과다. 퀴즈 시간으로 보상을 판정하지 않는다.
 - 구버전 APK는 숨김 필터가 없어 숨김 기록을 다시 표시할 수 있으므로 새 앱과 함께 배포한다. 기록 숨김은 답안·XP·통계·랭크·연속일·보상 증거를 유지한다. 스냅샷/변경 피드는 숨김을 포함하며 기본 목록과 최근 화면에서만 제외한다. 탈퇴 후 실제 삭제와 구분한다.
 - 일일/주간 미수령은 기간 종료 시 닫히며 마일스톤은 기한이 없다. 서버 성공 후 응답만 유실된 완료 요청은 원래 완료 시각·결과를 재전송으로 반환한다. 장기 오프라인 특수 보상은 별도 보류한다.
@@ -133,50 +133,38 @@
 
 ---
 
-## 4. 퀴즈 AI 서버 `POST /quiz`
+## 4. 강의실 LLM 연결·일반 학습 출제 (V11, 로컬 구현)
 
-앱은 퀴즈 AI 서버를 직접 부르지 않는다. 로그인한 회원이 API 서버 `POST /me/quiz {topicId, count, avoid, fresh}`를 부르면 API 서버가 `QUIZ_SERVER_URL`에 `QUIZ_SERVER_TOKEN`을 붙여 대신 부른다 ([`api/server/quiz-proxy.mjs`](server/quiz-proxy.mjs)). 회원마다 하루 30번(`quiz_daily_limit`), 그중 새로 만들기(fresh)는 10번까지이고 넘으면 창고 문제만 준다. 비회원은 AI 문제 없이 푼다. 퀴즈 서버 토큰은 앱에 넣지 않는다.
+- 앱은 기존 `POST /me/activities`로 일반 학습을 시작한다. 서버가 `quiz_jobs`를 만들거나 같은 주제의 활성 작업을 공유하고 즉시 응답한다. 재진입·같은 요청 UUID는 새 작업을 만들지 않는다.
+- 실제 연결 확인은 운영 적용 단계에서 `npm run ai:health`로 명시적으로 실행한다. 구현 검사는 가짜 HTTP 서버만 사용한다.
+- API 실행 프로세스의 백그라운드 처리기가 대기 작업을 가져와 `QUIZ_SERVER_URL`의 `/quiz`에 `{topicId,count:4}`를 보낸다. 기본 주소는 `http://127.0.0.1:18788`, 헤더는 `X-Quiz-Token: QUIZ_SERVER_TOKEN`이다. 토큰이 없으면 외부 호출 없이 실패 상태를 기록하고 저장 문제로 보충한다. 실제 비밀값은 EC2 .env에만 둔다.
+- EC2 처리기는 동시 실행 1개, 생성 작업의 대기·실행 합계 최대 10분이다. DB 연결은 점유·상태 갱신·결과 저장 때만 빌린다. 연결 전 실패만 최대 2회, 5초 뒤 재시도한다. 인증·HTTP 오류·잘못된 응답·응답 시간 초과는 자동 재요청하지 않는다.
+- 90초 점유를 20초마다 갱신한다. 프로세스 종료 후 queued 작업은 재개하고 만료된 running은 전달 여부 불명확 실패로 회수한다. 이전 점유의 늦은 응답은 저장하지 않는다. LLM에 요청 ID·취소 프로토콜이 없어 원격 생성 자체의 정확히 한 번 실행은 보장할 수 없다.
+- 응답은 `{topicId,questions,model,generated,seconds}`다. 주제·모델을 확인하고 최대 128KiB만 읽는다. mc 보기 4개·유효한 정수 답, ox boolean 답, 본문/해설 1~400자 등 공용 문제 규격을 검사한다. 잘못된 일부 문항은 제외하되 정상 문항은 저장한다. 주제 불일치·잘못된 JSON은 응답 전체를 거절한다.
+- `questions.source='ai'`, `question_details`에 전체 원본을 저장한다. `live/pool`은 생성 작업 결과 메타데이터이며 DB 출처 값이 아니다. 내용 해시로 중복을 재사용하고 본문을 덮어쓰지 않는다. 공개 AI는 주제당 최대 40개, 초과 시 오래된 순으로 비활성화한다. 참조 원본은 보존하고 비활성 문제를 가져오기 재실행으로 되살리지 않는다.
+- `quiz_jobs.accepted_count`는 신규 삽입 수가 아니라 확보한 서로 다른 문제 수다. 결과에 신규/재사용/거절 수와 문제 ID를 따로 저장한다. 문제·상세 저장·작업 종료는 한 트랜잭션이다.
+- 생성 작업은 주제 공용이므로 회원이 학습을 포기해도 다른 학습과 문제 은행을 위해 유지한다. 개인 답안·회원 식별자는 LLM에 보내지 않는다.
+- 학습 종료의 `quiz` 이벤트에서 이번 작업 AI → 저장 AI 순으로 최대 4개, 나머지는 기본 문제 → 서버 재현 연습으로 총 7개를 확정한다. 같은 본문은 중복 출제하지 않는다. `quiz_fixed_at`과 스냅샷을 함께 저장한다. 사용자는 생성 완료를 추가 대기하지 않는다. 출제 확정 뒤 정상 작업 결과가 도착하면 은행에만 저장하고 이미 발급한 문항은 바꾸지 않는다.
+- 서버가 발급한 AI는 기존 special-v1 답안 채점·기록·일반/특수 퀘스트·분야 랭크·부스터 정책을 그대로 사용한다. 클라이언트가 임의로 올린 AI 기록을 검증 완료로 바꾸지 않는다. 형식·서버 채점은 사실성 검수와 다르며 문제 품질은 LLM 생성·검수 담당 범위다.
+- 배틀·스피드·모의고사·복습의 기존 발급 방식은 유지한다. 게스트는 내장 문제·기존 기기 캐시·연습 문제만 사용한다.
+- **이전 `POST /me/quiz`는 인증 후 409 `{error:"quiz_activity_required"}`를 반환하는 호환 안내 경로다.** 추가 생성 호출을 하지 않는다. 앱의 기존 AI 선행 호출·직접 AI 요청은 제거했다.
 
-### 퀴즈 한 번의 구성
-한 번 푸는 퀴즈는 **7문제 = AI가 새로 만든 4문제 + 미리 만든 문제 3개**입니다 ([`app/src/lib/quiz.ts`](../app/src/lib/quiz.ts) `buildQuiz`).
-AI 문제는 ① 퀴즈 AI 서버 → ② 휴대폰에 저장해 둔 AI 문제 순서로 받고, 모자라면 미리 만든 문제 → 오프라인 연습 문제로 채웁니다.
+### 사전 생성 문제 가져오기
 
-**공부 시작을 누른 즉시 출제 + 2번 검수**: 앱은 "이걸로 시작"을 누르는 순간 `fresh: true`로 AI 문제를 요청합니다. 서버는 새 문제를 만든 직후 모든 문제를 2번 검수합니다 — 1차는 정답표 없이 직접 풀어 정답이 같은지·답이 하나뿐인지·주제에 맞는지 보고, 2차는 정답·해설까지 대조합니다. 둘 다 통과한 문제만 저장·출제합니다 (검수 지침 [`quiz-server/review1.md`](quiz-server/review1.md), [`review2.md`](quiz-server/review2.md)).
-
-**비슷한 문제 막기**: AI에게 그 주제의 문제 은행 + 이미 만든 AI 문제를 먼저 보여 주고 겹치지 않는 새 유형으로 내게 합니다(출제 지침 [`quiz-server/gem.md`](quiz-server/gem.md)). 그래도 비슷한 문제는 글자 2개 묶음 유사도 0.5 이상이면 버립니다 — 퀴즈 AI 서버와 앱 두 곳에서 같은 방법으로 검사합니다.
-
-요청
-```json
-{ "topicId": "sec-01", "count": 4, "avoid": ["앱이 이미 고른 문제 문장", "…"], "fresh": true }
+```powershell
+# api/server에서 실행. 입력 파일은 별도 전달하며 .sql은 실행하지 않는다.
+npm run ai:import -- --file <ai_quizzes.json> --summary <summary.txt> --report <결과.json>
 ```
-응답 `200`
-```json
-{ "questions": [
-    { "type": "mc", "q": "…", "choices": ["…", "…", "…", "…"], "answer": 2, "explain": "…" },
-    { "type": "ox", "q": "…", "answer": false, "explain": "…" } ] }
-```
-| 상태 | 언제 | 응답 |
-|---|---|---|
-| 400 | `topicId`가 없거나 주제 목록에 없음 | `{ "error": "unknown topic" }` |
-| 429 | AI 사용량 제한 | `{ "error": "rate limited" }` |
-| 502 | AI 오류이고 줄 수 있는 문제도 없음 | `{ "error": "…" }` |
 
-- **주제 목록에 있는 주제만** 받습니다. 임의의 글을 보내 AI 비용을 쓰게 할 수 없도록 하기 위해서입니다.
-- 주제마다 최대 40문제까지만 만들어서 **AI 비용에 상한**이 있습니다 (그 뒤로는 쌓인 검수 통과 문제로만 냄).
-- 앱은 응답을 그대로 믿지 않고 `validQuestions()`로 한 번 더 검사합니다.
-
-### AI 호출 규칙 (Claude API)
-- 공식 SDK(`@anthropic-ai/sdk`)만 씁니다. 모델은 `claude-opus-5-5`.
-- 결과는 **구조화 출력(JSON 스키마)**으로 받고, 받은 뒤에도 형식을 다시 검사합니다.
-- 안전 거절에 대비해 `fallbacks: "default"`(베타 헤더 `server-side-fallback-2026-07-01`)를 켜 둡니다.
-- `stop_reason`이 `refusal` 또는 `max_tokens`이면 저장하지 않습니다.
-- **개인정보를 AI에 보내지 않습니다.** 주제 이름·분야·난이도·힌트만 보냅니다.
-
----
+- 주제별 JSON을 검증해 같은 문제 은행에 저장하며 모델은 제공된 `qwen3:14b`, 생성 작업 ID는 NULL이다. 빈 배열은 건너뛰고 알 수 없는 주제/잘못된 문항은 이유·위치를 보고한다.
+- 반복 실행 시 기존 내용을 변경하거나 중복 삽입하지 않는다. 주제별 트랜잭션이므로 중단 후 같은 파일로 재실행할 수 있다.
+- summary의 처리 주제/문제 수와 AI 미보유 목록을 실제 JSON에 대조한다. DB 적재 이후 검증 탈락까지 포함한 최종 미보유 주제도 따로 집계한다. summary는 사실성 검수나 DB 원본이 아니다.
+- 전달 파일은 1,052개 주제·2,145문제, 빈 배열 293개, 미포함 주제 `en-water-02`·`theory-01` 2개다. 두 종류를 합친 295개가 summary의 AI 없는 주제 목록이다.
+- 원본 JSON은 개인 전달 파일이며 저장소 기본 문제 폴더에 섞지 않는다. 운영 적재·실제 터널/토큰 확인은 사용자 연결 완료 후 별도로 진행한다.
 
 ## 5. DB를 바꿀 때
 
-1. [`mysql/schema.sql`](mysql/schema.sql)을 고칩니다. **여러 번 실행해도 안전하게** 씁니다 (`CREATE TABLE IF NOT EXISTS`, 열 추가는 따로 `ALTER TABLE` 파일로).
+1. [`mysql/migrations/`](mysql/migrations/)을 고칩니다. **여러 번 실행해도 안전하게** 씁니다 (`CREATE TABLE IF NOT EXISTS`, 열 추가는 따로 `ALTER TABLE` 파일로).
 2. **열 이름을 바꾸거나 지우지 않습니다.** 새 열을 추가하고, 앱이 옛 형식도 읽을 수 있게 둡니다 (예: `normalizeRecord`).
 3. API 서버의 변환 코드와 앱 타입([`app/src/lib/types.ts`](../app/src/lib/types.ts))을 함께 고칩니다.
 4. 이 문서의 API 표를 고칩니다.
@@ -206,7 +194,7 @@ curl "$API/me/records" -H "Authorization: Bearer <access token>"
 curl "$API/quiz-bank/os-07"
 
 # AI 퀴즈
-curl -X POST "https://<도메인>/quiz" -H "Content-Type: application/json" -d '{"topicId":"os-07","count":4}'
+curl -X POST "$API/me/activities" -H "Authorization: Bearer <access token>" -H "Content-Type: application/json" -d '{"requestId":"<UUID>","purpose":"study","topicId":"os-07","studySec":900}'
 ```
 
 ## 8. 개발 중 mock 서버
@@ -241,7 +229,7 @@ adb reverse tcp:8788 tcp:8788                    # 안드로이드 에뮬레이�
 - `rewardStatus`: `eligible`(정산), `held`(확인 대기), `ineligible`(개인 기록만), `legacy_granted`(기존 정산 보존). `rp=0`만으로 보류와 적격 0점 풀이를 구분하지 않는다.
 - `rewardReason`: `question_unverified`, `time_needs_review`, `outside_study_window`, `client_daily_limit`, 미분류 기존 기록은 `unclassified`. 문제·답안 위조는 보류로 저장하지 않고 기존 오류로 거절한다.
 - `eligibility`는 recordAccepted / xpEligible / questEligible / timeQuestEligible / rankEligible / leaderboardEligible / studyDayEligible / repeatEligible / boostEligible / policyVersion을 포함한다. boostEligible은 문제·기록의 기본 후보 자격이며 실제 배율은 기존 구매·만료·수신 시각 검사 후 XP 계산에 반영한다.
-- 서버가 보관한 기본/대체 문제와 기존 전체 원본 대조를 통과한 기본 문제는 일반 XP 대상이다. 기기에서만 확인한 AI·대체 문제가 섞인 신규 제출은 기록만 보관하고 XP·일반 퀘스트·신규 랭크 기여를 인정하지 않는다. 시간 퀘스트에는 special-v1 서버 학습 단계로 확인한 시간만 사용하며 quiz_sec는 제외한다.
+- 서버가 발급·보관한 AI/기본/대체 문제와 기존 전체 원본 대조를 통과한 기본 문제는 일반 XP 대상이다. 기기에서만 확인한 AI·대체 문제가 섞인 신규 제출은 기록만 보관하고 XP·일반 퀘스트·신규 랭크 기여를 인정하지 않는다. 시간 퀘스트에는 special-v1 서버 학습 단계로 확인한 시간만 사용하며 quiz_sec는 제외한다.
 - 서버가 문제를 내지 않은 기록(앱이 문제·답을 보낸 기록, special-v1이 아님)은 문제 은행 원본과 맞아도 한국 날짜 하루 3개(`CLIENT_RECORD_DAILY_LIMIT`)까지만 `eligible`, 그 뒤는 `ineligible`/`client_daily_limit`(기록만 보관). 문제 은행 정답이 앱 안에 있어서 만점 기록을 꾸며 계속 올리는 것을 막는다. 서버가 낸 공부(special-v1)는 제한하지 않는다.
 - 보류·미인정 기록도 `saved/results.ok`는 기록 저장 성공으로 응답할 수 있다. 원장이 없어도 조회·메모·숨김·동기화가 된다. 저장 성공은 보상 지급 성공과 다르다.
 - needs_review는 시간 경과·동일 ID 재전송만으로 해제되지 않는다. 서버 내부 `reassessHeld`는 저장된 증거가 승인된 뒤 같은 ID로 한 번만 정산한다. 이를 호출하는 공개 사용자 해제/관리자 HTTP API는 만들지 않았다.

@@ -1,3 +1,4 @@
+import {createQuizJobWorker} from '../mysql/quiz-job-service.mjs';
 import {createActivityService} from '../mysql/activity-service.mjs';
 import {activityRoutes} from '../mysql/activity-http.mjs';
 import http from 'node:http';
@@ -32,7 +33,7 @@ import { quizProxyRoutes } from './quiz-proxy.mjs';
 import { clientIp, overLimit } from './client-key.mjs';
 
 export function createServer({ topics = loadTopics(), bank, store, auth, authLimits, battleService, battleSweep=true, kakao, quiz, ipLimit=Number(process.env.IP_RATE_LIMIT || 1200) } = {}) {
-  // 퀴즈 AI 서버 대신 부르기 (로그인 회원만, 하루 횟수 제한). QUIZ_SERVER_URL, QUIZ_SERVER_TOKEN 이 있을 때만 켜짐
+  // 이전 직접 AI 요청은 인증 후 학습 발급 경로로 안내한다. 실제 호출은 영속 작업 처리기가 담당.
   const handleQuiz=auth ? quizProxyRoutes(auth,quiz) : null;
   // 전체 요청을 실제 주소(IP)마다 분당 ipLimit번까지: 경로별 제한은 토큰 속 회원 id로 세서, 가짜 토큰을 바꿔 가며 보내면 피할 수 있음
   const ipHits=new Map();
@@ -116,7 +117,10 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const db = process.env.MYSQL_USER ? await createReadPool() : null;
   if (db) useSharedPool();
   const server = createServer(db ? { store:databaseStore(db),auth:createAuth() } : {});
-  for (const signal of ['SIGINT','SIGTERM']) process.once(signal, () => server.close(async () => { await db?.end(); await closeSharedPool(); }));
+  const quizWorker=db?createQuizJobWorker():null;
+  server.once('listening',()=>quizWorker?.start());
+  server.once('close',()=>quizWorker?.stop());
+  for (const signal of ['SIGINT','SIGTERM']) process.once(signal, () => { quizWorker?.stop(); server.close(async () => { await db?.end(); await closeSharedPool(); }); });
   server.listen(Number(process.env.PORT || 8788), process.env.HOST || '127.0.0.1', () => {
     console.log(`Question API listening on ${JSON.stringify(server.address())}`);
   });

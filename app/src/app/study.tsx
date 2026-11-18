@@ -53,7 +53,7 @@ function StudyInner() {
     try{
       const value=mode==='user'&&active?.serverTracking?await event('quiz'):null;
       const stopped=timer.stop();
-      setActive(a=>a?{...a,stage:'quiz',endAt:null,studyLeft:stopped.left,studyUsed:stopped.used,...(value?{studyUsed:value.studySec,quiz:{source:value.items.some(i=>i.question.src==='offline')?'offline':'bank',questions:value.items.map(i=>i.question),answers:[]}}:{})}:a);
+      setActive(a=>a?{...a,stage:'quiz',endAt:null,studyLeft:stopped.left,studyUsed:stopped.used,...(value?{studyUsed:value.studySec,quiz:{source:value.items.some(i=>i.question.src==='ai')?'ai':value.items.some(i=>i.question.src==='offline')?'offline':'bank',questions:value.items.map(i=>i.question),answers:[]}}:{})}:a);
       router.replace('/quiz');
     }catch(e){setNotice(authErrorMessage(e));}finally{setWorking(false);}
   };
@@ -81,7 +81,7 @@ function StudyInner() {
       if(saved?.attemptId===requestId.current){await clearStudyEvent();pending.current=undefined;}
       setActive(a=>a?{...a,serverAttemptId:value.id,serverTracking:true,serverPendingEvent:undefined}:a);setServerReady(true);
       if(value.studyEndedAt){
-        timer.stop();setActive(a=>a?{...a,stage:'quiz',endAt:null,studyUsed:value.studySec,quiz:{source:value.items.some(i=>i.question.src==='offline')?'offline':'bank',questions:value.items.map(i=>i.question),answers:[]}}:a);router.replace('/quiz');return;
+        timer.stop();setActive(a=>a?{...a,stage:'quiz',endAt:null,studyUsed:value.studySec,quiz:{source:value.items.some(i=>i.question.src==='ai')?'ai':value.items.some(i=>i.question.src==='offline')?'offline':'bank',questions:value.items.map(i=>i.question),answers:[]}}:a);router.replace('/quiz');return;
       }
       timer.restore(value.allowedSec,Math.max(0,value.allowedSec-value.studySec),!value.paused);
     }catch(e){setNotice(authErrorMessage(e));}finally{setWorking(false);}

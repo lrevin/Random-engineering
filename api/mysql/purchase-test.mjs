@@ -83,7 +83,7 @@ test('회원 구매·사용과 보상은 실제 MySQL 트랜잭션으로 처리'
   await db.execute('UPDATE speed_runs SET awarded_xp=140 WHERE id=?',[run.runId]);const next=await speed.start(h,{requestId:randomUUID()});const [[r]]=await db.execute('SELECT questions FROM speed_runs WHERE id=?',[next.runId]);for(let p=0;p<7;p++)await speed.answer(h,next.runId,{position:p,answer:json(r.questions)[p].q.answer});assert.equal((await speed.finish(h,next.runId)).xp,10);
  });
  await t.test('최신 회원 연결 풀에서도 구매 재전송·동시 조회·연결 반환 유지',async()=>{
-  await funds(2000);useSharedPool();
+  await funds(3000);useSharedPool();
   try{
    const id=randomUUID(),before=(await wallet()).balance;
    const result=await Promise.all([op('spend',{product:'skin:honey'},id),op('spend',{product:'skin:honey'},id)]);

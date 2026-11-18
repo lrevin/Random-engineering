@@ -87,6 +87,7 @@ function quiz(fetchBankQuestions,cache=new Map(),bundled=[{...q,q:'내장 문제
  return load('quiz',{
   '@react-native-async-storage/async-storage':{__esModule:true,default:{getItem:async key=>cache.get(key)??null,setItem:async(key,value)=>cache.set(key,value)}},
   '@/data':{TOPICS:[]},'@/data/quizbank':{QUIZ_BANK:{'ds-01':bundled},BANK_BUNDLED_FULL:full},'./api':{fetchBankQuestions},
+  './auth':{mysqlAuth:{getUserId:()=>null}},
  });
 }
 test('full bundled bank works without network and ignores old domain downloads',async()=>{

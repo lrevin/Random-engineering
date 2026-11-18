@@ -1,3 +1,5 @@
+import {enqueueQuizJob} from './quiz-job-service.mjs';
+import {selectAiQuestions} from './ai-question-store.mjs';
 import {sourceAttemptSql} from './reward-eligibility.mjs';
 import {STUDY_EXTEND_SECONDS,STUDY_EXTEND_COST} from './policy/economy.mjs';
 import {randomUUID,randomInt} from 'node:crypto';
@@ -15,10 +17,10 @@ const catalog=loadTopics();
 const fail=(code,status=409)=>{throw new AuthError(code,status);};
 const shuffle=a=>{const b=[...a];for(let i=b.length-1;i>0;i--){const j=randomInt(i+1);[b[i],b[j]]=[b[j],b[i]];}return b;};
 // 기본 은행 부족분은 기준 데이터·생성 버전을 포함한 스냅샷만 보존한다.
-async function questions(db,topicId,count,avoid=new Set()){
+async function questions(db,topicId,count,avoid=new Set(),exclude=new Set()){
  const [[t]]=await db.execute('SELECT t.*,c.name_ko AS category_name,c.domain_id FROM topics t JOIN categories c ON c.id=t.category_id WHERE t.id=?',[topicId]);if(!t)fail('unknown_topic',400);
  const [rows]=await db.execute(`SELECT q.id,d.type,d.body,d.choices,d.answer,d.explanation FROM questions q JOIN question_details d ON d.question_id=q.id WHERE q.topic_id=? AND q.source='bank' AND q.status='published' AND EXISTS(SELECT 1 FROM question_file_items i JOIN question_files f ON f.id=i.file_id WHERE i.question_id=q.id AND f.status='published') ORDER BY q.id`,[topicId]);
- const result=shuffle(rows).sort((a,b)=>Number(avoid.has(a.body))-Number(avoid.has(b.body))).slice(0,count).map(q=>({topicId,questionId:q.id,question:{type:q.type,q:q.body,...(q.type==='mc'?{choices:parse(q.choices)}:{}),answer:parse(q.answer),explain:q.explanation,src:'bank'}}));
+ const result=shuffle(rows.filter(q=>!exclude.has(q.body.trim().normalize('NFC')))).sort((a,b)=>Number(avoid.has(a.body))-Number(avoid.has(b.body))).slice(0,count).map(q=>({topicId,questionId:q.id,question:{type:q.type,q:q.body,...(q.type==='mc'?{choices:parse(q.choices)}:{}),answer:parse(q.answer),explain:q.explanation,src:'bank'}}));
  const info=catalog[topicId],hint=info?.hint??`${t.name_ko}은(는) ${t.category_name} 분야의 주제입니다.`;
  for(let n=result.length;n<count;n++){
   const seed=randomUUID(),material={name:t.name_ko,hint,category:t.category_name,distractors:[...new Set(shuffle(Object.entries(catalog).filter(([id,x])=>id!==topicId&&x.ko!==t.name_ko).map(([,x])=>x.ko)))].slice(0,3)};
@@ -39,14 +41,14 @@ async function receipt(db,id,key,action,payload,value){
  const result={balance:value.balance,state:value.state,assets:await assetsState(db,id)};
  await db.execute('INSERT INTO wallet_operations(user_id,request_id,request_hash,action,payload,result_json) VALUES (?,?,?,?,?,?)',[id,key,Buffer.from(hash({action,payload}),'hex'),action,JSON.stringify(payload),JSON.stringify(result)]);
 }
-export function createActivityService({auth,connectionFactory=connect,now=()=>new Date()}){
+export function createActivityService({auth,connectionFactory=connect,now=()=>new Date(),quizJobsEnabled}){
  async function member(header,action){const claims=await auth.verifyAccess(header),db=await connectionFactory();try{return await transaction(db,async()=>{
  const [[u]]=await db.execute('SELECT id,status,auth_version FROM users WHERE id=? FOR UPDATE',[claims.sub]);if(!u||u.status!=='active'||u.auth_version!==claims.av)fail('unauthorized',401);return action(db,u.id);
  });}finally{await db.end();}}
  async function find(db,id,attemptId){if(!UUID.test(attemptId??''))fail('not_found',404);const [[a]]=await db.execute("SELECT * FROM quiz_attempts WHERE id=? AND user_id=? AND rule_version=?",[attemptId,id,SPECIAL_RULE_VERSION]);if(!a)fail('not_found',404);return a;}
  async function view(db,id,a){const items=await issuedItems(db,a.id);const answers=items.map(i=>i.submitted_answer===null?null:parse(i.submitted_answer));
  let result=null;if(a.status==='completed'&&items.length)result=a.purpose==='exam'?gradeIssuedExam(items,answers):gradeIssued(items,answers);
- return {id:a.id,purpose:a.purpose,status:a.status,topicId:a.topic_id,certId:a.certificate_id,startedAt:instant(a.started_at).toISOString(),studyEndedAt:a.study_ended_at?instant(a.study_ended_at).toISOString():null,completedAt:a.completed_at?instant(a.completed_at).toISOString():null,allowedSec:Number(a.allowed_sec),studySec:a.purpose==='study'&&!a.study_ended_at?studyElapsed({startedAt:instant(a.started_at),pausedSec:Number(a.paused_sec),pausedAt:a.paused_at?instant(a.paused_at):null,allowedSec:Number(a.allowed_sec)},now()):Number(a.study_sec),quizSec:a.quiz_sec===null?null:Number(a.quiz_sec),paused:!!a.paused_at,
+ return {id:a.id,purpose:a.purpose,status:a.status,topicId:a.topic_id,certId:a.certificate_id,startedAt:instant(a.started_at).toISOString(),studyEndedAt:a.study_ended_at?instant(a.study_ended_at).toISOString():null,completedAt:a.completed_at?instant(a.completed_at).toISOString():null,allowedSec:Number(a.allowed_sec),studySec:a.purpose==='study'&&!a.study_ended_at?studyElapsed({startedAt:instant(a.started_at),pausedSec:Number(a.paused_sec),pausedAt:a.paused_at?instant(a.paused_at):null,allowedSec:Number(a.allowed_sec)},now()):Number(a.study_sec),quizSec:a.quiz_sec===null?null:Number(a.quiz_sec),paused:!!a.paused_at,quizFixedAt:a.quiz_fixed_at?instant(a.quiz_fixed_at).toISOString():null,
  items:items.map(i=>({position:Number(i.position),topicId:i.topicId,subject:i.subject,subjectName:i.subjectName,question:i.question})),answers,result,wallet:await walletState(db,id,now())};}
  return {
  status:header=>member(header,(db,id)=>rewardStatus(db,id,now())),
@@ -92,6 +94,7 @@ export function createActivityService({auth,connectionFactory=connect,now=()=>ne
   else{const payload={startId:attemptId,certId};await startExam(db,id,payload,value,now());await receipt(db,id,`activity-exam:${attemptId}`,'exam_start',payload,value);}
  }
  await db.execute(`INSERT INTO quiz_attempts(id,user_id,topic_id,status,verification_status,started_at,purpose,certificate_id,request_id,request_hash,rule_version,allowed_sec,study_ended_at) VALUES (?,?,?,'issued','server_verified',?,?,?,?,?,?,?,?)`,[attemptId,id,topicId,now(),purpose,certId,requestId,digest,SPECIAL_RULE_VERSION,duration,purpose==='study'?null:now()]);
+ if(purpose==='study'){const job=await enqueueQuizJob(db,topicId,now(),quizJobsEnabled===undefined?{}:{enabled:quizJobsEnabled});await db.execute('UPDATE quiz_attempts SET generation_job_id=? WHERE id=?',[job,attemptId]);}
  await storeItems(db,attemptId,items);return view(db,id,await find(db,id,attemptId));
  }),
  event:(header,attemptId,body)=>member(header,async(db,id)=>{
@@ -114,8 +117,11 @@ export function createActivityService({auth,connectionFactory=connect,now=()=>ne
  }
  if(event==='quiz'){
   const seconds=studyElapsed({startedAt:instant(a.started_at),pausedSec:a.paused_sec,pausedAt:a.paused_at?instant(a.paused_at):null,allowedSec:a.allowed_sec},at);
-  await storeItems(db,a.id,await questions(db,a.topic_id,7));
-  await db.execute('UPDATE quiz_attempts SET study_ended_at=?,study_sec=?,paused_at=NULL WHERE id=?',[at,seconds,a.id]);
+  const ai=await selectAiQuestions(db,a.topic_id,a.generation_job_id,4);
+  const bank=await questions(db,a.topic_id,7-ai.length,new Set(),new Set(ai.map(x=>x.question.q.trim().normalize('NFC'))));
+  const final=shuffle([...ai,...bank]).map((x,i)=>x.question.src==='offline'?{...x,question:reproducePractice(x.question.material,x.question.seed,i+1)}:x);
+  await storeItems(db,a.id,final);
+  await db.execute('UPDATE quiz_attempts SET study_ended_at=?,quiz_fixed_at=?,study_sec=?,paused_at=NULL WHERE id=?',[at,at,seconds,a.id]);
  }
  await receipt(db,id,key,'activity_event',payload,value);return view(db,id,await find(db,id,a.id));
  }),

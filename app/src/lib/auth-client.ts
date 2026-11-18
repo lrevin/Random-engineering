@@ -106,7 +106,6 @@ export function createAuthClient(url: string, storage: SessionStorage, fetcher: 
   return {
     getUserId() { return session?.user.id ?? null; },
     /** 퀴즈 AI 새 문제 (API 서버가 퀴즈 AI 서버를 대신 부름, 새로 만들고 검수까지 기다리므로 오래 걸림) */
-    async aiQuiz(body: { topicId: string; count: number; avoid: string[]; fresh: boolean }): Promise<{ questions: unknown; fresh: number }> { return authorized("/me/quiz", body, "POST", 150000); },
     async getSpeedStats(): Promise<{best:number;plays:number;day:string;xpToday:number;totalXp:number;bonusXp?:number}> {return authorized("/me/speed/stats");},
     async apiRequest(path: string, body?: unknown, method?: "GET" | "POST" | "PUT" | "DELETE") { return authorized(path, body, method); },
     async rewardStatus():Promise<RewardStatus>{return authorized('/me/rewards');},
