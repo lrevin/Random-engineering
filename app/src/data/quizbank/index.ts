@@ -73,6 +73,7 @@ import b_ma_prob_1 from "./ma-prob-1.json";
 import b_me_design_1 from "./me-design-1.json";
 import b_me_dynamics_1 from "./me-dynamics-1.json";
 import b_me_fluid_1 from "./me-fluid-1.json";
+import b_me_mfg_1 from "./me-mfg-1.json";
 import b_net_1 from "./net-1.json";
 import b_net_2 from "./net-2.json";
 import b_net_3 from "./net-3.json";
@@ -171,6 +172,7 @@ const FILES = [
   b_me_design_1,
   b_me_dynamics_1,
   b_me_fluid_1,
+  b_me_mfg_1,
   b_net_1,
   b_net_2,
   b_net_3,
