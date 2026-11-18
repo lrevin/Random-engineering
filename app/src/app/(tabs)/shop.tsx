@@ -5,6 +5,7 @@ import { AdRewardButton } from "@/components/AdRewardButton";
 import { Icon } from "@/components/Icon";
 import { Perk, PlanCard } from "@/components/PlanCard";
 import { SectionTitle } from "@/components/StatTile";
+import { SubscriptionPanel } from "@/components/SubscriptionPanel";
 import { GearCount } from "@/components/TimeUpSheet";
 import { Btn, Row, Screen, T, tap } from "@/components/ui";
 import { useApp } from "@/lib/app-state";
@@ -44,7 +45,7 @@ export default function Shop() {
     <Screen scroll edges={["top"]}>
       <T size={26} weight="bold">상점</T>
       {walletNotice ? <T color="accent">{walletNotice}</T> : null}
-      {mode === "user" ? <T size={13} color="muted">구매한 이용권·꾸미기·부스터는 회원 계정에 저장돼요. 실제 결제 기능은 아직 준비 중이에요.</T> : null}
+      {mode === "user" ? <T size={13} color="muted">구매한 이용권·꾸미기·부스터는 회원 계정에 저장돼요.</T> : null}
 
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: c.chip, borderRadius: radius.md, paddingHorizontal: 16, paddingVertical: 12, ...inset(c) }}>
         <T size={15} color="ink2">내 톱니바퀴</T>
@@ -84,14 +85,17 @@ export default function Shop() {
         art={<Icon name="crown" size={72} />}
         footer={
           <>
-            {!premium && !askUpgrade && <Btn title="프리미엄으로 업그레이드" variant="accent" size="lg" onPress={() => setAskUpgrade(true)} />}
-            {!premium && askUpgrade && (
+            {/* 회원: 월 구독 (토스페이먼츠 자동결제) */}
+            {mode === "user" && <SubscriptionPanel />}
+            {/* 둘러보기: 시험용으로만 켜기 (실제 결제는 회원만) */}
+            {mode !== "user" && !premium && !askUpgrade && <Btn title="프리미엄으로 업그레이드" variant="accent" size="lg" onPress={() => setAskUpgrade(true)} />}
+            {mode !== "user" && !premium && askUpgrade && (
               <View style={{ gap: 10, borderWidth: 1.5, borderColor: c.gold, borderRadius: radius.md, padding: 14, backgroundColor: c.goldSoft }}>
-                <T size={14} weight="semibold">앱스토어 · 구글 플레이 결제는 아직 연결 전이에요.</T>
-                <T size={13} color="ink2">{mode === "user" ? "회원 계정은 결제 연동 후 이용할 수 있어요." : "게스트 모드에서만 시험용으로 켤 수 있어요."}</T>
+                <T size={14} weight="semibold">구독 결제는 회원가입 후에 할 수 있어요.</T>
+                <T size={13} color="ink2">둘러보기에서는 시험용으로만 켤 수 있어요.</T>
                 <Row gap={8} style={{ flexWrap: "nowrap" }}>
                   <Btn title="취소" size="sm" onPress={() => setAskUpgrade(false)} style={{ flex: 1 }} />
-                  <Btn title="시험용으로 켜기" disabled={mode === "user"} variant="accent" size="sm" onPress={async () => {
+                  <Btn title="시험용으로 켜기" variant="accent" size="sm" onPress={async () => {
                     const got = await purchasePremium();
                     setBonusNotice(`${got ? `결제 보너스로 톱니바퀴 ${got}개를 받았어요!` : "이번 달 결제 보너스는 이미 받았어요."} 프리미엄 전용 테마 '프리즘 오팔'도 열렸어요.`);
                     setAskUpgrade(false);
@@ -100,7 +104,7 @@ export default function Shop() {
               </View>
             )}
             {bonusNotice ? <T size={13} color="success" weight="semibold" center>{bonusNotice}</T> : null}
-            {premium && <Btn title="무료 버전으로 돌아가기 (시험용)" size="sm" variant="ghost" onPress={() => setPremium(false)} />}
+            {mode !== "user" && premium && <Btn title="무료 버전으로 돌아가기 (시험용)" size="sm" variant="ghost" onPress={() => setPremium(false)} />}
           </>
         }
       >

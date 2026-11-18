@@ -14,7 +14,9 @@ const score=(b,id)=>b.questions.slice(0,5).filter((q,i)=>own(b.answers[id],i)&&b
 const answered=(b,id)=>Object.keys(b.answers[id]).length;
 const right=(q,value)=>value!==null&&value!==undefined&&q.answer===value;
 
-export function createBattleService({auth,connectionFactory=connect,now=()=>new Date(),studySec=600,quizSec=300,startDelaySec=8,roundSec=45,maxGapMs=30000}={}){
+/** 친구 배틀 신청이 유효한 시간 (초) · 이보다 오래 앱을 안 연 친구는 '접속 안 함'으로 보고 푸시 알림 */
+export const CHALLENGE_SEC=600, ONLINE_SEC=30;
+export function createBattleService({auth,connectionFactory=connect,now=()=>new Date(),studySec=600,quizSec=300,startDelaySec=8,roundSec=45,maxGapMs=30000,challengeSec=CHALLENGE_SEC,push=null}={}){
  async function totalXp(db,id){const [[r]]=await db.execute('SELECT (SELECT COALESCE(SUM(amount),0) FROM xp_ledger WHERE user_id=?)+(SELECT COALESCE(SUM(awarded_xp),0) FROM speed_runs WHERE user_id=?) AS xp',[id,id]);return Math.max(0,Number(r.xp));}
  async function person(db,id){
   const [[old]]=await db.execute('SELECT friend_code FROM social_members WHERE user_id=?',[id]);
@@ -127,6 +129,9 @@ export function createBattleService({auth,connectionFactory=connect,now=()=>new 
     for(const id of ids){const [[u]]=await db.execute('SELECT id,status,auth_version FROM users WHERE id=? FOR UPDATE',[id]);if(u)users.set(id,u);}
     if(claims){const u=users.get(claims.sub);if(!u||u.status!=='active'||u.auth_version!==claims.av)throw new AuthError('unauthorized',401);}
     for(const e of waiting){if(date(e.expires_at)<=now()||users.get(e.user_id)?.status!=='active'){if(users.has(e.user_id))await queueEnd(db,e,'expired',true);}}
+    // 시간이 지난 친구 배틀 신청은 만료하고 신청한 사람의 배틀권을 돌려줌
+    const [stale]=await db.execute("SELECT * FROM battle_challenges WHERE status='pending' AND expires_at<=? FOR UPDATE",[now()]);
+    for(const c of stale)await closeChallenge(db,c,'expired');
     for(const b of battles)await settle(db,b,users);
     return action(db,claims?.sub,users);
    });
@@ -138,12 +143,33 @@ export function createBattleService({auth,connectionFactory=connect,now=()=>new 
   const finished=b.status!=='accepted',round=b.rounds?.at(-1),quiz=time>=Date.parse(b.quizStartAt);
   const phase=finished?b.status:time<Date.parse(b.startAt)?'countdown':!quiz?'study':b.mainClosed?'overtime':b.submitted[id]?'submitted':'quiz';
   const results={};for(const p of [b.from,b.to])if(finished||b.mainClosed||b.submitted[p.id])results[p.uid]={score:score(b,p.id),total:5,submittedAt:b.submitted[p.id]??null};
-  return {id:b.id,revision:b.revision??0,studySkip:{count:players(b).filter(p=>b.studySkipVotes?.[p]===true).length,required:2,myAgreed:b.studySkipVotes?.[id]===true},kind:'random',status:b.status,phase,from:{uid:b.from.uid,nickname:b.from.nickname},to:{uid:b.to.uid,nickname:b.to.nickname},domain:b.domain,
+  return {id:b.id,revision:b.revision??0,studySkip:{count:players(b).filter(p=>b.studySkipVotes?.[p]===true).length,required:2,myAgreed:b.studySkipVotes?.[id]===true},kind:b.kind??'random',status:b.status,phase,from:{uid:b.from.uid,nickname:b.from.nickname},to:{uid:b.to.uid,nickname:b.to.nickname},domain:b.domain,
    topicId:time>=Date.parse(b.startAt)||finished?b.topicId:null,studySec:b.studySec,quizSec:b.quizSec,quizCount:5,createdAt:b.createdAt,startAt:b.startAt,quizStartAt:b.quizStartAt,quizEndAt:b.quizEndAt,
    questions:quiz||finished?b.questions.slice(0,5).map(q=>publicQ(q,finished)):null,questionsReady:true,myAnswers:Array.from({length:5},(_,i)=>b.answers[id][i]??null),mySubmitted:!!b.submitted[id],
    overtime:round?{round:b.rounds.length-1,question:time>=Date.parse(round.startAt)?publicQ(b.questions[4+b.rounds.length],finished):null,roundStartAt:round.startAt,roundSec,available:5,batches:0,
     mySubmitted:own(round.answers,id),myAnswer:round.answers[id]??null,past:b.rounds.filter(r=>r.closed).map((r,i)=>publicQ(b.questions[5+i],true))}:null,
    results,outcome:b.outcome??null,reason:b.reason??null,recordId:b.records?.[id]??null,opponent:other.uid,serverNow:now().toISOString()};
+ }
+ // ───────── 친구 배틀 신청 ─────────
+ async function areFriends(db,a,b){const [lo,hi]=a<b?[a,b]:[b,a];const [[f]]=await db.execute("SELECT 1 AS ok FROM social_friendships WHERE user_low=? AND user_high=? AND status='accepted'",[lo,hi]);return !!f;}
+ /** 진행 중인 배틀이나 랜덤 매칭 대기가 있으면 바쁨 */
+ async function busy(db,id){if(await current(db,id))return true;const [[e]]=await db.execute("SELECT id FROM match_entries WHERE user_id=? AND status IN ('waiting','matched')",[id]);return !!e;}
+ async function closeChallenge(db,c,status){
+  await db.execute('UPDATE battle_challenges SET status=?,responded_at=? WHERE id=?',[status,now(),c.id]);
+  await ticket(db,{id:c.from_entry_id,user_id:c.from_user,ticket_kind:c.ticket_kind,ticket_month:c.ticket_month},true);
+ }
+ async function challengeView(db,c,id){
+  const other=c.from_user===id?c.to_user:c.from_user;
+  const [[p]]=await db.execute('SELECT m.friend_code AS uid,p.nickname FROM social_members m LEFT JOIN profiles p ON p.user_id=m.user_id WHERE m.user_id=?',[other]);
+  return {id:c.id,status:c.status,direction:c.from_user===id?'outgoing':'incoming',friend:{uid:p?.uid??null,nickname:p?.nickname??'학습자'},
+   createdAt:date(c.created_at??now()).toISOString(),expiresAt:date(c.expires_at).toISOString(),battleId:c.battle_id??null};
+ }
+ async function createBattle(db,fromId,toId,topicId,qs,kind){
+  const [[t]]=await db.execute('SELECT c.domain_id FROM topics t JOIN categories c ON c.id=t.category_id WHERE t.id=?',[topicId]);
+  const at=now().getTime(),startAt=new Date(at+startDelaySec*1000).toISOString(),quizStartAt=new Date(at+(startDelaySec+studySec)*1000).toISOString();
+  const from=await person(db,fromId),to=await person(db,toId),b={id:randomUUID(),kind,from,to,domain:t.domain_id,topicId,questions:qs,status:'accepted',studySec,quizSec,createdAt:now().toISOString(),startAt,quizStartAt,quizEndAt:new Date(Date.parse(quizStartAt)+quizSec*1000).toISOString(),answers:{[from.id]:{},[to.id]:{}},submitted:{},rounds:[],mainClosed:false,lastTick:at};
+  await db.execute('INSERT INTO battles(id,user_a,user_b,topic_id,state_json) VALUES (?,?,?,?,?)',[b.id,from.id,to.id,topicId,JSON.stringify(b)]);
+  return b;
  }
  async function current(db,id){const [[r]]=await db.execute("SELECT state_json FROM battles WHERE (user_a=? OR user_b=?) AND status='accepted' ORDER BY created_at LIMIT 1",[id,id]);return r?json(r.state_json):null;}
  async function matchView(db,e,id){if(e.status==='matched'){const [[r]]=await db.execute('SELECT state_json FROM battles WHERE id=?',[e.battle_id]);if(r){const b=json(r.state_json);if(b.status==='accepted')return {status:'matched',battle:view(b,id)};}}return e.status==='waiting'?{status:'waiting',id:e.id,joinedAt:date(e.joined_at).toISOString(),expiresAt:date(e.expires_at).toISOString()}:{status:'none'};}
@@ -173,7 +199,65 @@ export function createBattleService({auth,connectionFactory=connect,now=()=>new 
   }),
   match:header=>locked(header,async(db,id)=>{const b=await current(db,id);if(b)return {status:'matched',battle:view(b,id)};const [[e]]=await db.execute("SELECT * FROM match_entries WHERE user_id=? AND status='waiting'",[id]);if(!e)return {status:'none'};await db.execute('UPDATE match_entries SET last_seen_at=? WHERE id=?',[now(),e.id]);return matchView(db,e,id);}),
   leave:(header,body)=>locked(header,async(db,id)=>{if(!UUID.test(body?.entryId??''))throw new AuthError('invalid_request',400);const [[e]]=await db.execute('SELECT * FROM match_entries WHERE id=? AND user_id=?',[body.entryId,id]);if(!e)throw new AuthError('not_found',404);if(e.status==='matched')return matchView(db,e,id);if(e.status==='waiting')await queueEnd(db,e,'canceled',true);return {status:'none'};}),
-  inbox:header=>locked(header,async(db,id)=>{const b=await current(db,id);return {incoming:[],current:b?view(b,id):null};}),
+  inbox:header=>locked(header,async(db,id)=>{
+   // 앱이 열려 있는 동안 5초마다 부르므로 '접속 중' 표시도 갱신 (접속 안 한 친구에게만 푸시)
+   await db.execute('UPDATE social_members SET last_seen_at=UTC_TIMESTAMP(3) WHERE user_id=?',[id]);
+   const b=await current(db,id);
+   const [mine]=await db.execute("SELECT * FROM battle_challenges WHERE (to_user=? OR from_user=?) AND status='pending' ORDER BY created_at",[id,id]);
+   const list=[];for(const c of mine)list.push(await challengeView(db,c,id));
+   return {incoming:list.filter(c=>c.direction==='incoming'),outgoing:list.filter(c=>c.direction==='outgoing'),current:b?view(b,id):null};
+  }),
+  /** 친구에게 1:1 배틀 신청: 친구 사이 · 둘 다 다른 배틀이 없고 · 같이 풀 주제가 있어야 함. 신청한 사람의 배틀권을 예약 */
+  challenge:async(header,body)=>{
+   const r=await locked(header,async(db,id)=>{
+    if(!UUID.test(body?.requestId??''))throw new AuthError('invalid_request',400);
+    const [[prior]]=await db.execute('SELECT * FROM battle_challenges WHERE from_user=? AND request_id=?',[id,body.requestId]);
+    if(prior)return {challenge:await challengeView(db,prior,id),notify:null};
+    const code=String(body?.uid??'').toUpperCase();if(!/^[A-Z2-9]{8}$/.test(code))throw new AuthError('not_found',404);
+    const [[t]]=await db.execute("SELECT m.user_id FROM social_members m JOIN users u ON u.id=m.user_id AND u.status='active' WHERE m.friend_code=?",[code]);
+    if(!t)throw new AuthError('not_found',404);if(t.user_id===id)throw new AuthError('self',400);
+    if(!(await areFriends(db,id,t.user_id)))throw new AuthError('not_friends',409);
+    if(await busy(db,id))throw new AuthError('busy',409);
+    if(await busy(db,t.user_id))throw new AuthError('opponent_busy',409);
+    const [[mine]]=await db.execute("SELECT id FROM battle_challenges WHERE from_user=? AND status='pending'",[id]);if(mine)throw new AuthError('challenge_pending',409);
+    const [[theirs]]=await db.execute("SELECT id FROM battle_challenges WHERE from_user=? AND to_user=? AND status='pending'",[t.user_id,id]);if(theirs)throw new AuthError('challenge_incoming',409);
+    const a=await eligible(db,id),b=await eligible(db,t.user_id);if(!a.length&&!b.length)throw new AuthError('no_match_topics',409);
+    const entry={id:randomUUID(),user_id:id};await ticket(db,entry);
+    const c={id:randomUUID(),from_user:id,to_user:t.user_id,request_id:body.requestId,status:'pending',from_entry_id:entry.id,ticket_kind:entry.ticket_kind,ticket_month:entry.ticket_month,created_at:now(),expires_at:new Date(now().getTime()+challengeSec*1000),battle_id:null};
+    await db.execute('INSERT INTO battle_challenges(id,from_user,to_user,request_id,status,from_entry_id,ticket_kind,ticket_month,created_at,expires_at) VALUES (?,?,?,?,?,?,?,?,?,?)',
+     [c.id,c.from_user,c.to_user,c.request_id,c.status,c.from_entry_id,c.ticket_kind,c.ticket_month,c.created_at,c.expires_at]);
+    const [[seen]]=await db.execute('SELECT last_seen_at>=? AS online FROM social_members WHERE user_id=?',[new Date(now().getTime()-ONLINE_SEC*1000),t.user_id]);
+    const me=await person(db,id);
+    return {challenge:await challengeView(db,c,id),notify:Number(seen?.online)?null:{to:t.user_id,nickname:me.nickname,id:c.id}};
+   });
+   // 접속 안 한 친구에게는 휴대폰 알림 (트랜잭션 밖에서, 실패해도 신청은 유지)
+   // notified: 실제로 휴대폰 한 대 이상에 보냈는지 (등록된 기기가 없으면 false → 친구가 앱을 열면 신청 창이 뜸)
+   const notified=r.notify&&push?(await push.send(r.notify.to,{title:'1:1 배틀 신청',body:`${r.notify.nickname}님에게 1:1 배틀 신청이 왔어요.`,data:{type:'battle_challenge',challengeId:r.notify.id}}))>0:false;
+   return {challenge:r.challenge,notified};
+  },
+  /** 받은 신청 수락 · 거절, 보낸 신청 취소. 수락하면 바로 배틀 시작 (기존 랜덤 배틀과 같은 진행 · 정산) */
+  respond:(header,challengeId,action)=>locked(header,async(db,id)=>{
+   if(!UUID.test(challengeId??'')||!['accept','decline','cancel'].includes(action))throw new AuthError('invalid_request',400);
+   const [[c]]=await db.execute('SELECT * FROM battle_challenges WHERE id=? FOR UPDATE',[challengeId]);
+   if(!c||(action==='cancel'?c.from_user!==id:c.to_user!==id))throw new AuthError('not_found',404);
+   if(c.status!=='pending'){
+    if(action==='accept'&&c.status==='accepted'&&c.battle_id){const [[r]]=await db.execute('SELECT state_json FROM battles WHERE id=?',[c.battle_id]);if(r)return {challenge:await challengeView(db,c,id),battle:view(json(r.state_json),id)};}
+    throw new AuthError('not_pending',409);
+   }
+   if(action!=='accept'){const status=action==='decline'?'declined':'canceled';await closeChallenge(db,c,status);return {challenge:await challengeView(db,{...c,status},id),battle:null};}
+   if(await busy(db,id))throw new AuthError('busy',409);
+   if(await busy(db,c.from_user))throw new AuthError('opponent_busy',409);
+   // 친구 배틀은 관심 주제가 겹치면 그중에서, 안 겹치면 두 사람 중 누구의 관심 주제든
+   const a=await eligible(db,c.from_user),b=await eligible(db,id),both=a.filter(x=>b.includes(x)),common=both.length?both:[...new Set([...a,...b])];if(!common.length)throw new AuthError('no_match_topics',409);
+   const topicId=common[randomInt(common.length)],qs=await questions(db,topicId);if(qs.length!==10)throw new AuthError('questions_unavailable',409);
+   const entry={id:randomUUID(),user_id:id};await ticket(db,entry);
+   const battle=await createBattle(db,c.from_user,id,topicId,qs,'friend'),at=now(),until=new Date(at.getTime()+180000);
+   // 기존 진행 · 무효 처리 · 배틀권 반환이 그대로 동작하도록 두 사람 모두 매칭된 대기열 기록을 남김
+   for(const [eid,uid,kind,month] of [[c.from_entry_id,c.from_user,c.ticket_kind,c.ticket_month],[entry.id,id,entry.ticket_kind,entry.ticket_month]])
+    await db.execute("INSERT INTO match_entries(id,user_id,request_id,candidates,status,ticket_kind,ticket_month,joined_at,last_seen_at,expires_at,battle_id) VALUES (?,?,?,?, 'matched',?,?,?,?,?,?)",[eid,uid,eid,JSON.stringify([topicId]),kind,month,at,at,until,battle.id]);
+   await db.execute("UPDATE battle_challenges SET status='accepted',battle_id=?,responded_at=? WHERE id=?",[battle.id,at,c.id]);
+   return {challenge:await challengeView(db,{...c,status:'accepted',battle_id:battle.id},id),battle:view(battle,id)};
+  }),
   history:header=>locked(header,async(db,id)=>{const [rows]=await db.execute("SELECT state_json FROM battles WHERE (user_a=? OR user_b=?) AND status<>'accepted' ORDER BY created_at DESC,id DESC LIMIT 50",[id,id]);return {battles:rows.map(r=>view(json(r.state_json),id))};}),
   get:(header,battleId)=>locked(header,async(db,id)=>view(await findBattle(db,id,battleId),id)),
   studySkip:(header,battleId,body)=>locked(header,async(db,id)=>{

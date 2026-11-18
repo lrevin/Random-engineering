@@ -111,6 +111,9 @@ function RootNav() {
           <Stack.Screen name="cosmetics" options={{ presentation: "modal" }} />
           <Stack.Screen name="review" options={flow} />
           <Stack.Screen name="match" />
+          <Stack.Screen name="friend" options={{ presentation: "modal" }} />
+          <Stack.Screen name="billing" options={{ animation: "none" }} />
+          <Stack.Screen name="auth/kakao" options={{ animation: "none" }} />
           <Stack.Screen name="ranking" />
           <Stack.Screen name="battle" options={flow} />
         </Stack.Protected>
