@@ -59,10 +59,10 @@ BANK_OUT = os.path.join(os.path.dirname(OUT), "bank.json")
 json.dump(dict(sorted(bank.items())), open(BANK_OUT, "w", encoding="utf8"), ensure_ascii=False, indent=0)
 print(f"exported bank for {len(bank)} topics -> {os.path.relpath(BANK_OUT, ROOT)}")
 
-# 출제 지침 (api/quiz-server/gem.md) → 서버 함수에서도 같은 지침을 쓰도록 JSON으로 복사
-GEM = os.path.join(ROOT, "api", "quiz-server", "gem.md")
+# 출제 지침 (api/llm-server/prompts/gem.md) → 서버 함수에서도 같은 지침을 쓰도록 JSON으로 복사
+QS = os.path.join(ROOT, "api", "llm-server", "prompts")
+GEM = os.path.join(QS, "gem.md")
 GEM_OUT = os.path.join(os.path.dirname(OUT), "gem.json")
-QS = os.path.join(ROOT, "api", "quiz-server")
 json.dump({
     "system": open(GEM, encoding="utf8").read(),
     "review1": open(os.path.join(QS, "review1.md"), encoding="utf8").read(),  # 1차 검수: 정답표 없이 직접 풀기

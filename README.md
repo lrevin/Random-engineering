@@ -11,7 +11,7 @@
 |---|---|
 | [`app/`](app) | 모바일 앱 — React Native 0.86 · Expo SDK 57 · TypeScript (iOS·안드로이드 공용) |
 | [`api/`](api) | 백엔드 — 자체 API 서버(Node.js · JWT) + AWS RDS MySQL |
-| [`api/quiz-server/`](api/quiz-server) | **퀴즈 AI 서버** — PC 등에서 계속 켜 두고 퀴즈를 만들어 쌓아 두는 출제 AI (Node · Claude API) |
+| [`api/llm-server/`](api/llm-server) | **LLM 퀴즈 서버** — 강의실 PC(GPU)에서 오픈 모델(Ollama · qwen3)로 위키백과 근거 퀴즈를 만들고 2번 검수, EC2와는 SSH 역방향 터널로 연결 (Python) |
 | [`api/API_RULES.md`](api/API_RULES.md) | **API 규칙** — 엔드포인트 목록, 이름·인증·오류 형식, DB 변경 방법 |
 | [`docs/`](docs) | 졸업작품 계획서(`docs/plan`), 로고·그림(`docs/images`), 퀴즈 작성 기준·검토 메모 |
 | [`scripts/`](scripts) | 주제·퀴즈 데이터 생성·검사 도구 (Python) |
@@ -89,7 +89,7 @@
 자세한 내용은 각 폴더의 안내를 본다.
 - 앱: [`app/README.md`](app/README.md) — 실행 방법, 폴더 구조, 에뮬레이터
 - 서버: [`api/API_RULES.md`](api/API_RULES.md) — API 목록, DB 만들기, 서버 함수 배포
-- 퀴즈 AI 서버: [`api/quiz-server/README.md`](api/quiz-server/README.md) — PC에서 켜는 법, 앱 연결, 설정
+- LLM 퀴즈 서버: [`api/llm-server/README.md`](api/llm-server/README.md) — 강의실 PC에서 켜는 법, 터널, API ([`API_SPEC.md`](api/llm-server/API_SPEC.md))
 - 퀴즈 문제 추가: [`docs/quiz-authoring.md`](docs/quiz-authoring.md)
 
 ```bash
@@ -109,7 +109,7 @@ npx expo start --android  # 안드로이드 에뮬레이터
 | `python scripts/export_topics.py` | 서버 함수용 주제 목록·문제 은행 문장·출제 지침 만들기 (주제·퀴즈·`gem.md`를 바꾼 뒤) |
 | `python scripts/fetch_kowiki.py` | 주제별 한국어 위키백과 문서 제목 받기 |
 | `python scripts/fetch_kowiki_reverse.py` | 위와 같지만 한국어 위키 쪽에서 거꾸로 찾기 (영어 위키 API가 막혔을 때) |
-| `cd api/quiz-server && npm test` | 퀴즈 AI 서버 자체 점검 (API 키 없이 연습 모드) |
+| `cd api/llm-server && python test_server.py ds-01` | LLM 퀴즈 서버 시험 (강의실 PC에서 server.py 를 켠 뒤) |
 | `python scripts/check_links.py` | 공식 문서 주소가 열리는지 확인 |
 | `python scripts/make_logo.py` | 로고·앱 아이콘 다시 만들기 |
 | `python scripts/make_figures.py` | 계획서용 그림(구성도·DB 구조도·일정표) 다시 만들기 |
@@ -119,5 +119,5 @@ npx expo start --android  # 안드로이드 에뮬레이터
 
 | 파일·값 | 위치 | 용도 |
 |---|---|---|
-| `.env.local` | `app/` | 자체 API 서버 HTTPS 주소, 별도 퀴즈 AI 서버 주소 (`app/.env.example` 참고) |
-| `ANTHROPIC_API_KEY` | `api/quiz-server/.env` | AI 퀴즈 생성 (코드·저장소에 적지 않음) |
+| `.env.local` | `app/` | 자체 API 서버 HTTPS 주소 (`app/.env.example` 참고) |
+| `token.txt` · `tunnel_config.json` · 키 파일 | `api/llm-server/` (강의실 PC) | LLM 서버 토큰 · EC2 터널 (저장소에 올리지 않음, EC2 `.env` 의 `QUIZ_SERVER_TOKEN` 과 같은 토큰) |

@@ -61,18 +61,16 @@ jobs:
       - run: npm ci
       - run: npm test
 
-  quiz-server:
-    name: 퀴즈 AI 서버 점검 (연습 모드)
+  llm-server:
+    name: LLM 퀴즈 서버 문법 점검
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: api/quiz-server
+        working-directory: api/llm-server
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-python@v5
         with:
-          node-version: '24'
-          cache: npm
-          cache-dependency-path: api/quiz-server/package-lock.json
-      - run: npm ci
-      - run: npm test
+          python-version: '3.12'
+      # 실제 출제는 강의실 PC의 GPU · Ollama 가 필요해서 CI에서는 파이썬 파일이 컴파일되는지만 확인
+      - run: python -m py_compile *.py

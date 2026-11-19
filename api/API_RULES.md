@@ -7,7 +7,7 @@
 | 구성 | 무엇 | 담당 | 어디 |
 |---|---|---|---|
 | API 서버 | Node.js + TypeScript, EC2에서 상시 구동 — 회원가입·로그인(JWT), 프로필·기록 저장, 문제 은행 | 서버(강건우) | `api/server/` · 동작 견본은 [`mock-server/`](mock-server) |
-| 퀴즈 AI 서버 | 강의실 PC LLM을 SSH 역방향 터널로 연결 — EC2가 생성 작업·문제 은행 관리 | 서버(강건우) · 출제 지침(김주안) | [`quiz-server/`](quiz-server) |
+| 퀴즈 AI 서버 | 강의실 PC LLM을 SSH 역방향 터널로 연결 — EC2가 생성 작업·문제 은행 관리 | 서버(강건우) · 출제 지침(김주안) | [`llm-server/`](llm-server) |
 | 데이터베이스 | AWS RDS MySQL 8.4 — API 서버만 접속 | DB(김창원) | [`mysql/migrations/`](mysql/migrations/) |
 | 앞단 | Nginx + Let's Encrypt HTTPS → API 서버. 강의실 `/quiz`는 EC2 내부 터널로만 호출 | 서버(강건우) | EC2 설정 |
 

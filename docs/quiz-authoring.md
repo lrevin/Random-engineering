@@ -2,7 +2,7 @@
 
 앱에 내장하는 문제 은행(`app/src/data/quizbank/*.json`)을 만들 때 지키는 기준입니다.
 사람이 쓰든 AI가 초안을 쓰든 같은 기준으로 작성하고, 출시 전에는 해당 분야를 아는 팀원이 검토합니다.
-**퀴즈 AI의 출제 지침([`api/quiz-server/gem.md`](../api/quiz-server/gem.md))도 이 기준과 똑같이 맞춥니다.** 이 문서를 고치면 gem.md도 같이 고치세요.
+**LLM 퀴즈 서버의 출제 지침([`api/llm-server/prompts/gem.md`](../api/llm-server/prompts/gem.md))도 이 기준과 똑같이 맞춥니다.** 이 문서를 고치면 gem.md도 같이 고치세요.
 
 ## 분량
 - 주제 1개당 **30문제**: 4지선다(`mc`) **22개** + OX(`ox`) **8개**

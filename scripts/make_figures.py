@@ -181,11 +181,10 @@ def architecture():
     for y in (410, 690):
         arrow(d, [(1210, y), (1210, y + 40)])
 
-    # 퀴즈 AI 서버 (개인 PC 등에서 계속 켜 두는 출제 AI)
-    box(d, 760, 1200, 900, 300, "퀴즈 AI 서버 (PC 등에서 상시 구동)", [], head=RED)
-    tech(im, d, 804, 1295, "nodejs", "Node.js", "api/quiz-server", h=60)
-    tech(im, d, 1150, 1295, "claude", "출제 지침", "gem.md (Gems처럼)", h=60)
-    lines_at(d, 804, 1395, ["공부 시작 즉시 출제 → 1차·2차 검수", "주제별 문제 창고 · 쉬는 동안 계속 출제"])
+    # LLM 퀴즈 서버 (강의실 PC, 오픈 모델)
+    box(d, 760, 1200, 900, 300, "LLM 퀴즈 서버 (강의실 PC · SSH 터널)", [], head=RED)
+    tech(im, d, 804, 1295, "wikipedia", "위키백과 근거 출제", "api/llm-server · Ollama qwen3", h=60)
+    lines_at(d, 804, 1395, ["출제 → 자동 검사 → 1차·2차 검수", "EC2가 생성 작업으로 받아 DB에 저장"])
 
     box(d, 1800, 110, 540, 300, "데이터베이스", [])
     hero(im, d, 1800, 540, 205, "postgresql", "PostgreSQL")

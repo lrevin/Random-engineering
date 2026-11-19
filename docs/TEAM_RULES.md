@@ -50,7 +50,7 @@ git push origin --delete feature/quest-server # 다 합쳤으면 지움
 | `app/src/lib/` | 앱 로직. **서버 호출은 `auth-client.ts`·`api.ts`·`quiz.ts`·`social.ts`·`speed.ts`에서만** | 이재빈 · 김창원 |
 | `api/server/` | API 서버 진입점 (`server.mjs`), 인증(`auth.mjs`), 카카오(`kakao.mjs`) | 김창원 |
 | `api/mysql/` | 기능별 서비스(`*-service.mjs`) + 주소 처리(`*-http.mjs`) + `migrations/` (Flyway) | 김창원 |
-| `api/quiz-server/` | 퀴즈 AI 서버, 생성 문제 저장소(`pools/`) | 강건우 · 김주안 |
+| `api/llm-server/` | LLM 퀴즈 서버(강의실 PC), 출제 · 검수 지침(`prompts/`) | 강건우 · 김주안 |
 | `app/src/data/quizbank/` | 앱에 넣는 기본 문제 은행 (**주제 묶음 형식 `{ "주제id": [문제…] }`만**) | 김주안 |
 | `docs/` | 문서. 설정 방법은 `*_SETUP.md`, 기능 규칙은 기능 이름 `.md` | 모두 |
 | `scripts/` | 데이터 생성·검사 도구 (Python) | 모두 |
@@ -85,7 +85,7 @@ git push origin --delete feature/quest-server # 다 합쳤으면 지움
 
 ### 문제 은행
 - `app/src/data/quizbank/`에는 주제 묶음 형식 파일만 둡니다. 서버가 이 폴더를 그대로 읽어 DB에 넣으므로 다른 형식이 섞이면 서버 시험이 실패합니다.
-- AI가 만든 문제, 시험용 mock 데이터는 `api/quiz-server/pools/`에 둡니다(주제별 배열 형식).
+- AI가 만든 문제는 LLM 서버가 PC의 `api/llm-server/out/`에 만들고(저장소에 올리지 않음), EC2가 받아 DB에 저장합니다.
 
 ## 4. 올리기 전 검사 (모두 통과해야 `develop`에 합침)
 
