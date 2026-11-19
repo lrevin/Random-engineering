@@ -94,7 +94,7 @@ export function createActivityService({auth,connectionFactory=connect,now=()=>ne
   else{const payload={startId:attemptId,certId};await startExam(db,id,payload,value,now());await receipt(db,id,`activity-exam:${attemptId}`,'exam_start',payload,value);}
  }
  await db.execute(`INSERT INTO quiz_attempts(id,user_id,topic_id,status,verification_status,started_at,purpose,certificate_id,request_id,request_hash,rule_version,allowed_sec,study_ended_at) VALUES (?,?,?,'issued','server_verified',?,?,?,?,?,?,?,?)`,[attemptId,id,topicId,now(),purpose,certId,requestId,digest,SPECIAL_RULE_VERSION,duration,purpose==='study'?null:now()]);
- if(purpose==='study'){const job=await enqueueQuizJob(db,topicId,now(),quizJobsEnabled===undefined?{}:{enabled:quizJobsEnabled});await db.execute('UPDATE quiz_attempts SET generation_job_id=? WHERE id=?',[job,attemptId]);}
+ if(purpose==='study'){const job=await enqueueQuizJob(db,topicId,now(),{ownerAttemptId:attemptId,...(quizJobsEnabled===undefined?{}:{enabled:quizJobsEnabled})});await db.execute('UPDATE quiz_attempts SET generation_job_id=? WHERE id=?',[job,attemptId]);}
  await storeItems(db,attemptId,items);return view(db,id,await find(db,id,attemptId));
  }),
  event:(header,attemptId,body)=>member(header,async(db,id)=>{
@@ -117,7 +117,7 @@ export function createActivityService({auth,connectionFactory=connect,now=()=>ne
  }
  if(event==='quiz'){
   const seconds=studyElapsed({startedAt:instant(a.started_at),pausedSec:a.paused_sec,pausedAt:a.paused_at?instant(a.paused_at):null,allowedSec:a.allowed_sec},at);
-  const ai=await selectAiQuestions(db,a.topic_id,a.generation_job_id,4);
+  const ai=await selectAiQuestions(db,a.topic_id,a.generation_job_id,4,{attemptId:a.id});
   const bank=await questions(db,a.topic_id,7-ai.length,new Set(),new Set(ai.map(x=>x.question.q.trim().normalize('NFC'))));
   const final=shuffle([...ai,...bank]).map((x,i)=>x.question.src==='offline'?{...x,question:reproducePractice(x.question.material,x.question.seed,i+1)}:x);
   await storeItems(db,a.id,final);

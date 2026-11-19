@@ -43,17 +43,25 @@ test('LLM 실제 DB: 큐·발급·채점·보상·JSON 가져오기',async t=>{
   // 다른 회귀 검사에 AI 은행이 섞이지 않게, 이 테스트가 적재한 사전 문제만 제거한다.
   await db.execute("DELETE d FROM question_details d JOIN questions q ON q.id=d.question_id WHERE q.source='ai' AND q.generation_job_id IS NULL");await db.execute("DELETE FROM questions WHERE source='ai' AND generation_job_id IS NULL");
  });
- let topic,attempt,jid;
+ let topic,attempt,jid,sharedAttempt,sharedMember;
  await t.test('동시 학습·재전송은 주제 작업 하나를 공유하고 HTTP는 짧은 등록 이후 실행',async()=>{
-  topic=await makeTopic();const results=await Promise.all([issue(topic),issue(topic)]);attempt=results[0];
-  const [rows]=await db.execute('SELECT generation_job_id FROM quiz_attempts WHERE id IN (?,?)',results.map(x=>x.id));assert.equal(rows[0].generation_job_id,rows[1].generation_job_id);jid=rows[0].generation_job_id;
+  topic=await makeTopic();const results=await Promise.all([issue(topic),issue(topic)]);attempt=results[0];sharedAttempt=results[1];
+  const [rows]=await db.execute('SELECT generation_job_id FROM quiz_attempts WHERE id IN (?,?)',results.map(x=>x.id));assert.equal(rows[0].generation_job_id,rows[1].generation_job_id);jid=rows[0].generation_job_id;const owner=parseJson((await job(jid)).request_spec).ownerAttemptId;attempt=results.find(x=>x.id===owner);sharedAttempt=results.find(x=>x.id!==owner);assert(attempt&&sharedAttempt);
+  const other=await auth.signup({email:randomUUID()+'@example.com',password:'Llm-Shared!123'});users.push(other.user.id);sharedMember={header:'Bearer '+other.accessToken};sharedMember.attempt=await activity.issue(sharedMember.header,{requestId:randomUUID(),purpose:'study',topicId:topic,studySec:60});
+  const [[link]]=await db.execute('SELECT generation_job_id FROM quiz_attempts WHERE id=?',[sharedMember.attempt.id]);assert.equal(link.generation_job_id,jid);
   const replay=await activity.issue(h,{requestId:attempt.id,purpose:'study',topicId:topic,studySec:60});assert.equal(replay.id,attempt.id);assert.equal((await job(jid)).attempt_count,0);
  });
  await t.test('실제 가짜 HTTP 서버의 기존 API 형식·인증 헤더를 사용하고 생성 결과를 원자 저장',async()=>{
   const server=createServer(async(req,res)=>{assert.equal(req.url,'/quiz');assert.equal(req.headers['x-quiz-token'],'fake-test-token');let body='';for await(const c of req)body+=c;assert.deepEqual(JSON.parse(body),{topicId:topic,count:4});res.setHeader('Content-Type','application/json');res.end(JSON.stringify({topicId:topic,questions:Array.from({length:4},(_,i)=>q(i)),model:'qwen3:14b',generated:4,seconds:1}));});
   await new Promise(r=>server.listen(0,'127.0.0.1',r));
   try{const w=createQuizJobWorker({settings:{...settings,url:'http://127.0.0.1:'+server.address().port}});assert.equal(await w.runOnce(),true);w.stop();}finally{server.closeAllConnections();await new Promise(r=>server.close(r));}
-  const saved=await job(jid);assert.equal(saved.status,'succeeded');assert.equal(Number(saved.accepted_count),4);assert(saved.response_hash);assert.equal(parseJson(saved.result_summary).questionIds.length,4);
+  const saved=await job(jid);assert.equal(saved.status,'succeeded');assert.equal(Number(saved.accepted_count),4);assert(saved.response_hash);assert.equal(parseJson(saved.result_summary).storageMode,'draft');assert.equal(parseJson(saved.result_summary).questionIds.length,4);assert.equal(parseJson(saved.request_spec).ownerAttemptId,attempt.id);const [[n]]=await db.execute("SELECT COUNT(*) AS n FROM questions WHERE topic_id=? AND source='ai' AND status='draft'",[topic]);assert.equal(Number(n.n),4);
+ });
+ await t.test('작업을 공유한 다른 시도와 다른 회원은 최초 요청자의 draft를 받지 않는다',async()=>{
+  const fixed=await activity.event(h,sharedAttempt.id,{requestId:randomUUID(),event:'quiz'});assert(fixed.items.every(x=>x.question.src!=='ai'));
+  const otherFixed=await activity.event(sharedMember.header,sharedMember.attempt.id,{requestId:randomUUID(),event:'quiz'});assert(otherFixed.items.every(x=>x.question.src!=='ai'));
+  await assert.rejects(activity.get(sharedMember.header,attempt.id),{code:'not_found'});
+  const [[draft]]=await db.execute("SELECT COUNT(*) AS n FROM questions WHERE topic_id=? AND status='draft'",[topic]);assert.equal(Number(draft.n),4);
  });
  await t.test('AI 4개와 보충 3개를 확정·재진입 불변·정답 변조 무시·XP 및 부스터 자격',async()=>{
   const fixed=await activity.event(h,attempt.id,{requestId:randomUUID(),event:'quiz'});assert.equal(fixed.items.length,7);assert(fixed.quizFixedAt);assert.equal(fixed.items.filter(x=>x.question.src==='ai').length,4);assert.equal(new Set(fixed.items.map(x=>x.question.q)).size,7);
@@ -71,6 +79,34 @@ test('LLM 실제 DB: 큐·발급·채점·보상·JSON 가져오기',async t=>{
   const untrusted={id:randomUUID(),topicId:'ds-01',memo:'',studySec:60,score:7,total:7,studiedAt:new Date().toISOString(),items:fixed.items.map(i=>({question:i.question,answer:i.question.answer}))};
   const out=await records.upload(h,{records:[untrusted]});assert.equal(out.results[0].record.rewardStatus,'ineligible');assert.equal(out.results[0].record.rp,0);
  });
+ await t.test('live·pool 혼합과 generated 초과·부분 응답은 수락 수로 종료하며 draft를 저장한다',async()=>{
+  const id=await makeTopic(),x=await issue(id),[[link]]=await db.execute('SELECT generation_job_id FROM quiz_attempts WHERE id=?',[x.id]);
+  await worker(async()=>new Response(JSON.stringify({topicId:id,model:'qwen3:14b',questions:[{...q(1),source:'live'},{...q(2),source:'pool'}],generated:7,seconds:64}))).runOnce();
+  const j=await job(link.generation_job_id),summary=parseJson(j.result_summary);assert.equal(j.status,'partial');assert.equal(Number(j.accepted_count),2);assert.equal(summary.generated,7);assert.equal(summary.returnedCount,2);assert.equal(summary.acceptedLiveCount,1);assert.equal(summary.acceptedPoolCount,1);
+  const fixed=await activity.event(h,x.id,{requestId:randomUUID(),event:'quiz'});assert.equal(fixed.items.filter(i=>i.question.src==='ai').length,2);assert.equal(fixed.items.length,7);
+ });
+ await t.test('인증 실패는 안전한 오류 코드로 구분하고 자동 재시도하지 않는다',async()=>{
+  const id=await makeTopic(),x=await issue(id),[[link]]=await db.execute('SELECT generation_job_id FROM quiz_attempts WHERE id=?',[x.id]);
+  await worker(async()=>new Response('unauthorized',{status:401})).runOnce();const j=await job(link.generation_job_id);assert.equal(j.status,'failed');assert.equal(parseJson(j.result_summary).reason,'upstream_unauthorized');assert.equal(parseJson(j.result_summary).upstreamStatus,401);assert.equal(Number(j.attempt_count),1);
+ });
+ await t.test('published 설정 전환은 신규 문제만 공개하고 기존 draft·disabled는 되살리지 않는다',async()=>{
+  const id=await makeTopic(),x=await issue(id),[[link]]=await db.execute('SELECT generation_job_id FROM quiz_attempts WHERE id=?',[x.id]);
+  await worker(async()=>response(id),{settings:{...settings,newQuestionStatus:'published'}}).runOnce();const j=await job(link.generation_job_id);assert.equal(j.status,'succeeded');
+  const [[n]]=await db.execute("SELECT COUNT(*) AS n FROM questions WHERE topic_id=? AND status='published'",[id]);assert.equal(Number(n.n),4);
+  const next=await issue(id);const fixed=await activity.event(h,next.id,{requestId:randomUUID(),event:'quiz'});assert.equal(fixed.items.filter(i=>i.question.src==='ai').length,4);
+  await db.execute("UPDATE quiz_jobs SET status='cancelled',finished_at=UTC_TIMESTAMP(3) WHERE topic_id=? AND status='queued'",[id]);
+  const first=await saveAiQuestions(db,id,[q(20)],{model:'qwen3:14b',status:'draft'});const blocked=await saveAiQuestions(db,id,[q(20)],{model:'qwen3:14b',status:'published'});assert.equal(blocked.questionIds.length,0);assert.equal(blocked.rejected[0].reason,'draft_requires_review');
+  await db.execute("UPDATE questions SET status='disabled' WHERE id=?",[first.questionIds[0]]);const disabled=await saveAiQuestions(db,id,[q(20)],{model:'qwen3:14b',status:'draft'});assert.equal(disabled.questionIds.length,0);assert.equal(disabled.rejected[0].reason,'disabled_question');
+ });
+ await t.test('최초 요청 정보가 없는 기존 작업과 disabled 문제는 draft 허용 대상에서 제외한다',async()=>{
+  for(const kind of ['legacy','disabled']){
+   const id=await makeTopic(),x=await issue(id),[[link]]=await db.execute('SELECT generation_job_id FROM quiz_attempts WHERE id=?',[x.id]);
+   await worker(async()=>response(id)).runOnce();const j=await job(link.generation_job_id);
+   if(kind==='legacy')await db.execute("UPDATE quiz_jobs SET request_spec=JSON_REMOVE(request_spec,'$.ownerAttemptId') WHERE id=?",[j.id]);
+   else await db.execute("UPDATE questions SET status='disabled' WHERE id=?",[parseJson(j.result_summary).questionIds[0]]);
+   const fixed=await activity.event(h,x.id,{requestId:randomUUID(),event:'quiz'});assert.equal(fixed.items.filter(i=>i.question.src==='ai').length,kind==='legacy'?0:3);assert.equal(fixed.items.length,7);
+  }
+ });
  await t.test('토큰 미설정은 생성 호출 없이 실패 이력·은행 보충, 대기 중 만료 작업은 복구 처리',async()=>{
   const id=await makeTopic(),off=createActivityService({auth,quizJobsEnabled:false});
   const x=await off.issue(h,{requestId:randomUUID(),purpose:'study',topicId:id,studySec:0});const [[r]]=await db.execute('SELECT generation_job_id FROM quiz_attempts WHERE id=?',[x.id]);assert.equal((await job(r.generation_job_id)).status,'failed');assert.equal(parseJson((await job(r.generation_job_id)).result_summary).reason,'not_configured');
@@ -79,11 +115,11 @@ test('LLM 실제 DB: 큐·발급·채점·보상·JSON 가져오기',async t=>{
   await db.execute('UPDATE quiz_jobs SET created_at=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 20 MINUTE),deadline_at=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 1 SECOND) WHERE id=?',[j.generation_job_id]);
   assert.equal(await worker(async()=>{throw Error('must not call');}).runOnce(),false);assert.equal((await job(j.generation_job_id)).status,'failed');
  });
- await t.test('조기 출제 뒤 응답은 문제 은행에만 저장하고 현재 문항을 바꾸지 않음',async()=>{
+ await t.test('조기 출제 뒤 draft는 현재 고정 풀이·다른 생성 작업에 자동 출제하지 않음',async()=>{
   const id=await makeTopic(),x=await issue(id),[[row]]=await db.execute('SELECT generation_job_id FROM quiz_attempts WHERE id=?',[x.id]);
   const fixed=await activity.event(h,x.id,{requestId:randomUUID(),event:'quiz'});assert(fixed.items.every(x=>x.question.src!=='ai'));
   await worker(async()=>response(id)).runOnce();assert.equal((await job(row.generation_job_id)).status,'succeeded');assert.deepEqual((await activity.get(h,x.id)).items,fixed.items);
-  const next=await issue(id),picked=await activity.event(h,next.id,{requestId:randomUUID(),event:'quiz'});assert.equal(picked.items.filter(i=>i.question.src==='ai').length,4);
+  const next=await issue(id),picked=await activity.event(h,next.id,{requestId:randomUUID(),event:'quiz'});assert.equal(picked.items.filter(i=>i.question.src==='ai').length,0);
   await db.execute("UPDATE quiz_jobs SET status='cancelled',finished_at=UTC_TIMESTAMP(3) WHERE topic_id=? AND status='queued'",[id]);
  });
  await t.test('부분 응답·중복·주제 불일치·빈 응답 처리',async()=>{
@@ -108,7 +144,7 @@ test('LLM 실제 DB: 큐·발급·채점·보상·JSON 가져오기',async t=>{
   await db.execute('UPDATE quiz_jobs SET lease_expires_at=DATE_SUB(UTC_TIMESTAMP(3),INTERVAL 1 SECOND) WHERE id=?',[r.generation_job_id]);await worker(async()=>response(id)).runOnce();release();await pending;assert.equal((await job(r.generation_job_id)).status,'failed');
   const [[n]]=await db.execute("SELECT COUNT(*) AS n FROM questions WHERE topic_id=? AND source='ai'",[id]);assert.equal(Number(n.n),0);
  });
- await t.test('저장 중 오류는 문제·상세·작업 완료를 함께 롤백',async()=>{
+ await t.test('draft 저장 오류는 문제·상세·작업 완료를 함께 롤백',async()=>{
   const id=await makeTopic(),x=await issue(id),[[r]]=await db.execute('SELECT generation_job_id FROM quiz_attempts WHERE id=?',[x.id]);
   const factory=async()=>{const c=await connect();return new Proxy(c,{get(target,k){if(k==='execute')return(sql,args)=>{if(sql.startsWith('INSERT INTO question_details'))throw Error('fake storage error');return target.execute(sql,args);};const v=target[k];return typeof v==='function'?v.bind(target):v;}});};
   await worker(async()=>response(id),{connectionFactory:factory}).runOnce();assert.equal((await job(r.generation_job_id)).status,'failed');const [[n]]=await db.execute('SELECT COUNT(*) AS n FROM questions WHERE topic_id=?',[id]);assert.equal(Number(n.n),0);
@@ -126,7 +162,7 @@ test('LLM 실제 DB: 큐·발급·채점·보상·JSON 가져오기',async t=>{
    assert.equal(attempt.items.length,0);await Promise.race([ready,new Promise((_,reject)=>{const t=setTimeout(()=>reject(Error('worker did not start')),10000);t.unref();})]);
    const fixed=await request('/me/activities/'+attempt.id+'/events',{requestId:randomUUID(),event:'quiz'},user.accessToken);assert.equal(fixed.items.length,7);assert(fixed.items.every(x=>x.question.src!=='ai'));
    release();
-   let done=false;for(let i=0;i<100;i++){const [[n]]=await db.execute("SELECT COUNT(*) AS n FROM questions WHERE topic_id=? AND source='ai'",[id]);if(Number(n.n)===4){done=true;break;}await new Promise(r=>setTimeout(r,20));}assert(done,'worker result not stored');
+   let done=false;for(let i=0;i<100;i++){const [[n]]=await db.execute("SELECT COUNT(*) AS n FROM quiz_jobs WHERE topic_id=? AND status='succeeded'",[id]);if(Number(n.n)===1){done=true;break;}await new Promise(r=>setTimeout(r,20));}assert(done,'worker result not stored');const [[n]]=await db.execute("SELECT COUNT(*) AS n FROM questions WHERE topic_id=? AND source='ai'",[id]);assert.equal(Number(n.n),4);
   }finally{
    release();child.kill();await new Promise(r=>{if(child.exitCode!==null)return r();child.once('exit',r);});mock.closeAllConnections();await new Promise(r=>mock.close(r));
   }

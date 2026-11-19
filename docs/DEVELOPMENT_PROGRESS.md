@@ -149,3 +149,14 @@
 - account-test.mjs에 테마/보호권/배틀권 보유 후 무료·유료 닉네임 변경, 최초 상태 이력 없는 변경의 회귀 검사 2개 추가. 서버71개·독립 MySQL/Flyway 통합214개 통과(실패·건너뜀0). 운영 DB에서 통합 테스트는 실행하지 않았다.
 - 기존 운영 파일·서비스·manifest를 /home/ubuntu/backups/wallet-state-fix-20261118/에 백업하고 수정 배포·재시작. 오류 계정의 지갑 조회·기존 자산 보존을 롤백 조회로 확인, HTTPS 임시 계정의 구매→닉네임 변경→지갑 보존→다음 장착 요청 통과. 임시 계정 정리 완료.
 - DB 구조·회원 데이터 보정·APK 변경 없음. 서버 코드만으로 기존 앱에 반영된다. 사용자가 공용 지갑 수정·기존 자산 보존·EC2 배포 완료의 팀 공유를 확인했고 develop 통합 대상으로 정리했다.
+
+### 2026-11-19 실시간 LLM 계약 보완·draft·최초 요청 시도 제한 (로컬 작업)
+
+- 사용자 합의로 기존 은행 미저장 중간안을 폐기하고 실시간 생성 문제를 questions/question_details의 draft로 저장한다. 최초 요청 시도 ID는 quiz_jobs.request_spec.ownerAttemptId에 고정하고, 서버가 학습 연결·회원 소유권을 확인한 경우에만 그 결과 draft를 출제한다. 공유 회원·같은 회원의 다른 시도에는 published만 제공한다.
+- QUIZ_NEW_QUESTION_STATUS 기본 draft, published로 바꾸면 이후 신규 생성분만 공개한다. 기존 draft 자동 승격·disabled 재활성화는 하지 않는다. 공개40개 제한·불변 문제 ID·재접속/고정 스냅샷·서버 채점/보상은 유지한다. V14의 기존 JSON·상태값을 사용해 마이그레이션 추가/변경 없음.
+- 실제 연결 구조(EC2 loopback18788·SSH 터널·X-Quiz-Token·POST /quiz)는 유지한다. 연결5초·전체기한10분·긴 생성 대기, 안전한 HTTP401/403 오류 코드, generated와 실제 live/pool 수락 수의 분리 집계를 반영했다. 토큰은 출력하지 않는다.
+- 변경 파일: quiz-job-service.mjs(저장 상태·최초 요청·오류/집계), ai-question-store.mjs(draft 저장/선택 권한), activity-service.mjs(학습 연결), llm-http.mjs(연결/기한·크기 제한), llm-health.mjs, .env.example, 관련 LLM 정책/DB 검사, API_RULES.md.
+- AWS 콘솔 직접 health/생성 성공은 사용자가 제공한 연결 확인 결과다. 이번 작업의 모의 HTTP·임시 DB 검사를 실제 강의실 연결·운영 반영 성공으로 표시하지 않는다. EC2 배포·RDS 변경·Git 커밋/push·APK 빌드는 수행하지 않았다.
+- develop 통합 전 최초 요청자 제한·공용 학습/출제·상태 전환 설정을 팀에 공유한다. 은행 공개 범위가 바뀌므로 배포 시 API 재시작과 QUIZ_NEW_QUESTION_STATUS 설정 확인이 필요하다. 앱 코드·네이티브 의존성 변경 없음.
+
+- 최종 검사: 앱 타입·ESLint·44개, 서버73개, 독립 MySQL/Flyway 통합219개 통과. 실패·건너뜀0. 임시 검사 DB 정리 완료, 운영 RDS·기존 개발 DB 변경 없음.
