@@ -293,3 +293,13 @@ adb reverse tcp:8788 tcp:8788                    # 안드로이드 에뮬레이�
 - `POST /social/friends/:uid/poke`: 오늘(한국 날짜) 공부 안 한 친구에게 푸시 "OO님이 콕 찔렀어요". 친구마다 하루 1번(`already_poked`), 이미 공부했으면 `friend_studied_today`. 친구 정보에 `studiedToday` · `pokedToday`.
 - 예약 알림(10분마다, `GET_LOCK`): 일요일 19~22시 주간 공부 리포트(알림 켠 회원), 토 · 일 18~22시 주간 목표 절반 이상인 스터디 팀 응원. `notification_log(kind,ref,period)`로 한 번만.
 - 친구 배틀 결과 화면에 "다시 붙기"(같은 친구에게 바로 배틀 신청).
+
+
+### LLM 관측 로그
+
+- `journalctl -u ppobgong-api.service -f -o cat`에서 `"component":"llm"` JSON 로그를 확인한다. 작업 UUID `jobId`로 요청·응답·저장·출제를 연결하고 `attemptId`로 실제 출제 시도를 구분한다.
+- `request_started`: 요청 수·시도 횟수·작업 생성 후 경과 시간. `response_received`: EC2 검증 전 원본 문제 배열 길이, 응답의 live/pool/미지정 수, LLM 보고 시간(`llmSeconds`), EC2 HTTP 경과 시간(`requestElapsedMs`).
+- `job_finished`: DB 커밋 후의 수락·신규 저장·재사용 수, 응답 형식/중복 검사 제외 수(`validationRejectedCount`), 저장 단계 제외 수(`storageRejectedCount`), 안전한 제외 사유·저장 상태·최종 작업 상태. 제외 사유의 position은 response_validation 단계에서는 원본 배열, storage 단계에서는 정규화 통과 배열의 0부터 시작하는 위치다.
+- `job_failed`·`job_retry`: 안전한 실패 사유와 HTTP 상태. `result_ignored`: 작업 점유·기한이 바뀌어 결과를 반영하지 않은 경우. `quiz_issued`: 출제 스냅샷 커밋 후 AI·기본·대체 문제의 실제 개수. 생성 응답 수와 앱 출제 수는 별도 이벤트다.
+- 토큰·인증 헤더·문제/보기/정답/해설·회원 개인 정보·원시 오류 메시지는 출력하지 않는다. 로그 출력 오류는 기존 업무 처리를 실패시키지 않는다. 생성·저장·권한·출제·채점·보상 정책과 DB 구조는 변경하지 않는다.
+- 강의실 LLM 내부의 후보 생성·검수 탈락 내역은 EC2에 전달되지 않으므로 이 로그로 추정하지 않는다. 해당 내역은 강의실 out/log.txt에서 확인한다.

@@ -3,6 +3,7 @@ import {randomUUID,createHash} from 'node:crypto';
 import {connect,transaction} from '../server/db.mjs';
 import {validateAiResponse,saveAiQuestions} from './ai-question-store.mjs';
 import {llmFetch} from './llm-http.mjs';
+import {writeLlmLog} from './llm-observation.mjs';
 import {instant} from './purchase-policy.mjs';
 export const JOB_DEADLINE_MS=600000,LEASE_MS=90000;
 export function llmSettings(env=process.env){
@@ -51,23 +52,26 @@ export function createQuizJobWorker({connectionFactory=connect,settings=llmSetti
    return {...job,lease_token:token,attempt_count:Number(job.attempt_count)+1};
   });}finally{await db.query("SELECT RELEASE_LOCK(SHA2(CONCAT(DATABASE(),':llm_claim'),256))");}
  });}
- async function finish(job,data,error){return connection(db=>transaction(db,async()=>{
+ async function finish(job,data,error){const result=await connection(db=>transaction(db,async()=>{
   await db.execute('SELECT id FROM topics WHERE id=? FOR UPDATE',[job.topic_id]);
   const [[current]]=await db.execute('SELECT * FROM quiz_jobs WHERE id=? FOR UPDATE',[job.id]);const at=now();
   if(current?.status!=='running'||current.lease_token!==job.lease_token||instant(current.lease_expires_at)<=at||instant(current.deadline_at)<=at)return false;
   if(error){const retry=!stopped&&safeRetry(error)&&job.attempt_count<2&&+at+5000<+instant(job.deadline_at);
-   await db.execute('UPDATE quiz_jobs SET status=?,available_at=?,finished_at=?,worker_id=NULL,lease_token=NULL,lease_expires_at=NULL,result_summary=? WHERE id=?',[retry?'queued':'failed',new Date(+at+5000),retry?null:at,JSON.stringify({reason:retry?'connect_retry':llmFailureReason(error),questionIds:[],...(Number.isInteger(error.status)?{upstreamStatus:error.status}:{})}),job.id]);return true;}
+   await db.execute('UPDATE quiz_jobs SET status=?,available_at=?,finished_at=?,worker_id=NULL,lease_token=NULL,lease_expires_at=NULL,result_summary=? WHERE id=?',[retry?'queued':'failed',new Date(+at+5000),retry?null:at,JSON.stringify({reason:retry?'connect_retry':llmFailureReason(error),questionIds:[],...(Number.isInteger(error.status)?{upstreamStatus:error.status}:{})}),job.id]);return {event:retry?'job_retry':'job_failed',fields:{reason:retry?'connect_retry':llmFailureReason(error),upstreamStatus:error.status,attemptNumber:job.attempt_count}};}
   const valid=validateAiResponse(data,job.topic_id,Number(job.requested_count));
   const saved=await saveAiQuestions(db,job.topic_id,valid.questions,{model:valid.model,jobId:job.id,status:settings.newQuestionStatus??'draft'}),n=saved.questionIds.length;
   const digest=createHash('sha256').update(JSON.stringify({topicId:job.topic_id,model:valid.model,questions:valid.questions})).digest();
   const origins=saved.acceptedPositions.map(i=>valid.origins[i]);
   const summary={...saved,storageMode:settings.newQuestionStatus??'draft',bankStored:true,model:valid.model,origins,returnedCount:valid.returnedCount,acceptedLiveCount:origins.filter(x=>x==='live').length,acceptedPoolCount:origins.filter(x=>x==='pool').length,acceptedUnknownCount:origins.filter(x=>x==='unspecified').length,generated:valid.generated,seconds:valid.seconds,rejected:[...valid.rejected,...saved.rejected]};
-  await db.execute('UPDATE quiz_jobs SET status=?,accepted_count=?,result_summary=?,response_hash=?,finished_at=?,lease_expires_at=NULL WHERE id=?',[n===Number(job.requested_count)?'succeeded':n?'partial':'failed',n,JSON.stringify(summary),digest,at,job.id]);return true;
- }));}
+  await db.execute('UPDATE quiz_jobs SET status=?,accepted_count=?,result_summary=?,response_hash=?,finished_at=?,lease_expires_at=NULL WHERE id=?',[n===Number(job.requested_count)?'succeeded':n?'partial':'failed',n,JSON.stringify(summary),digest,at,job.id]);return {event:'job_finished',fields:{status:n===Number(job.requested_count)?'succeeded':n?'partial':'failed',requestedCount:Number(job.requested_count),returnedCount:valid.returnedCount,acceptedCount:n,liveCount:summary.acceptedLiveCount,poolCount:summary.acceptedPoolCount,unknownCount:summary.acceptedUnknownCount,generatedCount:valid.generated,llmSeconds:valid.seconds,insertedCount:saved.inserted,reusedCount:saved.reused,validationRejectedCount:valid.rejected.length,storageRejectedCount:saved.rejected.length,storageMode:summary.storageMode,jobElapsedMs:Math.max(0,+at-+instant(job.created_at)),rejections:[...valid.rejected.map(x=>({...x,stage:'response_validation'})),...saved.rejected.map(x=>({...x,stage:'storage'}))]}};
+ }));
+ // DB 커밋 후에만 확정 결과를 출력한다.
+ writeLlmLog(result?result.event:'result_ignored',{jobId:job.id,topicId:job.topic_id,...(result?.fields??{})});return !!result;
+ }
  async function runOnce(){if(busy||stopped||!settings.enabled)return false;busy=true;let heartbeat,job;
-  try{job=await claim();if(!job)return false;controller=new AbortController();const requestController=controller;const timeout=setTimeout(()=>requestController.abort(),Math.max(1,+instant(job.deadline_at)-+now()));timeout.unref?.();
+  try{job=await claim();if(!job)return false;const requestStarted=Date.now();writeLlmLog('request_started',{jobId:job.id,topicId:job.topic_id,requestedCount:Number(job.requested_count),attemptNumber:job.attempt_count,queueElapsedMs:Math.max(0,+now()-+instant(job.created_at))});controller=new AbortController();const requestController=controller;const timeout=setTimeout(()=>requestController.abort(),Math.max(1,+instant(job.deadline_at)-+now()));timeout.unref?.();
    heartbeat=setInterval(()=>{void connection(async db=>{const at=now();await db.execute("UPDATE quiz_jobs SET lease_expires_at=? WHERE id=? AND status='running' AND lease_token=? AND lease_expires_at>? AND deadline_at>?",[new Date(Math.min(+at+LEASE_MS,+instant(job.deadline_at))),job.id,job.lease_token,at,at]);}).catch(()=>requestController.abort());},20000);heartbeat.unref?.();
-   let data,error;try{const response=await fetcher(settings.url+'/quiz',{method:'POST',headers:{'Content-Type':'application/json','X-Quiz-Token':settings.token},body:JSON.stringify({topicId:job.topic_id,count:Number(job.requested_count)}),signal:requestController.signal});if(!response.ok)throw Object.assign(Error('LLM request failed'),{code:response.status===401?'LLM_UNAUTHORIZED':response.status===403?'LLM_FORBIDDEN':'LLM_UPSTREAM_HTTP',status:response.status});data=await readLimitedJson(response);}catch(e){error=e;}finally{clearTimeout(timeout);clearInterval(heartbeat);}
+   let data,error;try{const response=await fetcher(settings.url+'/quiz',{method:'POST',headers:{'Content-Type':'application/json','X-Quiz-Token':settings.token},body:JSON.stringify({topicId:job.topic_id,count:Number(job.requested_count)}),signal:requestController.signal});if(!response.ok)throw Object.assign(Error('LLM request failed'),{code:response.status===401?'LLM_UNAUTHORIZED':response.status===403?'LLM_FORBIDDEN':'LLM_UPSTREAM_HTTP',status:response.status});data=await readLimitedJson(response);const qs=Array.isArray(data?.questions)?data.questions:[];writeLlmLog('response_received',{jobId:job.id,topicId:job.topic_id,returnedCount:Array.isArray(data?.questions)?qs.length:undefined,liveCount:qs.filter(x=>x?.source==='live').length,poolCount:qs.filter(x=>x?.source==='pool').length,unknownCount:qs.filter(x=>!['live','pool'].includes(x?.source)).length,generatedCount:data?.generated,llmSeconds:data?.seconds,requestElapsedMs:Date.now()-requestStarted});}catch(e){error=e;}finally{clearTimeout(timeout);clearInterval(heartbeat);}
    try{await finish(job,data,error);}catch{await finish(job,null,Object.assign(Error('LLM response validation or storage failed'),{code:'LLM_INVALID_RESPONSE_OR_STORAGE'}));}
    return true;
   }finally{clearInterval(heartbeat);controller=null;busy=false;}

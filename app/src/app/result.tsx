@@ -56,7 +56,10 @@ function ResultInner({ snapshot }: { snapshot: NonNullable<ReturnType<typeof use
     router.replace(to);
   };
   const retry = () => {
-    setActive({ ...snapshot, stage: "quiz", quizOnly: true, quiz: null, result: null, studyUsed: 0, endAt: null, startedAt: new Date().toISOString() });
+    // 재도전은 이전 완료 ID·답안·대기 이벤트를 상속하지 않는 별도 풀이다.
+    setActive({ topicId: snapshot.topicId, memo: snapshot.memo, stage: "quiz", quizOnly: true,
+      quiz: null, result: null, studyTotal: 0, studyLeft: 0, studyUsed: 0,
+      endAt: null, startedAt: new Date().toISOString() });
     router.replace("/quiz");
   };
 

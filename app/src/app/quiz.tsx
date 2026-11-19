@@ -36,6 +36,11 @@ function QuizInner() {
   const quiz = a.quiz;
   const attemptId=useRef(a.serverAttemptId??Crypto.randomUUID());
   const [failed, setFailed] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const [loadVersion, setLoadVersion] = useState(0);
+  const [leaving, setLeaving] = useState(false);
+  const leavingRef = useRef(false);
+  const pendingLoad = useRef<Promise<unknown> | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError,setSaveError]=useState("");
 
@@ -43,27 +48,56 @@ function QuizInner() {
   useEffect(() => {
     if (quiz || !topic) return;
     let alive = true;
+    const current = () => alive && !leavingRef.current;
+    const update = (change: (session: NonNullable<typeof active>) => NonNullable<typeof active>) => {
+      if (current()) setActive(x => x?.startedAt === a.startedAt && x.topicId === a.topicId ? change(x) : x);
+    };
     const load=async()=>{
       if(mode==='user'&&a.quizOnly){
+        // 이전 앱에서 완료 ID를 물려받은 재풀이도 새 ID로 복구한다.
+        if(a.serverAttemptId && a.serverTracking){
+          const prior=await mysqlAuth.getActivity(attemptId.current);
+          if(!current())return null;
+          if(prior.status!=='issued')attemptId.current=Crypto.randomUUID();
+        }
         const id=attemptId.current;
-        setActive(x=>x?{...x,serverAttemptId:id}:x);
+        update(x=>({...x,serverAttemptId:id,serverTracking:false,serverPendingEvent:undefined}));
         await mysqlAuth.issueActivity({requestId:id,purpose:'study',topicId:topic.id,studySec:0});
+        if(!current())return null;
         const value=await mysqlAuth.activityEvent(id,'quiz',id);
-        setActive(x=>x?{...x,serverTracking:true}:x);
+        if(!current())return null;
+        if(!value.items.length)throw new AuthApiError('questions_unavailable',409);
+        update(x=>({...x,serverTracking:true}));
         return {source:value.items.some(i=>i.question.src==='ai')?'ai' as const:value.items.some(i=>i.question.src==='offline')?'offline' as const:'bank' as const,questions:value.items.map(i=>i.question)};
       }
       return loadQuiz(topic);
     };
-    load()
+    const task=load()
       .then((set) => {
-        if (!alive) return;
-        setActive((x) => (x ? { ...x, quiz: { source: set.source, questions: set.questions, answers: [] } } : x));
+        if (!current() || !set) return;
+        update(x=>({...x,quiz:{source:set.source,questions:set.questions,answers:[]}}));
       })
-      .catch(() => alive && setFailed(true));
+      .catch(error => { if(current()){setLoadError(authErrorMessage(error));setFailed(true);} });
+    pendingLoad.current=task;
     return () => { alive = false; };
   // 학습별 최초 로딩은 UUID를 보존하며 실행한다.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [quiz, topic, setActive]);
+  }, [quiz, topic, setActive, loadVersion]);
+
+  const quit = () => confirmQuit(() => {
+    if(leavingRef.current)return;
+    leavingRef.current=true;setLeaving(true);setLoadError("");
+    void (async()=>{
+      // 발급 요청이 끝난 뒤 취소해야 늦게 생성된 시도가 서버에 남지 않는다.
+      await pendingLoad.current;
+      if(mode==='user'&&(a.quizOnly||a.serverAttemptId)){
+        try{await mysqlAuth.abandonActivity(attemptId.current);}
+        catch(error){if(!(error instanceof AuthApiError && error.status===404))throw error;}
+      }
+      setActive(x=>x?.startedAt===a.startedAt && x.topicId===a.topicId?null:x);
+      router.replace("/home");
+    })().catch(error=>{leavingRef.current=false;setLeaving(false);setLoadError(authErrorMessage(error));setFailed(true);});
+  });
 
   if (!topic) return null;
 
@@ -72,8 +106,8 @@ function QuizInner() {
       <SafeAreaView style={{ flex: 1, ...screenBg(c), alignItems: "center", justifyContent: "center", gap: 14, padding: 24 }}>
         {failed ? (
           <>
-            <T size={18} weight="semibold" center>문제를 불러오지 못했어요.</T>
-            <Btn title="다시 시도" variant="primary" onPress={() => { setFailed(false); setActive((x) => (x ? { ...x, quiz: null } : x)); }} />
+            <T size={18} weight="semibold" center>{loadError || "문제를 불러오지 못했어요."}</T>
+            <Btn title="다시 시도" variant="primary" disabled={leaving} onPress={() => { setFailed(false); setLoadError(""); setLoadVersion(x=>x+1); }} />
           </>
         ) : (
           <>
@@ -82,6 +116,7 @@ function QuizInner() {
             <T size={14} color="muted" center>문제와 답안을 확인하고 있어요.</T>
           </>
         )}
+        <Btn title={leaving ? "진행 상태 정리 중…" : "그만두고 홈으로"} disabled={leaving} onPress={quit} />
       </SafeAreaView>
     );
   }
@@ -136,7 +171,7 @@ function QuizInner() {
     topicName={topic.ko}
     badges={<Row gap={6}><Badge label={topic.categoryName} /><Badge label={levelText(topic.lv)} tone={levelTone(topic.level)} />{!!saveError&&<T color="accent">{saveError}</T>}</Row>}
     saving={saving}
-    onQuit={() => confirmQuit(() => { setActive(null); router.replace("/home"); })}
+    onQuit={quit}
     onNext={(answer) => {
       const answers = quiz.answers.length>=quiz.questions.length?quiz.answers:[...quiz.answers, answer];
       if (answers.length >= quiz.questions.length) finish(answers);

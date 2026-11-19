@@ -170,3 +170,21 @@
 - 최초 적재는 새 릴리스에 TypeScript 도구가 없어 중단됐고 기존 서비스로 복구했다. 로컬 잠금 버전과 같은 TypeScript6.0.3 도구만 추가해 재적재·서비스 전환을 완료했다. 소스/패키지 정의 변경 없음.
 - 서비스 active/enabled·Restart=always·재시작 횟수0, 공개 HTTPS health·카카오 설정·HTTP301 전환 확인. 실제 터널 GET /health에서 qwen3:14b·gemma3:12b·토큰 설정 여부 확인. 이번 배포에서 실제 문제 생성 POST나 회원 앱의 생성→출제→보상 전체 실사용은 검사하지 않았다.
 - 릴리스 APK 빌드·기존 전용 인증서 서명 검증 통과(140,698,972바이트). SHA256: 223da6d0e8c8d762808279979f12f5d0d6fbfe737e56ad68e80ce50fbf87874a. 새 네이티브 모듈·기기 저장 키 추가 없음. 이번 요청에서는 에뮬레이터 설치를 수행하지 않았다.
+
+
+### 2026-11-20 퀴즈 재풀이 ID·로딩 복구 (로컬)
+
+- feature/quiz-retry-recovery에서 결과 화면 재도전이 완료된 serverAttemptId·추적 상태·대기 이벤트를 복사하던 문제를 수정했다. 새 재도전은 별도 풀이 ID·학습시간0으로 시작하며 이전 기록·보상은 변경하지 않는다.
+- quiz.tsx는 이전 앱이 남긴 완료/중단 시도를 확인하면 새 ID로 복구한다. 실패 후 다시 시도는 동일 풀이 ID로 실제 로딩을 재실행한다. 로딩 중에도 중단 버튼을 제공하고, 진행 중 발급/출제 요청 종료 후 서버 중단 성공을 확인해 기기 상태를 비운다. 실패하면 상태를 보존하고, 중단 중 늦은 응답은 반영하지 않는다.
+- 앱 타입·ESLint·49개(신규 화면 회귀5개), 서버73개 통과. 릴리스 빌드·기존 전용 서명 검증·emulator-5554 데이터 유지 업데이트 완료. 앱 재실행 후 복원된 퀴즈 1/7 화면 확인. 기존 답안·보상 변경이나 임의 풀이 완료는 수행하지 않았다.
+- 변경: app/src/app/result.tsx, app/src/app/quiz.tsx, app/tests/quiz-retry-recovery.test.mjs. DB·서버·기기 저장 키·네이티브 의존성 변경 없음. EC2 재배포 불필요. develop 커밋/push는 하지 않았다.
+
+
+### 2026-11-20 LLM 관측 로그 운영 적용
+
+- feature/llm-observation에서 요청 시작·검증 전 응답 수/live/pool·HTTP/LLM 시간·검증/저장 제외 수와 안전한 사유·커밋 후 저장 결과·커밋 후 실제 출제 구성을 작업 ID로 연결해 출력한다. 원문·보기·답안·토큰·회원 개인 정보는 로그에서 제외한다.
+- 기존 생성·저장·draft 권한·출제·채점·보상 정책과 DB SQL/마이그레이션을 유지했다. 로컬 재풀이 미커밋 수정은 보존하고 EC2 배포에서 제외했다.
+- 앱 타입·ESLint·49개, 서버75개, 별도 임시 MySQL/Flyway V1~V14에서 LLM 큐·발급·채점·보상 통합18개 통과. 임시 DB 종료·정리 완료. 운영 RDS에서는 통합 테스트나 새 생성 요청을 수행하지 않았다.
+- EC2 기존 릴리스·서비스 설정을 /home/ubuntu/backups/llm-observation-20261120/에 백업하고 llm-observation-20261120 릴리스로 전환했다. 전환 전 실행 중 생성 작업0 확인. .env 내용·V1~V14 보존, EC2 서버75개 검사·active/enabled·Restart=always·NRestarts0·공개 HTTPS health 정상 확인.
+- 배포 준비 중 백업 권한·줄바꿈·작업 경로 오류는 기존 서버를 실행한 상태에서 보완했다. 새 의존성·DB 적재·APK 빌드·Git 커밋/push 없음. 운영 로그는 배포 이후 새 요청부터 기록한다.
+- 확인 명령: sudo journalctl -u ppobgong-api.service -f -o cat | grep --line-buffered '"component":"llm"'
