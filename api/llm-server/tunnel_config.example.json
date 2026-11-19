@@ -1,0 +1,7 @@
+{
+  "ec2_host": "<EC2 주소>",
+  "ec2_user": "<터널 전용 사용자 이름>",
+  "key_file": "<키 파일 이름 (.pem)>",
+  "remote_port": 18788,
+  "local_port": 8788
+}
