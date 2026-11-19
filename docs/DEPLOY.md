@@ -26,6 +26,14 @@ cd release-YYYYMMDD/api/server && npm ci --omit=dev
 cp /home/ubuntu/ppobgong-releases/<지난 릴리스>/api/server/.env ./.env && chmod 600 .env
 ```
 
+기본 문제를 `npm run db:import`로 적재할 때는 분류 데이터 로더가 `app/node_modules/typescript`를 사용한다. 새 릴리스에서 서버 패키지만 설치하면 이 도구가 빠진다. 앱 잠금 파일과 동일한 TypeScript 버전을 별도로 준비하고, **API를 멈추기 전에** 새 릴리스의 `api/server`에서 아래 검사를 통과시킨다.
+
+```bash
+node --input-type=module -e "import {loadCatalog} from './catalog.mjs'; console.log(loadCatalog().topics.length)"
+```
+
+실시간 AI 생성 문제는 기본 `draft`로 저장한다. 운영 서비스의 `QUIZ_NEW_QUESTION_STATUS=draft` 설정을 확인한다. `published` 전환은 이후 신규 생성분에만 적용되며 기존 초안을 자동 공개하지 않는다.
+
 ## 2. `.env`에 새 값 추가 (EC2)
 
 없는 값은 비워 둬도 서버는 켜진다(그 기능만 꺼짐).
