@@ -248,7 +248,7 @@ profiles.interests의 JSON 구조는 유지한다. API는 categories 또는 cert
 
 - 기본 JSON은 `os-1.json` 같은 분야·묶음 단위 파일이다. `{ "os-01": [...], "os-02": [...] }` 형식으로 한 파일에 여러 주제가 들어간다. 주제당 파일 하나라고 가정하지 않는다.
 - 같은 주제가 여러 파일에 나뉠 수 있으며 모든 배열을 병합한다. 뒤 파일로 덮어쓰지 않는다.
-- AI JSON은 `api/quiz-server/data/pools/<topicId>.json`에 주제별 배열로 저장한다. 각 문제에 `reviewed`, `model`, `createdAt`, `served`가 추가된다.
+- AI 문제는 강의실 PC의 LLM 서버(`api/llm-server`)가 만들고 EC2가 생성 작업(`quiz_jobs`, V14)으로 받아 DB에 저장한다. LLM 서버 쪽 원본은 PC의 `api/llm-server/out/`(저장소에 올리지 않음)에 주제별로 남는다.
 - 기존 JSON은 문제 작성·전달용 원본으로 보존한다. 기본 문제는 검증·변환 후 MySQL에 문제별 행으로 직접 저장하며, 서비스 문제 조회는 DB를 기준으로 한다. 중간 행 형식 JSON 파일은 생성하지 않는다.
 
 ### 기본 문제의 실제 형식

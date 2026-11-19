@@ -29,6 +29,10 @@ REVIEWER = os.environ.get("QUIZ_REVIEWER", "")  # 비우면 MODEL 로 검수. ge
 COUNT = 8  # 한 번에 출제 요청하는 수 (검사·검수 후 줄어듦)
 ROUNDS = 2  # 모자랄 때 최대 몇 번 만들지
 KEYS = ("type", "q", "choices", "answer", "explain")
+# 앞 요청이 그래픽카드를 쓰는 중이면 이만큼만 기다리고, 넘으면 새로 만들지 않고 미리 만든 문제로 바로 답함
+# (EC2는 작업을 만든 뒤 10분이 지나면 포기하므로, 줄이 길어져도 시간 안에 답하게)
+WAIT_GPU = int(os.environ.get("QUIZ_WAIT_GPU", "90"))
+MAX_BODY = 64 * 1024
 
 TOKEN_FILE = os.path.join(HERE, "token.txt")
 if not os.path.exists(TOKEN_FILE):
@@ -73,20 +77,26 @@ def make(tid, want):
     old = stored(tid)
     fresh = []
     start = time.time()
-    with GPU:  # 한 번에 하나씩
-        # 새 문제가 모자라면 한 번 더 만듦 (학습 15분 안에 끝나도록 6분이 넘으면 멈춤)
-        for _ in range(ROUNDS):
-            try:
-                fresh += g.make_topic(MODEL, REVIEWER or MODEL, tid, TOPICS[tid], wiki_for(tid), BANK, COUNT, log,
-                                      extra=old + fresh)
-            except Exception as e:
-                log(f"{tid}: 생성 실패 ({e}) — 미리 만든 문제로 대신함")
-                break
-            if len(fresh) >= want or time.time() - start > 360:
-                break
-    if fresh:
-        with open(os.path.join(LIVE, f"{tid}.json"), "w", encoding="utf8") as f:
-            json.dump(load(os.path.join(LIVE, f"{tid}.json")) + fresh, f, ensure_ascii=False, indent=1)
+    if GPU.acquire(timeout=WAIT_GPU):  # 한 번에 하나씩
+        try:
+            # 새 문제가 모자라면 한 번 더 만듦 (학습 15분 안에 끝나도록 6분이 넘으면 멈춤)
+            for _ in range(ROUNDS):
+                try:
+                    fresh += g.make_topic(MODEL, REVIEWER or MODEL, tid, TOPICS[tid], wiki_for(tid), BANK, COUNT, log,
+                                          extra=old + fresh)
+                except Exception as e:
+                    log(f"{tid}: 생성 실패 ({e}) — 미리 만든 문제로 대신함")
+                    break
+                if len(fresh) >= want or time.time() - start > 360:
+                    break
+            # 저장도 잠금 안에서 (같은 주제 요청이 거의 동시에 끝나도 문제가 사라지지 않게)
+            if fresh:
+                with open(os.path.join(LIVE, f"{tid}.json"), "w", encoding="utf8") as f:
+                    json.dump(load(os.path.join(LIVE, f"{tid}.json")) + fresh, f, ensure_ascii=False, indent=1)
+        finally:
+            GPU.release()
+    else:
+        log(f"{tid}: {WAIT_GPU}초 넘게 앞 요청을 기다려서 미리 만든 문제로 대신함")
     out = [{k: q[k] for k in KEYS if k in q} | {"source": "live"} for q in fresh[:want]]
     if len(out) < want:  # 모자라면 창고에서 채움 (새 문제와 겹치지 않는 것)
         spare = [q for q in old if not g.style_issues(q) and all(g.similarity(q["q"], o["q"]) < 0.5 for o in out)]
@@ -122,13 +132,18 @@ class Handler(BaseHTTPRequestHandler):
         if not self.authed():
             return self.reply(401, {"error": "bad token"})
         try:
-            body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0)) or 0) or b"{}")
+            size = int(self.headers.get("Content-Length", 0) or 0)
+            if not 0 <= size <= MAX_BODY:
+                return self.reply(413, {"error": "too large"})
+            body = json.loads(self.rfile.read(size) or b"{}")
         except ValueError:
+            return self.reply(400, {"error": "bad json"})
+        if not isinstance(body, dict):
             return self.reply(400, {"error": "bad json"})
         tid, want = body.get("topicId"), body.get("count", 4)
         if tid not in TOPICS:
             return self.reply(400, {"error": "unknown topicId"})
-        if not isinstance(want, int) or not 1 <= want <= 10:
+        if isinstance(want, bool) or not isinstance(want, int) or not 1 <= want <= 10:
             return self.reply(400, {"error": "count must be 1~10"})
         start = time.time()
         qs, made = make(tid, want)

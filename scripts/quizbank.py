@@ -41,7 +41,7 @@ def load_bank():
     return bank
 
 
-# ───────── 말투 (docs/quiz-authoring.md "말투") — api/quiz-server/core.mjs 의 styleIssues 와 같은 규칙 ─────────
+# ───────── 말투 (docs/quiz-authoring.md "말투") — api/llm-server/generate.py 의 style_issues 와 같은 규칙 ─────────
 COND = r"(\s*\([^()]*\))?"
 MC_END = re.compile(r"\?" + COND + "$")
 OX_END = re.compile(r"다\." + COND + "$")
