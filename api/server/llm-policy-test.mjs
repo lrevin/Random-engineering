@@ -1,3 +1,5 @@
+import {writeLlmLog} from '../mysql/llm-observation.mjs';
+import {createQuizJobWorker} from '../mysql/quiz-job-service.mjs';
 import {createServer} from 'node:http';
 import {llmFetch} from '../mysql/llm-http.mjs';
 import test from 'node:test';
@@ -43,4 +45,38 @@ test('실제 HTTP는 연결 제한 뒤에도 생성을 기다리고 크기·전�
   await assert.rejects(llmFetch(base+'/large',{maxBytes:10,signal:AbortSignal.timeout(2000)}),{code:'LLM_RESPONSE_TOO_LARGE'});
   await assert.rejects(llmFetch(base,{signal:AbortSignal.timeout(30)}),{name:'AbortError'});
  }finally{server.closeAllConnections();await new Promise(r=>server.close(r));}
+});
+
+
+test('관측 로그는 비밀·문제·답안·임의 오류를 제외하고 출력 실패를 삼킨다',()=>{
+ const lines=[];
+ writeLlmLog('response_received',{topicId:'arch-19',returnedCount:4,liveCount:1,poolCount:3,token:'secret',answer:2,questions:[q],reason:'raw secret',requestElapsedMs:1234},s=>lines.push(s));
+ const log=JSON.parse(lines[0]);assert.equal(log.returnedCount,4);assert.equal(log.requestElapsedMs,1234);assert.equal(log.event,'response_received');
+ assert(!lines[0].includes('secret'));assert(!('questions' in log));assert(!('answer' in log));assert(!('reason' in log));
+ assert.doesNotThrow(()=>writeLlmLog('job_finished',{},()=>{throw Error('출력 실패');}));
+});
+test('실제 작업자는 응답 원본 수와 검증·저장 탈락을 분리하고 커밋 후 결과를 기록한다',async()=>{
+ const id='00000000-0000-4000-8000-000000000001',at=new Date(),deadline=new Date(+at+600000);
+ let state={id,topic_id:'arch-19',status:'queued',attempt_count:0,requested_count:4,created_at:at,deadline_at:deadline},commits=0,checks=0;
+ const logs=[],original=console.info;
+ const db={beginTransaction:async()=>{},commit:async()=>{commits++;},rollback:async()=>{},end:async()=>{},
+  async query(sql){if(sql.includes('GET_LOCK'))return [[{ok:1}]];return [[]];},
+  async execute(sql,args=[]){
+   if(sql.startsWith('SELECT id FROM quiz_jobs'))return [[]];
+   if(sql.startsWith('SELECT id,topic_id FROM quiz_jobs'))return [[{id,topic_id:'arch-19'}]];
+   if(sql.startsWith('SELECT * FROM quiz_jobs'))return [[{...state}]];
+   if(sql.includes("SET status='running'")){state={...state,status:'running',lease_token:args[1],lease_expires_at:args[2],attempt_count:1};return [{}];}
+   if(sql.startsWith('SELECT id,status FROM questions'))return [++checks===1?[]:[{id:'disabled',status:'disabled'}]];
+   return [[]];
+  }};
+ console.info=line=>{const x=JSON.parse(line);if(x.event==='job_finished')assert.equal(commits,2);logs.push(x);};
+ try{
+  const questions=[{...q,q:'원본 하나',source:'live'},{...q,q:'원본 하나',source:'pool'},{...q,answer:99,source:'live'},{...q,q:'기존 비활성',source:'pool'}];
+  const worker=createQuizJobWorker({connectionFactory:async()=>db,settings:{enabled:true,url:'http://fake',token:'not-in-logs',newQuestionStatus:'draft'},fetcher:async()=>new Response(JSON.stringify({topicId:'arch-19',model:'test',questions,seconds:2,generated:8}))});
+  assert.equal(await worker.runOnce(),true);
+ }finally{console.info=original;}
+ assert.deepEqual(logs.map(x=>x.event),['request_started','response_received','job_finished']);
+ assert.equal(logs[1].returnedCount,4);assert.equal(logs[1].liveCount,2);assert.equal(logs[1].poolCount,2);
+ const done=logs[2];assert.equal(done.acceptedCount,1);assert.equal(done.validationRejectedCount,2);assert.equal(done.storageRejectedCount,1);assert.equal(done.status,'partial');assert.equal(done.rejections.length,3);
+ assert(!JSON.stringify(logs).includes('not-in-logs'));assert(!JSON.stringify(logs).includes('원본 하나'));
 });

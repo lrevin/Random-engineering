@@ -1,3 +1,4 @@
+import {writeLlmLog} from './llm-observation.mjs';
 import {enqueueQuizJob} from './quiz-job-service.mjs';
 import {selectAiQuestions} from './ai-question-store.mjs';
 import {sourceAttemptSql} from './reward-eligibility.mjs';
@@ -42,9 +43,9 @@ async function receipt(db,id,key,action,payload,value){
  await db.execute('INSERT INTO wallet_operations(user_id,request_id,request_hash,action,payload,result_json) VALUES (?,?,?,?,?,?)',[id,key,Buffer.from(hash({action,payload}),'hex'),action,JSON.stringify(payload),JSON.stringify(result)]);
 }
 export function createActivityService({auth,connectionFactory=connect,now=()=>new Date(),quizJobsEnabled}){
- async function member(header,action){const claims=await auth.verifyAccess(header),db=await connectionFactory();try{return await transaction(db,async()=>{
- const [[u]]=await db.execute('SELECT id,status,auth_version FROM users WHERE id=? FOR UPDATE',[claims.sub]);if(!u||u.status!=='active'||u.auth_version!==claims.av)fail('unauthorized',401);return action(db,u.id);
- });}finally{await db.end();}}
+ async function member(header,action){const claims=await auth.verifyAccess(header),db=await connectionFactory(),observations=[];try{const result=await transaction(db,async()=>{
+ const [[u]]=await db.execute('SELECT id,status,auth_version FROM users WHERE id=? FOR UPDATE',[claims.sub]);if(!u||u.status!=='active'||u.auth_version!==claims.av)fail('unauthorized',401);return action(db,u.id,observations);
+ });for(const fields of observations)writeLlmLog('quiz_issued',fields);return result;}finally{await db.end();}}
  async function find(db,id,attemptId){if(!UUID.test(attemptId??''))fail('not_found',404);const [[a]]=await db.execute("SELECT * FROM quiz_attempts WHERE id=? AND user_id=? AND rule_version=?",[attemptId,id,SPECIAL_RULE_VERSION]);if(!a)fail('not_found',404);return a;}
  async function view(db,id,a){const items=await issuedItems(db,a.id);const answers=items.map(i=>i.submitted_answer===null?null:parse(i.submitted_answer));
  let result=null;if(a.status==='completed'&&items.length)result=a.purpose==='exam'?gradeIssuedExam(items,answers):gradeIssued(items,answers);
@@ -97,7 +98,7 @@ export function createActivityService({auth,connectionFactory=connect,now=()=>ne
  if(purpose==='study'){const job=await enqueueQuizJob(db,topicId,now(),{ownerAttemptId:attemptId,...(quizJobsEnabled===undefined?{}:{enabled:quizJobsEnabled})});await db.execute('UPDATE quiz_attempts SET generation_job_id=? WHERE id=?',[job,attemptId]);}
  await storeItems(db,attemptId,items);return view(db,id,await find(db,id,attemptId));
  }),
- event:(header,attemptId,body)=>member(header,async(db,id)=>{
+ event:(header,attemptId,body)=>member(header,async(db,id,observations)=>{
  const a=await find(db,id,attemptId),{requestId,event}=body??{};if(!UUID.test(requestId??'')||!['pause','resume','quiz','extend'].includes(event))fail('invalid_activity',400);
  const key=`activity-event:${requestId}`,payload={attemptId,event},digest=Buffer.from(hash({action:'activity_event',payload}),'hex');
  const [[old]]=await db.execute('SELECT request_hash FROM wallet_operations WHERE user_id=? AND request_id=?',[id,key]);
@@ -122,6 +123,7 @@ export function createActivityService({auth,connectionFactory=connect,now=()=>ne
   const final=shuffle([...ai,...bank]).map((x,i)=>x.question.src==='offline'?{...x,question:reproducePractice(x.question.material,x.question.seed,i+1)}:x);
   await storeItems(db,a.id,final);
   await db.execute('UPDATE quiz_attempts SET study_ended_at=?,quiz_fixed_at=?,study_sec=?,paused_at=NULL WHERE id=?',[at,at,seconds,a.id]);
+  observations.push({jobId:a.generation_job_id,attemptId:a.id,topicId:a.topic_id,aiCount:final.filter(x=>x.question.src==='ai').length,bankCount:final.filter(x=>x.question.src==='bank').length,practiceCount:final.filter(x=>x.question.src==='offline').length,totalCount:final.length});
  }
  await receipt(db,id,key,'activity_event',payload,value);return view(db,id,await find(db,id,a.id));
  }),
