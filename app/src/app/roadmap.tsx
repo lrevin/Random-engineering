@@ -1,17 +1,18 @@
 import { router } from "expo-router";
-import { useMemo, useState } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { showDialog } from "@/components/Dialog";
 import { DomainIcon, Icon } from "@/components/Icon";
 import { ProgressBar } from "@/components/Quests";
 import { TierBadge } from "@/components/Rank";
-import { Chip, Row, Screen, T, tap } from "@/components/ui";
+import { Chip, FONT, Row, Screen, T, tap } from "@/components/ui";
 import { categoryById, CERTS, DOMAINS, LEVEL_NAMES, TOPICS, type LevelNum, type Topic } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { studyMinutesFor } from "@/lib/economy";
 import { subjectTopics } from "@/lib/exam";
 import { prefetchQuiz } from "@/lib/quiz";
 import { domainMastery } from "@/lib/rank";
+import { MAX_FONT_SCALE, useScale } from "@/lib/responsive";
 import { fmtDate } from "@/lib/stats";
 import { radius, useColors } from "@/theme";
 
@@ -19,6 +20,11 @@ import { radius, useColors } from "@/theme";
 interface Section { id: string; name: string; topics: Topic[] }
 
 const LEVELS: LevelNum[] = [1, 2, 3];
+type Stat = { n: number; best: number; total: number; last: string };
+/** 처음에 바로 그리는 세부 분야 수. 나머지는 화면이 뜬 뒤 프레임마다 STEP개씩 이어서 그림
+ *  (컴퓨터공학은 주제 374개라 한 번에 그리면 화면이 몇 초 늦게 뜸) */
+const FIRST = 2;
+const STEP = 2;
 
 /**
  * 분야 로드맵: 분야(또는 자격증) 안의 주제를 세부 분야별로 기초 → 중급 → 심화 순서로 펼쳐 놓고,
@@ -41,10 +47,11 @@ export default function Roadmap() {
   }, [prefs.interests]);
   const [sel, setSel] = useState(() => options[0]?.id ?? "it");
   const current = options.find((o) => o.id === sel) ?? options[0];
+  const [shown, setShown] = useState(FIRST);
 
   // 주제별 내 기록 (횟수 · 최고 점수 · 마지막 날)
   const stats = useMemo(() => {
-    const m = new Map<string, { n: number; best: number; total: number; last: string }>();
+    const m = new Map<string, Stat>();
     for (const r of records) {
       const x = m.get(r.topicId) ?? { n: 0, best: 0, total: r.total, last: r.studiedAt };
       x.n++;
@@ -65,10 +72,16 @@ export default function Roadmap() {
     return (d?.categories ?? []).map((cat) => ({ id: cat.id, name: cat.name, topics: TOPICS.filter((t) => t.category === cat.id) }));
   }, [current]);
 
-  const all = sections.flatMap((s) => s.topics);
-  const uniq = [...new Map(all.map((t) => [t.id, t])).values()];
+  const uniq = useMemo(() => [...new Map(sections.flatMap((s) => s.topics).map((t) => [t.id, t])).values()], [sections]);
   const done = uniq.filter((t) => stats.has(t.id)).length;
-  const rank = current?.kind === "domain" ? domainMastery(current.id, records) : null;
+  const rank = useMemo(() => (current?.kind === "domain" ? domainMastery(current.id, records) : null), [current, records]);
+
+  // 남은 세부 분야를 한 프레임에 STEP개씩 이어서 그림
+  useEffect(() => {
+    if (shown >= sections.length) return;
+    const id = requestAnimationFrame(() => setShown((n) => n + STEP));
+    return () => cancelAnimationFrame(id);
+  }, [shown, sections.length]);
 
   /** 프리미엄: 로드맵에서 고른 주제로 바로 공부 시작 */
   const startTopic = (t: Topic) => {
@@ -86,6 +99,9 @@ export default function Roadmap() {
     router.replace("/study");
   };
 
+  // 세부 분야 칸은 따로 그려 두고 다시 그리지 않도록, 누를 때 쓰는 함수는 늘 같은 것을 넘김
+  const openRef = useRef<(t: Topic) => void>(() => {});
+  const onOpen = useCallback((t: Topic) => openRef.current(t), []);
   const open = (t: Topic) => {
     tap();
     const s = stats.get(t.id);
@@ -99,6 +115,7 @@ export default function Roadmap() {
         : [{ text: "닫기", style: "cancel" }, { text: "프리미엄 보기", onPress: () => router.push("/shop") }],
     });
   };
+  useEffect(() => { openRef.current = open; });
 
   return (
     <Screen scroll>
@@ -117,7 +134,7 @@ export default function Roadmap() {
             key={o.id}
             label={o.name}
             selected={o.id === sel}
-            onPress={() => setSel(o.id)}
+            onPress={() => { if (o.id !== sel) { setSel(o.id); setShown(FIRST); } }}
             icon={o.kind === "cert" ? <Icon name="medal" size={16} /> : <DomainIcon id={o.id} size={18} />}
           />
         ))}
@@ -136,71 +153,78 @@ export default function Roadmap() {
         <T size={12} color="muted">주제 {uniq.length}개 중 {done}개 공부 · {uniq.length ? Math.round((done / uniq.length) * 100) : 0}%</T>
       </View>
 
-      {/* 세부 분야(과목)별 기초 → 중급 → 심화 */}
-      {sections.map((s) => {
-        const sDone = s.topics.filter((t) => stats.has(t.id)).length;
-        const complete = s.topics.length > 0 && sDone === s.topics.length;
-        return (
-          <View key={s.id} style={{ borderRadius: radius.lg, borderWidth: 2, borderColor: complete ? c.success : c.line, backgroundColor: c.paper, overflow: "hidden" }}>
-            <View style={{ padding: 14, gap: 6, backgroundColor: complete ? c.successSoft : c.chip }}>
-              <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
-                <T size={16} weight="bold" style={{ flex: 1 }} numberOfLines={1}>{s.name}</T>
-                <T size={13} weight="bold" color={complete ? "success" : "ink2"}>{sDone} / {s.topics.length}</T>
-              </Row>
-              <View style={{ height: 6, borderRadius: 3, backgroundColor: c.line, overflow: "hidden" }}>
-                <View style={{ width: `${s.topics.length ? (sDone / s.topics.length) * 100 : 0}%`, height: "100%", backgroundColor: c.success }} />
-              </View>
-            </View>
-
-            <View style={{ padding: 14, gap: 4 }}>
-              {LEVELS.map((lv, li) => {
-                const ts = s.topics.filter((t) => t.lv === lv);
-                if (!ts.length) return null;
-                const lvDone = ts.filter((t) => stats.has(t.id)).length;
-                return (
-                  <View key={lv} style={{ flexDirection: "row", gap: 10 }}>
-                    {/* 단계 표시: 점과 이어지는 선 */}
-                    <View style={{ alignItems: "center", width: 22 }}>
-                      <View style={{
-                        width: 22, height: 22, borderRadius: 11, alignItems: "center", justifyContent: "center",
-                        backgroundColor: lvDone === ts.length ? c.success : lvDone ? c.gold : c.line2,
-                      }}>
-                        <T size={11} weight="bold" style={{ color: "#ffffff" }}>{lv}</T>
-                      </View>
-                      {li < 2 && s.topics.some((t) => t.lv > lv) && <View style={{ flex: 1, width: 2, backgroundColor: c.line2, marginVertical: 2 }} />}
-                    </View>
-                    <View style={{ flex: 1, gap: 6, paddingBottom: 12 }}>
-                      <T size={13} weight="semibold" color="ink2">Lv.{lv} {LEVEL_NAMES[lv]} · {lvDone}/{ts.length}</T>
-                      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
-                        {ts.map((t) => {
-                          const st = stats.get(t.id);
-                          return (
-                            <Pressable
-                              key={t.id}
-                              onPress={() => open(t)}
-                              accessibilityRole="button"
-                              accessibilityLabel={`${t.ko}${st ? ", 공부함" : ""}`}
-                              style={({ pressed }) => ({
-                                flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 10, paddingVertical: 5,
-                                borderRadius: radius.pill, borderWidth: 1.5,
-                                borderColor: st ? c.success : c.line2,
-                                backgroundColor: st ? c.successSoft : pressed ? c.chip : c.paper,
-                              })}
-                            >
-                              {st && <Icon name="check" size={12} color={c.success} />}
-                              <T size={13} weight={st ? "semibold" : "regular"} color={st ? "success" : "ink2"}>{t.ko}</T>
-                            </Pressable>
-                          );
-                        })}
-                      </View>
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
-          </View>
-        );
-      })}
+      {/* 세부 분야(과목)별 기초 → 중급 → 심화 (처음엔 위쪽만, 나머지는 이어서 그림) */}
+      {sections.slice(0, shown).map((s) => <SectionCard key={s.id} s={s} stats={stats} onOpen={onOpen} />)}
     </Screen>
   );
 }
+
+/** 세부 분야(과목) 한 칸. 기록이나 고른 분야가 바뀔 때만 다시 그림 */
+const SectionCard = memo(function SectionCard({ s, stats, onOpen }: { s: Section; stats: Map<string, Stat>; onOpen: (t: Topic) => void }) {
+  const c = useColors();
+  // 주제 버튼 글자는 T 대신 Text를 바로 씀 (버튼 수백 개가 각자 화면 크기를 다시 읽지 않도록 한 번만 계산)
+  const fs = Math.round(13 * useScale().text * 2) / 2;
+  const chipText = { fontSize: fs, lineHeight: Math.round(fs * 1.45) };
+  const sDone = s.topics.filter((t) => stats.has(t.id)).length;
+  const complete = s.topics.length > 0 && sDone === s.topics.length;
+  return (
+    <View style={{ borderRadius: radius.lg, borderWidth: 2, borderColor: complete ? c.success : c.line, backgroundColor: c.paper, overflow: "hidden" }}>
+      <View style={{ padding: 14, gap: 6, backgroundColor: complete ? c.successSoft : c.chip }}>
+        <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
+          <T size={16} weight="bold" style={{ flex: 1 }} numberOfLines={1}>{s.name}</T>
+          <T size={13} weight="bold" color={complete ? "success" : "ink2"}>{sDone} / {s.topics.length}</T>
+        </Row>
+        <View style={{ height: 6, borderRadius: 3, backgroundColor: c.line, overflow: "hidden" }}>
+          <View style={{ width: `${s.topics.length ? (sDone / s.topics.length) * 100 : 0}%`, height: "100%", backgroundColor: c.success }} />
+        </View>
+      </View>
+
+      <View style={{ padding: 14, gap: 4 }}>
+        {LEVELS.map((lv, li) => {
+          const ts = s.topics.filter((t) => t.lv === lv);
+          if (!ts.length) return null;
+          const lvDone = ts.filter((t) => stats.has(t.id)).length;
+          return (
+            <View key={lv} style={{ flexDirection: "row", gap: 10 }}>
+              {/* 단계 표시: 점과 이어지는 선 */}
+              <View style={{ alignItems: "center", width: 22 }}>
+                <View style={{
+                  width: 22, height: 22, borderRadius: 11, alignItems: "center", justifyContent: "center",
+                  backgroundColor: lvDone === ts.length ? c.success : lvDone ? c.gold : c.line2,
+                }}>
+                  <T size={11} weight="bold" style={{ color: "#ffffff" }}>{lv}</T>
+                </View>
+                {li < 2 && s.topics.some((t) => t.lv > lv) && <View style={{ flex: 1, width: 2, backgroundColor: c.line2, marginVertical: 2 }} />}
+              </View>
+              <View style={{ flex: 1, gap: 6, paddingBottom: 12 }}>
+                <T size={13} weight="semibold" color="ink2">Lv.{lv} {LEVEL_NAMES[lv]} · {lvDone}/{ts.length}</T>
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+                  {ts.map((t) => {
+                    const st = stats.get(t.id);
+                    return (
+                      <Pressable
+                        key={t.id}
+                        onPress={() => onOpen(t)}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${t.ko}${st ? ", 공부함" : ""}`}
+                        style={({ pressed }) => ({
+                          flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 10, paddingVertical: 5,
+                          borderRadius: radius.pill, borderWidth: 1.5,
+                          borderColor: st ? c.success : c.line2,
+                          backgroundColor: st ? c.successSoft : pressed ? c.chip : c.paper,
+                        })}
+                      >
+                        {st && <Icon name="check" size={12} color={c.success} />}
+                        <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[chipText, { fontFamily: FONT[st ? "semibold" : "regular"], color: st ? c.success : c.ink2 }]}>{t.ko}</Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+            </View>
+          );
+        })}
+      </View>
+    </View>
+  );
+});
