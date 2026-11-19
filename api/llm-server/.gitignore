@@ -1,0 +1,8 @@
+# 비밀 값 (절대 올리지 않음)
+token.txt
+*.pem
+tunnel_config.json
+# 만들어지는 자료·결과 (prepare_data.py, fetch_wiki.py, generate.py 로 다시 만들 수 있음)
+data/
+out/
+__pycache__/
