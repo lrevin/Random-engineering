@@ -88,6 +88,7 @@ import b_os_1 from "./os-1.json";
 import b_os_2 from "./os-2.json";
 import b_os_3 from "./os-3.json";
 import b_ph_em_1 from "./ph-em-1.json";
+import b_ph_mech_1 from "./ph-mech-1.json";
 import b_pl_1 from "./pl-1.json";
 import b_pl_2 from "./pl-2.json";
 import b_pl_3 from "./pl-3.json";
@@ -195,6 +196,7 @@ const FILES = [
   b_os_2,
   b_os_3,
   b_ph_em_1,
+  b_ph_mech_1,
   b_pl_1,
   b_pl_2,
   b_pl_3,
