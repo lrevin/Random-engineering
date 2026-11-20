@@ -109,6 +109,7 @@ import b_sec_4 from "./sec-4.json";
 import b_sec_5 from "./sec-5.json";
 import b_sec_6 from "./sec-6.json";
 import b_sec_7 from "./sec-7.json";
+import b_sec_8 from "./sec-8.json";
 import b_theory_1 from "./theory-1.json";
 import b_theory_2 from "./theory-2.json";
 import b_theory_3 from "./theory-3.json";
@@ -224,6 +225,7 @@ const FILES = [
   b_sec_5,
   b_sec_6,
   b_sec_7,
+  b_sec_8,
   b_theory_1,
   b_theory_2,
   b_theory_3,
