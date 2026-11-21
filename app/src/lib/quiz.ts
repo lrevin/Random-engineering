@@ -201,15 +201,15 @@ export async function bankQuestions(topicId: string): Promise<QuizQuestion[]> {
 }
 
 // ───────── 한 번 풀 퀴즈 만들기 ─────────
-async function buildQuiz(topic: Topic, seen: string[] = []): Promise<QuizSet> {
-  const all = distinct((await bankQuestions(topic.id)).map((q) => ({ ...q, src: "bank" as const })));
+async function buildQuiz(topic: Topic, seen: string[] = [], localOnly = false): Promise<QuizSet> {
+  const all = distinct((localOnly ? validQuestions(QUIZ_BANK[topic.id]) : await bankQuestions(topic.id)).map((q) => ({ ...q, src: "bank" as const })));
   // 다시 공부: 전에 풀었던 문제(seen)와 비슷한 건 빼고 새 문제 위주로 (남는 게 모자라면 전체에서)
   const seenQs: QuizQuestion[] = seen.map((q) => ({ type: "ox", q, answer: true, explain: "" }));
   const unseen = distinct(all, seenQs);
   const bank = unseen.length >= QUIZ_LENGTH - AI_COUNT ? unseen : all;
 
   // 기존 기기 AI 캐시만 재사용하며 서버에 새 생성을 요청하지 않는다.
-  const ai = pickQuestions(distinct(shuffle(await readAiCache(topic.id)), [...bank, ...seenQs]).map((q) => ({ ...q, src: "ai" as const })), AI_COUNT);
+  const ai = pickQuestions(distinct(shuffle(localOnly ? [] : await readAiCache(topic.id)), [...bank, ...seenQs]).map((q) => ({ ...q, src: "ai" as const })), AI_COUNT);
 
   // 나머지는 미리 만든 문제로 채우고, 그래도 모자라면 오프라인 연습 문제로
   const picked = [...ai, ...pickQuestions(distinct(bank, ai), QUIZ_LENGTH - ai.length)];
@@ -219,6 +219,14 @@ async function buildQuiz(topic: Topic, seen: string[] = []): Promise<QuizSet> {
   const source: QuizSource = picked.some((q) => q.src === "ai") ? "ai" : picked.some((q) => q.src === "bank") ? "bank" : "offline";
   return { topicId: topic.id, source, questions: shuffle(picked).slice(0, QUIZ_LENGTH).map(shuffleChoices) };
 }
+
+/** 회원 오프라인 출제는 내장 기본 문제 우선. 원본 없는 보충 문제는 서버에서 보상 제외한다.
+ * 네트워크와 과거 AI 캐시를 조회하지 않아 오프라인 전환 시 즉시 출제할 수 있다. */
+// 오프라인 정책: 완전한 문제·보기·정답·해설과 답안을 기존 기록 키에 저장한다.
+// 재접속 시 서버 원본 대조가 통과한 기본 문제만 기존 보상 정책(직접 업로드 하루 3회)에 따른다.
+// 보충 문제 혼합은 미검증 보관, 서버 시간 증거 없는 학습은 시간 퀘스트에서 제외한다.
+// 서버에서 이미 발급한 문제는 이 함수로 교체하지 않고 발급 ID와 기존 문제를 그대로 전송한다.
+export const loadOfflineQuiz = (topic: Topic): Promise<QuizSet> => buildQuiz(topic, [], true);
 
 // 공부 시작을 누른 즉시 만들기 시작한 퀴즈 (퀴즈 화면에 들어가면 한 번 꺼내 씀)
 const prepared = new Map<string, { at: number; p: Promise<QuizSet> }>();

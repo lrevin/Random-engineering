@@ -1,5 +1,5 @@
 import * as Crypto from "expo-crypto";
-import {mysqlAuth,authErrorMessage} from "@/lib/auth";
+import {mysqlAuth,authErrorMessage,isConnectionFailure} from "@/lib/auth";
 import {AuthApiError} from "@/lib/auth-client";
 import * as Haptics from "expo-haptics";
 import { Redirect, router } from "expo-router";
@@ -10,7 +10,7 @@ import { Badge, Btn, levelTone, Row, T, tap } from "@/components/ui";
 import { levelText, topicById } from "@/data";
 import { useApp } from "@/lib/app-state";
 import { confirmQuit } from "@/lib/confirm";
-import { loadQuiz, type QuizQuestion } from "@/lib/quiz";
+import { loadQuiz, loadOfflineQuiz, type QuizQuestion } from "@/lib/quiz";
 import { boostActive } from "@/lib/booster";
 import { calcRp, domainMastery, userLevel } from "@/lib/rank";
 import { sfx } from "@/lib/sfx";
@@ -34,14 +34,16 @@ function QuizInner() {
   const a = active!;
   const topic = topicById(a.topicId);
   const quiz = a.quiz;
-  const attemptId=useRef(a.serverAttemptId??Crypto.randomUUID());
+  const attemptId=useRef(a.serverAttemptId??a.localRecordId??Crypto.randomUUID());
   const [failed, setFailed] = useState(false);
+  const [canGoOffline,setCanGoOffline]=useState(false);
   const [loadError, setLoadError] = useState("");
   const [loadVersion, setLoadVersion] = useState(0);
   const [leaving, setLeaving] = useState(false);
   const leavingRef = useRef(false);
   const pendingLoad = useRef<Promise<unknown> | null>(null);
   const [saving, setSaving] = useState(false);
+  const savingRef=useRef(false);
   const [saveError,setSaveError]=useState("");
 
   // 문제 불러오기 (처음 한 번)
@@ -53,6 +55,7 @@ function QuizInner() {
       if (current()) setActive(x => x?.startedAt === a.startedAt && x.topicId === a.topicId ? change(x) : x);
     };
     const load=async()=>{
+      if(a.offlineStudy)return loadOfflineQuiz(topic);
       if(mode==='user'&&a.quizOnly){
         // 이전 앱에서 완료 ID를 물려받은 재풀이도 새 ID로 복구한다.
         if(a.serverAttemptId && a.serverTracking){
@@ -75,9 +78,9 @@ function QuizInner() {
     const task=load()
       .then((set) => {
         if (!current() || !set) return;
-        update(x=>({...x,quiz:{source:set.source,questions:set.questions,answers:[]}}));
+        update(x=>({...x,localRecordId:x.localRecordId??attemptId.current,quiz:{source:set.source,questions:set.questions,answers:[]}}));
       })
-      .catch(error => { if(current()){setLoadError(authErrorMessage(error));setFailed(true);} });
+      .catch(error => { if(current()){setLoadError(authErrorMessage(error));setCanGoOffline(isConnectionFailure(error));setFailed(true);} });
     pendingLoad.current=task;
     return () => { alive = false; };
   // 학습별 최초 로딩은 UUID를 보존하며 실행한다.
@@ -90,7 +93,7 @@ function QuizInner() {
     void (async()=>{
       // 발급 요청이 끝난 뒤 취소해야 늦게 생성된 시도가 서버에 남지 않는다.
       await pendingLoad.current;
-      if(mode==='user'&&(a.quizOnly||a.serverAttemptId)){
+      if(mode==='user'&&!a.offlineStudy&&(a.quizOnly||a.serverAttemptId)){
         try{await mysqlAuth.abandonActivity(attemptId.current);}
         catch(error){if(!(error instanceof AuthApiError && error.status===404))throw error;}
       }
@@ -107,6 +110,11 @@ function QuizInner() {
         {failed ? (
           <>
             <T size={18} weight="semibold" center>{loadError || "문제를 불러오지 못했어요."}</T>
+            {canGoOffline&&<Btn title="내장 문제로 오프라인 풀이" disabled={leaving} onPress={()=>{
+              attemptId.current=Crypto.randomUUID();
+              setActive(x=>x?{...x,offlineStudy:true,localRecordId:attemptId.current,serverAttemptId:undefined,serverTracking:false,serverPendingEvent:undefined}:x);
+              setFailed(false);setLoadError("");setLoadVersion(x=>x+1);
+            }}/>}
             <Btn title="다시 시도" variant="primary" disabled={leaving} onPress={() => { setFailed(false); setLoadError(""); setLoadVersion(x=>x+1); }} />
           </>
         ) : (
@@ -125,8 +133,8 @@ function QuizInner() {
   const q = quiz.questions[idx];
 
   const finish = async (answers: (number | boolean)[]) => {
-    if (saving) return;
-    setSaving(true);setSaveError("");
+    if (savingRef.current) return;
+    savingRef.current=true;setSaving(true);setSaveError("");
     setActive(x=>x?.quiz?{...x,quiz:{...x.quiz,answers}}:x);
     const total = quiz.questions.length;
     const score = quiz.questions.filter((qq, i) => isCorrect(qq, answers[i])).length;
@@ -144,13 +152,16 @@ function QuizInner() {
     }
     const rpBefore = xp;
     const topicBefore = domainMastery(topic.domain, records);
+    // 서버 발급 문제는 원래 ID, 내장 문제는 학습에 고정한 별도 ID를 사용한다.
+    const recordId=a.serverTracking?a.serverAttemptId:(a.localRecordId??attemptId.current);
+    setActive(x=>x?{...x,localRecordId:recordId}:x);
+    try {
     const rec = await addRecord({
-      attemptId:a.serverTracking?a.serverAttemptId:undefined,
+      attemptId:recordId,
       topicId: topic.id, topicKo: topic.ko, domain: topic.domain, category: topic.category, level: topic.level,
       items: quiz.questions.map((question,i)=>({question,answer:answers[i]??null})),
       memo: a.memo, score, total, rp: rp.total, wrong, studySec: a.quizOnly ? 0 : a.studyUsed, quizSource: quiz.source,
     });
-    if(mode==='user'&&a.serverTracking&&!rec.synced){setSaving(false);setSaveError((rec.syncError?authErrorMessage(new AuthApiError(rec.syncError,409)):'서버 저장을 확인하지 못했어요.')+' 답안은 기기에 유지돼요.');return;}
     const topicAfter = domainMastery(topic.domain, [...records, rec]);
     setActive((x) => x ? {
       ...x, stage: "result", quiz: { ...quiz, answers },
@@ -161,6 +172,9 @@ function QuizInner() {
       },
     } : x);
     router.replace("/result");
+    } catch(error) {
+      setSaveError(authErrorMessage(error)+' 완료 기록을 저장하지 못했어요. 화면을 닫지 말고 다시 시도해 주세요.');
+    } finally {savingRef.current=false;setSaving(false);}
   };
 
   return <QuestionView

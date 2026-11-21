@@ -153,6 +153,7 @@ function stateHarness() {
   multiRemove:async keys=>{for(const k of keys)cache.delete(k);},getAllKeys:async()=>[...cache.keys()],
  };
  const auth={
+  getUserId:()=>user,
   signIn:async email=>{user=email;return {user:{id:user,email}};},
   signUp:async email=>{user=email;return {user:{id:user,email}};},
   signOut:async()=>{},deleteAccount:async()=>{records.delete(user);profiles.delete(user);},
@@ -184,7 +185,7 @@ function stateHarness() {
   './auth':{mysqlAuth:auth},'./auth-client':authClient,'./record-sync':{syncMySqlRecords,enqueueRecordOperation},
   './types':{DEFAULT_PREFS:{nickname:'',interests:[],level:0,studyMinutes:15,reminderEnabled:true,reminderTime:'21:00'}},
  });
- return {auth,cache,profiles,render:()=>{slot=0;return mod.AppProvider({children:null}).value;}};
+ return {auth,cache,profiles,storage,render:()=>{slot=0;return mod.AppProvider({children:null}).value;}};
 }
 test('actual AppProvider keeps guest data, syncs after login and isolates account switching',async()=>{
  const h=stateHarness();let app=h.render();
@@ -285,4 +286,60 @@ test('회원 풀이의 미전송 XP는 확정 표시하지 않고 서버 성공 
  const record=await app.addRecord({attemptId:'stable-issued-id',topicId:'ds-01',memo:'',score:7,total:7,rp:999,wrong:[],studySec:30});
  assert.equal(record.id,'stable-issued-id');assert.equal(record.rp,0);assert.equal(record.synced,false);
  h.auth.uploadRecords=rs=>original(rs.map(r=>({...r,rp:42})));await app.refreshRecords();app=h.render();assert.equal(app.records.find(r=>r.id===record.id).rp,42);
+});
+
+test('오프라인 완료의 답안·시각·UUID를 저장하고 자정 이후 재전송에도 최초 내용 유지',async()=>{
+ const h=stateHarness();let app=h.render();await app.signIn('offline-member','password');app=h.render();
+ const send=h.auth.uploadRecords;h.auth.uploadRecords=async()=>{throw new AuthApiError('network_error',0);};
+ const first=await app.addRecord({attemptId:'offline-fixed',topicId:'ds-01',memo:'최초 메모',score:1,total:7,rp:999,wrong:[],items:[{question:q,answer:true}],studySec:900});
+ const disk=JSON.parse(h.cache.get('pg.mysql.records'));
+ assert.equal(disk.find(r=>r.id===first.id).items[0].answer,true);
+ const again=await app.addRecord({...first,memo:'재시도에서 바뀐 메모',studySec:999});
+ assert.equal(again.studiedAt,first.studiedAt);assert.equal(again.memo,'최초 메모');assert.equal(again.studySec,900);
+ app=h.render();assert.equal(app.records.length,1);assert.equal(app.xp,0);
+ h.auth.uploadRecords=send;await app.refreshRecords();app=h.render();
+ assert.equal(app.records.length,1);assert.equal(app.records[0].synced,true);
+});
+test('기기 저장 실패면 전송하지 않고 완료를 거절한다',async()=>{
+ const h=stateHarness();let app=h.render();await app.signIn('disk-full','password');app=h.render();
+ let uploads=0;h.auth.uploadRecords=async()=>{uploads++;return {results:[]};};
+ const set=h.storage.setItem;h.storage.setItem=async(k,v)=>{if(k==='pg.mysql.records')throw Error('저장 공간 부족');return set(k,v);};
+ await assert.rejects(app.addRecord({attemptId:'disk-fixed',topicId:'ds-01',memo:'',score:0,total:7,rp:0,wrong:[],studySec:0}),/저장 공간/);
+ assert.equal(uploads,0);assert.equal(h.render().records.length,0);
+});
+test('오프라인 전환은 통신 장애에만 허용하고 인증·문제 불일치는 우회하지 않는다',()=>{
+ const {isConnectionFailure}=load('auth',{'./api':{API_URL:'https://api.example.com'},'./auth-client':authClient,'./auth-storage':{authStorage:store()}});
+ for(const error of [new AuthApiError('network_error',0),new AuthApiError('database_unavailable',503),new TypeError('Network request failed')])assert.equal(isConnectionFailure(error),true);
+ for(const error of [new AuthApiError('unauthorized',401),new AuthApiError('bank_question_mismatch',400),new AuthApiError('rate_limited',429),new Error('임의 오류')])assert.equal(isConnectionFailure(error),false);
+});
+
+test('회원 오프라인 출제는 네트워크·오래된 AI 캐시를 사용하지 않고 기본 문제로 7개 구성',async()=>{
+ let network=0,reads=0;
+ const bank=Array.from({length:9},(_,i)=>({type:'ox',q:`문항 ${String.fromCharCode(65+i).repeat(12)}`,answer:true,explain:'내장 원본'}));
+ const {loadOfflineQuiz}=load('quiz',{
+  '@react-native-async-storage/async-storage':{__esModule:true,default:{getItem:async()=>{reads++;throw Error('캐시 조회 금지');}}},
+  '@/data':{TOPICS:[]},'@/data/quizbank':{BANK_BUNDLED_FULL:true,QUIZ_BANK:{offline:bank}},
+  './api':{fetchBankQuestions:async()=>{network++;throw Error('네트워크 금지');}},
+ });
+ const quiz=await loadOfflineQuiz({id:'offline',category:'category',domain:'domain',ko:'주제',en:'topic',hint:'개념'});
+ assert.equal(quiz.questions.length,7);assert(quiz.questions.every(q=>q.src==='bank'));assert.equal(network,0);assert.equal(reads,0);
+});
+
+test('동시에 완료 요청을 눌러도 최초 스냅샷 하나만 기기에 보존',async()=>{
+ const h=stateHarness();let app=h.render();await app.signIn('concurrent-offline','password');app=h.render();
+ h.auth.uploadRecords=async()=>{throw new AuthApiError('network_error',0);};
+ const draft={attemptId:'same-offline',topicId:'ds-01',memo:'최초',score:0,total:7,rp:0,wrong:[],studySec:42};
+ const results=await Promise.all([app.addRecord(draft),app.addRecord({...draft,memo:'덮어쓰기 시도',studySec:999})]);
+ assert.equal(results[0].studiedAt,results[1].studiedAt);assert(results.every(r=>r.memo==='최초'&&r.studySec===42));assert.equal(h.render().records.length,1);
+});
+
+test('답안 저장 도중 계정을 바꿔도 이전 기록을 새 계정으로 보내지 않는다',async()=>{
+ const h=stateHarness();let app=h.render();await app.signIn('offline-a','password');app=h.render();
+ const sends=[];h.auth.uploadRecords=async rs=>{sends.push([h.auth.getUserId(),rs]);throw new AuthApiError('network_error',0);};
+ let release,entered;const blocked=new Promise(r=>release=r),started=new Promise(r=>entered=r),set=h.storage.setItem;
+ h.storage.setItem=async(k,v)=>{if(k==='pg.mysql.records'&&JSON.parse(v).some(r=>r.id==='switching-record')){entered();await blocked;}return set(k,v);};
+ const save=app.addRecord({attemptId:'switching-record',topicId:'ds-01',memo:'이전 계정 답안',score:0,total:7,rp:0,wrong:[],studySec:40});
+ await started;const change=app.signIn('offline-b','password');await new Promise(r=>setImmediate(r));release();
+ await Promise.allSettled([save,change]);app=h.render();assert.equal(app.records.length,0);assert(!sends.some(([owner])=>owner==='offline-b'));
+ await app.signIn('offline-a','password');app=h.render();assert.equal(app.records.length,1);assert.equal(app.records[0].id,'switching-record');
 });

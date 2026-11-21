@@ -2,7 +2,7 @@ import {AuthApiError, type createAuthClient} from "./auth-client";
 import type {StudyRecord} from "./types";
 type Client = ReturnType<typeof createAuthClient>;
 /** Serialize reads and deletes together so stale snapshots cannot restore a deleted record. */
-export function enqueueRecordOperation(queue: {current: Promise<void>}, action: () => Promise<void>) {
+export function enqueueRecordOperation<T>(queue: {current: Promise<unknown>}, action: () => Promise<T>): Promise<T> {
  const task=queue.current.catch(()=>{}).then(action);queue.current=task;return task;
 }
 /** One account at a time; callers serialize jobs and invalidate ownership before switching accounts. */

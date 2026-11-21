@@ -1,0 +1,11 @@
+[Unit]
+Description=뽑공 audit 정기 실행
+
+[Timer]
+OnCalendar=Sun *-*-* 05:00:00 Asia/Seoul
+RandomizedDelaySec=5min
+Persistent=true
+Unit=ppobgong-ops@audit.service
+
+[Install]
+WantedBy=timers.target

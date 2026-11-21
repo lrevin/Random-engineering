@@ -1,0 +1,11 @@
+[Unit]
+Description=뽑공 maintenance 정기 실행
+
+[Timer]
+OnCalendar=*-*-* 04:30:00 Asia/Seoul
+RandomizedDelaySec=5min
+Persistent=true
+Unit=ppobgong-ops@maintenance.service
+
+[Install]
+WantedBy=timers.target

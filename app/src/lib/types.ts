@@ -102,6 +102,10 @@ export interface QuizResult {
 
 /** 진행 중인 공부 (앱을 껐다 켜도 이어서 할 수 있도록 저장) */
 export interface ActiveSession {
+  /** 서버 시간 증거 없이 내장 문제로 진행. 앱 재시작 후에도 이 선택을 유지한다. */
+  offlineStudy?: boolean;
+  /** 재전송·재시작에서 완료 시각과 제출 UUID가 바뀌지 않도록 보관한다. */
+  localRecordId?: string;
   serverAttemptId?: string;
   serverTracking?: boolean;
   serverPendingEvent?: {event:"pause"|"resume"|"quiz"|"extend";id:string};
