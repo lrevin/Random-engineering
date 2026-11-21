@@ -125,7 +125,7 @@ journalctl -u ppobgong-api -n 50 --no-pager      # 오류 없는지
 
 ## 10. 운영 데이터 보존·백업·용량 관리
 
-2026-11-21 로컬 구현. 아래 명령·예약 예제는 아직 EC2에 설치하지 않았다. 기존 계정 정리 외에 운영 삭제·정기 백업·RDS 설정이 새로 활성화된 상태가 아니다. 새 DB 테이블·Flyway 변경은 없다.
+2026-11-22 운영 적용 완료. 사용자 승인 후 EC2 백업·보관 기간 정리·점검 예약과 journal 제한을 설치했다. 첫 백업·점검 성공과 정리 미리보기 0건을 확인했다. S3 미사용·RDS 점검 기준 1일이며, RDS 콘솔 설정·IAM 역할은 변경하지 않았다. 새 DB 테이블·Flyway 변경은 없다.
 
 ### 보존 기준
 
@@ -200,7 +200,7 @@ npm run ops:files -- --root /home/ubuntu/ppobgong-releases --kind release --curr
 
 현재 경로는 `systemctl show ppobgong-api -p WorkingDirectory --value`의 실제 적용 경로를 기준으로 **릴리스 루트까지** 지정한다. 폴더 이름·심볼릭 링크만 보고 판단하지 않는다. 등록되지 않은 폴더는 보고만 하고 심볼릭 링크·현재 폴더·부모 경로는 삭제하지 않는다.
 
-`ops/systemd/`는 아직 설치하지 않은 예제다. 관리 도구 전용 `/home/ubuntu/ppobgong-current` 링크가 검증된 릴리스를 가리키게 준비하고 Node 경로·사용자·파일 권한을 환경에 맞춘 뒤 설치한다. API 서비스의 WorkingDirectory는 이 템플릿이 변경하지 않는다.
+`ops/systemd/` 설정은 운영에 설치·활성화했다. 관리 도구 전용 `/home/ubuntu/ppobgong-current` 링크는 검증된 `operations-02d54a9-20261121` 릴리스를 가리킨다. 후속 배포에서는 Node 경로·사용자·파일 권한과 링크를 다시 확인한다. API 서비스의 WorkingDirectory는 이 템플릿이 변경하지 않는다.
 
 - 매일 한국 시간 03:30: 백업. 설정한 경우 별도 저장소 업로드 후 보관 기간 정리.
 - 매일 04:30: 최근 정상 백업 확인 후 DB 정리. 백업 실패 시 삭제도 차단.
@@ -213,6 +213,9 @@ npm run ops:files -- --root /home/ubuntu/ppobgong-releases --kind release --curr
 
 `npm run ops:test`는 데이터를 만들고 삭제하는 **격리 시험 DB 전용**이다. `MYSQL_HOST=127.0.0.1`, `MYSQL_DATABASE=ppobgong_ops_test`, 전용 포트와 `OPS_TEST_MYSQL_BIN`을 설정해 실행한다. 실제 덤프·복원은 MySQL 클라이언트·mysqldump·tar가 필요하다. 운영 RDS에서 실행하지 않는다. 서버 기본 `npm test`에는 DB에 접근하지 않는 정책·파일 보호 검사만 들어간다.
 
-develop 병합 전에 운영 보존 정책·관리 CLI·systemd 예제 추가를 팀에 공유한다. 운영에 예약·로그 제한·S3/RDS 설정을 적용하는 것은 별도 배포 작업이다. 이 문서 추가와 운영 도구 구현을 실제 운영 적용 완료로 해석하지 않는다.
+develop 병합 전에 운영 보존 정책·관리 CLI·systemd 예제 추가를 팀에 공유한다. 예약·로그 제한은 사용자 별도 승인 후 적용했다. S3는 사용하지 않으며, RDS 설정/조회 권한은 이 도구 배포로 자동 변경하지 않는다.
 
 로컬 검증(2026-11-21): 앱 타입·ESLint·59개, 서버 83개, 임시 MySQL V1~V14의 운영/일반 보상 통합 14개 통과. 실제 덤프 생성·gzip·환경 파일 제외·체크섬·제한 계정 복원·로그인/기록/지갑·다른 DB 생성 차단·임시 DB/계정 정리를 검사했다. 운영 RDS/S3·systemd 설정은 적용하지 않았다. DEVELOPMENT_PROGRESS.md는 사용자가 요청한 복원 상태를 유지했다.
+
+
+운영 적용 확인(2026-11-22): `operations-02d54a9-20261121` 릴리스에서 서버 83개·V1~V14 검증·HTTPS 읽기 전용 검사 통과. 승인 후 세 timer enabled/active 및 첫 backup/audit 성공 확인. 코드·DB·환경 사본 백업 전체 체크섬 일치, S3 업로드 없음, 정리 미리보기 삭제 0건. RDS 자동 조회는 AWS CLI/IAM 설정이 없어 `not_configured`로 보고한다. 적용 전 메타데이터는 `/home/ubuntu/backups/deploy-operations-02d54a9-20261121/`에 보관했다.
