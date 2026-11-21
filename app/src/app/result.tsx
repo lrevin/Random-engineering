@@ -33,7 +33,10 @@ export default function Result() {
 function ResultInner({ snapshot }: { snapshot: NonNullable<ReturnType<typeof useApp>["active"]> }) {
   const { records, setActive, xp } = useApp();
   const c = useColors();
-  const r = snapshot.result!;
+  const savedResult = snapshot.result!;
+  const record=records.find(x=>x.id===savedResult.recordId);
+  const r={...savedResult,score:record?.score??savedResult.score,rp:record?.rp??savedResult.rp,parts:record?.xpParts??savedResult.parts};
+  const pending=record?.synced===false&&record.rewardReason==='upload_pending';
   const topic = topicById(snapshot.topicId);
   const domain = topic ? domainById(topic.domain) : undefined;
   const mastery = domainMastery(topic?.domain ?? "", records);
@@ -65,6 +68,7 @@ function ResultInner({ snapshot }: { snapshot: NonNullable<ReturnType<typeof use
 
   return (
     <Screen scroll>
+      {pending&&<Card><T>답안은 기기에 저장됐어요. 연결 후 공부 기록에서 동기화하면 서버가 채점·보상을 확인해요. 현재 점수는 기기 채점 결과예요.</T></Card>}
       {scenes.length > 0 && <RankUp scenes={scenes} onDone={() => setScenes([])} />}
       {levelUp && (
         <Card style={{ backgroundColor: c.goldSoft, borderColor: c.gold, alignItems: "center", gap: 8 }}>

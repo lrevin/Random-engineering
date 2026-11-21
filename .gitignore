@@ -70,3 +70,8 @@ flyway.user.toml
 
 # Native CMake build cache
 .cxx/
+
+# 운영 도구가 만드는 실제 백업·비밀 환경 사본·관리 표시
+**/backup-20*/
+**/environment.secret
+**/.ppobgong-ops.json

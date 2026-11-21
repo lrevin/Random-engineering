@@ -4,6 +4,12 @@ import { authStorage } from "./auth-storage";
 // Authentication always uses the MySQL-backed API.
 if (!API_URL) throw new Error('MySQL API URL is required');
 export const mysqlAuth = createAuthClient(API_URL, authStorage);
+/** 인증·문제 불일치 오류를 오프라인으로 우회하지 않는다. */
+export function isConnectionFailure(error: unknown) {
+  return error instanceof AuthApiError
+    ? ['network_error', 'database_unavailable'].includes(error.code) || error.status >= 500
+    : error instanceof TypeError && /network|fetch|offline/i.test(error.message);
+}
 export function authErrorMessage(error: unknown) {
   if (!(error instanceof AuthApiError)) {
     const message = error instanceof Error ? error.message : String(error);

@@ -7,7 +7,7 @@
   },
   "scripts": {
     "start": "node --env-file-if-exists=.env server.mjs",
-    "test": "node --test test.mjs kakao-test.mjs ad-reward-test.mjs admin-grant-test.mjs admin-recall-test.mjs leaderboard-test.mjs client-key-test.mjs hardening-test.mjs ../mysql/migrate.test.mjs purchase-policy-test.mjs special-reward-policy-test.mjs general-reward-policy-test.mjs team-policy-test.mjs security-test.mjs subscription-policy-test.mjs llm-policy-test.mjs",
+    "test": "node --test test.mjs kakao-test.mjs ad-reward-test.mjs admin-grant-test.mjs admin-recall-test.mjs leaderboard-test.mjs client-key-test.mjs hardening-test.mjs ../mysql/migrate.test.mjs purchase-policy-test.mjs special-reward-policy-test.mjs general-reward-policy-test.mjs team-policy-test.mjs security-test.mjs subscription-policy-test.mjs llm-policy-test.mjs operations-policy-test.mjs",
     "validate": "node export.mjs --check",
     "db:setup": "node --env-file-if-exists=.env setup-db.mjs",
     "db:import": "node --env-file-if-exists=.env import-bank.mjs",
@@ -34,7 +34,13 @@
     "ai:health": "node --env-file-if-exists=.env ../mysql/llm-health.mjs",
     "friend-battle:test": "node --env-file-if-exists=.env --test ../mysql/friend-battle-test.mjs",
     "subscription:test": "node --env-file-if-exists=.env --test ../mysql/subscription-test.mjs",
-    "account-notify:test": "node --env-file-if-exists=.env --test ../mysql/account-notify-test.mjs"
+    "account-notify:test": "node --env-file-if-exists=.env --test ../mysql/account-notify-test.mjs",
+    "ops:maintenance": "node --env-file-if-exists=.env ../mysql/operations.mjs maintenance",
+    "ops:backup": "node --env-file-if-exists=.env ../mysql/operations.mjs backup",
+    "ops:files": "node --env-file-if-exists=.env ../mysql/operations.mjs files",
+    "ops:audit": "node --env-file-if-exists=.env ../mysql/operations.mjs audit",
+    "ops:restore": "node --env-file-if-exists=.env ../mysql/operations.mjs restore",
+    "ops:test": "node --test ../mysql/operations-test.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

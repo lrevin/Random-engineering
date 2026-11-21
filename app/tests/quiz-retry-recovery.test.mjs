@@ -15,11 +15,11 @@ function harness(screen,initial,api={}){
  const deps={
   'react':hooks,'react/jsx-runtime':{jsx:element,jsxs:element},'react-native':{View:'View',ActivityIndicator:'Spinner',Platform:{OS:'android'},Pressable:'Pressable',ScrollView:'ScrollView'},
   'expo-router':{Redirect:'Redirect',router:{replace:p=>routes.push(p),push:p=>routes.push(p)}},'expo-crypto':{randomUUID:()=>`new-id-${++serial}`},'expo-haptics':{},
-  'react-native-safe-area-context':{SafeAreaView:'SafeAreaView'},'@/lib/app-state':{useApp:()=>({mode:'user',active,setActive,records:[],xp:0,keptDays:[]})},
-  '@/components/ui':{Btn:'Btn',Card:'Card',Row:'Row',Screen:'Screen',T:'T',Badge:'Badge'},'@/components/Rank':{LevelBadge:'LevelBadge',TierBadge:'TierBadge',UserLevelBar:'UserLevelBar'},
-  '@/components/Icon':{Icon:'Icon'},'@/components/RankUp':{RankUp:'RankUp'},'@/data':{topicById:()=>topic,domainById:()=>({name:'분야'})},
-  '@/theme':{useColors:()=>({}),screenBg:()=>({})},'@/lib/rank':{domainMastery:()=>({points:0,topics:0,index:0,next:null}),TIERS:[{name:'시작'}],DOMAIN_TIER_MIN:[0]},
-  '@/lib/auth':{mysqlAuth:api,authErrorMessage:e=>e.message},'@/lib/auth-client':{AuthApiError},'@/lib/confirm':{confirmQuit:f=>f()},'@/lib/quiz':{},'@/lib/booster':{},'@/lib/sfx':{},'@/lib/stats':{},
+  'react-native-safe-area-context':{SafeAreaView:'SafeAreaView'},'@/lib/app-state':{useApp:()=>({mode:'user',active,setActive,records:[],xp:0,keptDays:[],addRecord:api.addRecord})},
+  '@/components/ui':{Btn:'Btn',Card:'Card',Row:'Row',Screen:'Screen',T:'T',Badge:'Badge',levelTone:()=>''},'@/components/Rank':{LevelBadge:'LevelBadge',TierBadge:'TierBadge',UserLevelBar:'UserLevelBar'},
+  '@/components/Icon':{Icon:'Icon'},'@/components/RankUp':{RankUp:'RankUp'},'@/data':{levelText:()=>'',topicById:()=>topic,domainById:()=>({name:'분야'})},
+  '@/theme':{useColors:()=>({}),screenBg:()=>({})},'@/lib/rank':{calcRp:()=>({total:20,parts:[]}),userLevel:()=>({level:1}),domainMastery:()=>({points:0,topics:0,index:0,next:null}),TIERS:[{name:'시작'}],DOMAIN_TIER_MIN:[0]},
+  '@/lib/auth':{mysqlAuth:api,authErrorMessage:e=>e.message,isConnectionFailure:e=>e instanceof TypeError},'@/lib/auth-client':{AuthApiError},'@/lib/confirm':{confirmQuit:f=>f()},'@/lib/quiz':{loadOfflineQuiz:async()=>({source:'bank',questions:[{type:'ox',q:'내장 문제',answer:true,explain:'해설',src:'bank'}]})},'@/lib/booster':{boostActive:()=>false},'@/lib/sfx':{},'@/lib/stats':{calcStreak:()=>({today:false,streak:0})},
  };
  const source=fs.readFileSync(new URL('../src/app/'+screen+'.tsx',import.meta.url),'utf8');
  const code=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText;
@@ -54,3 +54,33 @@ test('로딩 중 중단은 늦은 발급 완료 후 서버를 중단하고 상�
  const h=harness('quiz',{...result(),stage:'quiz',quizOnly:true,quiz:null,serverAttemptId:undefined,serverTracking:undefined},{issueActivity:async()=>{},activityEvent:async()=>({items:[{question:{type:'ox',q:'문제',answer:true,explain:'해설',src:'bank'}}]}),abandonActivity:async()=>{throw Error('통신 실패');}});
  const tree=h.render();walk(tree).find(x=>x.props?.title==='그만두고 홈으로').props.onPress();await tick();assert(h.active);assert.deepEqual(h.routes,[]);
  });
+
+test('재풀이 서버 연결 실패 후 내장 문제 선택은 새 ID로 보관하고 서버 ID를 상속하지 않는다',async()=>{
+ const h=harness('quiz',{...result(),stage:'quiz',quizOnly:true,quiz:null,serverAttemptId:undefined,serverTracking:undefined},{issueActivity:async()=>{throw new TypeError('offline');}});
+ h.render();await tick();const tree=h.render();
+ walk(tree).find(x=>x.props?.title==='내장 문제로 오프라인 풀이').props.onPress();
+ h.render();await tick();
+ assert.equal(h.active.offlineStudy,true);assert.equal(h.active.serverAttemptId,undefined);assert.equal(h.active.serverTracking,false);assert.ok(h.active.localRecordId);assert.equal(h.active.quiz.questions[0].q,'내장 문제');
+ const restored=harness('quiz',JSON.parse(JSON.stringify(h.active)),{issueActivity:async()=>{throw Error('복원 시 재발급 금지');}});
+ restored.render();await tick();assert.deepEqual(restored.active.quiz,h.active.quiz);assert.equal(restored.active.localRecordId,h.active.localRecordId);
+});
+
+test('서버 발급 후 오프라인 완료도 원래 ID와 답안을 보존하고 0 XP 대기 결과로 이동',async()=>{
+ const submitted=[];const q={type:'ox',q:'문제',answer:true,explain:'해설',src:'ai'};
+ const h=harness('quiz',{...result(),stage:'quiz',quiz:{source:'ai',questions:Array(7).fill(q),answers:Array(6).fill(true)}},{addRecord:async r=>{submitted.push(r);return {...r,id:r.attemptId,rp:0,xpParts:[],synced:false};}});
+ const tree=h.render();tree.props.onNext(true);tree.props.onNext(true);await tick();
+ assert.equal(submitted.length,1);assert.equal(submitted[0].attemptId,'completed-id');assert.equal(submitted[0].items.length,7);assert(submitted[0].items.every(i=>i.answer===true));
+ assert.equal(h.active.stage,'result');assert.equal(h.active.result.rp,0);assert.deepEqual(h.routes,['/result']);
+});
+test('완료 저장 실패 후 재시도는 같은 로컬 ID와 답안을 사용',async()=>{
+ const ids=[];let fail=true;const q={type:'ox',q:'내장 문제',answer:true,explain:'해설',src:'bank'};
+ const h=harness('quiz',{...result(),stage:'quiz',serverAttemptId:undefined,serverTracking:false,offlineStudy:true,quiz:{source:'bank',questions:Array(7).fill(q),answers:Array(6).fill(true)}},{addRecord:async r=>{ids.push(r.attemptId);if(fail)throw Error('저장 공간 부족');return {...r,id:r.attemptId,rp:0,xpParts:[],synced:false};}});
+ h.render().props.onNext(true);await tick();assert.equal(h.active.stage,'quiz');assert.equal(h.active.quiz.answers.length,7);assert.deepEqual(h.routes,[]);
+ fail=false;h.render().props.onNext(true);await tick();assert.equal(ids.length,2);assert.equal(ids[0],ids[1]);assert.equal(h.active.stage,'result');
+});
+
+test('오프라인 내장 풀이를 그만두면 서버 취소 응답 없이 홈으로 나갈 수 있다',async()=>{
+ let calls=0;
+ const h=harness('quiz',{...result(),stage:'quiz',quizOnly:true,quiz:null,offlineStudy:true,serverAttemptId:undefined,serverTracking:false},{abandonActivity:async()=>{calls++;throw new TypeError('offline');}});
+ const tree=h.render();walk(tree).find(x=>x.props?.title==='그만두고 홈으로').props.onPress();await tick();assert.equal(calls,0);assert.equal(h.active,null);assert.deepEqual(h.routes,['/home']);
+});

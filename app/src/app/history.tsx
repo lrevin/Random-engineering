@@ -40,7 +40,7 @@ export default function History() {
         <Btn title={syncing ? "동기화 중…" : "기록 동기화"} disabled={syncing} onPress={async()=>{
           setSyncing(true);try{await refreshRecords();}catch{showDialog({icon:"offline",title:"연결하지 못했어요",message:"기기의 기록은 유지돼요. 연결 후 다시 시도해 주세요."});}finally{setSyncing(false);}
         }}/>
-        {records.some(r=>!r.synced)&&<T size={13} color="muted">서버 미반영 기록이 있어요. 전체 답안이 없는 이전 기록 등은 기기에만 보관될 수 있어요.</T>}
+        {records.some(r=>!r.synced)&&<T size={13} color="muted">서버 미반영 기록이 있어요. 연결 후 동기화하면 답안과 보상 조건을 확인해요. 원본 없는 연습 문제는 보상에서 제외되며, 오프라인 시간은 시간 퀘스트에 포함되지 않아요.</T>}
       </>}
       {mode === "guest" && (
         <Card style={{ backgroundColor: c.accentSoft, borderColor: c.accent, gap: 8 }}>

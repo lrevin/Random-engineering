@@ -181,7 +181,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<Mode>("none");
   const [apiSession, setApiSession] = useState<AuthSession | null>(null);
   const ownerRef = useRef<string | null>(null);
-  const syncQueue = useRef<Promise<void>>(Promise.resolve());
+  const syncQueue = useRef<Promise<unknown>>(Promise.resolve());
   const [prefs, setPrefs] = useState<Prefs>(DEFAULT_PREFS);
   const [onboarded, setOnboarded] = useState(false);
   const [records, setRecords] = useState<StudyRecord[]>([]);
@@ -285,14 +285,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   /** 서버에 아직 안 올라간 기록을 올립니다. */
   const syncPending = useCallback(async (userId: string) => {
     return enqueueRecordOperation(syncQueue, async () => {
-      if (ownerRef.current !== userId) return;
+      if (ownerRef.current !== userId || mysqlAuth.getUserId() !== userId) return;
       await syncMySqlRecords(mysqlAuth, () => recordsRef.current, saveRecordsLocal,
-        () => ownerRef.current === userId,
+        () => ownerRef.current === userId && mysqlAuth.getUserId() === userId,
         r => AsyncStorage.setItem("pg.mysql.memo-draft." + userId + "." + r.id, JSON.stringify(r)));
     });
   }, [saveRecordsLocal]);
 
   const clearLocal = useCallback(async () => {
+    await syncQueue.current.catch(()=>{});
     ownerRef.current = null;
     walletRevision.current="0";setMemberAssets(null);
     setApiSession(null);
@@ -351,6 +352,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const archiveApiAccount = useCallback(async () => {
+    // 계정 전환은 진행 중인 기기 저장을 마친 뒤 보관한다.
+    await syncQueue.current.catch(()=>{});
     const owner = await readJSON<string | null>(K.account, null);
     if (!owner) return;
     await AsyncStorage.setItem(`pg.mysql.local.${owner}`, JSON.stringify({
@@ -817,11 +820,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [mode, remoteWallet]);
 
   const addRecord = useCallback(async (r: NewRecord) => {
-    const rec: StudyRecord = { ...r, ...(mode==='user'?{rp:0,xpParts:[],rewardStatus:'held' as const,rewardReason:'upload_pending',countsAsStudy:false}:{}), id: r.attemptId ?? Crypto.randomUUID(), studiedAt: new Date().toISOString(), synced: false };
-    saveRecordsLocal(sortRecords([...recordsRef.current.filter(x=>x.id!==rec.id), rec]));
+    const owner=ownerRef.current;
+    // 동기화와 같은 대기열에서 저장해 연속 클릭·이전 응답이 완료 스냅샷을 덮어쓰지 못하게 한다.
+    const rec=await enqueueRecordOperation(syncQueue, async () => {
+      if(ownerRef.current!==owner)throw new AuthApiError('session_changed',409);
+      const existing=r.attemptId?recordsRef.current.find(x=>x.id===r.attemptId):undefined;
+      const rec: StudyRecord = existing ?? { ...r, ...(mode==='user'?{rp:0,xpParts:[],rewardStatus:'held' as const,rewardReason:'upload_pending',countsAsStudy:false}:{}), id: r.attemptId ?? Crypto.randomUUID(), studiedAt: new Date().toISOString(), synced: false };
+      const next=sortRecords([...recordsRef.current.filter(x=>x.id!==rec.id), rec]);
+      // 저장 공간 오류를 숨기지 않는다. 완료 화면으로 떠나기 전에 답안의 영속 저장을 확인한다.
+      await AsyncStorage.setItem(K.records,JSON.stringify(next));
+      if(ownerRef.current!==owner)throw new AuthApiError('session_changed',409);
+      recordsRef.current=next;setRecords(next);
+      return rec;
+    });
     if (mode === "user" && apiSession) await syncPending(apiSession.user.id).catch(() => {});
+    if(ownerRef.current!==owner)throw new AuthApiError('session_changed',409);
     return recordsRef.current.find(x => x.id === rec.id) ?? rec;
-  }, [mode, apiSession, saveRecordsLocal, syncPending]);
+  }, [mode, apiSession, syncPending]);
 
   const setRecordVisibility = useCallback(async (id:string,hidden:boolean)=>{
     const target=recordsRef.current.find(r=>r.id===id);if(!target)return;
