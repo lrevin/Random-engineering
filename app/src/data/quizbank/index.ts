@@ -44,6 +44,8 @@ import b_db_2 from "./db-2.json";
 import b_db_3 from "./db-3.json";
 import b_ds_1 from "./ds-1.json";
 import b_ds_2 from "./ds-2.json";
+import b_ds_3 from "./ds-3.json";
+import b_ds_4 from "./ds-4.json";
 import b_ea_astro_1 from "./ea-astro-1.json";
 import b_ea_atmo_1 from "./ea-atmo-1.json";
 import b_ea_geo_1 from "./ea-geo-1.json";
@@ -87,6 +89,11 @@ import b_net_3 from "./net-3.json";
 import b_os_1 from "./os-1.json";
 import b_os_2 from "./os-2.json";
 import b_os_3 from "./os-3.json";
+import b_ph_em_1 from "./ph-em-1.json";
+import b_ph_mech_1 from "./ph-mech-1.json";
+import b_ph_modern_1 from "./ph-modern-1.json";
+import b_ph_thermo_1 from "./ph-thermo-1.json";
+import b_ph_wave_1 from "./ph-wave-1.json";
 import b_pl_1 from "./pl-1.json";
 import b_pl_2 from "./pl-2.json";
 import b_pl_3 from "./pl-3.json";
@@ -100,6 +107,9 @@ import b_sec_2 from "./sec-2.json";
 import b_sec_3 from "./sec-3.json";
 import b_sec_4 from "./sec-4.json";
 import b_sec_5 from "./sec-5.json";
+import b_sec_6 from "./sec-6.json";
+import b_sec_7 from "./sec-7.json";
+import b_sec_8 from "./sec-8.json";
 import b_theory_1 from "./theory-1.json";
 import b_theory_2 from "./theory-2.json";
 import b_theory_3 from "./theory-3.json";
@@ -150,6 +160,8 @@ const FILES = [
   b_db_3,
   b_ds_1,
   b_ds_2,
+  b_ds_3,
+  b_ds_4,
   b_ea_astro_1,
   b_ea_atmo_1,
   b_ea_geo_1,
@@ -193,6 +205,11 @@ const FILES = [
   b_os_1,
   b_os_2,
   b_os_3,
+  b_ph_em_1,
+  b_ph_mech_1,
+  b_ph_modern_1,
+  b_ph_thermo_1,
+  b_ph_wave_1,
   b_pl_1,
   b_pl_2,
   b_pl_3,
@@ -206,6 +223,9 @@ const FILES = [
   b_sec_3,
   b_sec_4,
   b_sec_5,
+  b_sec_6,
+  b_sec_7,
+  b_sec_8,
   b_theory_1,
   b_theory_2,
   b_theory_3,
