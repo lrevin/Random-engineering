@@ -18,9 +18,9 @@ const catalog=loadTopics();
 const fail=(code,status=409)=>{throw new AuthError(code,status);};
 const shuffle=a=>{const b=[...a];for(let i=b.length-1;i>0;i--){const j=randomInt(i+1);[b[i],b[j]]=[b[j],b[i]];}return b;};
 // 기본 은행 부족분은 기준 데이터·생성 버전을 포함한 스냅샷만 보존한다.
-async function questions(db,topicId,count,avoid=new Set(),exclude=new Set()){
+export async function questions(db,topicId,count,avoid=new Set(),exclude=new Set(),{multipleChoiceOnly=false}={}){
  const [[t]]=await db.execute('SELECT t.*,c.name_ko AS category_name,c.domain_id FROM topics t JOIN categories c ON c.id=t.category_id WHERE t.id=?',[topicId]);if(!t)fail('unknown_topic',400);
- const [rows]=await db.execute(`SELECT q.id,d.type,d.body,d.choices,d.answer,d.explanation FROM questions q JOIN question_details d ON d.question_id=q.id WHERE q.topic_id=? AND q.source='bank' AND q.status='published' AND EXISTS(SELECT 1 FROM question_file_items i JOIN question_files f ON f.id=i.file_id WHERE i.question_id=q.id AND f.status='published') ORDER BY q.id`,[topicId]);
+ const [rows]=await db.execute(`SELECT q.id,d.type,d.body,d.choices,d.answer,d.explanation FROM questions q JOIN question_details d ON d.question_id=q.id WHERE q.topic_id=? AND q.source='bank' AND q.status='published' ${multipleChoiceOnly?"AND d.type='mc' AND JSON_LENGTH(d.choices)=4":''} AND EXISTS(SELECT 1 FROM question_file_items i JOIN question_files f ON f.id=i.file_id WHERE i.question_id=q.id AND f.status='published') ORDER BY q.id`,[topicId]);
  const result=shuffle(rows.filter(q=>!exclude.has(q.body.trim().normalize('NFC')))).sort((a,b)=>Number(avoid.has(a.body))-Number(avoid.has(b.body))).slice(0,count).map(q=>({topicId,questionId:q.id,question:{type:q.type,q:q.body,...(q.type==='mc'?{choices:parse(q.choices)}:{}),answer:parse(q.answer),explain:q.explanation,src:'bank'}}));
  const info=catalog[topicId],hint=info?.hint??`${t.name_ko}은(는) ${t.category_name} 분야의 주제입니다.`;
  for(let n=result.length;n<count;n++){
@@ -83,7 +83,8 @@ export function createActivityService({auth,connectionFactory=connect,now=()=>ne
   for(let subject=0;subject<subjects.length;subject++){
    const [pool]=await db.execute(`SELECT DISTINCT t.id FROM certificate_subject_items i JOIN topics t ON t.id=i.topic_id OR t.category_id=i.category_id JOIN categories c ON c.id=t.category_id JOIN domains d ON d.id=c.domain_id WHERE i.subject_id=? AND t.is_active=1 AND c.is_active=1 AND d.is_active=1 ORDER BY t.id`,[subjects[subject].id]);
    if(!pool.length)fail('questions_unavailable');
-   const qs=[];for(const t of shuffle(pool))qs.push(...await questions(db,t.id,10,avoid));
+   // 모의고사는 공개 기본 문제와 부족분 보충 모두 4지선다로 출제한다.
+   const qs=[];for(const t of shuffle(pool))qs.push(...await questions(db,t.id,10,avoid,new Set(),{multipleChoiceOnly:true}));
    const picked=shuffle(qs).sort((a,b)=>(Number(avoid.has(a.question.q))*2+Number(avoidTopics.has(a.topicId)))-(Number(avoid.has(b.question.q))*2+Number(avoidTopics.has(b.topicId)))).slice(0,10);
    items.push(...picked.map(q=>({...q,question:{...q.question,grading:{version:"exam-v1",subjectMin:.4,totalMin:.6}},subject,subjectName:subjects[subject].name_ko})));
    for(const q of picked)avoid.add(q.question.q);

@@ -290,8 +290,10 @@ export async function examQuestions(topics: Topic[], n: number, avoid: ExamAvoid
   const seen = shuffle(topics.filter((t) => avoidTopics.has(t.id)));
   const chosen = [...fresh, ...seen].slice(0, n);
   const pools = await Promise.all(chosen.map(async (topic) => {
-    const bank = distinct((await bankQuestions(topic.id)).map((q) => ({ ...q, src: "bank" as const })));
-    const all = shuffle(bank.length ? bank : offlineQuestions(topic));
+    // 게스트 모의고사도 은행·보충 문제를 모두 4지선다로 제한한다.
+    const isFourChoice = (q: QuizQuestion) => q.type === "mc" && q.choices.length === 4;
+    const bank = distinct((await bankQuestions(topic.id)).filter(isFourChoice).map((q) => ({ ...q, src: "bank" as const })));
+    const all = shuffle(bank.length >= n ? bank : distinct([...bank, ...offlineQuestions(topic).filter(isFourChoice)]));
     const notRecent = all.filter((q) => !avoidQ.some((t) => similarity(q.q, t) >= SIMILAR));
     const recent = all.filter((q) => !notRecent.includes(q));
     return { topic, qs: [...notRecent, ...recent] };
