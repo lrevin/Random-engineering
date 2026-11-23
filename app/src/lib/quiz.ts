@@ -316,11 +316,12 @@ export async function examQuestions(topics: Topic[], n: number, avoid: ExamAvoid
  * 같은 걸 묻지만 정답이 달라서, 답을 외워서는 못 맞힙니다. 비슷한 문제가 없으면 원래 문제의 보기 순서를 섞어서 냅니다.
  * changed: 원래 문제와 다른 문제로 바뀌었는지
  */
-export async function variantQuestion(topic: Topic, wrong: { q: string; answer: string }): Promise<{ q: QuizQuestion; changed: boolean }> {
+export async function variantQuestion(topic: Topic, wrong: { q: string; answer: string }, {multipleChoiceOnly=false}: {multipleChoiceOnly?:boolean} = {}): Promise<{ q: QuizQuestion; changed: boolean }> {
   const bank = distinct((await bankQuestions(topic.id)).map((q) => ({ ...q, src: "bank" as const })));
-  const orig = bank.find((b) => b.q === wrong.q);
-  const type: QuizQuestion["type"] = orig?.type ?? (/^[OX] \(/.test(wrong.answer) ? "ox" : "mc");
-  const ranked = bank
+  const eligible = multipleChoiceOnly ? bank.filter((q) => q.type === "mc" && q.choices.length === 4) : bank;
+  const orig = eligible.find((b) => b.q === wrong.q);
+  const type: QuizQuestion["type"] = multipleChoiceOnly ? "mc" : orig?.type ?? (/^[OX] \(/.test(wrong.answer) ? "ox" : "mc");
+  const ranked = eligible
     .filter((b) => b.type === type && b.q !== wrong.q && answerLabel(b) !== wrong.answer)
     .map((b) => ({ b, s: similarity(b.q, wrong.q) }))
     .sort((x, y) => y.s - x.s);
@@ -328,7 +329,8 @@ export async function variantQuestion(topic: Topic, wrong: { q: string; answer: 
   const near = ranked.slice(0, 3);
   if (near.length) return { q: shuffleChoices(near[Math.floor(Math.random() * near.length)].b), changed: true };
   if (orig) return { q: shuffleChoices(orig), changed: false };
-  const any = shuffle(bank.length ? bank : offlineQuestions(topic))[0];
+  const fallback = multipleChoiceOnly ? offlineQuestions(topic).filter((q) => q.type === "mc" && q.choices.length === 4) : offlineQuestions(topic);
+  const any = shuffle(eligible.length ? eligible : fallback)[0];
   return { q: shuffleChoices(any), changed: true };
 }
 const answerLabel = (q: QuizQuestion) => (q.type === "mc" ? q.choices[q.answer] : q.answer ? "O (맞다)" : "X (틀리다)");

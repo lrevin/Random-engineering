@@ -45,7 +45,7 @@ export const LOCAL_KEYS = {
   questClaims: { key: "pg.questClaims", group: "progress", desc: "받은 퀘스트 보상 키", server: true },
   exam: { key: "pg.exam", group: "progress", desc: "모의고사 결과 · 오늘 본 횟수 · 1회권 · 모의고사 오답 (회원은 계정에 보관: progress-sync.ts)", server: true },
   reviewDone: { key: "pg.review.done2", group: "progress", desc: "오답 다시 풀기로 해결한 오답과 시각 (회원은 계정에 보관: progress-sync.ts)", server: true },
-  activities: { key: "pg.activities", group: "device", desc: "같은 기기의 서버 풀이 요청·답안 복원 (회원별 접미사)", server: false },
+  activities: { key: "pg.activities", group: "device", desc: "같은 기기의 서버 풀이 요청·답안 복원 (회원별·기능별, 모의고사 오답은 review.exam 접미사)", server: false },
   recall: { key: "pg.recall", group: "progress", desc: "주제별 마지막 복습 시각 (회원은 계정에 보관: progress-sync.ts)", server: true },
   certDates: { key: "pg.certDates", group: "progress", desc: "자격증별 시험일 (회원은 계정에 보관: progress-sync.ts)", server: true },
   speed: { key: "pg.speed", group: "progress", desc: "스피드 퀴즈 최고 기록 · 오늘 받은 경험치", server: true },

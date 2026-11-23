@@ -31,9 +31,9 @@ export function collectWrongs(records: StudyRecord[], examWrongs: ExamWrong[], d
 }
 
 /** 이번에 풀 묶음: 오답에서 무작위로 골라 변형 문제로 바꿈 */
-export async function buildReview(wrongs: WrongItem[], n = REVIEW_LENGTH): Promise<ReviewItem[]> {
+export async function buildReview(wrongs: WrongItem[], n = REVIEW_LENGTH, options: {multipleChoiceOnly?:boolean} = {}): Promise<ReviewItem[]> {
   const picked = [...wrongs].sort(() => Math.random() - 0.5).slice(0, n);
-  const items = await Promise.all(picked.map(async (wrong) => ({ wrong, ...(await variantQuestion(wrong.topic, wrong)) })));
+  const items = await Promise.all(picked.map(async (wrong) => ({ wrong, ...(await variantQuestion(wrong.topic, wrong, options)) })));
   return items.filter((x) => !!x.q);
 }
 

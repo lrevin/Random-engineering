@@ -105,7 +105,7 @@
 | 메서드 | 주소 | 요청·역할 |
 |---|---|---|
 | GET | `/me/rewards` | 오늘의 배정·달성, 복습 대상, 최고 연속일, 프리미엄 주간 실적, 현재 지갑 |
-| POST | `/me/activities` | `{ requestId, purpose, topicId?, certId?, studySec? }` · `study/recall/exam/review` 발급. 시작 UUID 재사용 |
+| POST | `/me/activities` | `{ requestId, purpose, topicId?, certId?, studySec?, reviewSource? }` · `study/recall/exam/review` 발급. `reviewSource="exam"`은 모의고사 4지선다 오답만 선택. 시작 UUID는 선택 조건까지 일치해야 재사용 |
 | GET | `/me/activities/:id` | 소유한 발급 문제·현재 상태·저장 답안. 자동 다른 기기 이어하기 목록은 제공하지 않음 |
 | POST | `/me/activities/:id/events` | `{ requestId, event }` · `pause/resume/quiz/extend`. 시간 추가 120초·10개, 같은 이벤트 UUID 중복 차감 없음 |
 | POST | `/me/activities/:id/answers` | `{ position, answer }` · 오답 풀이 문항별 승인·최초 해결 저장 |

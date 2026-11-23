@@ -204,7 +204,7 @@ export default function Exam() {
           </>
         )}
 
-        {wrong.length > 0 && <Btn title={premium ? "틀린 문제 변형해서 다시 풀기" : "틀린 문제 다시 풀기 (프리미엄)"} variant="premium" icon={<Icon name="crown" size={24} />} onPress={() => router.push("/review")} />}
+        {wrong.length > 0 && <Btn title={premium ? "틀린 문제 변형해서 다시 풀기" : "틀린 문제 다시 풀기 (프리미엄)"} variant="premium" icon={<Icon name="crown" size={24} />} onPress={() => router.push("/review?source=exam")} />}
         <Btn title="모의고사 목록으로" variant="primary" size="lg" onPress={() => { setPaper(null); setResult(null); }} />
         <Btn title="닫기" variant="ghost" onPress={() => router.back()} />
       </Screen>
