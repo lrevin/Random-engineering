@@ -117,7 +117,7 @@ export function createAuthClient(url: string, storage: SessionStorage, fetcher: 
     async getSpeedStats(): Promise<{best:number;plays:number;day:string;xpToday:number;totalXp:number;bonusXp?:number}> {return authorized("/me/speed/stats");},
     async apiRequest(path: string, body?: unknown, method?: "GET" | "POST" | "PUT" | "DELETE") { return authorized(path, body, method); },
     async rewardStatus():Promise<RewardStatus>{return authorized('/me/rewards');},
-    async issueActivity(body:{requestId:string;purpose:'study'|'recall'|'review'|'exam';topicId?:string;certId?:string;studySec?:number}):Promise<ServerActivity>{return authorized('/me/activities',body,'POST');},
+    async issueActivity(body:{requestId:string;purpose:'study'|'recall'|'review'|'exam';topicId?:string;certId?:string;studySec?:number;reviewSource?:'exam'}):Promise<ServerActivity>{return authorized('/me/activities',body,'POST');},
     async getActivity(id:string):Promise<ServerActivity>{return authorized('/me/activities/'+id);},
     async activityEvent(id:string,event:'pause'|'resume'|'quiz'|'extend',requestId:string):Promise<ServerActivity>{return authorized('/me/activities/'+id+'/events',{event,requestId},'POST');},
     async activityAnswer(id:string,position:number,answer:number|boolean):Promise<ServerActivity>{return authorized('/me/activities/'+id+'/answers',{position,answer},'POST');},

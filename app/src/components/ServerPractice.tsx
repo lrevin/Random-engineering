@@ -14,28 +14,28 @@ import {showDialog} from './Dialog';
 import {Icon} from './Icon';
 
 /** 회원 복습·오답 풀이. 답안은 기기에 먼저 보관하고 서버 성공 후 완료로 표시한다. */
-export function ServerPractice({purpose}:{purpose:'recall'|'review'}){
+export function ServerPractice({purpose,examOnly=false}:{purpose:'recall'|'review';examOnly?:boolean}){
  const {refreshWallet,premium}=useApp(),{rewards,refresh}=useRewardStatus();
  const [session,setSession]=useState<CachedActivity|null>(null),[ready,setReady]=useState(false),[busy,setBusy]=useState(false),[notice,setNotice]=useState('');
  const [completed,setCompleted]=useState<ServerActivity|null>(null),[got,setGot]=useState(false);
  const lock=useRef(false),owner=mysqlAuth.getUserId();
- useEffect(()=>{let alive=true;readCachedActivity(purpose).then(x=>{if(alive&&mysqlAuth.getUserId()===owner){setSession(x);setReady(true);}}).catch(()=>{if(alive){setNotice('저장된 진행을 읽지 못했어요. 다시 열어 주세요.');}});return()=>{alive=false;};},[owner,purpose]);
- const run=async(task:()=>Promise<void>)=>{if(lock.current)return;lock.current=true;setBusy(true);setNotice('');try{await task();}catch(e){const pending=await readCachedActivity(purpose).catch(()=>null);if(pending)setSession(pending);setNotice(authErrorMessage(e));}finally{lock.current=false;setBusy(false);}};
+ useEffect(()=>{let alive=true;readCachedActivity(purpose,examOnly).then(x=>{if(alive&&mysqlAuth.getUserId()===owner){setSession(x);setReady(true);}}).catch(()=>{if(alive){setNotice('저장된 진행을 읽지 못했어요. 다시 열어 주세요.');}});return()=>{alive=false;};},[owner,purpose,examOnly]);
+ const run=async(task:()=>Promise<void>)=>{if(lock.current)return;lock.current=true;setBusy(true);setNotice('');try{await task();}catch(e){const pending=await readCachedActivity(purpose,examOnly).catch(()=>null);if(pending)setSession(pending);setNotice(authErrorMessage(e));}finally{lock.current=false;setBusy(false);}};
  const resolve=async(x:CachedActivity)=>{
   const activity=x.activity?await mysqlAuth.getActivity(x.activity.id):await mysqlAuth.issueActivity(x.request);
-  if(activity.status==='abandoned'){await clearCachedActivity(purpose);setSession(null);return;}
+  if(activity.status==='abandoned'){await clearCachedActivity(purpose,examOnly);setSession(null);return;}
   const next={...x,activity};await saveCachedActivity(next);setSession(next);
-  if(activity.status==='completed'){setCompleted(activity);await refreshWallet();await refresh();await clearCachedActivity(purpose);}
+  if(activity.status==='completed'){setCompleted(activity);await refreshWallet();await refresh();await clearCachedActivity(purpose,examOnly);}
  };
  const start=()=>run(async()=>{
-  const x=session??{owner:owner!,request:{purpose,requestId:Crypto.randomUUID()},answers:[]};
+  const x=session??{owner:owner!,request:{purpose,requestId:Crypto.randomUUID(),...(examOnly?{reviewSource:"exam" as const}:{})},answers:[]};
   await saveCachedActivity(x);setSession(x);setCompleted(null);setGot(false);await resolve(x);
  });
  const submit=async(x:CachedActivity)=>{
   const before=x.activity!.wallet.claims;
   const activity=await mysqlAuth.completeActivity(x.activity!.id,x.answers);
   setCompleted(activity);setGot(purpose==='recall'&&activity.wallet.claims.some(k=>k.startsWith('recall:')&&!before.includes(k)));
-  await refreshWallet();await refresh();await clearCachedActivity(purpose);
+  await refreshWallet();await refresh();await clearCachedActivity(purpose,examOnly);
  };
  const next=(answer:number|boolean)=>run(async()=>{
   if(!session?.activity)return;
@@ -53,7 +53,7 @@ export function ServerPractice({purpose}:{purpose:'recall'|'review'}){
   if(purpose==='review')for(let i=0;i<session.answers.length;i++)await mysqlAuth.activityAnswer(session.activity.id,i+1,session.answers[i]);
   if(session.answers.length===session.activity.items.length)await submit(session);else await resolve(session);
  });
- const quit=()=>showDialog({title:'풀이를 그만둘까요?',message:purpose==='review'?'서버에서 해결이 확인된 오답은 유지돼요.':'완료하지 않은 복습은 보상에 포함되지 않아요.',buttons:[{text:'계속 풀기',style:'cancel'},{text:'그만두기',style:'destructive',onPress:()=>{void run(async()=>{if(session){const a=session.activity??await mysqlAuth.issueActivity(session.request);await mysqlAuth.abandonActivity(a.id);}await clearCachedActivity(purpose);setSession(null);setCompleted(null);await refresh();});}}]});
+ const quit=()=>showDialog({title:'풀이를 그만둘까요?',message:purpose==='review'?'서버에서 해결이 확인된 오답은 유지돼요.':'완료하지 않은 복습은 보상에 포함되지 않아요.',buttons:[{text:'계속 풀기',style:'cancel'},{text:'그만두기',style:'destructive',onPress:()=>{void run(async()=>{if(session){const a=session.activity??await mysqlAuth.issueActivity(session.request);await mysqlAuth.abandonActivity(a.id);}await clearCachedActivity(purpose,examOnly);setSession(null);setCompleted(null);await refresh();});}}]});
  if(session&&session.owner!==owner)return <Screen><T>현재 계정의 진행을 확인하고 있어요.</T></Screen>;
  const activity=session?.activity,index=session?.answers.length??0;
  // 요청 실패 때도 답안과 같은 UUID를 남겨서 재시도한다.

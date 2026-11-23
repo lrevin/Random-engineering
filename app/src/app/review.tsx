@@ -1,5 +1,5 @@
 import {ServerPractice} from "@/components/ServerPractice";
-import { router } from "expo-router";
+import { useLocalSearchParams, router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -15,10 +15,11 @@ import { answerText, isCorrect, QuestionView } from "./quiz";
 
 /**
  * 오답 다시 풀기 (프리미엄): 퀴즈·모의고사에서 틀린 문제를 모아, 같은 주제·같은 유형의 변형 문제로 다시 풉니다.
+ * 모의고사 결과에서 진입하면 모의고사 오답만 고르고 변형·보충도 4지선다로 제한합니다.
  * 변형 문제를 맞히면 그 오답은 목록에서 빠집니다.
  */
-export default function Review(){const {mode}=useApp();return mode==='user'?<ServerPractice purpose="review"/>:<GuestReview/>;}
-function GuestReview() {
+export default function Review(){const {mode}=useApp();const {source}=useLocalSearchParams<{source?:string}>();const examOnly=source==='exam';return mode==='user'?<ServerPractice purpose="review" examOnly={examOnly}/>:<GuestReview examOnly={examOnly}/>;}
+function GuestReview({examOnly=false}:{examOnly?:boolean}) {
   const { records, premium } = useApp();
   const c = useColors();
   const [examWrongs, setExamWrongs] = useState<ExamWrong[] | null>(null);
@@ -32,7 +33,7 @@ function GuestReview() {
     Promise.all([readExamStore(), readDone()]).then(([s, d]) => { setExamWrongs(s.wrongs); setDone(d); });
   }, []);
 
-  const wrongs = useMemo(() => collectWrongs(records, examWrongs ?? [], done), [records, examWrongs, done]);
+  const wrongs = useMemo(() => collectWrongs(examOnly ? [] : records, examWrongs ?? [], done), [records, examWrongs, done, examOnly]);
   const finished = !!items && answers.length >= items.length;
 
   const start = async () => {
@@ -40,7 +41,7 @@ function GuestReview() {
     setNotice("");
     setLoading(true);
     try {
-      const set = await buildReview(wrongs);
+      const set = await buildReview(wrongs, REVIEW_LENGTH, {multipleChoiceOnly:examOnly});
       if (!set.length) throw new Error("empty");
       setAnswers([]);
       setItems(set);

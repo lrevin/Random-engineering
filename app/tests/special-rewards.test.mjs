@@ -34,3 +34,14 @@ test('학습일·연속일은 기기 시간대와 무관하게 한국 날짜를 
   assert.equal(stats.dateKey(new Date('2026-11-14T15:00:00Z')),'2026-11-15');assert.equal(stats.calcStreak(records,new Date('2026-11-15T00:00:00Z')).streak,2);
  }}finally{if(old===undefined)delete process.env.TZ;else process.env.TZ=old;}
 });
+
+test('모의고사 오답 캐시는 일반 OX 복습과 분리하여 복원·삭제한다',async()=>{
+ const values=new Map(),storage={getItem:async k=>values.get(k)??null,setItem:async(k,v)=>values.set(k,v),removeItem:async k=>values.delete(k)};
+ const local=load('local-data',{'@react-native-async-storage/async-storage':{__esModule:true,default:storage}});
+ const cache=load('activity-cache',{'@react-native-async-storage/async-storage':{__esModule:true,default:storage},'./local-data':local,'./auth':{mysqlAuth:{getUserId:()=> 'a'}}});
+ const general={owner:'a',request:{requestId:'g',purpose:'review'},answers:[true]};
+ const exam={owner:'a',request:{requestId:'e',purpose:'review',reviewSource:'exam'},answers:[1]};
+ await cache.saveCachedActivity(general);await cache.saveCachedActivity(exam);
+ assert.deepEqual(await cache.readCachedActivity('review'),general);assert.deepEqual(await cache.readCachedActivity('review',true),exam);
+ await cache.clearCachedActivity('review',true);assert.equal(await cache.readCachedActivity('review',true),null);assert.deepEqual(await cache.readCachedActivity('review'),general);
+});

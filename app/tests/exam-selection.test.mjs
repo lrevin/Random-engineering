@@ -19,3 +19,14 @@ test('OX만 있는 은행도 게스트 모의고사에서 객관식으로 보충
  const items=await quiz.examQuestions([topic],2);assert.equal(items.length,2);
  for(const {q} of items){assert.equal(q.type,'mc');assert.equal(q.choices.length,4);}
 });
+
+test('모의고사 오답 변형은 원본이 OX이거나 은행에서 사라져도 4지선다만 반환한다',async()=>{
+ for(const bank of [[],[{type:'ox',q:'과거 OX',answer:true,explain:'해설'}],[mc]]){
+  const {quiz,topic}=load(bank);const {q}=await quiz.variantQuestion(topic,{q:'과거 OX',answer:'O (맞다)'},{multipleChoiceOnly:true});
+  assert.equal(q.type,'mc');assert.equal(q.choices.length,4);
+ }
+});
+test('일반 학습 오답 변형은 기존 OX 유형을 유지한다',async()=>{
+ const {quiz,topic}=load([{type:'ox',q:'OX 원본',answer:true,explain:'해설'}]);
+ assert.equal((await quiz.variantQuestion(topic,{q:'OX 원본',answer:'O (맞다)'})).q.type,'ox');
+});

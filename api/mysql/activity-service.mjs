@@ -59,7 +59,9 @@ export function createActivityService({auth,connectionFactory=connect,now=()=>ne
  if(!UUID.test(requestId??'')||!['study','recall','exam','review'].includes(purpose))fail('invalid_activity',400);
  const duration=purpose==='study'?body.studySec:0;
  if(!Number.isInteger(duration)||duration<0)fail('invalid_study_time',400);
- const digest=Buffer.from(hash({purpose,topicId,certId,duration}),'hex');
+ const examOnly=purpose==='review'&&body.reviewSource==='exam';
+ if(body.reviewSource!==undefined&&(!examOnly))fail('invalid_activity',400);
+ const digest=Buffer.from(hash({purpose,topicId,certId,duration,...(examOnly?{reviewSource:'exam'}:{})}),'hex');
  const [[prior]]=await db.execute('SELECT * FROM quiz_attempts WHERE user_id=? AND purpose=? AND request_id=?',[id,purpose,requestId]);
  if(prior){if(!prior.request_hash.equals(digest))fail('operation_conflict');return view(db,id,prior);}
  const [[taken]]=await db.execute('SELECT id FROM quiz_attempts WHERE id=?',[requestId]);if(taken)fail('operation_conflict');
@@ -73,7 +75,7 @@ export function createActivityService({auth,connectionFactory=connect,now=()=>ne
   const due=await recallTargets(db,id,now());if(!due.length)fail('recall_not_due');for(const t of due)items.push(...await questions(db,t.topicId,3));
  }else if(purpose==='review'){
   if(!value.state.premium)fail('premium_required');
-  const [wrongs]=await db.execute(`SELECT * FROM (SELECT i.*,ROW_NUMBER() OVER(PARTITION BY i.topic_id,COALESCE(i.question_id,SHA2(JSON_EXTRACT(i.question_snapshot,'$.q'),256)) ORDER BY i.answered_at,i.attempt_id,i.position) AS rn FROM quiz_attempt_items i JOIN quiz_attempts a ON a.id=i.attempt_id WHERE a.user_id=? AND a.status='completed' AND a.verification_status='server_verified' AND a.purpose IN ('study','exam') AND ${sourceAttemptSql()} AND i.is_correct=0 AND i.resolved_at IS NULL) x WHERE rn=1 ORDER BY answered_at,attempt_id,position LIMIT 10`,[id]);
+  const [wrongs]=await db.execute(`SELECT * FROM (SELECT i.*,ROW_NUMBER() OVER(PARTITION BY i.topic_id,COALESCE(i.question_id,SHA2(JSON_EXTRACT(i.question_snapshot,'$.q'),256)) ORDER BY i.answered_at,i.attempt_id,i.position) AS rn FROM quiz_attempt_items i JOIN quiz_attempts a ON a.id=i.attempt_id WHERE a.user_id=? AND a.status='completed' AND a.verification_status='server_verified' AND a.purpose IN ('study','exam') ${examOnly?"AND a.purpose='exam' AND JSON_UNQUOTE(JSON_EXTRACT(i.question_snapshot,'$.type'))='mc' AND JSON_LENGTH(JSON_EXTRACT(i.question_snapshot,'$.choices'))=4":''} AND ${sourceAttemptSql()} AND i.is_correct=0 AND i.resolved_at IS NULL) x WHERE rn=1 ORDER BY answered_at,attempt_id,position LIMIT 10`,[id]);
   if(!wrongs.length)fail('review_not_due');
   items=wrongs.map(i=>({topicId:i.topic_id,questionId:i.question_id,question:parse(i.question_snapshot),sourceAttemptId:i.attempt_id,sourcePosition:i.position}));
  }else{
