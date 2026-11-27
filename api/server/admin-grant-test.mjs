@@ -3,8 +3,10 @@ import assert from 'node:assert/strict';
 import { adminGrant, parseAdminArgs } from '../mysql/admin-grant.mjs';
 
 test('admin-grant 인자 읽기', () => {
-  assert.deepEqual(parseAdminArgs(['jry9ffxg', '--gears', '999999', '--premium']), { code: 'JRY9FFXG', gears: 999999, premium: true });
-  assert.deepEqual(parseAdminArgs(['JRY9FFXG', '--premium', 'off']), { code: 'JRY9FFXG', gears: null, premium: false });
+  assert.deepEqual(parseAdminArgs(['jry9ffxg', '--gears', '999999', '--premium']), { code: 'JRY9FFXG', gears: 999999, premium: true, premiumTickets: null });
+  assert.deepEqual(parseAdminArgs(['JRY9FFXG', '--premium', 'off', '--gears', '1500', '--premium-tickets', '1']), { code: 'JRY9FFXG', gears: 1500, premium: false, premiumTickets: 1 });
+  assert.throws(() => parseAdminArgs(['JRY9FFXG', '--premium-tickets', '-1']));
+  assert.deepEqual(parseAdminArgs(['JRY9FFXG', '--premium', 'off']), { code: 'JRY9FFXG', gears: null, premium: false, premiumTickets: null });
   assert.throws(() => parseAdminArgs(['JRY9FFXG']));
   assert.throws(() => parseAdminArgs(['nope', '--premium']));
   assert.throws(() => parseAdminArgs(['JRY9FFXG', '--gears', '-1']));
@@ -26,7 +28,7 @@ test('admin-grant: 잔액 맞추기 + 원장 기록 + 프리미엄 상태 저장
     async beginTransaction() {}, async commit() {}, async rollback() {}, async query() { return [[]]; }, async end() {},
   };
   const r = await adminGrant({ code: 'JRY9FFXG', gears: 999999, premium: true }, { connectionFactory: async () => db });
-  assert.deepEqual(r, { userId: 'u1', balance: 999999, premium: true });
+  assert.deepEqual(r, { userId: 'u1', balance: 999999, premium: true, premiumTickets: 0, subscribed: false });
   const tx = calls.find(([s]) => s.startsWith('INSERT INTO wallet_transactions'));
   assert.equal(tx[1][1], 999999 - 30);
   const op = calls.find(([s]) => s.startsWith('INSERT INTO wallet_operations'));

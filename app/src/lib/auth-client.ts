@@ -9,7 +9,7 @@ export interface WalletState {
  balance: number; revision: string; claims: string[];
  /** 오늘 서버가 확인해 지급한 광고 보상 횟수 (AdMob SSV) */
  adsToday?: number;
- state: {freezes: number; boughtTickets: number; freeTickets: number; month: string; premium: boolean; keptDays: string[]};
+ state: {freezes: number; boughtTickets: number; freeTickets: number; month: string; premium: boolean; keptDays: string[]; premiumTickets?: number; premiumUntil?: string | null};
 }
 export interface AuthSession {
   accessToken: string; refreshToken: string; expiresAt: number;

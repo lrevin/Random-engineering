@@ -1,4 +1,5 @@
 import { router } from "expo-router";
+import { showPremiumOnly } from "@/components/PremiumNotice";
 import { useEffect, useState } from "react";
 import { Pressable, useColorScheme, View } from "react-native";
 import { Icon } from "@/components/Icon";
@@ -33,7 +34,7 @@ export default function Skins() {
     setNotice(`${t.name} 테마를 사서 바로 적용했어요`);
   };
   const use = async (t: ThemeDef) => {
-    if (t.premium && !premium) { router.push("/shop"); return; }
+    if (t.premium && !premium) { showPremiumOnly(); return; }
     if (mode === "user") { if (!await equipCosmetic("skin", t.id)) return; } else applyTheme(t.id);
     setNotice(`${t.name} 테마로 바꿨어요`);
   };

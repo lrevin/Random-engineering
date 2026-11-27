@@ -38,7 +38,7 @@ export default function Quests() {
   }, [got]);
 
   return (
-    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: def.color }}>
+    <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: def.color }}>
       <ScrollView style={{ ...screenBg(c) }} contentContainerStyle={{ paddingBottom: 28 }}>
         {/* 위: 기간별 색 띠 + 탭 + 남은 시간 + 상자 */}
         <View style={{ backgroundColor: def.color, paddingHorizontal: 20, paddingTop: 14, paddingBottom: 64 }}>

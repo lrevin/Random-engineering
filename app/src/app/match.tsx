@@ -187,7 +187,7 @@ export default function Match() {
   );
 
   return (
-    <Screen edges={["top"]} scroll>
+    <Screen scroll>
       <Row style={{ justifyContent: "space-between", flexWrap: "nowrap" }}>
         <Row gap={12} style={{ flexWrap: "nowrap", flexShrink: 1 }}>
           <Pressable onPress={() => router.back()} hitSlop={10} accessibilityRole="button" accessibilityLabel="뒤로">

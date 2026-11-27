@@ -7,7 +7,8 @@ import { walletState } from './wallet-state.mjs';
  * EC2에서 api/server 폴더 기준으로 실행합니다. 앱이나 API 주소로는 열려 있지 않습니다.
  *
  *   npm run admin:grant -- JRY9FFXG --gears 999999 --premium
- *   npm run admin:grant -- JRY9FFXG --premium off        # 프리미엄 끄기
+ *   npm run admin:grant -- JRY9FFXG --premium off        # 프리미엄 끄기 (사용 중인 프리미엄 티켓 기간도 끝냄)
+ *   npm run admin:grant -- JRY9FFXG --premium off --gears 1500 --premium-tickets 1   # 시연 준비: 일반 회원 + 티켓 1장
  *
  * - 톱니바퀴는 "잔액을 이 값으로 맞춤"이고, 차이를 wallet_transactions(reason='admin_grant')에 남깁니다.
  * - 프리미엄은 지갑 상태(wallet_operations 마지막 결과의 state.premium)로 저장합니다.
@@ -18,22 +19,26 @@ const MAX_GEARS = 999999;
 function parse(argv) {
   const [code, ...rest] = argv;
   if (!/^[A-Z2-9]{8}$/.test(String(code ?? '').toUpperCase())) throw new Error('친구 UID 8자리를 첫 번째로 적어 주세요. 예: JRY9FFXG');
-  const out = { code: code.toUpperCase(), gears: null, premium: null };
+  const out = { code: code.toUpperCase(), gears: null, premium: null, premiumTickets: null };
   for (let i = 0; i < rest.length; i++) {
     if (rest[i] === '--gears') {
       const n = Number(rest[++i]);
       if (!Number.isInteger(n) || n < 0 || n > MAX_GEARS) throw new Error(`--gears 는 0~${MAX_GEARS} 정수`);
       out.gears = n;
+    } else if (rest[i] === '--premium-tickets') {
+      const n = Number(rest[++i]);
+      if (!Number.isInteger(n) || n < 0 || n > 99) throw new Error('--premium-tickets 는 0~99 정수');
+      out.premiumTickets = n;
     } else if (rest[i] === '--premium') {
       const v = rest[i + 1];
       if (v === 'off' || v === 'on') { out.premium = v === 'on'; i++; } else out.premium = true;
     } else throw new Error('알 수 없는 옵션: ' + rest[i]);
   }
-  if (out.gears === null && out.premium === null) throw new Error('--gears 또는 --premium 중 하나는 있어야 해요.');
+  if (out.gears === null && out.premium === null && out.premiumTickets === null) throw new Error('--gears · --premium · --premium-tickets 중 하나는 있어야 해요.');
   return out;
 }
 
-export async function adminGrant({ code, gears, premium }, { connectionFactory = connect, now = new Date() } = {}) {
+export async function adminGrant({ code, gears, premium, premiumTickets = null }, { connectionFactory = connect, now = new Date() } = {}) {
   const db = await connectionFactory();
   try {
     return await transaction(db, async () => {
@@ -48,10 +53,13 @@ export async function adminGrant({ code, gears, premium }, { connectionFactory =
         value.balance = gears;
       }
       const state = { ...value.state, ...(premium === null ? {} : { premium, grantedPremium: premium }) };
-      const payload = { gears, premium };
+      // 프리미엄을 끄면 티켓으로 켠 기간도 끝냄 (구독은 subscriptions 표라서 여기서 끄지 않음)
+      if (premium === false) { state.premiumUntil = null; state.ticketPremium = false; state.premium = !!value.state.subscribed; }
+      if (premiumTickets !== null) state.premiumTickets = premiumTickets;
+      const payload = { gears, premium, premiumTickets };
       await db.execute('INSERT INTO wallet_operations(user_id,request_id,request_hash,action,payload,result_json) VALUES (?,?,?,?,?,?)',
         [id, requestId, createHash('sha256').update(JSON.stringify(payload)).digest(), 'admin_grant', JSON.stringify(payload), JSON.stringify({ balance: value.balance, state })]);
-      return { userId: id, balance: value.balance, premium: state.premium };
+      return { userId: id, balance: value.balance, premium: state.premium, premiumTickets: state.premiumTickets ?? 0, subscribed: !!value.state.subscribed };
     });
   } finally { await db.end(); }
 }

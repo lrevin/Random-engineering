@@ -34,6 +34,7 @@
     "ai:health": "node --env-file-if-exists=.env ../mysql/llm-health.mjs",
     "friend-battle:test": "node --env-file-if-exists=.env --test ../mysql/friend-battle-test.mjs",
     "subscription:test": "node --env-file-if-exists=.env --test ../mysql/subscription-test.mjs",
+    "premium-ticket:test": "node --env-file-if-exists=.env --test ../mysql/premium-ticket-test.mjs",
     "account-notify:test": "node --env-file-if-exists=.env --test ../mysql/account-notify-test.mjs",
     "ops:maintenance": "node --env-file-if-exists=.env ../mysql/operations.mjs maintenance",
     "ops:backup": "node --env-file-if-exists=.env ../mysql/operations.mjs backup",

@@ -1,4 +1,5 @@
 import { showDialog } from "@/components/Dialog";
+import { showPremiumOnly } from "@/components/PremiumNotice";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
@@ -14,7 +15,7 @@ import { SectionTitle, StatGrid, StatTile } from "@/components/StatTile";
 import { WeeklyReport } from "@/components/WeeklyReport";
 
 export default function History() {
-  const { records, mode, xp, keptDays, refreshRecords } = useApp();
+  const { records, mode, xp, keptDays, refreshRecords, premium } = useApp();
   const c = useColors();
   const [syncing,setSyncing]=useState(false);
 
@@ -70,7 +71,7 @@ export default function History() {
         </Card>
       </Pressable>
 
-      <Pressable onPress={() => router.push("/review")} accessibilityRole="button">
+      <Pressable onPress={() => (premium ? router.push("/review") : showPremiumOnly())} accessibilityRole="button">
         <Card style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
           <Icon name="target" size={34} />
           <View style={{ flex: 1 }}>

@@ -100,6 +100,11 @@ interface AppStateValue {
   setPremium(v: boolean): void;
   /** 프리미엄 결제: 프리미엄을 켜고 그 순간 톱니바퀴를 넣어 줌. 돌려주는 값은 받은 톱니바퀴 수 (이번 달에 이미 받았으면 0) */
   purchasePremium(): Promise<number>;
+  /** 시연용 뽑공 프리미엄 티켓 (회원 서버 지갑) · 티켓으로 켠 프리미엄이 끝나는 시각 */
+  premiumTickets: number;
+  premiumUntil: string | null;
+  /** 티켓 1장 사용: 30일 프리미엄 (서버가 확인 후 바로 켬) */
+  redeemPremiumTicket(): Promise<boolean>;
   /** 무료 버전 배틀권 (유료 버전이면 무제한) */
   battleTickets: number;
   /** 이번 달 무료 배틀권 / 톱니바퀴로 산 배틀권 */
@@ -190,6 +195,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [freezes, setFreezes] = useState(0);
   const [keptDays, setKeptDays] = useState<string[]>([]);
   const [premium, setPremiumState] = useState(false);
+  const [premiumTickets, setPremiumTickets] = useState(0);
+  const [premiumUntil, setPremiumUntil] = useState<string | null>(null);
   const [tickets, setTickets] = useState<Tickets>(() => refillTickets(null));
   const ticketsRef = useRef<Tickets>(refillTickets(null));
   const [battleXp, setBattleXp] = useState(0);
@@ -226,6 +233,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const t={n:value.state.freeTickets,bought:value.state.boughtTickets,month:value.state.month};
     ticketsRef.current=t;setTickets(t);writeJSON(K.tickets,t);
     setPremiumState(value.state.premium);writeJSON(K.premium,value.state.premium);
+    setPremiumTickets(value.state.premiumTickets??0);setPremiumUntil(value.state.premiumUntil??null);
     keptRef.current=value.state.keptDays;setKeptDays(value.state.keptDays);writeJSON(K.kept,value.state.keptDays);
     questRef.current=value.claims;setQuestClaims(value.claims);writeJSON(K.questClaims,value.claims);
     if(typeof value.adsToday==="number"){adRef.current={day:dateKey(new Date()),n:value.adsToday};setAdViews(adRef.current);writeJSON(K.adViews,adRef.current);}
@@ -251,7 +259,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       try {const value=await mysqlAuth.walletOperation(request.id,action,payload);if(ownerRef.current!==owner)return false;applyWallet(value);await AsyncStorage.removeItem(key);setWalletNotice("");return true;}
       catch(e){if(e instanceof AuthApiError&&e.status>=400&&e.status<500)await AsyncStorage.removeItem(key);throw e;}
     }).catch((e:unknown)=>{
-      if(ownerRef.current===owner){const code=e instanceof AuthApiError?e.code:'';setWalletNotice(({inventory_full:'최대 보유량 또는 부스터 시간을 초과해요.',already_owned:'이미 소유한 상품이에요.',not_owned:'소유한 상품만 사용할 수 있어요.',not_in_season:'현재 판매 기간이 아니에요.',premium_unlimited:'프리미엄은 모의고사를 무제한 이용할 수 있어요.',premium_required:'뽑공 프리미엄 전용이에요.',exam_ticket_required:'모의고사 이용권이 필요해요.',insufficient_balance:'톱니바퀴가 부족해요.',verification_required:'서버의 광고·결제 확인을 준비하고 있어요.',product_not_available:'이 상품의 계정 저장을 준비하고 있어요.',operation_not_available:'이 기능의 서버 연결을 준비하고 있어요.',quest_not_complete:'서버에 저장된 학습 기록으로 보상 조건을 확인하지 못했어요.',already_claimed:'이미 받은 보상이에요.'} as Record<string,string>)[code]??'서버에 연결하지 못했어요. 다시 시도해 주세요.');}return false;
+      if(ownerRef.current===owner){const code=e instanceof AuthApiError?e.code:'';setWalletNotice(({inventory_full:'최대 보유량 또는 부스터 시간을 초과해요.',already_owned:'이미 소유한 상품이에요.',not_owned:'소유한 상품만 사용할 수 있어요.',not_in_season:'현재 판매 기간이 아니에요.',premium_unlimited:'프리미엄은 모의고사를 무제한 이용할 수 있어요.',premium_required:'뽑공 프리미엄 전용이에요.',exam_ticket_required:'모의고사 이용권이 필요해요.',insufficient_balance:'톱니바퀴가 부족해요.',verification_required:'서버의 광고·결제 확인을 준비하고 있어요.',product_not_available:'이 상품의 계정 저장을 준비하고 있어요.',operation_not_available:'이 기능의 서버 연결을 준비하고 있어요.',quest_not_complete:'서버에 저장된 학습 기록으로 보상 조건을 확인하지 못했어요.',already_claimed:'이미 받은 보상이에요.',no_premium_ticket:'사용할 프리미엄 티켓이 없어요.'} as Record<string,string>)[code]??'서버에 연결하지 못했어요. 다시 시도해 주세요.');}return false;
     });walletQueue.current=run;return run;
   }, [applyWallet]);
   const assetOperation=useCallback(async(action:string,payload:Record<string,unknown>)=>{
@@ -646,6 +654,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setRescue(plan);
   }, [mode, remoteWallet, saveKept]);
 
+  const redeemPremiumTicket = useCallback(async () => (mode === "user" ? remoteWallet("use_premium_ticket") : false), [mode, remoteWallet]);
   const buyFreeze = useCallback(async () => {
     if(mode==="user")return remoteWallet("buy_freeze");
     if (freezesRef.current >= MAX_FREEZES || !await spendGears(FREEZE_COST)) return false;
@@ -858,11 +867,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     ready, mode, email: apiSession?.user.email ?? null, serverEnabled: true,
     catalogVersion, prefs, onboarded, records, active, gears, spendGears, walletNotice, memberAssets, walletBusy, purchaseItem, equipCosmetic, startMemberExam,
     xp, freezes, keptDays, buyFreeze, rescue, restoreStreak, dismissRescue, devPreviewRescue, devSeedRecords,
-    premium, setPremium, purchasePremium, battleTickets: premium ? Infinity : (mode === "user" ? tickets : refillTickets(tickets)).n + ((mode === "user" ? tickets : refillTickets(tickets)).bought ?? 0), freeTickets: (mode === "user" ? tickets : refillTickets(tickets)).n, boughtTickets: (mode === "user" ? tickets : refillTickets(tickets)).bought ?? 0, buyBattleTicket, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid, questClaims, claimQuest, adViewsToday: adViews.day === dateKey(new Date()) ? adViews.n : 0, grantAdReward,
+    premium, setPremium, purchasePremium, premiumTickets, premiumUntil, redeemPremiumTicket, battleTickets: premium ? Infinity : (mode === "user" ? tickets : refillTickets(tickets)).n + ((mode === "user" ? tickets : refillTickets(tickets)).bought ?? 0), freeTickets: (mode === "user" ? tickets : refillTickets(tickets)).n, boughtTickets: (mode === "user" ? tickets : refillTickets(tickets)).bought ?? 0, buyBattleTicket, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid, questClaims, claimQuest, adViewsToday: adViews.day === dateKey(new Date()) ? adViews.n : 0, grantAdReward,
     startGuest, signUp, signIn, signInKakao, signOut, cancelDeletion, refreshRecords, refreshWallet, refreshSpeedXp, updateRecordMemo, deleteAccount, updatePrefs, setActive, addRecord, removeRecord, restoreRecord,
   }), [catalogVersion, ready, mode, apiSession, prefs, onboarded, records, active, gears, spendGears, walletNotice, memberAssets, walletBusy, purchaseItem, equipCosmetic, startMemberExam,
     xp, freezes, keptDays, buyFreeze, rescue, restoreStreak, dismissRescue, devPreviewRescue, devSeedRecords,
-    premium, setPremium, purchasePremium, tickets, buyBattleTicket, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid, questClaims, claimQuest, adViews, grantAdReward,
+    premium, setPremium, purchasePremium, premiumTickets, premiumUntil, redeemPremiumTicket, tickets, buyBattleTicket, spendBattleTicket, refundBattleTicket, applyBattleXp, claimOnce, uid, questClaims, claimQuest, adViews, grantAdReward,
     startGuest, signUp, signIn, signInKakao, signOut, cancelDeletion, refreshRecords, refreshWallet, refreshSpeedXp, updateRecordMemo, deleteAccount, updatePrefs, setActive, addRecord, removeRecord, restoreRecord]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

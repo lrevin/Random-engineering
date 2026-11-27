@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { showDialog } from "@/components/Dialog";
+import { showPremiumOnly } from "@/components/PremiumNotice";
 import { DomainIcon, Icon } from "@/components/Icon";
 import { ProgressBar } from "@/components/Quests";
 import { TierBadge } from "@/components/Rank";
@@ -109,10 +110,9 @@ export default function Roadmap() {
     showDialog({
       icon: s ? "check" : "book",
       title: t.ko,
-      message: `${t.categoryName} · Lv.${t.lv} ${t.level}\n${t.hint}\n\n${record}${premium ? "" : "\n\n고른 주제로 바로 공부하기는 프리미엄 기능이에요."}`,
-      buttons: premium
-        ? [{ text: "닫기", style: "cancel" }, { text: "이 주제 공부하기", onPress: () => startTopic(t) }]
-        : [{ text: "닫기", style: "cancel" }, { text: "프리미엄 보기", onPress: () => router.push("/shop") }],
+      message: `${t.categoryName} · Lv.${t.lv} ${t.level}\n${t.hint}\n\n${record}`,
+      // 고른 주제로 바로 공부하기는 프리미엄: 무료 회원이 누르면 화면 가운데 안내
+      buttons: [{ text: "닫기", style: "cancel" }, { text: "이 주제 공부하기", onPress: () => (premium ? startTopic(t) : showPremiumOnly()) }],
     });
   };
   useEffect(() => { openRef.current = open; });

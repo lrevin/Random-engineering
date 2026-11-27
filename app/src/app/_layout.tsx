@@ -17,6 +17,7 @@ import { useThemeLauncher } from "@/lib/theme-launcher";
 import { setThemePremium, useActiveThemeId } from "@/lib/skins";
 import { noteTouch } from "@/lib/gear-fly";
 import { showDialog, DialogHost } from "@/components/Dialog";
+import { PremiumNoticeHost } from "@/components/PremiumNotice";
 import { initAds } from "@/lib/ads";
 import { initSfx } from "@/lib/sfx";
 import { StreakSheet } from "@/components/StreakSheet";
@@ -127,6 +128,7 @@ function RootNav() {
       {inApp && <StreakSheet />}
       {inApp && <BattleWatcher />}
       <DialogHost />
+      <PremiumNoticeHost />
       {inApp && <GearFlyLayer />}
     </View>
   );

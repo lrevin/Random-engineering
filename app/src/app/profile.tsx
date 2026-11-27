@@ -78,7 +78,7 @@ export default function Profile() {
   };
 
   return (
-    <SafeAreaView edges={["top"]} style={{ flex: 1, ...screenBg(c) }}>
+    <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, ...screenBg(c) }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
         {/* 위: 고른 배경 + 큰 프로필 캐릭터 */}
         <View style={{ height: 210, overflow: "hidden" }}>
