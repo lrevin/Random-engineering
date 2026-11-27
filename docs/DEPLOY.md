@@ -59,6 +59,8 @@ chmod 600 /home/ubuntu/backups/release-YYYYMMDD/database-before.sql
 
 ## 4. 마이그레이션 V9~V14 (새 릴리스의 `api/server` 에서)
 
+> **2026-11 시연 준비 배포 (V15):** `npm run db:migrate` 한 번이면 끝난다. V15는 표를 바꾸지 않고, 팀장 시연 계정(UID `JRY9FFXG`)을 일반 회원(시험 구독도 종료)으로 되돌리고 톱니바퀴 1,500개와 **뽑공 프리미엄 티켓 1장**을 넣는다. 앱 설정 > 뽑공 프리미엄 티켓 > 티켓 사용하기 → 30일 프리미엄. 티켓을 더 줄 때는 `npm run admin:grant -- <UID> --premium-tickets <장수>`.
+
 ```bash
 npm run db:info
 npm run db:migrate

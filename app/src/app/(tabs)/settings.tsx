@@ -16,7 +16,6 @@ import { radius, raised, shadow, useColors } from "@/theme";
 import { Icon, type IconName } from "@/components/Icon";
 import { HomeIntro } from "@/components/HomeIntro";
 import { userLevel } from "@/lib/rank";
-import { setSfxEnabled, sfx, sfxEnabled } from "@/lib/sfx";
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -105,15 +104,21 @@ function Minutes({ value, min, max, onChange }: { value: number; min: number; ma
   );
 }
 
+/** "2026-12-27T.." → "12월 27일" (한국 시간) */
+const fmtUntil = (iso: string) => {
+  const d = new Date(new Date(iso).getTime() + 9 * 3600000);
+  return `${d.getUTCMonth() + 1}월 ${d.getUTCDate()}일`;
+};
+
 const confirm = (title: string, msg: string, ok: string, run: () => void) =>
   showDialog({ title, message: msg, buttons: [{ text: "취소", style: "cancel" }, { text: ok, style: "destructive", onPress: run }] });
 
 export default function Settings() {
-  const { prefs, updatePrefs, mode, email, signOut, deleteAccount, premium, xp, uid } = useApp();
+  const { prefs, updatePrefs, mode, signOut, deleteAccount, premium, xp, uid, premiumTickets, premiumUntil, redeemPremiumTicket } = useApp();
   const c = useColors();
   const look = useProfileLook();
   const [notice, setNotice] = useState("");
-  const [sound, setSound] = useState(sfxEnabled());
+  const [ticketBusy, setTicketBusy] = useState(false);
   const [intro, setIntro] = useState(false);
 
   const toggleReminder = async (on: boolean) => {
@@ -133,6 +138,27 @@ export default function Settings() {
 
   const interestNames = prefs.interests.map(interestName);
 
+  /** 프리미엄 티켓 사용: 한 번 묻고, 서버가 켜면 화면이 바로 프리미엄으로 바뀜 */
+  const askTicket = () => {
+    tap();
+    showDialog({
+      icon: "crown",
+      title: "프리미엄 티켓을 쓸까요?",
+      message: premiumUntil ? `지금 프리미엄 기간에 30일이 더해져요.
+남는 티켓 ${premiumTickets - 1}장` : `지금부터 30일 동안 뽑공 프리미엄을 써요.
+남는 티켓 ${premiumTickets - 1}장`,
+      buttons: [{ text: "취소", style: "cancel" }, { text: "사용하기", onPress: () => { void spendTicket(); } }],
+    });
+  };
+  const spendTicket = async () => {
+    setTicketBusy(true);
+    try {
+      if (await redeemPremiumTicket()) showDialog({ icon: "crown", title: "뽑공 프리미엄 시작!", message: "모의고사 · 오답 다시 풀기 · 배틀 무제한, 로드맵에서 바로 공부하기를 쓸 수 있어요." });
+    } finally {
+      setTicketBusy(false);
+    }
+  };
+
   return (
     <Screen edges={["top"]} scroll>
       <T size={26} weight="bold">설정</T>
@@ -144,12 +170,19 @@ export default function Settings() {
         accessibilityRole="button"
         accessibilityLabel="내 프로필 보기"
         style={({ pressed }) => ({
-          flexDirection: "row", alignItems: "center", gap: 14, padding: 16, borderRadius: radius.lg, borderWidth: 1, borderColor: c.line,
+          flexDirection: "row", alignItems: "center", gap: 14, padding: 16, paddingTop: premium ? 20 : 16, borderRadius: radius.lg,
+          borderWidth: premium ? 2.5 : 1, borderColor: premium ? c.gold : c.line,
           backgroundColor: c.paper, ...raised(c.paperEdge, pressed), ...(!pressed ? shadow(c, 2) : null),
         })}
       >
-        <View style={{ borderRadius: 31, borderWidth: 3, borderColor: c.goldSoft }}>
+        <View style={{ borderRadius: 31, borderWidth: 3, borderColor: premium ? c.gold : c.goldSoft }}>
           <Avatar id={look.avatar} name={prefs.nickname || "나"} size={56} />
+          {/* 프리미엄이면 글 대신 왕관만 얹음 */}
+          {premium && (
+            <View pointerEvents="none" style={{ position: "absolute", top: -22, left: 0, right: 0, alignItems: "center" }}>
+              <Icon name="crown" size={30} />
+            </View>
+          )}
         </View>
         <View style={{ flex: 1, gap: 2 }}>
           <T size={18} weight="bold" numberOfLines={1}>{prefs.nickname || "나"}</T>
@@ -158,27 +191,20 @@ export default function Settings() {
         <T size={14} weight="semibold" color="accent">프로필 ›</T>
       </Pressable>
 
-      {/* 유료 멤버십 */}
-      <Card accent style={{ gap: 10 }}>
-        <Row gap={8}><Icon name="crown" size={28} /><T size={17} weight="bold">{premium ? "유료 멤버십 사용 중" : "유료 멤버십"}</T></Row>
-        <T size={14} color="ink2">
-          {premium ? "모의고사 · 오답 다시 풀기 · 배틀을 무제한으로 쓰고 있어요." : "모의고사 · 오답 다시 풀기 · 배틀 무제한, 결제 즉시 톱니바퀴 300개."}
-        </T>
-        <Btn
-          title={premium ? "멤버십 관리" : "유료 멤버십으로 업그레이드"}
-          variant={premium ? "outline" : "accent"}
-          size={premium ? "md" : "lg"}
-          onPress={() => router.push("/shop")}
-        />
-      </Card>
+      {/* 유료 멤버십: 무료 회원에게만 업그레이드 안내 (프리미엄은 프로필 테두리 · 왕관으로만 표시) */}
+      {!premium && (
+        <Card accent style={{ gap: 10 }}>
+          <Row gap={8}><Icon name="crown" size={28} /><T size={17} weight="bold">유료 멤버십</T></Row>
+          <T size={14} color="ink2">모의고사 · 오답 다시 풀기 · 배틀 무제한, 결제 즉시 톱니바퀴 300개.</T>
+          <Btn title="유료 멤버십으로 업그레이드" variant="accent" size="lg" onPress={() => router.push("/shop")} />
+        </Card>
+      )}
 
-      <Section title="계정">
-        {mode === "user" ? (
-          <Item icon="lock" label="로그인 계정" sub={email ?? ""} last />
-        ) : (
+      {mode !== "user" && (
+        <Section title="계정">
           <Item icon="user-plus" label="둘러보기 중" sub="회원가입하면 기록이 안전하게 보관돼요" onPress={() => router.push("/signup")} last />
-        )}
-      </Section>
+        </Section>
+      )}
 
       <View style={{ gap: 8 }}>
         <T size={13} weight="semibold" color="muted" style={{ marginLeft: 4 }}>공부</T>
@@ -205,14 +231,25 @@ export default function Settings() {
         <Item icon="hourglass" label="공부 시간" sub={premium ? `최대 ${PREMIUM_MAX_STUDY_MIN}분` : `무료는 최대 ${FREE_MAX_STUDY_MIN}분`} right={<Minutes value={studyMinutesFor(prefs.studyMinutes, premium)} min={1} max={premium ? PREMIUM_MAX_STUDY_MIN : FREE_MAX_STUDY_MIN} onChange={(v) => updatePrefs({ studyMinutes: v })} />} last />
       </Section>
 
-      <Section title="소리">
-        <Item
-          label="효과음"
-          sub="슬롯머신 · 퀴즈 · 배틀 · 보상 (무음 모드에서는 나지 않아요)"
-          right={<Switch value={sound} onValueChange={(on) => { setSound(on); setSfxEnabled(on); if (on) sfx("correct"); }} trackColor={{ true: c.accent, false: c.line2 }} thumbColor={c.paper} />}
-          last
-        />
-      </Section>
+      {mode === "user" && (
+        <Section title="뽑공 프리미엄 티켓">
+          <View style={{ paddingVertical: 14, gap: 12 }}>
+            <Row gap={12} style={{ flexWrap: "nowrap" }}>
+              <View style={{ width: 40, height: 40, borderRadius: radius.md, alignItems: "center", justifyContent: "center", backgroundColor: c.goldSoft }}>
+                <Icon name="ticket" size={26} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <T size={16} weight="semibold">보유한 티켓 {premiumTickets}장</T>
+                <T size={12} color="muted">
+                  {premiumUntil ? `${fmtUntil(premiumUntil)}까지 프리미엄 · 쓰면 30일 연장` : "1장을 쓰면 30일 동안 뽑공 프리미엄"}
+                </T>
+              </View>
+            </Row>
+            <Btn title={ticketBusy ? "확인하는 중…" : "티켓 사용하기"} variant="premium" icon={<Icon name="crown" size={24} />}
+              disabled={ticketBusy || premiumTickets < 1} onPress={askTicket} />
+          </View>
+        </Section>
+      )}
 
       <Section title="매일 알림">
         <Item

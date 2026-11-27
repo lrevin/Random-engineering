@@ -6,6 +6,8 @@ import {connect,transaction} from '../server/db.mjs';
 import {AuthError} from '../server/auth.mjs';
 import {planStreakRescue} from './policy/economy.mjs';
 import {hash} from '../shared/question-store.mjs';
+/** 시연용 프리미엄 티켓 1장으로 켜지는 프리미엄 기간 (일) */
+export const PREMIUM_TICKET_DAYS=30;
 import {weekStartKst} from './team-policy.mjs';
 const kstDay=d=>new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(d);
 const levelOf=xp=>Math.min(100,Math.max(1,Math.floor((-45+Math.sqrt(2025+20*Math.max(0,Number(xp))))/10)+1));
@@ -136,6 +138,12 @@ export function createMemberService({auth,connectionFactory=connect,now=()=>new 
    else if(action==='exam_start'){await startExam(db,id,payload,value,now());}
    else if(action==='spend'){
     amount=payload.product==='study_extend'?-10:await purchase(db,id,payload.product,value,now());
+   }
+   else if(action==='use_premium_ticket'){
+    // 프리미엄 티켓 1장 = 지금(또는 남은 기간 끝)부터 30일 프리미엄
+    if(!(s.premiumTickets>0))throw new AuthError('no_premium_ticket',409);
+    s.premiumTickets--;const at=now(),base=s.premiumUntil&&new Date(s.premiumUntil)>at?new Date(s.premiumUntil):at;
+    s.premiumUntil=new Date(+base+PREMIUM_TICKET_DAYS*86400000).toISOString();s.ticketPremium=true;s.premium=true;
    }
    else if(action==='ad_reward'||action==='premium')throw new AuthError('verification_required',409);
    else throw new AuthError('operation_not_available',409);

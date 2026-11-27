@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { showPremiumOnly } from "@/components/PremiumNotice";
 import { LOCAL_KEYS } from "@/lib/local-data";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
@@ -35,7 +36,7 @@ const addDays = (key: string, n: number) => {
 
 /** 자격증 대시보드: 시험일 디데이 · 과목별 진도 · 약한 과목 · 모의고사 점수 추이 */
 export default function Certs() {
-  const { prefs, records } = useApp();
+  const { prefs, records, premium } = useApp();
   const c = useColors();
   const [dates, setDates] = useState<Record<string, string>>({});
   const [results, setResults] = useState<ExamResult[]>([]);
@@ -161,7 +162,7 @@ export default function Certs() {
 
         <Row gap={8} style={{ flexWrap: "nowrap" }}>
           <Btn title="모의고사 보기" variant="accent" onPress={() => router.push("/exam")} style={{ flex: 1 }} />
-          <Btn title="오답 풀기" onPress={() => router.push("/review")} style={{ flex: 1 }} />
+          <Btn title="오답 풀기" onPress={() => (premium ? router.push("/review") : showPremiumOnly())} style={{ flex: 1 }} />
         </Row>
       </Card>
     );

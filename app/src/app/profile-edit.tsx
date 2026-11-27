@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
+import { showDialog } from "@/components/Dialog";
 import { Icon } from "@/components/Icon";
 import { Avatar, AVATARS, BACKDROPS, ProfileBackdrop } from "@/components/ProfileLook";
 import { GearCount } from "@/components/TimeUpSheet";
@@ -28,6 +29,21 @@ function PriceTag({ price }: { price: number }) {
       <Icon name="gear" size={13} />
       <T size={11} weight="bold" style={{ color: "#fffaf0" }}>{price.toLocaleString()}</T>
     </View>
+  );
+}
+
+/** 입어 보는 중인 유료 그림의 구매 버튼 (누르면 살지 묻는 창) */
+function BuyPill({ price, label = "구매", inline, onPress }: { price: number; label?: string; inline?: boolean; onPress: () => void }) {
+  return (
+    <Pressable onPress={onPress} hitSlop={6} accessibilityRole="button" accessibilityLabel={`${label}, 톱니바퀴 ${price}개`}
+      style={({ pressed }) => ({
+        ...(inline ? null : { position: "absolute" as const, bottom: 6, right: 6 }),
+        flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: radius.pill,
+        backgroundColor: pressed ? "#c43a30" : "#e0453a", borderWidth: 1.5, borderColor: "#fffaf0", boxShadow: "0px 2px 0px rgba(0,0,0,0.25)",
+      })}>
+      <Icon name="gear" size={14} />
+      <T size={12} weight="bold" style={{ color: "#fffaf0" }}>{label} · {price.toLocaleString()}</T>
+    </Pressable>
   );
 }
 
@@ -62,6 +78,25 @@ export default function ProfileEdit() {
     } finally {
       setBusy(false);
     }
+  };
+
+  /** 입어 보는 중인 그림의 구매 버튼: 살지 한 번 더 물어봄 */
+  const askBuy = (id: string) => {
+    if (!isPaidLook(id) || owns(id) || busy) return;
+    tap();
+    const price = LOOK_PRICES[id];
+    if (gears < price) {
+      showDialog({ icon: "gear", title: "톱니바퀴가 부족해요", message: `${nameOf(id)}은(는) 톱니바퀴 ${price.toLocaleString()}개예요.
+지금 ${gears.toLocaleString()}개 있어서 ${(price - gears).toLocaleString()}개가 더 필요해요.` });
+      return;
+    }
+    showDialog({
+      icon: "gear",
+      title: `${nameOf(id)}을(를) 살까요?`,
+      message: `톱니바퀴 ${price.toLocaleString()}개를 써요.
+지금 ${gears.toLocaleString()}개 → 산 뒤 ${(gears - price).toLocaleString()}개`,
+      buttons: [{ text: "취소", style: "cancel" }, { text: "사기", onPress: () => { void buy(id); } }],
+    });
   };
 
   const nickChanged = nick.trim() !== prefs.nickname;
@@ -106,7 +141,9 @@ export default function ProfileEdit() {
         {paid && (has ? (
           <T size={11} weight="bold" color="success">보유 중</T>
         ) : a.price ? (
-          <Row gap={3} style={{ flexWrap: "nowrap" }}><Icon name="gear" size={13} /><T size={12} weight="bold" color="ink2">{a.price.toLocaleString()}</T></Row>
+          on ? <BuyPill price={a.price} inline onPress={() => askBuy(a.id)} /> : (
+            <Row gap={3} style={{ flexWrap: "nowrap" }}><Icon name="gear" size={13} /><T size={12} weight="bold" color="ink2">{a.price.toLocaleString()}</T></Row>
+          )
         ) : null)}
       </Pressable>
     );
@@ -123,7 +160,7 @@ export default function ProfileEdit() {
         style={{ flex: 1, borderRadius: radius.md, borderWidth: 2, borderColor: on ? c.accent : paid ? c.gold : c.line, backgroundColor: c.paper, overflow: "hidden" }}>
         <View style={{ height: 70 }}>
           <ProfileBackdrop id={b.id} />
-          {paid && !has && b.price ? <PriceTag price={b.price} /> : null}
+          {paid && !has && b.price ? (on ? <BuyPill price={b.price} onPress={() => askBuy(b.id)} /> : <PriceTag price={b.price} />) : null}
         </View>
         <Row style={{ justifyContent: "space-between", paddingHorizontal: 10, paddingVertical: 8, flexWrap: "nowrap" }}>
           <T size={13} weight={on ? "bold" : "medium"} color={on ? "accent" : "ink2"} numberOfLines={1}>{b.name}</T>
@@ -150,32 +187,25 @@ export default function ProfileEdit() {
         <GearCount n={gears} size={16} />
       </Row>
 
-      {/* 미리 보기 */}
-      <View style={{ borderRadius: radius.lg, overflow: "hidden", borderWidth: 2, borderColor: c.line, backgroundColor: c.paper, ...shadow(c, 2) }}>
-        <View style={{ height: 130 }}>
-          <ProfileBackdrop id={backdrop} />
-        </View>
-        <View style={{ alignItems: "center", marginTop: -52, paddingBottom: 16, gap: 6 }}>
-          <View style={{ borderRadius: 60, borderWidth: 5, borderColor: c.paper, boxShadow: "0px 4px 0px rgba(0,0,0,0.18)" }}>
+      {/* 미리 보기: 배경이 카드 전체를 채움 */}
+      <View style={{ height: 230, borderRadius: radius.lg, overflow: "hidden", borderWidth: 2, borderColor: c.line, ...shadow(c, 2) }}>
+        <ProfileBackdrop id={backdrop} />
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "flex-end", paddingBottom: 16, gap: 10 }}>
+          <View style={{ borderRadius: 60, borderWidth: 5, borderColor: "#fffaf0", boxShadow: "0px 4px 0px rgba(0,0,0,0.18)" }}>
             <Avatar id={avatar} name={name} size={100} />
           </View>
-          <T size={22} weight="bold" numberOfLines={1}>{name}</T>
+          <View style={{ paddingHorizontal: 16, paddingVertical: 4, borderRadius: radius.pill, backgroundColor: "rgba(255,250,240,0.92)", maxWidth: "80%" }}>
+            <T size={20} weight="bold" numberOfLines={1} style={{ color: "#1d2742" }}>{name}</T>
+          </View>
         </View>
+        {/* 입어 보는 중인 유료 그림: 미리 보기에서 바로 사기 */}
+        {unpaid.length > 0 && (
+          <View style={{ position: "absolute", top: 10, right: 10, gap: 6, alignItems: "flex-end" }}>
+            {unpaid.map((id) => <BuyPill key={id} price={LOOK_PRICES[id as keyof typeof LOOK_PRICES]} label={`${nameOf(id)} 사기`} inline onPress={() => askBuy(id)} />)}
+          </View>
+        )}
       </View>
 
-      {/* 입어 보는 중인 유료 그림: 바로 살 수 있게 */}
-      {unpaid.map((id) => {
-        const price = isPaidLook(id) ? LOOK_PRICES[id] : 0;
-        const short = gears < price;
-        return (
-          <View key={id} style={{ gap: 8, padding: 14, borderRadius: radius.lg, borderWidth: 2, borderColor: c.gold, backgroundColor: c.goldSoft }}>
-            <T size={14} weight="semibold">{nameOf(id)} 입어 보는 중이에요</T>
-            <Btn title={`톱니바퀴 ${price.toLocaleString()}개로 사기`} variant="accent" icon={<Icon name="gear" size={22} />}
-              disabled={busy || short} onPress={() => { void buy(id); }} />
-            {short && <T size={13} color="accent" center>톱니바퀴가 {(price - gears).toLocaleString()}개 부족해요</T>}
-          </View>
-        );
-      })}
       {(walletNotice || msg) ? <T size={14} color={msg.includes("샀어요") ? "success" : "accent"} weight="semibold" center>{walletNotice || msg}</T> : null}
 
       <View style={{ gap: 6 }}>
